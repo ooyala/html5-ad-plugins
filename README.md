@@ -1,4 +1,4 @@
-# html5_ad_plugins
+# html5-ad-plugins
 Open-source HTML5 ad managers that plug into the Ooyala core HTML5 player.
 
 ## Requirements
