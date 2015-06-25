@@ -170,16 +170,6 @@ OO.Ads.manager((function(_, $) {
     };
 
     /**
-     * <i>Optional.</i><br/>
-     * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
-     * called
-     * @method AdManager#playerClicked
-     * @public
-    */
-    this.playerClicked = function(amcAd, showPage) {
-    };
-
-    /**
      * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
      * the Ad Manager Controller.
      * @method AdManager#destroy
