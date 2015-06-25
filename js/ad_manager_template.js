@@ -12,8 +12,6 @@ OO.Ads.manager((function(_, $) {
    * @public
    * @property {string} name The name of the ad manager. This should match the name used by the server to
    *                         provide metadata.
-   * @property {object} amc A reference to the Ad Manager Controller retreived when the initialize function
-   *                        is called.
    * @property {boolean} ready Should be set to false initially.  Should be set to true when the ad manager
    *                           has loaded all external files and metadata to notify the controller that the
    *                           ad manager is ready for the user to hit play.
@@ -172,38 +170,6 @@ OO.Ads.manager((function(_, $) {
     };
 
     /**
-     * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
-     * the Ad Manager Controller.
-     * @method AdManager#destroy
-     * @public
-     */
-    this.destroy = function() {
-      // Stop any running ads
-    };
-
-    /**
-     * <i>Optional.</i><br/>
-     * Called by Ad Manager Controller.  This function should be used to hide an overlay and pause the
-     * duration timer for the overlay.  This function is called when the main video is paused during an
-     * overlay.
-     * @method AdManager#pauseOverlayTimer
-     * @public
-     */
-    this.pauseOverlayTimer = function() {
-    };
-
-    /**
-     * <i>Optional.</i><br/>
-     * Called by Ad Manager Controller.  This function should be used to unhide an overlay and unpause the
-     * duration timer for the overlay.  This function is called when resuming the main video during an
-     * overlay.
-     * @method AdManager#unpauseOverlayTimer
-     * @public
-     */
-    this.unpauseOverlayTimer = function() {
-    };
-
-    /**
      * <i>Optional.</i><br/>
      * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
      * called
@@ -211,6 +177,16 @@ OO.Ads.manager((function(_, $) {
      * @public
     */
     this.playerClicked = function(amcAd, showPage) {
+    };
+
+    /**
+     * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
+     * the Ad Manager Controller.
+     * @method AdManager#destroy
+     * @public
+     */
+    this.destroy = function() {
+      // Stop any running ads
     };
 
     var _onContentChanged = function() {
