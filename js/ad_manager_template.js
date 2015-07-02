@@ -150,9 +150,10 @@ OO.Ads.manager((function(_, $) {
     };
 
     /**
+     * <i>Optional.</i><br/>
      * When the Ad Manager Controller needs to hide the overlay it will call this function.
      * NOTE: This function should only be used by the ad manager if the cancelOverlay function is not being used.
-     * NOTE 2: Only use this function if you play to hide and reshow the overlay. Otherwise delete it or leave it commented.
+     * NOTE 2: Only implement this function if you plan to hide and reshow the overlay. Otherwise delete it or leave it commented.
      * @method AdManager#hideOverlay
      * @public
      * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC.
@@ -161,9 +162,10 @@ OO.Ads.manager((function(_, $) {
     //};
 
     /**
+     * <i>Optional.</i><br/>
      * When the Ad Manager Controller needs to cancel the overlay it will call this function.
      * NOTE: This function should only be used by the ad manager if the hideOverlay function is not being used.
-     * NOTE 2: Only use this function if you play to cancel and not reshow the overlay. Otherwise leave it commented or delte it.
+     * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delte it.
      * @method AdManager#cancelOverlay
      * @public
      * @param {object} currentAd The overlay ad object to be stored if we need to keep track of it, when we update the AMC.
