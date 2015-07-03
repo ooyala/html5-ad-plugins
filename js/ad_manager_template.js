@@ -168,7 +168,7 @@ OO.Ads.manager((function(_, $) {
      * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delete it.
      * @method AdManager#cancelOverlay
      * @public
-     * @param {object} currentAd The overlay ad object that the AMC needs to know is going to be cancelled and removed.
+     * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed.
      */
     //this.cancelOverlay = function(currentAd) {
     //};
