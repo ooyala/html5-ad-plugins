@@ -150,13 +150,28 @@ OO.Ads.manager((function(_, $) {
     };
 
     /**
+     * <i>Optional.</i><br/>
      * When the Ad Manager Controller needs to hide the overlay it will call this function.
+     * NOTE: This function should only be used by the ad manager if the cancelOverlay function is not being used.
+     * NOTE 2: Only implement this function if you plan to hide and reshow the overlay. Otherwise delete it or leave it commented.
      * @method AdManager#hideOverlay
      * @public
      * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC.
      */
-    this.hideOverlay = function(currentAd) {
-    };
+    //this.hideOverlay = function(currentAd) {
+    //};
+
+    /**
+     * <i>Optional.</i><br/>
+     * When the Ad Manager Controller needs to cancel the overlay it will call this function.
+     * NOTE: This function should only be used by the ad manager if the hideOverlay function is not being used.
+     * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delete it.
+     * @method AdManager#cancelOverlay
+     * @public
+     * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed.
+     */
+    //this.cancelOverlay = function(currentAd) {
+    //};
 
     /**
      * This function gets called by the ad Manager Controller when an ad has completed playing. If the main video is
