@@ -5,6 +5,7 @@
 var gulp = require('gulp'),
     browserify = require('browserify'),
     source = require('vinyl-source-stream'),
+    buffer = require('vinyl-buffer'),
     gutil = require('gulp-util'),
     uglify = require('gulp-uglify'),
     shell = require('gulp-shell'),
@@ -18,7 +19,7 @@ var path = {
 };
 
 // Build All
-gulp.task('build', ['browserify', "publish_debug", "publish_min"]);
+gulp.task('build', ['browserify']);
 
 gulp.task('browserify', function() {
   debug = true;
@@ -29,9 +30,20 @@ gulp.task('browserify', function() {
   {
     _.each(srcArray, function(sourceFile)
     {
-      var bundle = browserify(sourceFile).bundle();
-      bundle.pipe(source(getFileNameFromPath(sourceFile)))
-            .pipe(gulp.dest(destDir));
+      var b = browserify({
+        entries: sourceFile,
+        debug: true,
+      });
+
+      b.bundle()
+        .pipe(source(getFileNameFromPath(sourceFile)))
+        .pipe(buffer())
+        .pipe(gulp.dest('./build/'))
+        .pipe(uglify())
+        .pipe(rename({
+          extname: '.min.js'
+        }))
+        .pipe(gulp.dest('./build/'))
     });
   };
 
