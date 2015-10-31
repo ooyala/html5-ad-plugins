@@ -14,17 +14,13 @@ var gulp = require('gulp'),
     listFiles = require('file-lister');
 
 var path = {
-  originalJs: ['./js/'],
-  standAloneJs: ['./tmp/*.js']
+  originalJs: ['./js/']
 };
 
 // Build All
 gulp.task('build', ['browserify']);
 
 gulp.task('browserify', function() {
-  debug = true;
-  var destDir = "./tmp";
-
 
   var bundleThis = function(srcArray)
   {
@@ -72,22 +68,6 @@ var getFileNameFromPath = function(path)
   var start = path.lastIndexOf('/') + 1;
   return path.substring(start);
 }
-
-gulp.task('publish_min', function() {
-  return gulp.src(path.standAloneJs)
-    .pipe(uglify())
-    .pipe(rename({
-      extname: '.min.js'
-    }))
-    .on('error', gutil.log)
-    .pipe(gulp.dest('./build/'));
-});
-
-gulp.task('publish_debug', function() {
-  return gulp.src(path.standAloneJs)
-    .on('error', gutil.log)
-    .pipe(gulp.dest('./build/'));
-});
 
 // Run tests
 gulp.task('test', shell.task(['npm test']));
