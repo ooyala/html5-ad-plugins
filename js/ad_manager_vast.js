@@ -2,34 +2,18 @@
  * Ad Manager For Vast Ads
  * Originally Created by Greg Frank Based on Existing Vast Ad Code
  */
-if(!OO)
-  OO = {};
-
-var $ = require('jquery');
-var _ = require('underscore');
-
-if (!window._)
-  window._ = _;
-if(!window.Hazmat)
-  require('hazmat');
-
-OO.$ = $.noConflict(true);
-OO._ = _.noConflict();
-
-if(!OO.HM)
-  OO.HM = window.Hazmat.noConflict().create();
-
-//default value for 
-OO.playerParams = {
-    "core_version" : 4,
-    "vast_proxy_url" : "http://player.ooyala.com/adinsertion/vast_proxy"
-  };
 
 
- require("../html5-common/js/utils/constants.js");
- require("../html5-common/js/utils/utils.js");
- require("../html5-common/js/classes/emitter.js");
- require("../html5-common/js/utils/environment.js");
+require("../html5-common/js/utils/InitModules/InitOO.js");
+require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
+require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
+require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
+
+require("../html5-common/js/utils/constants.js");
+require("../html5-common/js/utils/utils.js");
+require("../html5-common/js/classes/emitter.js");
+require("../html5-common/js/utils/environment.js");
 
 OO.Ads.manager((function(_, $) {
   /**
