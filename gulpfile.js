@@ -70,7 +70,7 @@ var getFileNameFromPath = function(path)
 }
 
 // Run tests
-gulp.task('test', shell.task(['npm test']));
+gulp.task('test', shell.task(['make test']));
 
 // Initiate a watch
 gulp.task('watch', function() {
