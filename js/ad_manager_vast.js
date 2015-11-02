@@ -2,9 +2,34 @@
  * Ad Manager For Vast Ads
  * Originally Created by Greg Frank Based on Existing Vast Ad Code
  */
+if(!OO)
+  OO = {};
 
-require("../html5-common/utils/utils.js");
-require("../html5-common/classes/emitter.js");
+var $ = require('jquery');
+var _ = require('underscore');
+
+if (!window._)
+  window._ = _;
+if(!window.Hazmat)
+  require('hazmat');
+
+OO.$ = $.noConflict(true);
+OO._ = _.noConflict();
+
+if(!OO.HM)
+  OO.HM = window.Hazmat.noConflict().create();
+
+//default value for 
+OO.playerParams = {
+    "core_version" : 4,
+    "vast_proxy_url" : "http://player.ooyala.com/adinsertion/vast_proxy"
+  };
+
+
+ require("../html5-common/js/utils/constants.js");
+ require("../html5-common/js/utils/utils.js");
+ require("../html5-common/js/classes/emitter.js");
+ require("../html5-common/js/utils/environment.js");
 
 OO.Ads.manager((function(_, $) {
   /**
@@ -40,6 +65,7 @@ OO.Ads.manager((function(_, $) {
    * @property {function} onAdVideoTimeUpdateCallback Callback this is used when the timeline updates.
    * @property {object} wrapperAds Is used to keep track of the analytic and clickthrough info of an ad.
    */
+
   var Vast = OO.inherit(OO.Emitter, function() {
     // this.name should match the key in metadata form the server
     this.name = "vast";

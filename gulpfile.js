@@ -28,7 +28,7 @@ gulp.task('browserify', function() {
     {
       var b = browserify({
         entries: sourceFile,
-        debug: true,
+        debug: false,
       });
 
       b.bundle()
@@ -74,7 +74,7 @@ gulp.task('test', shell.task(['npm test']));
 
 // Initiate a watch
 gulp.task('watch', function() {
-  gulp.watch(path.scripts, ['browserify', 'publish_min', 'publish_debug']);
+  gulp.watch(path.scripts, ['browserify']);
 });
 
 // The default task (called when you run `gulp` from cli)
