@@ -324,12 +324,13 @@ OO.Ads.manager((function(_, $) {
         this.onAdVideoCompleteCallback = onEnded;
         this.onAdVideoTimeUpdateCallback = onTimeUpdate;
         ui.adVideoElement[0].play();
-        this.amc.showSkipVideoAdButton(true);
-        var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
+        this.amc.showSkipVideoAdButton();
+        var clickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0 ?
+                       adWrapper.ad.data.linear.ClickThrough[0] : null;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
             duration: adWrapper.ad.durationInMilliseconds/1000,
-            hasClickUrl: true,
+            clickUrl: clickUrl,
             indexInPod: 1,
             skippable: false
           });
