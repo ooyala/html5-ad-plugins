@@ -7,14 +7,14 @@ UGLIFY_BIN = ./node_modules/.bin/uglifyjs
 test:
 	@NODE_ENV=test $(MOCHA_BIN) \
       --timeout 3500 \
-      --require scripts/test_lib.js \
+      --require test/test_lib.js \
       --reporter $(REPORTER) \
       $(UNIT_TESTS)
 
 test-debug:
 	@NODE_ENV=test $(MOCHA_BIN) \
       --timeout 3500 \
-      --require script/test_lib.js \
+      --require test/test_lib.js \
       --reporter $(REPORTER) \
       --debug --bail \
       $(UNIT_TESTS)
