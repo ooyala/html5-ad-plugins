@@ -302,7 +302,7 @@ OO.Ads.manager((function(_, $)
           ad: { type: AD_REQUEST_TYPE },
           adType: _amc.ADTYPE.LINEAR_OVERLAY
         })];
-        
+
         return placeholder;
       }
 
@@ -357,7 +357,7 @@ OO.Ads.manager((function(_, $)
     {
       if(this.currentAMCAdPod)
       {
-        _endCurrentAdPod();
+        _endCurrentAd(true);
       }
 
       this.currentAMCAdPod = amcAdPod;
@@ -423,7 +423,7 @@ OO.Ads.manager((function(_, $)
     {
       //currently IMA doesn't have overlay durations so it will always be canceled.
       //They will never recieve a completed message.
-      _endCurrentAdPod();
+      _endCurrentAd(true);
       if (!_usingAdRules)
       {
         _IMA_SDK_destroyAdsManager();
@@ -443,7 +443,7 @@ OO.Ads.manager((function(_, $)
         _throwError("AMC canceling ad that is not the current one playing.");
       }
       OO.log("GOOGLE IMA: ad got canceled by AMC");
-      _endCurrentAdPod();
+      _endCurrentAd(true);
       if (!_usingAdRules)
       {
         _IMA_SDK_destroyAdsManager();
@@ -568,13 +568,13 @@ OO.Ads.manager((function(_, $)
         try
         {
           //notify placeholder end if we do not have a preroll to start main content
-          if(_usingAdRules && 
-            !this.hasPreroll && 
-            this.currentAMCAdPod && 
-            this.currentAMCAdPod.ad && 
+          if(_usingAdRules &&
+            !this.hasPreroll &&
+            this.currentAMCAdPod &&
+            this.currentAMCAdPod.ad &&
             this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
           {
-              _endCurrentAdPod();
+              _endCurrentAd(true);
           }
 
           var w = _amc.ui.width;
@@ -946,7 +946,7 @@ OO.Ads.manager((function(_, $)
         _tryUndoSetupForAdRules();
       }
         
-      _endCurrentAdPod();
+      _endCurrentAd(true);
       _IMA_SDK_destroyAdsManager();
       //make sure we are showing the video in case it was hidden for whatever reason.
       if (adError)
@@ -1063,7 +1063,7 @@ OO.Ads.manager((function(_, $)
     {
       //make sure when we resume, that we have ended the ad pod and told
       //the AMC that we have done so.
-      _endCurrentAdPod();
+      _endCurrentAd(true);
 
       OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
     });
@@ -1094,7 +1094,7 @@ OO.Ads.manager((function(_, $)
         case eventType.SKIPPED:
         case eventType.COMPLETE:
           //change this to end ad
-          _endCurrentAd();
+          _endCurrentAd(false);
           _linearAdIsPlaying = false;
           _onAdMetrics(adEvent);
 
@@ -1227,24 +1227,50 @@ OO.Ads.manager((function(_, $)
       }
 
       var adId = this.currentAMCAdPod.id;
-      var adPodInfo = this.currentIMAAd.getAdPodInfo();
-      if(!adPodInfo)
+
+      var adProperties = {};
+
+      //ad properties - actual values to be provided by IMA APIs, default values are set here
+      var totalAdsInPod = 1;
+      adProperties.indexInPod = 1;
+      adProperties.name = null;
+      adProperties.duration = 0;
+      adProperties.hasClickUrl = false; //default to false because IMA does not provide any clickthrough APIs to us
+      adProperties.skippable = false;
+
+      try
+      {
+        var adPodInfo = this.currentIMAAd.getAdPodInfo();
+        totalAdsInPod = adPodInfo.getTotalAds();
+        adProperties.indexInPod = adPodInfo.getAdPosition();
+      }
+      catch(e)
       {
         _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
       }
-      var totalAdsInPod = adPodInfo.getTotalAds();
-      var adPodPos = adPodInfo.getAdPosition();
-      if (adPodPos == 1)
+      
+      //Google may remove any of these APIs at a future point.
+      //Note: getClickThroughUrl has been removed by Google
+      if (typeof this.currentIMAAd.getTitle == "function") 
+      {
+        adProperties.name = this.currentIMAAd.getTitle();
+      }
+
+      if (typeof this.currentIMAAd.getDuration == "function") 
+      {
+        adProperties.duration = this.currentIMAAd.getDuration();
+      }
+      
+      if (typeof this.currentIMAAd.isSkippable == "function") 
+      {
+        adProperties.skippable = this.currentIMAAd.isSkippable();
+      }
+
+      if (adProperties.indexInPod == 1)
       {
         _amc.notifyPodStarted(adId, totalAdsInPod);
       }
 
-      var adProperties = {};
-      adProperties.name = this.currentIMAAd.getTitle();
-      adProperties.duration = this.currentIMAAd.getDuration();
-      adProperties.clickUrl = this.currentIMAAd.getClickThroughUrl();
-      adProperties.indexInPod = adPodPos;
-      adProperties.skippable = this.currentIMAAd.isSkippable();
       _amc.notifyLinearAdStarted(adId, adProperties);
     });
 
@@ -1287,13 +1313,42 @@ OO.Ads.manager((function(_, $)
      * Controller that the whole ad pod has ended.
      * @private
      * @method GoogleIMA#_endCurrentAdPod
+     * @param linear whether or not the ad pod was linear or overlay
      */
-    var _endCurrentAdPod = privateMember(function()
+    var _endCurrentAdPod = privateMember(function(linear)
     {
       if (this.currentAMCAdPod)
       {
-        var adId = this.currentAMCAdPod.id;
-        if (!this.currentIMAAd)
+        var currentAMCAdPod = this.currentAMCAdPod;
+        var adId = currentAMCAdPod.id;
+
+        this.currentAMCAdPod = null;
+        _linearAdIsPlaying = false;
+        
+        if (linear)
+        {
+          _amc.notifyPodEnded(adId);
+        }
+        else
+        {
+          _stopNonLinearOverlay();
+        }
+      }
+    });
+
+    /**
+     * Ends the current ad in an ad pod the Ad Manager Controller. If it's the
+     * last ad in the pod or if forceEndAdPod is true, it also notifies the AMC 
+     * that the whole ad pod has ended.
+     * @private
+     * @method GoogleIMA#_endCurrentAd
+     * @param forceEndAdPod forces the ad pod to end
+     */
+    var _endCurrentAd = privateMember(function(forceEndAdPod)
+    {
+      if (!this.currentIMAAd)
+      {
+        if (this.currentAMCAdPod)
         {
           //if there is no ad from IMA then we have to see what type of ad the amc
           //was trying to start and end that.
@@ -1306,16 +1361,41 @@ OO.Ads.manager((function(_, $)
             _stopNonLinearOverlay();
           }
         }
-        else if (this.currentIMAAd.isLinear())
+        this.currentAMCAdPod = null;
+      }
+      else if (this.currentIMAAd && this.currentAMCAdPod)
+      {
+        var currentIMAAd = this.currentIMAAd;
+        this.currentIMAAd = null;
+        var adId = this.currentAMCAdPod.id;
+        if (currentIMAAd.isLinear())
         {
+          var adPodInfo = currentIMAAd.getAdPodInfo();
+          if(!adPodInfo)
+          {
+            if (forceEndAdPod)
+            {
+              _endCurrentAdPod(true);
+            }
+            _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
+          }
+
           _amc.notifyLinearAdEnded(adId);
-          _amc.notifyPodEnded(adId);
+
+          var adPos = adPodInfo.getAdPosition();
+          var totalAds = adPodInfo.getTotalAds();
+          //IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
+          if (adPos == totalAds || forceEndAdPod)
+          {
+            _endCurrentAdPod(true);
+          }
         }
         else
         {
           // If the currentIMAAd is non-linear but the currentAMCAdPod
           //is linear, that means we are trying to end the fake ad
-          //that occurs before an overlay is forced to play.
+          //that occurs before an overlay is forced to play. Notify
+          //we started the pod to ensure correct state
           if (this.currentAMCAdPod.isLinear)
           {
             _amc.notifyPodStarted(adId);
@@ -1323,67 +1403,21 @@ OO.Ads.manager((function(_, $)
             //and one is an overlay, the delayed pod end msg prevents getting into a
             //bad state where different notify messages start overlapping each other
             //and the amc could potentially end up canceling a random ad.
-            var delayedPodEnd = function(amc, adId)
+            var delayedPodEnd = function()
               {
-                amc.notifyPodEnded(adId);
+                _endCurrentAdPod(true);
               };
-            _.defer(delayedPodEnd, _amc,adId);
+            _.defer(delayedPodEnd);
           }
           else
           {
-            _stopNonLinearOverlay();
+            _endCurrentAdPod(false);
           }
         }
       }
-
-      if (!_usingAdRules)
+      else if (forceEndAdPod)
       {
-        //try to clear this.currentIMAAd except if we started a linear ad and realized it was an overlay.
-        // (that's how IMA works, you don't know if it's an overlay till it starts.)
-        if(!this.currentIMAAd || this.currentIMAAd.isLinear() || !this.currentAMCAdPod.isLinear)
-        {
-          this.currentIMAAd = null;
-        }
-      }
-
-      this.currentAMCAdPod = null;
-      _linearAdIsPlaying = false;
-    });
-
-    /**
-     * Ends the current ad in an ad pod the Ad Manager Controller. If it's the
-     * last ad in the pod, it also notifies the AMC that the whole ad pod has ended.
-     * @private
-     * @method GoogleIMA#_endCurrentAdPod
-     */
-    var _endCurrentAd = privateMember(function()
-    {
-      if (this.currentIMAAd && this.currentAMCAdPod)
-      {
-        var adId = this.currentAMCAdPod.id;
-        if (this.currentIMAAd.isLinear())
-        {
-          var adPodInfo = this.currentIMAAd.getAdPodInfo();
-          if(!adPodInfo)
-          {
-            _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
-          }
-          var adPos = adPodInfo.getAdPosition();
-          var totalAds = adPodInfo.getTotalAds();
-          //IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
-          if (adPos == totalAds)
-          {
-            _endCurrentAdPod();
-          }
-          else
-          {
-            _amc.notifyLinearAdEnded(adId);
-          }
-        }
-        else
-        {
-          _endCurrentAdPod();
-        }
+        _endCurrentAdPod(true);
       }
 
       this.currentIMAAd = null;

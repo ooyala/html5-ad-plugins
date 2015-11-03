@@ -49,7 +49,6 @@ OO.Ads.manager((function(_, $) {
    * @property {function} onAdVideoTimeUpdateCallback Callback this is used when the timeline updates.
    * @property {object} wrapperAds Is used to keep track of the analytic and clickthrough info of an ad.
    */
-
   var Vast = OO.inherit(OO.Emitter, function() {
     // this.name should match the key in metadata form the server
     this.name = "vast";
@@ -324,13 +323,12 @@ OO.Ads.manager((function(_, $) {
         this.onAdVideoCompleteCallback = onEnded;
         this.onAdVideoTimeUpdateCallback = onTimeUpdate;
         ui.adVideoElement[0].play();
-        this.amc.showSkipVideoAdButton();
-        var clickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0 ?
-                       adWrapper.ad.data.linear.ClickThrough[0] : null;
+        this.amc.showSkipVideoAdButton(true);
+        var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
             duration: adWrapper.ad.durationInMilliseconds/1000,
-            clickUrl: clickUrl,
+            hasClickUrl: true,
             indexInPod: 1,
             skippable: false
           });
