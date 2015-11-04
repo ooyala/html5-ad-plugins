@@ -2,24 +2,30 @@
 Open-source HTML5 ad managers that plug into the Ooyala core HTML5 player.
 
 ## Requirements
-- Ooyala player is a requirement. To know more, visit: [www.ooyala.com](http://www.ooyala.com)
+- Access to the Ooyala player. To know more, visit: [www.ooyala.com](http://www.ooyala.com)
 - React JS to render virtual DOM
+- Hosting of the html5-skin repository located at https://github.com/ooyala/html5-skin
 
 ## Examples
+The following example assumes that you hare hosting the html5-skin repo at http://localhost:8080/skin and that you are hosting this repo at http://localhost:8080/ad-plugins.
 ```javascript
 <html>
   <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.12.2/react.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-
     <script language="javascript" src="//player.ooyala.com/v3/6440813504804d76ba35c8c787a4b33c?debug=true&platform=html5"></script>
-    <script src="build/html5-skin.js"></script>
-    <script src="managers/ad-manager-vast.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.12.2/react.js"></script>
+    <link rel="stylesheet" href="http://localhost:8080/skin/assets/styles.css"/>
+    <script src="http://localhost:8080/skin/build/html5-skin.js"></script>
+    <script src="http://localhost:8080/ad-plugins/managers/ad-manager-vast.js"></script>
   </head>
   <body>
     <div id='container' style='width:640px;height:480px'></div>
     <script>
-      var playerParam = { layout:'chromeless' };
+      var playerParam = { 
+        layout:'chromeless',
+        skin: {
+          config: "/skin/config/skin.json"
+        },
+      };
       OO.ready(function() {
         window.pp = OO.Player.create('container', 'RmZW4zcDo6KqkTIhn1LnowEZyUYn5Tb2', playerParam);
       });
