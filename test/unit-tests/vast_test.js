@@ -5,19 +5,20 @@
 
 //stubs
 OO.log = function() {};
-require(SRC_ROOT + "core/utils.js");
-require(SRC_ROOT + "core/emitter.js");
+require(COMMON_SRC_ROOT + "utils/utils.js");
+require(COMMON_SRC_ROOT + "utils/environment.js");
+require(COMMON_SRC_ROOT + "classes/emitter.js");
 var fs = require("fs");
 
 describe('ad_manager_vast', function() {
   var amc, vastAdManager;
   var name = "vast";
   var originalOoAds = _.clone(OO.Ads);
-  require(TEST_ROOT + "helpers/mock_amc.js");
+  require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
 
-  var linearXMLString = fs.readFileSync(require.resolve("../stubs/vast_linear.xml"), "utf8");
-  var nonLinearXMLString = fs.readFileSync(require.resolve("../stubs/vast_overlay.xml"), "utf8");
-  var wrapperXMLString = fs.readFileSync(require.resolve("../stubs/vast_wrapper.xml"), "utf8");
+  var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
+  var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
+  var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var linearXML = OO.$.parseXML(linearXMLString);
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
@@ -65,8 +66,8 @@ describe('ad_manager_vast', function() {
         vastAdManager.testMode = true;
       }
     };
-    delete require.cache[require.resolve(SRC_ROOT + "modules/ads/ad_manager_vast.js")];
-    require(SRC_ROOT + "modules/ads/ad_manager_vast.js");
+    delete require.cache[require.resolve(SRC_ROOT + "ad_manager_vast.js")];
+    require(SRC_ROOT + "ad_manager_vast.js");
     amc = new fake_amc();
   }, this));
 

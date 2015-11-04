@@ -424,7 +424,10 @@ OO.Ads.manager((function(_, $) {
             //Freewheel has a limitation where it is not possible to skip a single ad in a pod.
             //Until this is resolved, we will only show the skip button for ad pods of size 1.
             if (currentPlayingSlot.getAdCount() == 1) {
-              amc.showSkipVideoAdButton();
+              amc.showSkipVideoAdButton(true);
+            }
+            else {
+              amc.showSkipVideoAdButton(false);
             }
           } else {
             fwContext.setParameter("renderer.video.clickDetection", true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
@@ -718,11 +721,11 @@ OO.Ads.manager((function(_, $) {
       if (_.isFunction(adStartedCallbacks[event.slotCustomId])) {
         var clickEvents = _.filter(event.adInstance._eventCallbacks,
                                    function(callback){ return callback._name == "defaultClick" });
-        var clickUrl = clickEvents.length > 0 ? clickEvents[0]._url : null;
+        var hasClickUrl = clickEvents.length > 0;
         adStartedCallbacks[event.slotCustomId]({
             name: event.adInstance.getActiveCreativeRendition().getPrimaryCreativeRenditionAsset().getName(),
             duration: event.adInstance._creative.getDuration(),
-            clickUrl: clickUrl,
+            hasClickUrl: hasClickUrl,
             indexInPod: indexInPod,
             skippable: false
           });

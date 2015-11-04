@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><VAST version="2.0">
+  <Ad id="602833">
+  <Wrapper>
+    <AdSystem>Acudeo Compatible</AdSystem>
+    <VASTAdTagURI>vastad.xml</VASTAdTagURI>
+    <Impression>impressionurl</Impression>
+	<Creatives>
+		<Creative AdID="602833">
+			<Linear>
+				<TrackingEvents>
+				</TrackingEvents>
+			</Linear>
+		</Creative>
+		<Creative AdID="602833-Companion">
+			<CompanionAds>
+				<Companion width="300" height="250">
+					<IFrameResource creativeType="image/jpeg">1.jpg</IFrameResource>
+					<TrackingEvents>
+						<Tracking event="creativeView">creativeViewUrl</Tracking>
+					</TrackingEvents>
+					<CompanionClickThrough>c1Url</CompanionClickThrough>
+				</Companion>
+				<Companion width="728" height="90">
+					<HTMLResource creativeType="image/jpeg">2.jpg</HTMLResource>
+					<CompanionClickThrough>c2Url</CompanionClickThrough>
+				</Companion>
+			</CompanionAds>
+		</Creative>
+	</Creatives>
+  </Wrapper>
+  </Ad>
+</VAST>

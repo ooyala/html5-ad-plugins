@@ -2,6 +2,19 @@
  * Ad Manager For Vast Ads
  * Originally Created by Greg Frank Based on Existing Vast Ad Code
  */
+
+
+require("../html5-common/js/utils/InitModules/InitOO.js");
+require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
+require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
+require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
+
+require("../html5-common/js/utils/constants.js");
+require("../html5-common/js/utils/utils.js");
+require("../html5-common/js/classes/emitter.js");
+require("../html5-common/js/utils/environment.js");
+
 OO.Ads.manager((function(_, $) {
   /**
    * @class Vast
@@ -310,13 +323,12 @@ OO.Ads.manager((function(_, $) {
         this.onAdVideoCompleteCallback = onEnded;
         this.onAdVideoTimeUpdateCallback = onTimeUpdate;
         ui.adVideoElement[0].play();
-        this.amc.showSkipVideoAdButton();
-        var clickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0 ?
-                       adWrapper.ad.data.linear.ClickThrough[0] : null;
+        this.amc.showSkipVideoAdButton(true);
+        var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
             duration: adWrapper.ad.durationInMilliseconds/1000,
-            clickUrl: clickUrl,
+            hasClickUrl: true,
             indexInPod: 1,
             skippable: false
           });

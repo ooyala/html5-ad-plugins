@@ -1,0 +1,3 @@
+[submodule "html5-common"]
+	path = html5-common
+	url = git@github.com:ooyala/html5-common.git

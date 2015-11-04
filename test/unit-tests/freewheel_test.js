@@ -11,8 +11,8 @@ describe('ad_manager_freewheel', function() {
   var amc,fw;
   var name = "freewheel-ads-manager";
   var originalOoAds = _.clone(OO.Ads);
-  require(TEST_ROOT + "helpers/mock_amc.js");
-  require(TEST_ROOT + "helpers/mock_fw.js");
+  require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
+  require(TEST_ROOT + "unit-test-helpers/mock_fw.js");
 
   // Helper functions
   fakeAd = function(timePositionClass, position, duration) {
@@ -46,8 +46,8 @@ describe('ad_manager_freewheel', function() {
       },
     };
 
-    delete require.cache[require.resolve(SRC_ROOT + "modules/ads/freewheel.js")];
-    require(SRC_ROOT + "modules/ads/freewheel.js");
+    delete require.cache[require.resolve(SRC_ROOT + "freewheel.js")];
+    require(SRC_ROOT + "freewheel.js");
     amc = new fake_amc();
   }, this));
 
