@@ -5,6 +5,9 @@
  */
 
 //TODO make amc ignore ad request timeout.
+require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+require("../html5-common/js/utils/constants.js");
+require("../html5-common/js/utils/utils.js");
 
 OO.Ads.manager((function(_, $)
 {
