@@ -3,10 +3,29 @@ Open-source HTML5 ad managers that plug into the Ooyala core HTML5 player.
 
 ## Requirements
 - Access to the Ooyala player. To know more, visit: [www.ooyala.com](http://www.ooyala.com)
-- React JS to render virtual DOM
-- Hosting of the html5-skin repository located at https://github.com/ooyala/html5-skin
+- Hosting of the html5-ad-plugins repository located at https://github.com/ooyala/html5-ad-plugins
 
-## Examples
+## Repo setup step
+
+cd [path to repo parent folder]
+git clone [git hub repo location]
+cd ./html5-ad-plugins
+git pull
+git init submodules
+git update submodules
+npm install
+npm update
+
+
+## Building the ad managers
+gulp build
+or
+gulp (it defaults to build)
+
+## Running unit tests
+gulp test
+
+## Example test page
 The following example assumes that you hare hosting the html5-skin repo at http://localhost:8080/skin and that you are hosting this repo at http://localhost:8080/ad-plugins.
 ```javascript
 <html>
@@ -20,7 +39,7 @@ The following example assumes that you hare hosting the html5-skin repo at http:
   <body>
     <div id='container' style='width:640px;height:480px'></div>
     <script>
-      var playerParam = { 
+      var playerParam = {
         layout:'chromeless',
         skin: {
           config: "/skin/config/skin.json"
