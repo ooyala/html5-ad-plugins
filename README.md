@@ -7,14 +7,14 @@ Open-source HTML5 ad managers that plug into the Ooyala core HTML5 player.
 
 ## Repo setup step
 
-cd [path to repo parent folder]
-git clone [git hub repo location]
-cd ./html5-ad-plugins
-git pull
-git init submodules
-git update submodules
-npm install
-npm update
+- cd [path to repo parent folder]
+- git clone [git hub repo location]
+- cd ./html5-ad-plugins
+- git pull
+- git init submodules
+- git update submodules
+- npm install
+- npm update
 
 
 ## Building the ad managers
