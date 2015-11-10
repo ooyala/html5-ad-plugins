@@ -425,13 +425,9 @@ OO.Ads.manager((function(_, $)
     this.cancelOverlay = function(ad)
     {
       //currently IMA doesn't have overlay durations so it will always be canceled.
-      //They will never recieve a completed message.
-      _endCurrentAd(true);
-      if (!_usingAdRules)
-      {
-        _IMA_SDK_destroyAdsManager();
-      }
-    }
+      //They will never receive a completed message.
+      this.cancelAd(ad);
+    };
 
     /**
      * Called by the ad manager controller.  Cancels the current running ad.
@@ -948,7 +944,7 @@ OO.Ads.manager((function(_, $)
         //give control back to AMC
         _tryUndoSetupForAdRules();
       }
-        
+
       _endCurrentAd(true);
       _IMA_SDK_destroyAdsManager();
       //make sure we are showing the video in case it was hidden for whatever reason.
@@ -1251,20 +1247,20 @@ OO.Ads.manager((function(_, $)
       {
         _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
       }
-      
+
       //Google may remove any of these APIs at a future point.
       //Note: getClickThroughUrl has been removed by Google
-      if (typeof this.currentIMAAd.getTitle == "function") 
+      if (typeof this.currentIMAAd.getTitle == "function")
       {
         adProperties.name = this.currentIMAAd.getTitle();
       }
 
-      if (typeof this.currentIMAAd.getDuration == "function") 
+      if (typeof this.currentIMAAd.getDuration == "function")
       {
         adProperties.duration = this.currentIMAAd.getDuration();
       }
-      
-      if (typeof this.currentIMAAd.isSkippable == "function") 
+
+      if (typeof this.currentIMAAd.isSkippable == "function")
       {
         adProperties.skippable = this.currentIMAAd.isSkippable();
       }
@@ -1285,28 +1281,33 @@ OO.Ads.manager((function(_, $)
      */
     var _startNonLinearOverlay = privateMember(function()
     {
+      if (!this.currentAMCAdPod)
+      {
+        _throwError("Trying to start non linear overlay and this.currentAMCAdPod is falsy");
+      }
+
+      //notify that the fake ad has started
+      _amc.notifyPodStarted(this.currentAMCAdPod.id);
       //we don't know the type of ad until it starts playing, we assume it's linear
       //but if it isn't then we need to tell the ad manager otherwise and resume playing
-      _IMA_SDK_resumeMainContent();
       var adData = {
         position_type: NON_AD_RULES_POSITION_TYPE,
         forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY
       };
       _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
       //call to _amc.notifyNonlinearAdStarted() will be in playAd() after forcing amc in non linear mode.
+      _IMA_SDK_resumeMainContent();
     });
 
     /**
      * Stop overlay and prepare the ad manager to be able to request another ad.
      * @private
      * @method GoogleIMA#_stopNonLinearOverlay
+     * @param adId the id of the overlay we are stopping
      */
-    var _stopNonLinearOverlay = privateMember(function()
+    var _stopNonLinearOverlay = privateMember(function(adId)
     {
-      if(this.currentAMCAdPod)
-      {
-        _amc.notifyNonlinearAdEnded(this.currentAMCAdPod.id);
-      }
+      _amc.notifyNonlinearAdEnded(adId);
       _resetAdsState();
 
     });
@@ -1327,21 +1328,21 @@ OO.Ads.manager((function(_, $)
 
         this.currentAMCAdPod = null;
         _linearAdIsPlaying = false;
-        
+
         if (linear)
         {
           _amc.notifyPodEnded(adId);
         }
         else
         {
-          _stopNonLinearOverlay();
+          _stopNonLinearOverlay(adId);
         }
       }
     });
 
     /**
      * Ends the current ad in an ad pod the Ad Manager Controller. If it's the
-     * last ad in the pod or if forceEndAdPod is true, it also notifies the AMC 
+     * last ad in the pod or if forceEndAdPod is true, it also notifies the AMC
      * that the whole ad pod has ended.
      * @private
      * @method GoogleIMA#_endCurrentAd
@@ -1349,78 +1350,54 @@ OO.Ads.manager((function(_, $)
      */
     var _endCurrentAd = privateMember(function(forceEndAdPod)
     {
-      if (!this.currentIMAAd)
+      if (this.currentAMCAdPod)
       {
-        if (this.currentAMCAdPod)
+        var adId = this.currentAMCAdPod;
+        if (this.currentIMAAd)
         {
-          //if there is no ad from IMA then we have to see what type of ad the amc
-          //was trying to start and end that.
-          if (this.currentAMCAdPod.isLinear)
+          var currentIMAAd = this.currentIMAAd;
+          this.currentIMAAd = null;
+          if (currentIMAAd.isLinear())
           {
-            _amc.notifyPodEnded(adId);
-          }
-          else
-          {
-            _stopNonLinearOverlay();
-          }
-        }
-        this.currentAMCAdPod = null;
-      }
-      else if (this.currentIMAAd && this.currentAMCAdPod)
-      {
-        var currentIMAAd = this.currentIMAAd;
-        this.currentIMAAd = null;
-        var adId = this.currentAMCAdPod.id;
-        if (currentIMAAd.isLinear())
-        {
-          var adPodInfo = currentIMAAd.getAdPodInfo();
-          if(!adPodInfo)
-          {
-            if (forceEndAdPod)
+            var adPodInfo = currentIMAAd.getAdPodInfo();
+            if(!adPodInfo)
+            {
+              if (forceEndAdPod)
+              {
+                _endCurrentAdPod(true);
+              }
+              _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
+            }
+
+            _amc.notifyLinearAdEnded(adId);
+
+            var adPos = adPodInfo.getAdPosition();
+            var totalAds = adPodInfo.getTotalAds();
+            //IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
+            if (adPos == totalAds || forceEndAdPod)
             {
               _endCurrentAdPod(true);
             }
-            _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
           }
-
-          _amc.notifyLinearAdEnded(adId);
-
-          var adPos = adPodInfo.getAdPosition();
-          var totalAds = adPodInfo.getTotalAds();
-          //IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
-          if (adPos == totalAds || forceEndAdPod)
+          else
           {
-            _endCurrentAdPod(true);
+            // If the currentIMAAd is non-linear but the currentAMCAdPod
+            //is linear, that means we are trying to end the fake ad
+            //that occurs before an overlay is forced to play
+            if (this.currentAMCAdPod.isLinear)
+            {
+              _endCurrentAdPod(true);
+            }
+            else
+            {
+              _endCurrentAdPod(false);
+            }
           }
         }
         else
         {
-          // If the currentIMAAd is non-linear but the currentAMCAdPod
-          //is linear, that means we are trying to end the fake ad
-          //that occurs before an overlay is forced to play. Notify
-          //we started the pod to ensure correct state
-          if (this.currentAMCAdPod.isLinear)
-          {
-            _amc.notifyPodStarted(adId);
-            //in the case where multiple ads are queued up in the AMC
-            //and one is an overlay, the delayed pod end msg prevents getting into a
-            //bad state where different notify messages start overlapping each other
-            //and the amc could potentially end up canceling a random ad.
-            var delayedPodEnd = function()
-              {
-                _endCurrentAdPod(true);
-              };
-            _.defer(delayedPodEnd);
-          }
-          else
-          {
-            _endCurrentAdPod(false);
-          }
+          _endCurrentAdPod(this.currentAMCAdPod.isLinear);
         }
-      }
-      else if (forceEndAdPod)
-      {
-        _endCurrentAdPod(true);
       }
 
       this.currentIMAAd = null;
