@@ -196,7 +196,7 @@ OO.Ads.manager((function(_, $) {
       var creativeData = {};
       var environmentVariables = _.extend({
         slot: amc.ui.videoWrapper[0],
-        //slot: amc.ui.pluginsElement[0],
+        //slot: amc.ui.adWrapper[0],
         videoSlot: amc.ui.adVideoElement[0],
         videoSlotCanAutoPlay: true // based on LR engineer's comment, need to set it to true
       }, this.environmentVariables);
