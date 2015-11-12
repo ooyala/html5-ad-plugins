@@ -460,6 +460,30 @@ OO.Ads.manager((function(_, $) {
       currentPlayingSlot = null;
     }, this);
 
+    /*
+     * Called by the ad manager controller.  Pauses the current ad.
+     * Not implemented because the ooyala player handles pause for freewheel.
+     * @public
+     * @method Freewheel#pauseAd
+     * @param {object} ad The ad to pause
+     */
+    /*
+    this.pauseAd = function(ad) {
+    };
+    */
+
+    /**
+     * Called by the ad manager controller.  Resumes the current ad.
+     * Not implemented because the ooyala player handles resume for freewheel.
+     * @public
+     * @method Freewheel#resumeAd
+     * @param {object} ad The ad to resume
+     */
+    /*
+    this.resumeAd = function(ad) {
+    };
+    */
+
     /**
      * Called by the ad manager controller.  Cancels an ad if the ad passed in is the currently playing ad.
      * @public
