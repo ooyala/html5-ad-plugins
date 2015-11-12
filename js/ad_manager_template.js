@@ -194,6 +194,17 @@ OO.Ads.manager((function(_, $) {
     this.playerClicked = function(amcAd, showPage) {
     };
 
+
+    /**
+     * <i>Optional.</i><br/>
+     * Called when the player detects an error in the ad video playback.  If the ad manager did not detect
+     * this error itself, it can use this time to end the ad playback.
+     * @method AdManager#adVideoError
+     * @public
+     */
+    this.adVideoError = function() {
+    };
+
     /**
      * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
      * the Ad Manager Controller.
