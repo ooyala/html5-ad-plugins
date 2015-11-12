@@ -179,9 +179,6 @@ OO.Ads.manager((function(_, $) {
         freeWheelCompanionAdsWrapper = $('#' + freeWheelCompanionAdsWrapperId);
       }
 
-      // TODO: Consider binding and unbinding this each time an ad is played
-      amc.ui.adVideoElement.bind('timeupdate', _.bind(fw_videoTimeUpdate, this));
-
       _positionOverlays();
     };
 
@@ -312,6 +309,8 @@ OO.Ads.manager((function(_, $) {
 
     /**
      * If the timeline has not been built yet, build it in preparation for sending it to the AMC.
+     * Freewheel assumes that the ad video element is an html5 video tag.  To force use of this element,
+     * always list the stream type as mp4.
      * @private
      * @method Freewheel#_prepareTimeline
      */
@@ -327,6 +326,7 @@ OO.Ads.manager((function(_, $) {
                   duration: slots[i].getTotalDuration(),
                   adManager: this.name,
                   ad: slots[i],
+                  streams: {"mp4":""},
                   adType: amc.ADTYPE.LINEAR_VIDEO}));
             break;
           case tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL:
@@ -335,6 +335,7 @@ OO.Ads.manager((function(_, $) {
                   duration: slots[i].getTotalDuration(),
                   adManager: this.name,
                   ad: slots[i],
+                  streams: {"mp4":""},
                   adType: amc.ADTYPE.LINEAR_VIDEO}));
             break;
           case tv.freewheel.SDK.TIME_POSITION_CLASS_POSTROLL:
@@ -343,6 +344,7 @@ OO.Ads.manager((function(_, $) {
                   duration: slots[i].getTotalDuration(),
                   adManager: this.name,
                   ad: slots[i],
+                  streams: {"mp4":""},
                   adType: amc.ADTYPE.LINEAR_VIDEO}));
             break;
           case tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY:
@@ -363,13 +365,7 @@ OO.Ads.manager((function(_, $) {
      * @method Freewheel#_registerDisplayForLinearAd
      */
     var _registerDisplayForLinearAd = _.bind(function() {
-      if (amc.ui.useSingleVideoElement) {
-        //fwContext.registerVideoDisplayBase(amc.ui.rootElement.attr("id"));
-        fwContext.registerVideoDisplayBase(amc.ui.videoWrapper.attr("id"));
-      } else {
-        fwContext.registerVideoDisplayBase(amc.ui.pluginsElement.attr("id"));
-        //fwContext.registerVideoDisplayBase(amc.ui.rootElement.attr("id"));
-      }
+      fwContext.registerVideoDisplayBase(amc.ui.adWrapper.attr("id"));
     }, this);
 
     /**
@@ -404,6 +400,7 @@ OO.Ads.manager((function(_, $) {
         }
         else {
           // Trigger the ad
+          _registerDisplayForNonlinearAd();
           _registerDisplayForLinearAd();
           currentPlayingSlot = ad.ad;
           indexInPod = 0;
@@ -465,25 +462,27 @@ OO.Ads.manager((function(_, $) {
 
     /**
      * Called by the ad manager controller.  Pauses the current ad.
+     * Not implemented because the ooyala player handles pause for freewheel.
      * @public
      * @method Freewheel#pauseAd
      * @param {object} ad The ad to pause
      */
+    /*
     this.pauseAd = function(ad) {
-      OO.log("FW: Pausing the ad");
-      amc.ui.adVideoElement[0].pause();
     };
+    */
 
     /**
      * Called by the ad manager controller.  Resumes the current ad.
+     * Not implemented because the ooyala player handles resume for freewheel.
      * @public
      * @method Freewheel#resumeAd
      * @param {object} ad The ad to resume
      */
+    /*
     this.resumeAd = function(ad) {
-      OO.log("FW: Resuming the ad");
-      amc.ui.adVideoElement[0].play();
     };
+    */
 
     /**
      * Called by the ad manager controller.  Cancels an ad if the ad passed in is the currently playing ad.
@@ -658,25 +657,6 @@ OO.Ads.manager((function(_, $) {
     }, this);
 
     /**
-     * Called when timeupdate is called on the ad video element.  Sets the current position with the Ooyala
-     * player to update the scrubber bar if the ad is linear by calling "raiseAdPlayhead".
-     * @private
-     * @method Freewheel#fw_videoTimeUpdate
-     */
-    var fw_videoTimeUpdate = function() {
-      if (currentPlayingSlot &&
-          currentPlayingSlot.getTimePositionClass() != tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
-          currentPlayingSlot.getTotalDuration() > 0) {
-        var currentAd = currentPlayingSlot.getCurrentAdInstance();
-        if (currentAd) {
-          amc.raiseAdPlayhead(currentAd.getPlayheadTime(),
-                              currentAd.getDuration());
-          _updateCountdown(currentAd.getPlayheadTime(), currentAd.getDuration());
-        }
-      }
-    };
-
-    /**
      * Called by Freewheel js when an ad is clicked.  Raises the event with the ad manager controller by
      * calling "adsClicked".
      * @private
@@ -782,7 +762,6 @@ OO.Ads.manager((function(_, $) {
       // Disable controls on the video element.  Freewheel seems to be turning it on
       // TODO: inspect event for playback success or errors
       amc.ui.adVideoElement.attr('controls',false);
-      amc.ui.adVideoElement.src = "";
 
       if (currentPlayingSlot &&
           currentPlayingSlot.getTimePositionClass() == tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {

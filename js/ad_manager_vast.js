@@ -45,8 +45,6 @@ OO.Ads.manager((function(_, $) {
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
    * show the ads.
    * @property {object} currentAdBeingLoaded Stores the ad data of the ad that is currently being loaded.
-   * @property {function} onAdVideoCompleteCallback Callback that is used when the video ad ends.
-   * @property {function} onAdVideoTimeUpdateCallback Callback this is used when the timeline updates.
    * @property {object} wrapperAds Is used to keep track of the analytic and clickthrough info of an ad.
    */
   var Vast = OO.inherit(OO.Emitter, function() {
@@ -70,13 +68,12 @@ OO.Ads.manager((function(_, $) {
     this.READY = 'vastReady';
     this.VAST_AD_CONTAINER = '#vast_ad_container';
     this.currentAdBeingLoaded = null;
-    this.onAdVideoCompleteCallback;
-    this.onAdVideoTimeUpdateCallback;
     this.wrapperAds = { error: [],
                         impression: [],
                         companion: [],
                         linear: { tracking: {}, ClickTracking: [] },
                         nonLinear: { tracking: {} } };
+    var adCompletedCallback = null;
 
     /**
      * Used to keep track of what events that are tracked for vast.
@@ -179,6 +176,7 @@ OO.Ads.manager((function(_, $) {
      * @method vast#failedAd
      */
     var failedAd = _.bind(function() {
+      // TODO: Do not destory the whole ad manager if one ad fails!
       this.destroy();
     }, this);
 
@@ -240,11 +238,24 @@ OO.Ads.manager((function(_, $) {
      * When the ad is finished playing we need to call the AMC callback that was provided to let the AMC know that the
      * ad is finished playing.
      * @public
-     * @method Vast#adCompleted
-     * @param {function} adCompletedCallback The callback that was provided via the AMC.
+     * @method Vast#adVideoEnded
      */
-    this.adCompleted = function(adCompletedCallback) {
-      adCompletedCallback();
+    this.adVideoEnded = function() {
+      if (typeof adCompletedCallback === "function") {
+        adCompletedCallback();
+      }
+    };
+
+    /**
+     * When the ad fails to play we need to call the AMC callback that was provided to let the AMC know that the
+     * ad is finished playing and we need to follow the process for cleaning up after an ad fails.
+     * @public
+     * @method Vast#adVideoError
+     */
+    this.adVideoError = function() {
+      this.adVideoEnded();
+      // VTC will pause the ad when the video element loses focus
+      failedAd();
     };
 
 
@@ -276,53 +287,11 @@ OO.Ads.manager((function(_, $) {
       if (adWrapper.isLinear) {
         this.amc.notifyPodStarted(adWrapper.id, 1);
         var innerWrapper = this.amc.ui.videoWrapper;
-        var adCompletedCallback = (function(amc, adId) {
-            return function() {
-               amc.notifyLinearAdEnded(adId);
-               amc.notifyPodEnded(adId);
-              };
-          })(this.amc, adWrapper.id);
-        var onTimeUpdate = _.bind(function(adWrapper, adCompletedCallback, streamUrl, event) {
-          // Originally [jigish] wrote This is a hack fix for m3u8, current iOS has a bug that if the m3u8 EXTINF indication
-          // a different duration, the ended event never got dispatched. Monkey patch here to manual trigger a onEnded event
-          // need to wait OTS to fix their end. [gfrank] Doesn't seem to be fixed so using it here.
-          var duration = adWrapper.duration;
-          var durationInt = Math.floor(duration);
-          var isM3u8 = streamUrl.toLowerCase().indexOf("m3u8") > 0;
-          if (isM3u8 && this.amc.ui.adVideoElement[0].currentTime == duration && duration > durationInt) {
-            this.amc.ui.adVideoElement.off("timeupdate", onTimeUpdate);
-            this.amc.ui.adVideoElement.off("ended", onEnded);
-            this.amc.ui.adVideoElement.off("error", onError);
-            _.delay(_.bind(this.adCompleted, this, adCompletedCallback), 0, event);
-          }
-          if (adWrapper.isLinear) {
-            this.amc.raiseAdPlayhead(this.amc.ui.adVideoElement[0].currentTime, adWrapper.duration)
-          }
-        }, this, adWrapper, adCompletedCallback, streamUrl);
-        var onEnded = _.bind(function(adWrapper, adCompletedCallback, event) {
-          this.amc.ui.adVideoElement.off("ended", onEnded);
-          this.amc.ui.adVideoElement.off("timeupdate", onTimeUpdate);
-          this.adCompleted(adCompletedCallback);
-        }, this, adWrapper,adCompletedCallback);
-        var onError = _.bind(function(adWrapper, adCompletedCallback, event) {
-          this.amc.ui.adVideoElement.off("error", onError);
-          onEnded(adWrapper, adCompletedCallback, event);
-          this.amc.ui.adVideoElement[0].pause();
-          failedAd();
-        }, this, adWrapper, adCompletedCallback);
-        ui.adVideoElement.on("ended", onEnded);
-        ui.adVideoElement.on("timeupdate", onTimeUpdate);
-        ui.adVideoElement[0].src = streamUrl;
-        ui.adVideoElement[0].load(false);
-        var widthOfPlayer = innerWrapper.width();
-        var heightOfPlayer = innerWrapper.height();
-        ui.adVideoElement.css({"display": "block", "width": widthOfPlayer, "height": heightOfPlayer,
-          "text-align": "center"});
+        adCompletedCallback = _.bind(function(amc, adId) {
+            amc.notifyLinearAdEnded(adId);
+            amc.notifyPodEnded(adId);
+          }, this, this.amc, adWrapper.id);
         this.checkCompanionAds(adWrapper.ad);
-        ui.adVideoElement.on("error", onError);
-        this.onAdVideoCompleteCallback = onEnded;
-        this.onAdVideoTimeUpdateCallback = onTimeUpdate;
-        ui.adVideoElement[0].play();
         this.amc.showSkipVideoAdButton(true);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(this.name, {
@@ -352,15 +321,7 @@ OO.Ads.manager((function(_, $) {
       }
       if (ad) {
         if (ad.isLinear) {
-          this.amc.ui.adVideoElement[0].pause();
-          if (this.onAdVideoCompleteCallback) {
-            this.amc.ui.adVideoElement.off("ended", this.onAdVideoCompleteCallback);
-            this.onAdVideoCompleteCallback = null;
-          }
-          if (this.onAdVideoTimeUpdateCallback) {
-            this.amc.ui.adVideoElement.off("timeupdate", this.onAdVideoTimeUpdateCallback);
-            this.onAdVideoTimeUpdateCallback = null;
-          }
+          // The VTC should pause the ad when the video element loses focus
           this.amc.notifyLinearAdEnded(ad.id);
           this.amc.notifyPodEnded(ad.id);
         } else {
@@ -380,8 +341,6 @@ OO.Ads.manager((function(_, $) {
       // Stop any running ads
       this.cancelAd();
       this.ready = false;
-      this.onAdVideoCompleteCallback = null;
-      this.onAdVideoTimeUpdateCallback = null;
     };
 
     /**
@@ -407,8 +366,21 @@ OO.Ads.manager((function(_, $) {
         duration = ad.data.nonLinear.Duration ?  OO.timeStringToSeconds(ad.data.nonLinear.Duration) : 0;
       }
       var positionSeconds = adLoaded.time/1000;
+
+      // Save the stream data for use by VideoController
+      var streams = {};
+      var linearAd = ad.data.linear;
+      if (linearAd && linearAd.mediaFiles) {
+        var vastStreams = linearAd.mediaFiles;
+        streams["webm"] = this._extractStreamForType(linearAd.mediaFiles, "webm");
+        streams["mp4"] = this._extractStreamForType(linearAd.mediaFiles, "mp4");
+        if (ad.streamUrl == null) {
+          OO.log("extract m3u8 stream here"); // TODO
+        }
+      }
+
       timeline.push(new this.amc.Ad({position:positionSeconds, duration:duration, adManager:this.name,
-                                     ad:ad, adType:type}));
+                                     ad:ad, adType:type, streams: streams}));
       this.amc.appendToTimeline(timeline);
     }, this);
 
@@ -472,9 +444,7 @@ OO.Ads.manager((function(_, $) {
      * @param {object} amcAd The current ad data.
      */
     this.pauseAd = function(amcAd) {
-      if (amcAd && amcAd.isLinear) {
-        this.amc.ui.adVideoElement[0].pause();
-      }
+      // No code required here as VTC will pause the ad
     };
 
     /**
@@ -484,9 +454,7 @@ OO.Ads.manager((function(_, $) {
      * @param {object} amcAd The current ad data.
      */
     this.resumeAd = function(amcAd) {
-      if (amcAd && amcAd.isLinear) {
-        this.amc.ui.adVideoElement[0].play();
-      }
+      // No code required here as VTC will resume the ad
     };
 
     /**
