@@ -11,8 +11,8 @@ Open-source HTML5 ad managers that plug into the Ooyala core HTML5 player.
 - git clone [git hub repo location]
 - cd ./html5-ad-plugins
 - git pull
-- git init submodules
-- git update submodules
+- git submodule init
+- git submodule update
 - npm install
 - npm update
 
