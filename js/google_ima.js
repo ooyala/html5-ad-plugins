@@ -310,7 +310,8 @@ OO.Ads.manager(function(_, $)
           adManager: this.name,
           ad: { type: AD_REQUEST_TYPE },
           streams: {"ima":""},
-          adType: _amc.ADTYPE.LINEAR_OVERLAY
+          //use linear video so VTC can prepare the video element (does not disturb overlays)
+          adType: _amc.ADTYPE.LINEAR_VIDEO
         })];
 
         return placeholder;
@@ -519,14 +520,26 @@ OO.Ads.manager(function(_, $)
       }
     };
 
-    this.setVolume = function(volume){
+    this.getVolume = function()
+    {
+      var volume = -1;
+      if (_IMAAdsManager)
+      {
+        volume = _IMAAdsManager.getVolume();
+      }
+      return volume;
+    };
+
+    this.setVolume = function(volume)
+    {
       if (_IMAAdsManager)
       {
         _IMAAdsManager.setVolume(volume);
       }
     };
 
-    this.getCurrentTime = function() {
+    this.getCurrentTime = function()
+    {
       var currentTime = -1;
       if (_IMAAdsManager && this.currentIMAAd)
       {
@@ -1062,7 +1075,10 @@ OO.Ads.manager(function(_, $)
         eventType.PAUSED,
         eventType.RESUMED,
         eventType.STARTED,
-        eventType.THIRD_QUARTILE];
+        eventType.THIRD_QUARTILE,
+        eventType.VOLUME_CHANGED,
+        eventType.VOLUME_MUTED,
+        eventType.USER_CLOSE];
 
       var addIMAEventListener =
         function(e)
@@ -1150,6 +1166,7 @@ OO.Ads.manager(function(_, $)
           _onSizeChanged();
           _tryStartAd();
           break;
+        case eventType.USER_CLOSE:
         case eventType.SKIPPED:
         case eventType.COMPLETE:
           //change this to end ad
@@ -1190,6 +1207,32 @@ OO.Ads.manager(function(_, $)
           break;
         default:
           break;
+      }
+
+      if (this.videoControllerWrapper)
+      {
+        switch (adEvent.type)
+        {
+          case eventType.STARTED:
+          case eventType.RESUMED:
+            this.videoControllerWrapper.raisePlayEvent();
+            break;
+          case eventType.USER_CLOSE:
+          case eventType.SKIPPED:
+          case eventType.COMPLETE:
+            this.videoControllerWrapper.raiseEndedEvent();
+            break;
+          case eventType.PAUSED:
+            this.videoControllerWrapper.raisePauseEvent();
+            break;
+            break;
+          case eventType.VOLUME_CHANGED:
+          case eventType.VOLUME_MUTED:
+            this.videoControllerWrapper.raiseVolumeEvent();
+            break;
+          default:
+            break;
+        }
       }
     });
 
@@ -1475,6 +1518,11 @@ OO.Ads.manager(function(_, $)
     {
       return (google && google.ima && google.ima.AdDisplayContainer);
     });
+
+    this.registerVideoControllerWrapper = function(videoWrapper)
+    {
+      this.videoControllerWrapper = videoWrapper;
+    }
   };
 
   var _throwError = function(outputStr)
@@ -1512,6 +1560,7 @@ OO.Ads.manager(function(_, $)
     this.create = function(parentContainer, id, ooyalaVideoController, css) {
       var wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
+      wrapper.subscribeAllEvents();
       return wrapper;
     };
 
@@ -1571,6 +1620,7 @@ OO.Ads.manager(function(_, $)
      * @method TemplateVideoWrapper#subscribeAllEvents
      */
     this.subscribeAllEvents = function() {
+      _ima.registerVideoControllerWrapper(this);
     };
 
     /**
@@ -1580,7 +1630,6 @@ OO.Ads.manager(function(_, $)
      * @method TemplateVideoWrapper#unsubscribeAllEvents
      */
     this.unsubscribeAllEvents = function() {
-      _.each(listeners, function(v, i) { $(_video).off(i, v); }, this);
     };
 
     /**
@@ -1690,6 +1739,29 @@ OO.Ads.manager(function(_, $)
       this.unsubscribeAllEvents();
       // Remove the element
       _IMA_SDK_destroyAdsManager();
+    };
+
+    //Events
+    this.raisePlayEvent = function() {
+      console.log("IMA VTC: raise play");
+      this.controller.notify(this.controller.EVENTS.PLAY, {});
+      this.controller.notify(this.controller.EVENTS.PLAYING);
+    };
+
+    this.raiseEndedEvent = function() {
+      console.log("IMA VTC: raise ended");
+      this.controller.notify(this.controller.EVENTS.ENDED);
+    };
+
+    this.raisePauseEvent = function() {
+      console.log("IMA VTC: raise pause");
+      this.controller.notify(this.controller.EVENTS.PAUSED);
+    };
+
+    this.raiseVolumeEvent = function() {
+      var volume = _ima.getVolume();
+      console.log("IMA VTC: raise volume event: " + volume);
+      this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
     };
   };
 
