@@ -77,6 +77,8 @@ OO.Ads.manager(function(_, $)
     {
       _amc = amcIn;
 
+      OO.Video.plugin(new GoogleIMAVideoFactory());
+
       var ext = _amc.platform.DEV ? '_debug.js' : '.js';
       remoteModuleJs = "//imasdk.googleapis.com/js/sdkloader/ima3" + ext;
       _resetVars();
@@ -121,6 +123,9 @@ OO.Ads.manager(function(_, $)
       _linearAdIsPlaying = false;
       _resetPlayheadTracker();
       this.hasPreroll = false;
+
+      this.adPlaybackStarted = false;
+      this.vcPlayRequested = false;
 
       //flag to track whether ad rules failed to load
       this.adRulesLoadError = false;
@@ -280,6 +285,7 @@ OO.Ads.manager(function(_, $)
                 "position": ad.position / 1000,
                 "adManager": this.name,
                 "ad": ad,
+                "streams": {"ima":""},
                 "adType": _amc.ADTYPE.LINEAR_VIDEO
               };
 
@@ -303,6 +309,7 @@ OO.Ads.manager(function(_, $)
           duration: 0,
           adManager: this.name,
           ad: { type: AD_REQUEST_TYPE },
+          streams: {"ima":""},
           adType: _amc.ADTYPE.LINEAR_OVERLAY
         })];
 
@@ -473,8 +480,59 @@ OO.Ads.manager(function(_, $)
     {
       if (_IMAAdsManager)
       {
-        _IMAAdsManager.resume();
+        if(this.adPlaybackStarted)
+        {
+          _IMAAdsManager.resume();
+        }
+        else
+        {
+          _IMAAdsManager.start();
+          this.adPlaybackStarted = true;
+        }
+
       }
+    };
+
+    this.requestPause = function()
+    {
+      if (this.adPlaybackStarted)
+      {
+        this.pauseAd();
+      }
+      else
+      {
+        //remove any play requests
+        this.vcPlayRequested = false;
+      }
+    };
+
+    this.requestPlay = function()
+    {
+      if (_IMAAdsManagerInitialized)
+      {
+        this.resumeAd();
+      }
+      else
+      {
+        //store the play command
+        this.vcPlayRequested = true;
+      }
+    };
+
+    this.setVolume = function(volume){
+      if (_IMAAdsManager)
+      {
+        _IMAAdsManager.setVolume(volume);
+      }
+    };
+
+    this.getCurrentTime = function() {
+      var currentTime = -1;
+      if (_IMAAdsManager && this.currentIMAAd)
+      {
+        currentTime = this.currentIMAAd.getDuration() - _IMAAdsManager.getRemainingTime();
+      }
+      return currentTime;
     };
 
     /**
@@ -579,9 +637,11 @@ OO.Ads.manager(function(_, $)
           var w = _amc.ui.width;
           var h = _amc.ui.height;
           _IMAAdsManager.init(w, h, google.ima.ViewMode.NORMAL);
-
-          _IMAAdsManager.start();
           _IMAAdsManagerInitialized = true;
+          if(this.vcPlayRequested)
+          {
+            this.resumeAd();
+          }
           OO.log("tryInitadsManager successful: adsManager started")
         }
         catch (adError)
@@ -1048,7 +1108,7 @@ OO.Ads.manager(function(_, $)
         //we do not want to force an ad play with preroll ads
         if(_playheadTracker.currentTime > 0)
         {
-          _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.LINEAR_VIDEO);
+          _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.LINEAR_VIDEO, {"ima":""});
         }
       }
     });
@@ -1401,6 +1461,7 @@ OO.Ads.manager(function(_, $)
       }
 
       this.currentIMAAd = null;
+      this.adPlaybackStarted = false;
     });
 
     /**
@@ -1420,7 +1481,217 @@ OO.Ads.manager(function(_, $)
   {
     //TODO consolidate code to exit gracefully if we have an error.
     throw new Error("GOOGLE IMA: " + outputStr);
-  }
+  };
 
-  return new GoogleIMA();
+  var googleIMA = new GoogleIMA();
+
+  /**
+   * @class GoogleIMAVideoFactory
+   * @classdesc Factory for creating video player objects that use HTML5 video tags.
+   * @property {string} name The name of the plugin
+   * @property {boolean} ready The readiness of the plugin for use.  True if elements can be created.
+   * @property {object} streams An array of supported encoding types (ex. m3u8, mp4)
+   */
+  var GoogleIMAVideoFactory = function() {
+    this.name = "GoogleIMAVideoTech";
+    this.encodings = ["ima"];
+
+    // This module defaults to ready because no setup or external loading is required
+    this.ready = true;
+
+    /**
+     * Creates a video player instance using TemplateVideoWrapper.
+     * @public
+     * @method TemplateVideoFactory#create
+     * @param {object} parentContainer The jquery div that should act as the parent for the video element
+     * @param {string} id The id of the video player instance to create
+     * @param {object} ooyalaVideoController A reference to the video controller in the Ooyala player
+     * @param {object} css The css to apply to the video element
+     * @returns {object} A reference to the wrapper for the newly created element
+     */
+    this.create = function(parentContainer, id, ooyalaVideoController, css) {
+      var wrapper = new GoogleIMAVideoWrapper(googleIMA);
+      wrapper.controller = ooyalaVideoController;
+      return wrapper;
+    };
+
+    /**
+     * Destroys the video technology factory.
+     * @public
+     * @method TemplateVideoFactory#destroy
+     */
+    this.destroy = function() {
+      this.ready = false;
+      this.encodings = [];
+      this.create = function() {};
+    };
+
+    /**
+     * Represents the max number of support instances of video elements that can be supported on the
+     * current platform. -1 implies no limit.
+     * @public
+     * @property TemplateVideoFactory#maxSupportedElements
+     */
+    this.maxSupportedElements = -1;
+
+    /**
+     * Returns the number of video elements currently instantiated.
+     * @public
+     * @method TemplateVideoFactory#getCurrentNumberOfInstances
+     * @returns {int} The number of video elements created by this factory that have not been destroyed
+     */
+    this.getCurrentNumberOfInstances = function() {
+    };
+  };
+
+  /**
+   * @class GoogleIMAVideoWrapper
+   * @classdesc Player object that wraps the video element.
+   * @param {string} playerId The id of the video player element
+   * @param {object} video The core video object to wrap
+   * @property {object} controller A reference to the Ooyala Video Tech Controller
+   * @property {boolean} disableNativeSeek When true, the plugin should supress or undo seeks that come from
+   *                                       native video controls
+   */
+  var GoogleIMAVideoWrapper = function(ima) {
+    var _ima = ima;
+    var listeners = {};
+
+    this.controller = {};
+    this.disableNativeSeek = true;
+
+    /************************************************************************************/
+    // Required. Methods that Video Controller, Destroy, or Factory call
+    /************************************************************************************/
+
+    /**
+     * Subscribes to all events raised by the video element.
+     * This is called by the Factory during creation.
+     * @public
+     * @method TemplateVideoWrapper#subscribeAllEvents
+     */
+    this.subscribeAllEvents = function() {
+    };
+
+    /**
+     * Unsubscribes all events from the video element.
+     * This should be called by the destroy function.
+     * @public
+     * @method TemplateVideoWrapper#unsubscribeAllEvents
+     */
+    this.unsubscribeAllEvents = function() {
+      _.each(listeners, function(v, i) { $(_video).off(i, v); }, this);
+    };
+
+    /**
+     * Sets the url of the video.
+     * @public
+     * @method TemplateVideoWrapper#setVideoUrl
+     * @param {string} url The new url to insert into the video element's src attribute
+     * @returns {boolean} True or false indicating success
+     */
+    this.setVideoUrl = function(url) {
+      return true;
+    };
+
+    /**
+     * Loads the current stream url in the video element; the element should be left paused.
+     * @public
+     * @method TemplateVideoWrapper#load
+     * @param {boolean} rewind True if the stream should be set to time 0
+     */
+    this.load = function(rewind) {
+    };
+
+    /**
+     * Sets the initial time of the video playback.
+     * @public
+     * @method TemplateVideoWrapper#setInitialTime
+     * @param {number} initialTime The initial time of the video (seconds)
+     */
+    this.setInitialTime = function(initialTime) {
+    };
+
+    /**
+     * Triggers playback on the video element.
+     * @public
+     * @method TemplateVideoWrapper#play
+     */
+    this.play = function() {
+      console.log("IMA VTC: play");
+      var time = _ima.getCurrentTime();
+      console.log("IMA VTC: Playing at current time: " + time);
+      _ima.requestPlay();
+    };
+
+    /**
+     * Triggers a pause on the video element.
+     * @public
+     * @method TemplateVideoWrapper#pause
+     */
+    this.pause = function() {
+      console.log("IMA VTC: pause");
+      var time = _ima.getCurrentTime();
+      console.log("IMA VTC: Pausing at current time: " + time);
+      _ima.requestPause();
+    };
+
+    /**
+     * Triggers a seek on the video element.
+     * @public
+     * @method TemplateVideoWrapper#seek
+     * @param {number} time The time to seek the video to (in seconds)
+     */
+    this.seek = function(time) {
+    };
+
+    /**
+     * Triggers a volume change on the video element.
+     * @public
+     * @method TemplateVideoWrapper#setVolume
+     * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
+     */
+    this.setVolume = function(volume) {
+      console.log("IMA VTC: Set volume: " + volume);
+      _ima.setVolume(volume);
+    };
+
+    /**
+     * Gets the current time position of the video.
+     * @public
+     * @method TemplateVideoWrapper#getCurrentTime
+     * @returns {number} The current time position of the video (seconds)
+     */
+    this.getCurrentTime = function() {
+      var time = _ima.getCurrentTime();
+      console.log("IMA VTC: Get current time: " + time);
+      return time;
+    };
+
+    /**
+     * Applies the given css to the video element.
+     * @public
+     * @method TemplateVideoWrapper#applyCss
+     * @param {object} css The css to apply in key value pairs
+     */
+    this.applyCss = function(css) {
+    };
+
+    /**
+     * Destroys the individual video element.
+     * @public
+     * @method TemplateVideoWrapper#destroy
+     */
+    this.destroy = function() {
+      console.log("IMA VTC: destroy");
+      // Pause the video
+      // Reset the source
+      // Unsubscribe all events
+      this.unsubscribeAllEvents();
+      // Remove the element
+      _IMA_SDK_destroyAdsManager();
+    };
+  };
+
+  return googleIMA;
 });
