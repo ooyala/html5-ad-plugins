@@ -15,7 +15,7 @@ require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/classes/emitter.js");
 require("../html5-common/js/utils/environment.js");
 
-OO.Ads.manager((function(_, $) {
+OO.Ads.manager(function(_, $) {
   /**
    * @class Vast
    * @classDesc The Vast Ads Manager class, registered as an ads manager with the ad manager controller.
@@ -373,8 +373,8 @@ OO.Ads.manager((function(_, $) {
       if (linearAd && linearAd.mediaFiles) {
         var vastStreams = linearAd.mediaFiles;
         streams["webm"] = this._extractStreamForType(linearAd.mediaFiles, "webm");
-        streams["mp4"] = this._extractStreamForType(linearAd.mediaFiles, "mp4");
         if (ad.streamUrl == null) {
+          streams["mp4"] = this._extractStreamForType(linearAd.mediaFiles, "mp4");
           OO.log("extract m3u8 stream here"); // TODO
         }
       }
@@ -952,4 +952,4 @@ OO.Ads.manager((function(_, $) {
     };
   });
   return new Vast();
-}(OO._, OO.$)));
+});

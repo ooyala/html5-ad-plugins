@@ -5,7 +5,7 @@
  * version 0.1
  */
 
-OO.Ads.manager((function(_, $) {
+OO.Ads.manager(function(_, $) {
   /**
    * @class AdManager
    * @classDesc The main Ad Manager class.
@@ -221,4 +221,4 @@ OO.Ads.manager((function(_, $) {
   }
 
   return new AdManager();
-}(OO._, OO.$)));
+});
