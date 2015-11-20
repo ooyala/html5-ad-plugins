@@ -5,7 +5,7 @@
  * version 0.1
  */
 
-OO.Ads.manager((function(_, $) {
+OO.Ads.manager(function(_, $) {
   /**
    * @class OoyalaAdTech
    * @classDesc The main Ad Manager class for Ooyala ad tech.
@@ -704,4 +704,4 @@ OO.Ads.manager((function(_, $) {
   };
 
   return new OoyalaAdTech();
-}(OO._, OO.$)));
+});

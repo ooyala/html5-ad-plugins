@@ -11,7 +11,7 @@
  *     http://hub.freewheel.tv/display/techdocs/How+to+Get+Ad+Level+Information+from+Events
  */
 
-OO.Ads.manager((function(_, $) {
+OO.Ads.manager(function(_, $) {
   /**
    * @class Freewheel
    * @classDesc The Freewheel Ads Manager class, registered as an ads manager with the ad manager controller.
@@ -109,7 +109,7 @@ OO.Ads.manager((function(_, $) {
 
       // If the ad server or network id are not specified, unregister
       if (adServerURL == null || networkId == null) {
-        OO.Ads.unregisterAdManager(this.name);
+        amc.unregisterAdManager(this.name);
         return;
       }
 
@@ -806,4 +806,4 @@ OO.Ads.manager((function(_, $) {
   };
 
   return new Freewheel();
-}(OO._, OO.$)));
+});

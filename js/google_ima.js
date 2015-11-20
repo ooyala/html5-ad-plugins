@@ -9,7 +9,7 @@ require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 
-OO.Ads.manager((function(_, $)
+OO.Ads.manager(function(_, $)
 {
   /**
    * @class GoogleIMA
@@ -534,7 +534,7 @@ OO.Ads.manager((function(_, $)
       if(!_IMAAdDisplayContainer)
       {
         _onImaAdError();
-        OO.Ads.unregisterAdManager(this.name);
+        _amc.unregisterAdManager(this.name);
         _throwError("onInitialPlayRequested called but _IMAAdDisplayContainer not created yet.");
       }
 
@@ -776,7 +776,7 @@ OO.Ads.manager((function(_, $)
       if (!success || !_isGoogleSDKValid())
       {
         _onImaAdError();
-        OO.Ads.unregisterAdManager(this.name);
+        _amc.unregisterAdManager(this.name);
         return;
       }
 
@@ -1423,4 +1423,4 @@ OO.Ads.manager((function(_, $)
   }
 
   return new GoogleIMA();
-}(OO._, OO.$)));
+});

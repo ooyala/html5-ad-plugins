@@ -8,7 +8,7 @@
  *
  */
 
-OO.Ads.manager((function(_, $) {
+OO.Ads.manager(function(_, $) {
   // There are quite a few more of these events, see the linked VPAID docs above
   var VPAID_EVENTS = {
     AD_LOADED: "AdLoaded",
@@ -335,4 +335,4 @@ OO.Ads.manager((function(_, $) {
   };
 
   return new Liverail();
-}(OO._, OO.$)));
+});
