@@ -1548,9 +1548,9 @@ OO.Ads.manager(function(_, $)
     this.ready = true;
 
     /**
-     * Creates a video player instance using TemplateVideoWrapper.
+     * Creates a video player instance using GoogleIMAVideoWrapper.
      * @public
-     * @method TemplateVideoFactory#create
+     * @method GoogleIMAVideoFactory#create
      * @param {object} parentContainer The jquery div that should act as the parent for the video element
      * @param {string} id The id of the video player instance to create
      * @param {object} ooyalaVideoController A reference to the video controller in the Ooyala player
@@ -1567,7 +1567,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Destroys the video technology factory.
      * @public
-     * @method TemplateVideoFactory#destroy
+     * @method GoogleIMAVideoFactory#destroy
      */
     this.destroy = function() {
       this.ready = false;
@@ -1579,14 +1579,14 @@ OO.Ads.manager(function(_, $)
      * Represents the max number of support instances of video elements that can be supported on the
      * current platform. -1 implies no limit.
      * @public
-     * @property TemplateVideoFactory#maxSupportedElements
+     * @property GoogleIMAVideoFactory#maxSupportedElements
      */
     this.maxSupportedElements = -1;
 
     /**
      * Returns the number of video elements currently instantiated.
      * @public
-     * @method TemplateVideoFactory#getCurrentNumberOfInstances
+     * @method GoogleIMAVideoFactory#getCurrentNumberOfInstances
      * @returns {int} The number of video elements created by this factory that have not been destroyed
      */
     this.getCurrentNumberOfInstances = function() {
@@ -1617,7 +1617,7 @@ OO.Ads.manager(function(_, $)
      * Subscribes to all events raised by the video element.
      * This is called by the Factory during creation.
      * @public
-     * @method TemplateVideoWrapper#subscribeAllEvents
+     * @method GoogleIMAVideoWrapper#subscribeAllEvents
      */
     this.subscribeAllEvents = function() {
       _ima.registerVideoControllerWrapper(this);
@@ -1627,7 +1627,7 @@ OO.Ads.manager(function(_, $)
      * Unsubscribes all events from the video element.
      * This should be called by the destroy function.
      * @public
-     * @method TemplateVideoWrapper#unsubscribeAllEvents
+     * @method GoogleIMAVideoWrapper#unsubscribeAllEvents
      */
     this.unsubscribeAllEvents = function() {
     };
@@ -1635,7 +1635,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Sets the url of the video.
      * @public
-     * @method TemplateVideoWrapper#setVideoUrl
+     * @method GoogleIMAVideoWrapper#setVideoUrl
      * @param {string} url The new url to insert into the video element's src attribute
      * @returns {boolean} True or false indicating success
      */
@@ -1646,7 +1646,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Loads the current stream url in the video element; the element should be left paused.
      * @public
-     * @method TemplateVideoWrapper#load
+     * @method GoogleIMAVideoWrapper#load
      * @param {boolean} rewind True if the stream should be set to time 0
      */
     this.load = function(rewind) {
@@ -1655,7 +1655,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Sets the initial time of the video playback.
      * @public
-     * @method TemplateVideoWrapper#setInitialTime
+     * @method GoogleIMAVideoWrapper#setInitialTime
      * @param {number} initialTime The initial time of the video (seconds)
      */
     this.setInitialTime = function(initialTime) {
@@ -1664,31 +1664,27 @@ OO.Ads.manager(function(_, $)
     /**
      * Triggers playback on the video element.
      * @public
-     * @method TemplateVideoWrapper#play
+     * @method GoogleIMAVideoWrapper#play
      */
     this.play = function() {
-      console.log("IMA VTC: play");
       var time = _ima.getCurrentTime();
-      console.log("IMA VTC: Playing at current time: " + time);
       _ima.requestPlay();
     };
 
     /**
      * Triggers a pause on the video element.
      * @public
-     * @method TemplateVideoWrapper#pause
+     * @method GoogleIMAVideoWrapper#pause
      */
     this.pause = function() {
-      console.log("IMA VTC: pause");
       var time = _ima.getCurrentTime();
-      console.log("IMA VTC: Pausing at current time: " + time);
       _ima.requestPause();
     };
 
     /**
      * Triggers a seek on the video element.
      * @public
-     * @method TemplateVideoWrapper#seek
+     * @method GoogleIMAVideoWrapper#seek
      * @param {number} time The time to seek the video to (in seconds)
      */
     this.seek = function(time) {
@@ -1697,30 +1693,28 @@ OO.Ads.manager(function(_, $)
     /**
      * Triggers a volume change on the video element.
      * @public
-     * @method TemplateVideoWrapper#setVolume
+     * @method GoogleIMAVideoWrapper#setVolume
      * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
      */
     this.setVolume = function(volume) {
-      console.log("IMA VTC: Set volume: " + volume);
       _ima.setVolume(volume);
     };
 
     /**
      * Gets the current time position of the video.
      * @public
-     * @method TemplateVideoWrapper#getCurrentTime
+     * @method GoogleIMAVideoWrapper#getCurrentTime
      * @returns {number} The current time position of the video (seconds)
      */
     this.getCurrentTime = function() {
       var time = _ima.getCurrentTime();
-      console.log("IMA VTC: Get current time: " + time);
       return time;
     };
 
     /**
      * Applies the given css to the video element.
      * @public
-     * @method TemplateVideoWrapper#applyCss
+     * @method GoogleIMAVideoWrapper#applyCss
      * @param {object} css The css to apply in key value pairs
      */
     this.applyCss = function(css) {
@@ -1729,10 +1723,9 @@ OO.Ads.manager(function(_, $)
     /**
      * Destroys the individual video element.
      * @public
-     * @method TemplateVideoWrapper#destroy
+     * @method GoogleIMAVideoWrapper#destroy
      */
     this.destroy = function() {
-      console.log("IMA VTC: destroy");
       // Pause the video
       // Reset the source
       // Unsubscribe all events
@@ -1743,24 +1736,20 @@ OO.Ads.manager(function(_, $)
 
     //Events
     this.raisePlayEvent = function() {
-      console.log("IMA VTC: raise play");
       this.controller.notify(this.controller.EVENTS.PLAY, {});
       this.controller.notify(this.controller.EVENTS.PLAYING);
     };
 
     this.raiseEndedEvent = function() {
-      console.log("IMA VTC: raise ended");
       this.controller.notify(this.controller.EVENTS.ENDED);
     };
 
     this.raisePauseEvent = function() {
-      console.log("IMA VTC: raise pause");
       this.controller.notify(this.controller.EVENTS.PAUSED);
     };
 
     this.raiseVolumeEvent = function() {
       var volume = _ima.getVolume();
-      console.log("IMA VTC: raise volume event: " + volume);
       this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
     };
   };
