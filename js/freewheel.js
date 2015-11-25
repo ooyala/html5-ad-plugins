@@ -52,6 +52,7 @@ OO.Ads.manager(function(_, $) {
     var adStartedCallbacks   = {};
     var adEndedCallbacks     = {};
     var indexInPod           = 0;
+    var currentAd            = null;
 
     // ui - do I need this?
     var freeWheelCompanionAdsWrapperId = null;
@@ -385,6 +386,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.playAd = function(ad) {
       _resetAdState();
+      currentAd = ad;
       try {
         if (ad.ad.type == adRequestType) {
           if (shouldRequestAds) {
@@ -743,7 +745,7 @@ OO.Ads.manager(function(_, $) {
      */
     var fw_onSlotStarted = function() {
       // adVideoElement may be null for overlays
-      if (amc && amc.ui && amc.ui.adVideoElement) {
+      if (currentAd.isLinear && amc && amc.ui && amc.ui.adVideoElement) {
         amc.ui.adVideoElement.removeAttr('controls');
       }
 
@@ -766,7 +768,7 @@ OO.Ads.manager(function(_, $) {
       // TODO: inspect event for playback success or errors
       
       // adVideoElement may be null for overlays
-      if (amc && amc.ui && amc.ui.adVideoElement) {
+      if (currentAd.isLinear && amc && amc.ui && amc.ui.adVideoElement) {
         amc.ui.adVideoElement.attr('controls',false);
       }
 
