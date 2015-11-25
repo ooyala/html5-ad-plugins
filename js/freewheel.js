@@ -769,7 +769,7 @@ OO.Ads.manager(function(_, $) {
 
       // check if ad is an overlay
       if (currentPlayingSlot &&
-          currentPlayingSlot.getTimePositionClass() == tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
+          currentPlayingSlot.getTimePositionClass() === tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
         _registerDisplayForLinearAd();
 
         // adVideoElement may be null for overlays
