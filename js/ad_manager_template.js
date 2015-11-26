@@ -30,8 +30,9 @@ OO.Ads.manager(function(_, $) {
      * @method AdManager#initialize
      * @public
      * @param {object} adManagerController A reference to the Ad Manager Controller.
+     * @param {string} playerId The unique player identifier of the player initializing the class
      */
-    this.initialize = function(adManagerController) {
+    this.initialize = function(adManagerController, playerId) {
       amc = adManagerController;
 
       // Add any player event listeners now
