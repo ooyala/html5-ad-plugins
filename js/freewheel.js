@@ -768,7 +768,8 @@ OO.Ads.manager(function(_, $) {
       // TODO: inspect event for playback success or errors
       
       // adVideoElement may be null for overlays
-      if (currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
+      if (currentPlayingSlot &&
+          currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
           amc && amc.ui && amc.ui.adVideoElement) {
         amc.ui.adVideoElement.attr('controls',false);
       }
