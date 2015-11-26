@@ -402,6 +402,7 @@ OO.Ads.manager(function(_, $) {
           // Trigger the ad
           _registerDisplayForNonlinearAd();
           _registerDisplayForLinearAd();
+          debugger;
           currentPlayingSlot = ad.ad;
           indexInPod = 0;
           if (ad.isLinear) {
@@ -744,7 +745,7 @@ OO.Ads.manager(function(_, $) {
     var fw_onSlotStarted = function() {
       // adVideoElement may be null for overlays
       if (currentPlayingSlot &&
-          currentPlayingSlot.getTimePositionClass() === tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
+          currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
           amc && amc.ui && amc.ui.adVideoElement) {
         amc.ui.adVideoElement.removeAttr('controls');
       }
@@ -766,16 +767,16 @@ OO.Ads.manager(function(_, $) {
     var fw_onSlotEnded = function(event) {
       // Disable controls on the video element.  Freewheel seems to be turning it on
       // TODO: inspect event for playback success or errors
+      
+      // adVideoElement may be null for overlays
+      if (currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
+          amc && amc.ui && amc.ui.adVideoElement) {
+        amc.ui.adVideoElement.attr('controls',false);
+      }
 
-      // check if ad is an overlay
       if (currentPlayingSlot &&
-          currentPlayingSlot.getTimePositionClass() === tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
+          currentPlayingSlot.getTimePositionClass() == tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
         _registerDisplayForLinearAd();
-
-        // adVideoElement may be null for overlays
-        if (amc && amc.ui && amc.ui.adVideoElement) {
-          amc.ui.adVideoElement.attr('controls',false);
-        }
       }
 
       if (!event || !event.slot) return;
