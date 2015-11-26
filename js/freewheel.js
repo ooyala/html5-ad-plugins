@@ -402,7 +402,6 @@ OO.Ads.manager(function(_, $) {
           // Trigger the ad
           _registerDisplayForNonlinearAd();
           _registerDisplayForLinearAd();
-          debugger;
           currentPlayingSlot = ad.ad;
           indexInPod = 0;
           if (ad.isLinear) {
