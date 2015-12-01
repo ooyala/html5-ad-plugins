@@ -1179,6 +1179,41 @@ require("../html5-common/js/utils/utils.js");
       });
 
       /**
+       * Checks if there is any companion ads associated with the ad and if one is found, it will call the Ad Manager
+       * Controller to show it.
+       * @public
+       * @method GoogleIMA#checkCompanionAds
+       * @param {object} ad The Ad metadata.
+       */
+      var _checkCompanionAds = privateMember(function(ad) {
+        if (!ad) {
+          return;
+        }
+        // Page level setting with format:
+        // companionAd: {
+        //  slots: [{width: 300, height: 250}, ..]
+        // }
+        var slots = _amc.pageSettings.companionAd.slots;
+        var companionAds = [],
+            companionAd = null;
+
+        _.each(slots, function(slot) {
+          companionAd = ad.getCompanionAds(slot.width, slot.height);
+          if (companionAd.length) {
+            _.each(companionAd, function(ad) {
+              companionAds.push({slotSize: slot.width + "x" + slot.height, ad: ad.getContent()});
+            });
+          }
+        });
+
+        if (!companionAds.length) {
+          return;
+        }
+        //companionAds = [{slotSize: "300x250", ad: <Companion Ad as HTML>}, ..]
+        _amc.showCompanion(companionAds);
+       });
+
+      /**
        * Callback from IMA SDK for ad tracking events.
        * @private
        * @method GoogleIMA#_IMA_SDK_onAdEvent
@@ -1459,6 +1494,7 @@ require("../html5-common/js/utils/utils.js");
           _amc.notifyPodStarted(adId, totalAdsInPod);
         }
 
+        _checkCompanionAds(this.currentIMAAd);
         _amc.notifyLinearAdStarted(adId, adProperties);
       });
 
@@ -1483,6 +1519,7 @@ require("../html5-common/js/utils/utils.js");
           position_type: NON_AD_RULES_POSITION_TYPE,
           forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY
         };
+        _checkCompanionAds(this.currentIMAAd);
         _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
         //call to _amc.notifyNonlinearAdStarted() will be in playAd() after forcing amc in non linear mode.
         _IMA_SDK_resumeMainContent();
