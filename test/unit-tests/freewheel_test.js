@@ -36,14 +36,14 @@ describe('ad_manager_freewheel', function() {
 
   var play = function() {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
-  }
+  };
 
   before(_.bind(function() {
     OO.Ads = {
       manager: function(adManager){
-        fw = adManager;
+        fw = adManager(_, $);
         fw.testMode = true;
-      },
+      }
     };
 
     delete require.cache[require.resolve(SRC_ROOT + "freewheel.js")];

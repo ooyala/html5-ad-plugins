@@ -24,7 +24,8 @@ fake_amc = function() {
     videoWrapper : $("<div>", {}),
     ooyalaVideoElement : $("<div>", {class: "video"}),
     adVideoElement : $("<div>", {class: "video"}),
-    pluginsElement : $("<div>", {})
+    pluginsElement : $("<div>", {}),
+    adWrapper : $("<div>", {})
   };
   this.platform = {};
   this.pageSettings = {};

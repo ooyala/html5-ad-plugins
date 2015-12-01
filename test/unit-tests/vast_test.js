@@ -62,7 +62,7 @@ describe('ad_manager_vast', function() {
   before(_.bind(function() {
     OO.Ads = {
       manager: function(adManager){
-        vastAdManager = adManager;
+        vastAdManager = adManager(_, $);
         vastAdManager.testMode = true;
       }
     };
