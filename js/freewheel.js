@@ -427,6 +427,7 @@ OO.Ads.manager(function(_, $) {
               amc.showSkipVideoAdButton(false);
             }
           } else {
+            amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
             fwContext.setParameter("renderer.video.clickDetection", true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyNonlinearAdStarted(adId);
