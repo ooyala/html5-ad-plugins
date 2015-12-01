@@ -427,13 +427,12 @@ OO.Ads.manager(function(_, $) {
               amc.showSkipVideoAdButton(false);
             }
           } else {
-            amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
             fwContext.setParameter("renderer.video.clickDetection", true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
-                amc.notifyNonlinearAdStarted(adId);
+                amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
               }, this, ad.id);
             slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
-                amc.notifyNonlinearAdEnded(adId);
+                amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
               }, this, ad.id);
             delete adStartedCallbacks[ad.ad.getCustomId()];
             delete adEndedCallbacks[ad.ad.getCustomId()];
