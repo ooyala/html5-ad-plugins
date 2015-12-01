@@ -486,7 +486,6 @@ OO.Ads.manager(function(_, $) {
             this.amc.ui.adVideoElement.off("ended", onEnded);
             _.delay(_.bind(this.adCompleted, this, adPodEndedCallback), 0, event);
           }
-          this.amc.raiseAdPlayhead(this.amc.ui.adVideoElement[0].currentTime, duration)
         }, this, ad, adPodEndedCallback, streamUrl);
         var onEnded = _.bind(function (ad, adPodEndedCallback, event) {
           this.amc.ui.adVideoElement.off("ended", onEnded);
