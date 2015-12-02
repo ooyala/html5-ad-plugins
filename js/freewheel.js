@@ -432,7 +432,7 @@ OO.Ads.manager(function(_, $) {
                 amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
               }, this, ad.id);
             slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
-                amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
+                amc.notifyNonlinearAdEnded(adId);
               }, this, ad.id);
             delete adStartedCallbacks[ad.ad.getCustomId()];
             delete adEndedCallbacks[ad.ad.getCustomId()];
