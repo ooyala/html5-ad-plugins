@@ -43,6 +43,7 @@ require("../html5-common/js/utils/utils.js");
       var _IMAAdsManagerInitialized;
       var _IMAAdDisplayContainer;
       var _linearAdIsPlaying;
+      var _timeUpdater = null;
 
       //Constants
       var DEFAULT_ADS_REQUEST_TIME_OUT = 3000;
@@ -57,6 +58,8 @@ require("../html5-common/js/utils/utils.js");
 
       var VISIBLE_CSS = {left: OO.CSS.VISIBLE_POSITION, visibility: "visible"};
       var INVISIBLE_CSS = {left: OO.CSS.INVISIBLE_POSITION, visibility: "hidden"};
+
+      var TIME_UPDATER_INTERVAL = 500;
 
       /**
        * Helper function to make functions private to GoogleIMA variable for consistency
@@ -550,11 +553,24 @@ require("../html5-common/js/utils/utils.js");
       this.getCurrentTime = function()
       {
         var currentTime = 0;
-        if (_IMAAdsManager && this.currentIMAAd)
+        //IMA provides values for getRemainingTime which can result in negative current times
+        //or current times which are greater than duration.
+        //We will check these boundaries so we will not report these unexpected current times
+        if (_IMAAdsManager && this.currentIMAAd && _IMAAdsManager.getRemainingTime() >= 0 && _IMAAdsManager.getRemainingTime() <= this.currentIMAAd.getDuration())
         {
           currentTime = this.currentIMAAd.getDuration() - _IMAAdsManager.getRemainingTime();
         }
         return currentTime;
+      };
+
+      this.getDuration = function()
+      {
+        var duration = 0;
+        if (this.currentIMAAd)
+        {
+          duration = this.currentIMAAd.getDuration();
+        }
+        return duration;
       };
 
       /**
@@ -1087,7 +1103,8 @@ require("../html5-common/js/utils/utils.js");
           eventType.THIRD_QUARTILE,
           eventType.VOLUME_CHANGED,
           eventType.VOLUME_MUTED,
-          eventType.USER_CLOSE];
+          eventType.USER_CLOSE,
+          eventType.DURATION_CHANGE];
 
         var addIMAEventListener =
           function(e)
@@ -1209,10 +1226,31 @@ require("../html5-common/js/utils/utils.js");
             this.currentIMAAd = ad;
             _onSizeChanged();
             _tryStartAd();
+            if (this.videoControllerWrapper)
+            {
+              this.videoControllerWrapper.raisePlayEvent();
+              this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
+              _startTimeUpdater();
+            }
+            break;
+          case eventType.RESUMED:
+            if (this.videoControllerWrapper)
+            {
+              this.videoControllerWrapper.raisePlayEvent();
+            }
             break;
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
+            if (this.videoControllerWrapper)
+            {
+              _stopTimeUpdater();
+              //IMA provides values which can result in negative current times or current times which are greater than duration.
+              //For good user experience, we will provide the duration as the current time here if the event type is COMPLETE
+              var currentTime = adEvent.type === eventType.COMPLETE ? this.getDuration() : this.getCurrentTime();
+              this.videoControllerWrapper.raiseTimeUpdate(currentTime, this.getDuration());
+              this.videoControllerWrapper.raiseEndedEvent();
+            }
             //change this to end ad
             _endCurrentAd(false);
             _linearAdIsPlaying = false;
@@ -1226,6 +1264,12 @@ require("../html5-common/js/utils/utils.js");
               {
                 _IMA_SDK_resumeMainContent();
               }, this), 100);
+            }
+            break;
+          case eventType.PAUSED:
+            if (this.videoControllerWrapper)
+            {
+              this.videoControllerWrapper.raisePauseEvent();
             }
             break;
           case eventType.ALL_ADS_COMPLETED:
@@ -1249,35 +1293,55 @@ require("../html5-common/js/utils/utils.js");
           case eventType.THIRD_QUARTILE:
             _onAdMetrics(adEvent);
             break;
+          case eventType.VOLUME_CHANGED:
+          case eventType.VOLUME_MUTED:
+            if (this.videoControllerWrapper)
+            {
+              this.videoControllerWrapper.raiseVolumeEvent();
+            }
+            break;
+          case eventType.DURATION_CHANGE:
+            if (this.videoControllerWrapper)
+            {
+              this.videoControllerWrapper.raiseDurationChange(this.getCurrentTime(), this.getDuration());
+            }
+            break;
           default:
             break;
         }
+      });
 
-        if (this.videoControllerWrapper)
+      /**
+       * Starts a timer that will provide an update to the video controller wrapper of the ad's current time.
+       * We use a timer because IMA does not provide us with a time update event.
+       * @private
+       * @method GoogleIMA#_startTimeUpdater
+       */
+      var _startTimeUpdater = privateMember(function()
+      {
+        _stopTimeUpdater();
+        _timeUpdater = setInterval(_.bind(function()
         {
-          switch (adEvent.type)
+          if(_linearAdIsPlaying)
           {
-            case eventType.STARTED:
-            case eventType.RESUMED:
-              this.videoControllerWrapper.raisePlayEvent();
-              break;
-            case eventType.USER_CLOSE:
-            case eventType.SKIPPED:
-            case eventType.COMPLETE:
-              this.videoControllerWrapper.raiseEndedEvent();
-              break;
-            case eventType.PAUSED:
-              this.videoControllerWrapper.raisePauseEvent();
-              break;
-              break;
-            case eventType.VOLUME_CHANGED:
-            case eventType.VOLUME_MUTED:
-              this.videoControllerWrapper.raiseVolumeEvent();
-              break;
-            default:
-              break;
+            this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
           }
-        }
+          else
+          {
+            _stopTimeUpdater();
+          }
+        }, this), TIME_UPDATER_INTERVAL);
+      });
+
+      /**
+       * Stops the timer that was started via _startTimeUpdater.
+       * @private
+       * @method GoogleIMA#_stopTimeUpdater
+       */
+      var _stopTimeUpdater = privateMember(function()
+      {
+        clearInterval(_timeUpdater);
+        _timeUpdater = null;
       });
 
       /**
@@ -1793,6 +1857,25 @@ require("../html5-common/js/utils/utils.js");
       var volume = _ima.getVolume();
       this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
     };
+
+    this.raiseTimeUpdate = function(currentTime, duration)
+    {
+      raisePlayhead(this.controller.EVENTS.TIME_UPDATE, currentTime, duration);
+    };
+
+    this.raiseDurationChange = function(currentTime, duration)
+    {
+      raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, currentTime, duration);
+    };
+
+    var raisePlayhead = _.bind(function(eventname, currentTime, duration)
+    {
+      this.controller.notify(eventname,
+        { "currentTime" : currentTime,
+          "duration" : duration,
+          "buffer" : 0,
+          "seekRange" : { "begin" : 0, "end" : 0 } });
+    }, this);
   };
 
   OO.Video.plugin(new GoogleIMAVideoFactory());
