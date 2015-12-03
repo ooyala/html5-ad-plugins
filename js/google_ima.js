@@ -425,7 +425,9 @@ require("../html5-common/js/utils/utils.js");
           //displaying it, so just notify AMC that we are showing an overlay.
           else
           {
-            _amc.notifyNonlinearAdStarted(this.currentAMCAdPod.id);
+            // raise WILL_PLAY_NONLINEAR_AD event and alert AMC and player that a nonlinear ad is started.
+            // Nonlinear ad is rendered by IMA.
+            _amc.sendURLToLoadAndPlayNonLinearAd(this.currentAMCAdPod, this.currentAMCAdPod.id, null);
           }
         }
       };
