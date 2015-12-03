@@ -7,6 +7,9 @@ fake_amc = function() {
   this.EVENTS = {
     INITIAL_PLAY_REQUESTED : "initialPlayRequested"
   };
+  this.AD_SETTINGS  = {
+
+  };
   this.ADTYPE = {
     LINEAR_OVERLAY : "linearOverlay",
     NONLINEAR_OVERLAY : "nonlinearOverlay",
@@ -44,4 +47,8 @@ fake_amc = function() {
   this.notifyLinearAdEnded = function() {};
   this.notifyNonlinearAdStarted = function() {};
   this.notifyNonlinearAdEnded = function() {};
+
+  this.adManagerDoneControllingAds = function() {};
+  this.removePlayerListener = function() {};
+  this.adManagerSettings = {};
 };
