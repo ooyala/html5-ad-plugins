@@ -90,7 +90,7 @@ require("../html5-common/js/utils/utils.js");
         _amc = amcIn;
 
         var ext = _amc.platform.DEV ? '_debug.js' : '.js';
-        remoteModuleJs = "//imasdk.googleapis.com/js/sdkloader/ima3" + ext;
+        var remoteModuleJs = "//imasdk.googleapis.com/js/sdkloader/ima3" + ext;
         _resetVars();
         _createAMCListeners();
         if (!this.runningUnitTests)
@@ -170,13 +170,16 @@ require("../html5-common/js/utils/utils.js");
        */
       var _removeAMCListeners = privateMember(function()
       {
-        _amc.removePlayerListener(_amc.EVENTS.INITIAL_PLAY_REQUESTED, _onInitialPlayRequested);
-        _amc.removePlayerListener(_amc.EVENTS.CONTENT_COMPLETED, _onContentCompleted);
-        _amc.removePlayerListener(_amc.EVENTS.PLAYHEAD_TIME_CHANGED, _onPlayheadTimeChanged);
-        _amc.removePlayerListener(_amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
-        _amc.removePlayerListener(_amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
-        _amc.removePlayerListener(_amc.EVENTS.REPLAY_REQUESTED, _onReplayRequested);
-        _amc.removePlayerListener(_amc.EVENTS.FULL_SCREEN_CHANGED, _onFullscreenChanged);
+        if (_amc)
+        {
+          _amc.removePlayerListener(_amc.EVENTS.INITIAL_PLAY_REQUESTED, _onInitialPlayRequested);
+          _amc.removePlayerListener(_amc.EVENTS.CONTENT_COMPLETED, _onContentCompleted);
+          _amc.removePlayerListener(_amc.EVENTS.PLAYHEAD_TIME_CHANGED, _onPlayheadTimeChanged);
+          _amc.removePlayerListener(_amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
+          _amc.removePlayerListener(_amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+          _amc.removePlayerListener(_amc.EVENTS.REPLAY_REQUESTED, _onReplayRequested);
+          _amc.removePlayerListener(_amc.EVENTS.FULL_SCREEN_CHANGED, _onFullscreenChanged);
+        }
       });
 
       /**
@@ -1327,7 +1330,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _tryUndoSetupForAdRules = privateMember(function()
       {
-        if (_usingAdRules)
+        if (_usingAdRules && _amc)
         {
           _amc.adManagerDoneControllingAds(this.name);
         }

@@ -5,7 +5,6 @@
 
 //stubs
 OO.log = function() {};
-fake_amc = null;
 
 describe('ad_manager_freewheel', function() {
   var amc,fw;
@@ -120,7 +119,7 @@ describe('ad_manager_freewheel', function() {
   it('Init: fake ad is added to timeline', function(){
     initialize();
     expect(amc.timeline.length).to.be(1);
-    expect(amc.timeline[0].ad.type == "adRequest");
+    expect(amc.timeline[0].ad.type).to.be("adRequest");
   });
 
   it('Init: fw context is set up', function(){
