@@ -48,6 +48,7 @@ fake_amc = function() {
   this.notifyNonlinearAdStarted = function() {};
   this.notifyNonlinearAdEnded = function() {};
 
+  this.adManagerWillControlAds = function() {};
   this.adManagerDoneControllingAds = function() {};
   this.removePlayerListener = function() {};
   this.adManagerSettings = {};

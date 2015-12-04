@@ -97,6 +97,10 @@ require("../html5-common/js/utils/utils.js");
         {
           _amc.loadAdModule(this.name, remoteModuleJs, _onSdkLoaded);
         }
+        else
+        {
+          _onSdkLoaded(true);
+        }
       };
 
       /**
@@ -869,7 +873,6 @@ require("../html5-common/js/utils/utils.js");
       {
         _adModuleJsReady = success;
         OO.log("onSdkLoaded!");
-
         // [PBK-639] Corner case where Google's SDK 200s but isn't properly
         // loaded. Better safe than sorry..
         if (!success || !_isGoogleSDKValid())
