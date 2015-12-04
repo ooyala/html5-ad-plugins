@@ -742,7 +742,12 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#fw_onSlotStarted
      */
     var fw_onSlotStarted = function() {
-      amc.ui.adVideoElement.removeAttr('controls');
+      // adVideoElement may be null for overlays
+      if (currentPlayingSlot &&
+          currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
+          amc && amc.ui && amc.ui.adVideoElement) {
+        amc.ui.adVideoElement.removeAttr('controls');
+      }
 
       // cancel timeout on load
       if (_.isFunction(slotStartedCallbacks[currentPlayingSlot.getCustomId()])) {
@@ -761,7 +766,13 @@ OO.Ads.manager(function(_, $) {
     var fw_onSlotEnded = function(event) {
       // Disable controls on the video element.  Freewheel seems to be turning it on
       // TODO: inspect event for playback success or errors
-      amc.ui.adVideoElement.attr('controls',false);
+      
+      // adVideoElement may be null for overlays
+      if (currentPlayingSlot &&
+          currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
+          amc && amc.ui && amc.ui.adVideoElement) {
+        amc.ui.adVideoElement.attr('controls',false);
+      }
 
       if (currentPlayingSlot &&
           currentPlayingSlot.getTimePositionClass() == tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
