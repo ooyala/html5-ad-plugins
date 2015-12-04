@@ -1326,17 +1326,21 @@ require("../html5-common/js/utils/utils.js");
       var _startTimeUpdater = privateMember(function()
       {
         _stopTimeUpdater();
-        _timeUpdater = setInterval(_.bind(function()
+        //starting an interval causes unit tests to throw a max call stack exceeded error
+        if (!this.runningUnitTests)
         {
-          if(_linearAdIsPlaying)
+          _timeUpdater = setInterval(_.bind(function()
           {
-            this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
-          }
-          else
-          {
-            _stopTimeUpdater();
-          }
-        }, this), TIME_UPDATER_INTERVAL);
+            if(_linearAdIsPlaying)
+            {
+              this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
+            }
+            else
+            {
+              _stopTimeUpdater();
+            }
+          }, this), TIME_UPDATER_INTERVAL);
+        }
       });
 
       /**
