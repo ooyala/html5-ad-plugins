@@ -1,37 +1,43 @@
 google = {
-  ima : {
-    AdDisplayContainer : function() {
+  ima: {
+    adManagerInstance: null,   //for unit test convenience
+    AdDisplayContainer: function() {
       this.initialize = function() {};
       this.destroy = function() {};
     },
-    settings : {
-      setPlayerVersion : function() {},
-      setPlayerType : function() {}
+    settings: {
+      setPlayerVersion: function() {},
+      setPlayerType: function() {}
     },
-    AdsManagerLoadedEvent : {
-      Type : {
-        ADS_MANAGER_LOADED : "adsManagerLoaded"
+    AdsManagerLoadedEvent: {
+      Type: {
+        ADS_MANAGER_LOADED: "adsManagerLoaded"
       }
     },
-    AdErrorEvent : {
-      Type : {}
+    AdErrorEvent: {
+      Type: {}
     },
-    AdsLoader : function() {
+    AdsLoader: function() {
       var callbacks = {};
       var adsManagerLoadedEvent = {
-        getAdsManager : function() {
-          return {
-            getCuePoints: function () {
-              return [];
-            },
-            addEventListener: function () {
-
-            },
-            stop: function () {
-            },
-            destroy: function () {
-            }
-          };
+        getAdsManager: function() {
+          if (!google.ima.adManagerInstance) {
+            google.ima.adManagerInstance = {
+              init: function() {},
+              getCuePoints: function() {
+                return [];
+              },
+              addEventListener: function() {},
+              start: function() {},
+              stop: function () {},
+              resume: function() {},
+              pause: function() {},
+              destroy: function() {
+                google.ima.adManagerInstance = null;
+              }
+            };
+          }
+          return google.ima.adManagerInstance;
         }
       };
       this.addEventListener = function(event, callback) {
@@ -45,10 +51,11 @@ google = {
       };
       this.destroy = function() {};
     },
-    AdsRequest : function() {},
-    AdsRenderingSettings : function() {},
-    AdEvent : {
-      Type : {}
-    }
+    AdsRequest: function() {},
+    AdsRenderingSettings: function() {},
+    AdEvent: {
+      Type: {}
+    },
+    ViewMode: {}
   }
 };
