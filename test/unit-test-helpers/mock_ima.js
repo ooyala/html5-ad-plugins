@@ -1,6 +1,41 @@
 google = {
   ima: {
     adManagerInstance: null,   //for unit test convenience
+    linearAds: true,          //for unit test coonvenience
+    Ad : function() {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
+      this.getAdId = function() {
+        return "blah";
+      };
+      this.getAdPodInfo = function() {
+        return {
+          getTotalAds: function () {
+            return 1;
+          },
+          getAdPosition: function () {
+            return 1;
+          }
+        };
+      };
+      //getAdSystem,
+      //getCompanionAds,
+      //getContentType,
+      //getDescription,
+      this.getDuration = function() {
+        return -1;
+      };
+      //getHeight,
+      //getMinSuggestedDuration,
+      //getTitle,
+      //getTraffickingParameters,
+      //getTraffickingParametersString,
+      //getUiElements,
+      //getWidth,
+      //getWrapperAdIds,
+      //getWrapperAdSystems,
+      this.isLinear = function() {
+        return google.ima.linearAds;
+      };
+    },
     AdDisplayContainer: function() {
       this.initialize = function() {};
       this.destroy = function() {};
@@ -22,20 +57,45 @@ google = {
       var adsManagerLoadedEvent = {
         getAdsManager: function() {
           if (!google.ima.adManagerInstance) {
-            google.ima.adManagerInstance = {
-              init: function() {},
-              getCuePoints: function() {
+            var mockAdManager = function() {
+              var amCallbacks = {};
+              var currentAd = null;
+              this.init = function() {
+                if (!currentAd) {
+                  currentAd = new google.ima.Ad();
+                }
+              };
+              this.getCuePoints = function() {
                 return [];
-              },
-              addEventListener: function() {},
-              start: function() {},
-              stop: function () {},
-              resume: function() {},
-              pause: function() {},
-              destroy: function() {
+              };
+              this.addEventListener = function(event, callback) {
+                amCallbacks[event] = callback;
+              };
+              this.start = function() {};
+              this.stop = function() {};
+              this.resume = function() {};
+              this.pause = function() {};
+              this.resize = function() {};
+              this.getRemainingTime = function() {};
+              this.destroy = function() {
                 google.ima.adManagerInstance = null;
-              }
+                currentAd = null;
+              };
+              this.publishEvent = function(event) {      //convenience function for unit tests
+                if (typeof amCallbacks[event] === "function") {
+                  amCallbacks[event]({
+                    type : event,
+                    getAd : function() {
+                      return currentAd;
+                    }
+                  });
+                }
+              };
+              this.getCurrentAd = function() {        //convenience function for unit tests
+                return currentAd;
+              };
             };
+            google.ima.adManagerInstance = new mockAdManager();
           }
           return google.ima.adManagerInstance;
         }
@@ -45,7 +105,7 @@ google = {
       };
       this.contentComplete = function() {};
       this.requestAds = function() {
-        if (callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED]) {
+        if (typeof callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED] === "function") {
           callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED](adsManagerLoadedEvent);
         }
       };
@@ -54,7 +114,22 @@ google = {
     AdsRequest: function() {},
     AdsRenderingSettings: function() {},
     AdEvent: {
-      Type: {}
+      Type: {
+        ALL_ADS_COMPLETED: "allAdsCompleted",
+        COMPLETE: "complete",
+        SKIPPED: "skipped",
+        FIRST_QUARTILE: "firstQuartile",
+        LOADED: "loaded",
+        MIDPOINT: "midpoint",
+        PAUSED: "paused",
+        RESUMED: "resumed",
+        STARTED: "started",
+        THIRD_QUARTILE: "thirdQuartile",
+        VOLUME_CHANGED: "volumeChanged",
+        VOLUME_MUTED: "volumeMuted",
+        USER_CLOSE: "userClose",
+        DURATION_CHANGE: "durationChange"
+      }
     },
     ViewMode: {}
   }
