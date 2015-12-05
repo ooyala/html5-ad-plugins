@@ -380,9 +380,9 @@ OO.Ads.manager(function(_, $) {
             streamData = this._extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
           }
           if (streamData) {
-            streams[encoding] = streamData;
-            if (ad.streamUrl == null || encoding == "mp4") {
-              ad.streamUrl = streams[encoding];
+            streams[videoEncodingsSupported[encoding]] = streamData;
+            if (ad.streamUrl == null || videoEncodingsSupported[encoding] == OO.VIDEO.ENCODING.MP4) {
+              ad.streamUrl = streams[videoEncodingsSupported[encoding]];
             }
           }
         }
