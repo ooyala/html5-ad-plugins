@@ -369,16 +369,14 @@ OO.Ads.manager(function(_, $) {
 
       // Save the stream data for use by VideoController
       var streams = {};
-      var streamData = null;
       var linearAd = ad.data.linear;
       if (linearAd && linearAd.mediaFiles) {
         var vastStreams = linearAd.mediaFiles;
         var videoEncodingsSupported = OO.VIDEO.ENCODING;
+        var streamData = null;
         for (var encoding in videoEncodingsSupported) {
           streamData = null;
-          if (videoEncodingsSupported.hasOwnProperty(encoding)) {
-            streamData = this._extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
-          }
+          streamData = this._extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
           if (streamData) {
             streams[videoEncodingsSupported[encoding]] = streamData;
             if (ad.streamUrl == null || videoEncodingsSupported[encoding] == OO.VIDEO.ENCODING.MP4) {
@@ -387,9 +385,13 @@ OO.Ads.manager(function(_, $) {
           }
         }
       }
-      timeline.push(new this.amc.Ad({position:positionSeconds, duration:duration, adManager:this.name,
-                                     ad:ad, adType:type, streams: streams}));
-      this.amc.appendToTimeline(timeline);
+      if (ad.streamUrl != null) {
+        timeline.push(new this.amc.Ad({
+          position: positionSeconds, duration: duration, adManager: this.name,
+          ad: ad, adType: type, streams: streams
+        }));
+        this.amc.appendToTimeline(timeline);
+      }
     }, this);
 
     /**
