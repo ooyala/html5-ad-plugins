@@ -272,17 +272,9 @@ OO.Ads.manager(function(_, $) {
     this.playAd = function(adWrapper) {
       // When the ad is done, trigger callback
       var ui = this.amc.ui;
-      var streamUrl;
-      if (adWrapper.ad && adWrapper.ad.streamUrl) {
-        streamUrl = adWrapper.ad.streamUrl;
-      }
-      else if (adWrapper.streamUrl) {
-        streamUrl = adWrapper.streamUrl;
-      }
 
       if (adWrapper.isLinear) {
         this.amc.notifyPodStarted(adWrapper.id, 1);
-        var innerWrapper = this.amc.ui.videoWrapper;
         adCompletedCallback = _.bind(function(amc, adId) {
             amc.notifyLinearAdEnded(adId);
             amc.notifyPodEnded(adId);
@@ -293,12 +285,19 @@ OO.Ads.manager(function(_, $) {
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
             duration: adWrapper.ad.durationInMilliseconds/1000,
-            hasClickUrl: true,
+            hasClickUrl: hasClickUrl,
             indexInPod: 1,
             skippable: false
           });
       }
       else {
+        var streamUrl;
+        if (adWrapper.ad && adWrapper.ad.streamUrl) {
+          streamUrl = adWrapper.ad.streamUrl;
+        }
+        else if (adWrapper.streamUrl) {
+          streamUrl = adWrapper.streamUrl;
+        }
         this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
         this.checkCompanionAds(adWrapper.ad);
       }
@@ -375,18 +374,16 @@ OO.Ads.manager(function(_, $) {
           streamData = this._extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
           if (streamData) {
             streams[videoEncodingsSupported[encoding]] = streamData;
-            if (ad.streamUrl == null || videoEncodingsSupported[encoding] == OO.VIDEO.ENCODING.MP4) {
-              ad.streamUrl = streams[videoEncodingsSupported[encoding]];
-            }
           }
         }
       }
-      if (ad.streamUrl != null) {
+      if (ad.streamUrl != null || (type == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(streams))) {
         timeline.push(new this.amc.Ad({
           position: positionSeconds, duration: duration, adManager: this.name,
           ad: ad, adType: type, streams: streams
         }));
         this.amc.appendToTimeline(timeline);
+        ad.streams = streams;
       }
     }, this);
 
@@ -589,7 +586,7 @@ OO.Ads.manager(function(_, $) {
       _.extend(this.vastAdUnit.data, firstLinearAd);
       this.vastAdUnit.data.tracking = firstLinearAd.linear.tracking;
       addToTimeline(this.vastAdUnit, adLoaded);
-      if (this.vastAdUnit.streamUrl == null) {
+      if (_.isEmpty(this.vastAdUnit.streams)) {
         // No Playable stream, report error.
         OO.log("Can not find playable stream in vast result", this.inlineAd);
         return false;
