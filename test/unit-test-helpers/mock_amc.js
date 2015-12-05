@@ -4,8 +4,14 @@ fake_amc = function() {
   this.addPlayerListener = function(event, callback){
     this.callbacks[event] = callback;
   };
+  this.publishPlayerEvent = function(event){    //convenience method for unit tests
+    if(typeof this.callbacks[event] === "function"){
+      this.callbacks[event].apply(this, arguments);
+    }
+  };
   this.EVENTS = {
-    INITIAL_PLAY_REQUESTED : "initialPlayRequested"
+    INITIAL_PLAY_REQUESTED : "initialPlayRequested",
+    PLAYHEAD_TIME_CHANGED : "playheadTimeChanged"
   };
   this.AD_SETTINGS  = {
 
