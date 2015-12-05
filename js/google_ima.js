@@ -1178,7 +1178,7 @@ require("../html5-common/js/utils/utils.js");
       /**
        * Callback from IMA SDK for ad tracking events.
        * @private
-       * @method GoogleIMA#_IMA_SDK_resumeMainContent
+       * @method GoogleIMA#_IMA_SDK_onAdEvent
        */
       var _IMA_SDK_onAdEvent = privateMember(function(adEvent)
       {

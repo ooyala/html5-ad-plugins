@@ -1,7 +1,7 @@
 google = {
   ima: {
     adManagerInstance: null,   //for unit test convenience
-    linearAds: true,          //for unit test coonvenience
+    linearAds: true,          //for unit test convenience
     Ad : function() {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
       this.getAdId = function() {
         return "blah";
@@ -52,7 +52,7 @@ google = {
     AdErrorEvent: {
       Type: {}
     },
-    AdsLoader: function() {
+    AdsLoader: function(container) {
       var callbacks = {};
       var adsManagerLoadedEvent = {
         getAdsManager: function() {
@@ -105,6 +105,7 @@ google = {
       };
       this.contentComplete = function() {};
       this.requestAds = function() {
+        //mock executes this callback immediately. Typically this does not occur in real world situations
         if (typeof callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED] === "function") {
           callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED](adsManagerLoadedEvent);
         }
@@ -128,7 +129,11 @@ google = {
         VOLUME_CHANGED: "volumeChanged",
         VOLUME_MUTED: "volumeMuted",
         USER_CLOSE: "userClose",
-        DURATION_CHANGE: "durationChange"
+        DURATION_CHANGE: "durationChange",
+        CLICK: "click",
+        AD_ERROR: "adError",
+        CONTENT_PAUSE_REQUESTED: "contentPauseRequested",
+        CONTENT_RESUME_REQUESTED: "contentResumeRequested"
       }
     },
     ViewMode: {}
