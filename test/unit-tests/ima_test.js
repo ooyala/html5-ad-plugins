@@ -59,11 +59,11 @@ describe('ad_manager_ima', function() {
     ima.initialize(amc, playerId);
     ima.registerUi();
     var ad = {
-      tag_url : "https://blah",
-      position_type : adRules ? AD_RULES_POSITION_TYPE : NON_AD_RULES_POSITION_TYPE
+      tag_url: "https://blah",
+      position_type: adRules ? AD_RULES_POSITION_TYPE : NON_AD_RULES_POSITION_TYPE
     };
     var content = {
-      all_ads : [ad]
+      all_ads: [ad]
     };
     ima.loadMetadata(content, {}, {});
     amc.timeline = ima.buildTimeline();
@@ -212,6 +212,37 @@ describe('ad_manager_ima', function() {
     expect(amc.timeline[0].ad.type).to.be("adRequest");
   });
 
+  it('Init, Ad Rules: fake ad started notification is received by amc', function(){
+    var notified = false;
+    amc.notifyPodStarted = function(adId) {
+      //current placeholder id is undefined, update this when this changes
+      if(typeof adId === "undefined") {
+        notified = true;
+      }
+    };
+    initialize(true);
+    play();
+    ima.playAd(amc.timeline[0]);
+    expect(notified).to.be(true);
+  });
+
+  it('Init, Ad Rules: fake ad ends properly when IMA ads manager is initialized and there is no preroll', function(){
+    var notified = false;
+    amc.notifyPodEnded = function(adId) {
+      //current placeholder id is undefined, update this when this changes
+      if(typeof adId === "undefined") {
+        notified = true;
+      }
+    };
+    initialize(true);
+    //This line mimics the ad pod having been set by the time the ad request success returns
+    //This is a hack, will revisit in the future, but does properly test to see that the fake ad
+    //ends when an ad request is successful
+    ima.currentAMCAdPod = amc.timeline[0];
+    play();
+    expect(notified).to.be(true);
+  });
+
   // Non-Ad Rules
   it('Init, Non-Ad Rules: ad is added to timeline for non-ad rules ads', function(){
     initialize(false);
@@ -226,8 +257,106 @@ describe('ad_manager_ima', function() {
     expect(ima.adsRequested).to.be(true);
   });
 
-  // IMA Event tests
-  it('IMA Event: IMA STARTED event notifies amc of linear ad start for a linear ad', function(){
+  // AMC integration/IMA Event tests
+  it('AMC Integration, IMA Event: IMA CLICK event notifies amc of an ad click', function(){
+    var notified = false;
+    initAndPlay(true, vci);
+    amc.adsClicked = function() {
+      notified = true;
+    };
+    ima.playAd({
+      ad : {}
+    });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.CLICK);
+    expect(notified).to.be(true);
+  });
+
+  it('AMC Integration, IMA Event: IMA AD_ERROR gives back control and ends current ad and ad pod', function(){
+    var doneControllingAdsNotified = false;
+    var linearAdEndedNotified = false;
+    var podEndedNotified = false;
+    initAndPlay(true, vci);
+    amc.notifyLinearAdEnded = function() {
+      linearAdEndedNotified = true;
+    };
+
+    amc.notifyPodEnded = function() {
+      podEndedNotified = true;
+    };
+
+    amc.adManagerDoneControllingAds = function(adManagerName) {
+      if (adManagerName === name) {
+        doneControllingAdsNotified = true;
+      }
+    };
+    ima.playAd({
+      ad : {}
+    });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(google.ima.AdEvent.Type.AD_ERROR);
+    expect(linearAdEndedNotified).to.be(true);
+    expect(podEndedNotified).to.be(true);
+    expect(doneControllingAdsNotified).to.be(true);
+  });
+
+  it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc of a forced ad playback with streams set if a preroll', function(){
+    var notified = false;
+    initAndPlay(true, vci);
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      if(adManager === name && streams["ima"]) {
+        notified = true;
+      }
+    };
+    ima.playAd({
+      ad : {}
+    });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED);
+    expect(notified).to.be(false);
+  });
+
+  it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED notifies amc of a forced ad playback with streams set if not a preroll', function(){
+    var notified = false;
+    initAndPlay(true, vci);
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      if(adManager === name && streams["ima"] === "") {
+        notified = true;
+      }
+    };
+    amc.publishPlayerEvent(amc.EVENTS.PLAYHEAD_TIME_CHANGED, 10, 20); //event, playhead time, duration
+    ima.playAd({
+      ad : {}
+    });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED);
+    expect(notified).to.be(true);
+  });
+
+  it('AMC Integration, IMA Event: IMA CONTENT_RESUME_REQUESTED notifies amc of a forced ad playback with streams set if not a preroll', function(){
+    var linearAdEndedNotified = false;
+    var podEndedNotified = false;
+    initAndPlay(true, vci);
+    amc.notifyLinearAdEnded = function() {
+      linearAdEndedNotified = true;
+    };
+
+    amc.notifyPodEnded = function() {
+      podEndedNotified = true;
+    };
+
+    ima.playAd({
+      ad : {}
+    });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED);
+    expect(linearAdEndedNotified).to.be(true);
+    expect(podEndedNotified).to.be(true);
+  });
+
+  it('AMC Integration, IMA Event: IMA STARTED event notifies amc of linear ad start for a linear ad', function(){
     var notified = false;
     initAndPlay(true, vci);
     amc.notifyLinearAdStarted = function() {
@@ -241,7 +370,7 @@ describe('ad_manager_ima', function() {
     expect(notified).to.be(true);
   });
 
-  it('IMA Event: IMA COMPLETE event notifies amc of linear ad end for a linear ad', function(){
+  it('AMC Integration, IMA Event: IMA COMPLETE event notifies amc of linear ad end for a linear ad', function(){
     var notified = false;
     initAndPlay(true, vci);
     amc.notifyLinearAdEnded = function() {
@@ -256,7 +385,7 @@ describe('ad_manager_ima', function() {
     expect(notified).to.be(true);
   });
 
-  it('IMA Event: IMA USER_CLOSE event notifies amc of linear ad end for a linear ad', function(){
+  it('AMC Integration, IMA Event: IMA USER_CLOSE event notifies amc of linear ad end for a linear ad', function(){
     var notified = false;
     initAndPlay(true, vci);
     amc.notifyLinearAdEnded = function() {
@@ -271,7 +400,7 @@ describe('ad_manager_ima', function() {
     expect(notified).to.be(true);
   });
 
-  it('IMA Event: IMA SKIPPED event notifies amc of linear ad end for a linear ad', function(){
+  it('AMC Integration, IMA Event: IMA SKIPPED event notifies amc of linear ad end for a linear ad', function(){
     var notified = false;
     initAndPlay(true, vci);
     amc.notifyLinearAdEnded = function() {
@@ -286,7 +415,7 @@ describe('ad_manager_ima', function() {
     expect(notified).to.be(true);
   });
 
-  it('IMA Event: IMA COMPLETE event notifies amc of ad pod end with pod size 1', function(){
+  it('AMC Integration, IMA Event: IMA COMPLETE event notifies amc of ad pod end with pod size 1', function(){
     var notified = false;
     initAndPlay(true, vci);
     amc.notifyPodEnded = function() {
@@ -302,7 +431,7 @@ describe('ad_manager_ima', function() {
     expect(notified).to.be(true);
   });
 
-  it('IMA Event: IMA COMPLETE events notifies amc of ad pod end with pod size 2', function(){
+  it('AMC Integration, IMA Event: IMA COMPLETE events notifies amc of ad pod end with pod size 2', function(){
     var notified = false;
     initAndPlay(true, vci);
     amc.notifyPodEnded = function() {
@@ -333,7 +462,7 @@ describe('ad_manager_ima', function() {
     expect(notified).to.be(true);
   });
 
-  it('IMA Event, Ad Rules: IMA ALL_ADS_COMPLETED gives up control for ad rules ads', function(){
+  it('AMC Integration, IMA Event, Ad Rules: IMA ALL_ADS_COMPLETED gives up control for ad rules ads', function(){
     var notified = false;
     initAndPlay(true, vci);
     amc.adManagerDoneControllingAds = function(adManagerName) {
@@ -349,6 +478,25 @@ describe('ad_manager_ima', function() {
     am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
     am.publishEvent(google.ima.AdEvent.Type.ALL_ADS_COMPLETED);
     expect(notified).to.be(true);
+  });
+
+  it('AMC Integration: can cancel ad', function(){
+    var notified = false;
+    initAndPlay(true, vci);
+    amc.notifyLinearAdEnded = function() {
+      notified = true;
+    };
+    var id = "blah";
+    var myAd = {
+      id : id
+    };
+    ima.playAd({
+      ad : myAd,
+      id : id
+    });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    ima.cancelAd(myAd);
   });
 
   // TODO: Overlay tests once we implement notification to amc of nonLinearAdStarted/Ended
