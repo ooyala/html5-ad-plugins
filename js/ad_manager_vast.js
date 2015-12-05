@@ -369,16 +369,24 @@ OO.Ads.manager(function(_, $) {
 
       // Save the stream data for use by VideoController
       var streams = {};
+      var streamData = null;
       var linearAd = ad.data.linear;
       if (linearAd && linearAd.mediaFiles) {
         var vastStreams = linearAd.mediaFiles;
-        streams["webm"] = this._extractStreamForType(linearAd.mediaFiles, "webm");
-        if (ad.streamUrl == null) {
-          streams["mp4"] = this._extractStreamForType(linearAd.mediaFiles, "mp4");
-          OO.log("extract m3u8 stream here"); // TODO
+        var videoEncodingsSupported = OO.VIDEO.ENCODING;
+        for (var encoding in videoEncodingsSupported) {
+          streamData = null;
+          if (videoEncodingsSupported.hasOwnProperty(encoding)) {
+            streamData = this._extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
+          }
+          if (streamData) {
+            streams[encoding] = streamData;
+            if (ad.streamUrl == null || encoding == "mp4") {
+              ad.streamUrl = streams[encoding];
+            }
+          }
         }
       }
-
       timeline.push(new this.amc.Ad({position:positionSeconds, duration:duration, adManager:this.name,
                                      ad:ad, adType:type, streams: streams}));
       this.amc.appendToTimeline(timeline);
@@ -559,17 +567,8 @@ OO.Ads.manager(function(_, $) {
      * @returns {string} The creative url if it finds one, otherwise null.
      */
     this._extractStreamForType = function(streams, type) {
-      // TODO, also cap on bitrate and width/height if there is any device restriction.
       var filter = [];
-      switch (type) {
-        case "webm":
-          filter.push("video/webm");
-           break;
-        case "mp4":
-          filter.push("video/mp4");
-          if (OO.isIos) { filter.push("video/quicktime"); }
-          break;
-      }
+      filter.push("video/" +type);
       var stream = _.find(streams, function(v) { return (filter.indexOf(v.type) >= 0); }, this);
       return stream ? stream.url : null;
     };
@@ -589,24 +588,14 @@ OO.Ads.manager(function(_, $) {
       var maxMedia = _.max(streams, function(v) { return parseInt(v.bitrate, 10); });
       this.vastAdUnit.maxBitrateStream = maxMedia && maxMedia.url;
       this.vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(firstLinearAd.linear.Duration) * 1000;
-      if (OO.supportedVideoTypes.webm) {
-        this.vastAdUnit.streamUrl = this._extractStreamForType(streams, "webm");
-      }
-      if (this.vastAdUnit.streamUrl == null && OO.supportedVideoTypes.mp4) {
-        this.vastAdUnit.streamUrl = this._extractStreamForType(streams, "mp4");
-      }
-      if (this.vastAdUnit.streamUrl == null && OO.supportedVideoTypes.m3u8) {
-        OO.log("extract m3u8 stream here");
-      }
       _.extend(this.vastAdUnit.data, firstLinearAd);
       this.vastAdUnit.data.tracking = firstLinearAd.linear.tracking;
-
+      addToTimeline(this.vastAdUnit, adLoaded);
       if (this.vastAdUnit.streamUrl == null) {
         // No Playable stream, report error.
         OO.log("Can not find playable stream in vast result", this.inlineAd);
         return false;
       }
-      addToTimeline(this.vastAdUnit, adLoaded);
       return true;
     };
 
