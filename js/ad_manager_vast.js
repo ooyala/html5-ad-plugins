@@ -280,10 +280,6 @@ OO.Ads.manager(function(_, $) {
         streamUrl = adWrapper.streamUrl;
       }
 
-      //There is a caching bug with chrome that this will fix.
-      if (OO.isChrome) {
-        streamUrl = streamUrl + (/\?/.test(streamUrl) ? "&" : "?") + "_=" + OO.getRandomString();
-      }
       if (adWrapper.isLinear) {
         this.amc.notifyPodStarted(adWrapper.id, 1);
         var innerWrapper = this.amc.ui.videoWrapper;
