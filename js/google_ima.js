@@ -1160,7 +1160,8 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} ad The Ad metadata.
        */
       var _checkCompanionAds = privateMember(function(ad) {
-        if (!ad) {
+        // companionAd slots are required
+        if (!ad || !_amc.pageSettings.companionAd || !_amc.pageSettings.companionAd.slots) {
           return;
         }
         // Page level setting with format:
@@ -1172,11 +1173,13 @@ require("../html5-common/js/utils/utils.js");
             companionAd = null;
 
         _.each(slots, function(slot) {
-          companionAd = ad.getCompanionAds(slot.width, slot.height);
-          if (companionAd.length) {
-            _.each(companionAd, function(ad) {
-              companionAds.push({slotSize: slot.width + "x" + slot.height, ad: ad.getContent()});
-            });
+          if (slot.width && slot.height) {
+            companionAd = ad.getCompanionAds(slot.width, slot.height);
+            if (companionAd.length) {
+              _.each(companionAd, function(ad) {
+                companionAds.push({slotSize: slot.width + "x" + slot.height, ad: ad.getContent()});
+              });
+            }
           }
         });
 
