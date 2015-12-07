@@ -557,7 +557,10 @@ require("../html5-common/js/utils/utils.js");
         //IMA provides values for getRemainingTime which can result in negative current times
         //or current times which are greater than duration.
         //We will check these boundaries so we will not report these unexpected current times
-        if (_IMAAdsManager && this.currentIMAAd && _IMAAdsManager.getRemainingTime() >= 0 && _IMAAdsManager.getRemainingTime() <= this.currentIMAAd.getDuration())
+        if (_IMAAdsManager &&
+          this.currentIMAAd &&
+          _IMAAdsManager.getRemainingTime() >= 0 &&
+          _IMAAdsManager.getRemainingTime() <= this.currentIMAAd.getDuration())
         {
           currentTime = this.currentIMAAd.getDuration() - _IMAAdsManager.getRemainingTime();
         }
