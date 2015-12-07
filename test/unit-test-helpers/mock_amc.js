@@ -37,7 +37,9 @@ fake_amc = function() {
     adWrapper : $("<div>", {})
   };
   this.platform = {};
-  this.pageSettings = {};
+  this.pageSettings = {
+    companionAd: {}
+  };
   this.loadAdModule = function() {};
   this.onAdManagerReady = function() {};
   this.removeAdManager = function() {};
