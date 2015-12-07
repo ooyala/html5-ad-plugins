@@ -38,7 +38,7 @@ fake_amc = function() {
   };
   this.platform = {};
   this.pageSettings = {
-    companionAd: {}
+    companionAd : {}
   };
   this.loadAdModule = function() {};
   this.onAdManagerReady = function() {};
@@ -60,5 +60,6 @@ fake_amc = function() {
   this.adManagerDoneControllingAds = function() {};
   this.removePlayerListener = function() {};
   this.unregisterAdManager = function() {};
+  this.forceAdToPlay = function() {};
   this.adManagerSettings = {};
 };
