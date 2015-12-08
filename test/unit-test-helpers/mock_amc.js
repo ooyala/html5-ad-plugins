@@ -13,9 +13,7 @@ fake_amc = function() {
     INITIAL_PLAY_REQUESTED : "initialPlayRequested",
     PLAYHEAD_TIME_CHANGED : "playheadTimeChanged"
   };
-  this.AD_SETTINGS  = {
-
-  };
+  this.AD_SETTINGS  = {};
   this.ADTYPE = {
     LINEAR_OVERLAY : "linearOverlay",
     NONLINEAR_OVERLAY : "nonlinearOverlay",
@@ -37,9 +35,7 @@ fake_amc = function() {
     adWrapper : $("<div>", {})
   };
   this.platform = {};
-  this.pageSettings = {
-    companionAd : {}
-  };
+  this.pageSettings = {};
   this.loadAdModule = function() {};
   this.onAdManagerReady = function() {};
   this.removeAdManager = function() {};
