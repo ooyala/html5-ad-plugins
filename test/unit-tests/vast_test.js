@@ -57,7 +57,7 @@ describe('ad_manager_vast', function() {
 
   var initalPlay = function() {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
-  }
+  };
 
   before(_.bind(function() {
     OO.Ads = {
