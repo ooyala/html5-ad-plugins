@@ -378,12 +378,12 @@ OO.Ads.manager(function(_, $) {
         }
       }
       if (ad.streamUrl != null || (type == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(streams))) {
+        ad.streams = streams;
         timeline.push(new this.amc.Ad({
           position: positionSeconds, duration: duration, adManager: this.name,
           ad: ad, adType: type, streams: streams
         }));
         this.amc.appendToTimeline(timeline);
-        ad.streams = streams;
       }
     }, this);
 
