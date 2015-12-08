@@ -136,6 +136,7 @@ require("../html5-common/js/utils/utils.js");
 
         this.adPlaybackStarted = false;
         this.vcPlayRequested = false;
+        this.savedVolume = -1;
 
         //flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
@@ -502,6 +503,11 @@ require("../html5-common/js/utils/utils.js");
           }
           else
           {
+            if (this.savedVolume >= 0)
+            {
+              this.setVolume(this.savedVolume);
+              this.savedVolume = -1;
+            }
             _IMAAdsManager.start();
             this.adPlaybackStarted = true;
           }
@@ -550,6 +556,11 @@ require("../html5-common/js/utils/utils.js");
         if (_IMAAdsManager)
         {
           _IMAAdsManager.setVolume(volume);
+        }
+        else
+        {
+          //if IMA Ads Manager is not loaded yet, store the volume to set later when we start the video
+          this.savedVolume = volume;
         }
       };
 
