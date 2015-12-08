@@ -1,6 +1,6 @@
 /*
  * Unit test class for the Google IMA Ad Manager
- * https ://github.com/Automattic/expect.js
+ * https://github.com/Automattic/expect.js
  */
 
 //stubs
@@ -59,7 +59,7 @@ describe('ad_manager_ima', function() {
     ima.initialize(amc, playerId);
     ima.registerUi();
     var ad = {
-      tag_url : "https ://blah",
+      tag_url : "https://blah",
       position_type : adRules ? AD_RULES_POSITION_TYPE : NON_AD_RULES_POSITION_TYPE
     };
     var content = {
@@ -163,7 +163,7 @@ describe('ad_manager_ima', function() {
 
   it('Init: ad manager handles the loadMetadata function', function(){
     var ad = {
-      tag_url : "https ://blah",
+      tag_url : "https://blah",
       position_type : AD_RULES_POSITION_TYPE
     };
     var content = {
@@ -177,7 +177,7 @@ describe('ad_manager_ima', function() {
     ima.initialize(amc, playerId);
     expect(ima.ready).to.be(false);
     var ad = {
-      tag_url : "https ://blah",
+      tag_url : "https://blah",
       position_type : AD_RULES_POSITION_TYPE
     };
     var content = {
