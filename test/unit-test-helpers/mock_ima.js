@@ -1,17 +1,24 @@
-google = {
-  ima : {
+google =
+{
+  ima :
+  {
     adManagerInstance : null,   //for unit test convenience
     linearAds : true,          //for unit test convenience
-    Ad : function() {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
-      this.getAdId = function() {
+    Ad : function()
+    {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
+      this.getAdId = function()
+      {
         return "blah";
       };
-      this.getAdPodInfo = function() {
+      this.getAdPodInfo = function()
+      {
         return {
-          getTotalAds : function () {
+          getTotalAds : function ()
+          {
             return 1;
           },
-          getAdPosition : function () {
+          getAdPosition : function ()
+          {
             return 1;
           }
         };
@@ -20,7 +27,8 @@ google = {
       //getCompanionAds,
       //getContentType,
       //getDescription,
-      this.getDuration = function() {
+      this.getDuration = function()
+      {
         return -1;
       };
       //getHeight,
@@ -32,43 +40,58 @@ google = {
       //getWidth,
       //getWrapperAdIds,
       //getWrapperAdSystems,
-      this.isLinear = function() {
+      this.isLinear = function()
+      {
         return google.ima.linearAds;
       };
     },
-    AdDisplayContainer : function() {
+    AdDisplayContainer : function()
+    {
       this.initialize = function() {};
       this.destroy = function() {};
     },
-    settings : {
+    settings :
+    {
       setPlayerVersion : function() {},
       setPlayerType : function() {}
     },
-    AdsManagerLoadedEvent : {
-      Type : {
+    AdsManagerLoadedEvent :
+    {
+      Type :
+      {
         ADS_MANAGER_LOADED : "adsManagerLoaded"
       }
     },
-    AdErrorEvent : {
+    AdErrorEvent :
+    {
       Type : {}
     },
-    AdsLoader : function(container) {
+    AdsLoader : function(container)
+    {
       var callbacks = {};
-      var adsManagerLoadedEvent = {
-        getAdsManager : function() {
-          if (!google.ima.adManagerInstance) {
-            var mockAdManager = function() {
+      var adsManagerLoadedEvent =
+      {
+        getAdsManager : function()
+        {
+          if (!google.ima.adManagerInstance)
+          {
+            var mockAdManager = function()
+            {
               var amCallbacks = {};
               var currentAd = null;
-              this.init = function() {
-                if (!currentAd) {
+              this.init = function()
+              {
+                if (!currentAd)
+                {
                   currentAd = new google.ima.Ad();
                 }
               };
-              this.getCuePoints = function() {
+              this.getCuePoints = function()
+              {
                 return [];
               };
-              this.addEventListener = function(event, callback) {
+              this.addEventListener = function(event, callback)
+              {
                 amCallbacks[event] = callback;
               };
               this.start = function() {};
@@ -77,21 +100,27 @@ google = {
               this.pause = function() {};
               this.resize = function() {};
               this.getRemainingTime = function() {};
-              this.destroy = function() {
+              this.destroy = function()
+              {
                 google.ima.adManagerInstance = null;
                 currentAd = null;
               };
-              this.publishEvent = function(event) {      //convenience function for unit tests
-                if (typeof amCallbacks[event] === "function") {
-                  amCallbacks[event]({
+              this.publishEvent = function(event)
+              {      //convenience function for unit tests
+                if (typeof amCallbacks[event] === "function")
+                {
+                  amCallbacks[event](
+                  {
                     type : event,
-                    getAd : function() {
+                    getAd : function()
+                    {
                       return currentAd;
                     }
                   });
                 }
               };
-              this.getCurrentAd = function() {        //convenience function for unit tests
+              this.getCurrentAd = function()
+              {        //convenience function for unit tests
                 return currentAd;
               };
             };
@@ -100,13 +129,16 @@ google = {
           return google.ima.adManagerInstance;
         }
       };
-      this.addEventListener = function(event, callback) {
+      this.addEventListener = function(event, callback)
+      {
         callbacks[event] = callback;
       };
       this.contentComplete = function() {};
-      this.requestAds = function() {
+      this.requestAds = function()
+      {
         //mock executes this callback immediately. Typically this does not occur in real world situations
-        if (typeof callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED] === "function") {
+        if (typeof callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED] === "function")
+        {
           callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED](adsManagerLoadedEvent);
         }
       };
@@ -114,8 +146,10 @@ google = {
     },
     AdsRequest : function() {},
     AdsRenderingSettings : function() {},
-    AdEvent : {
-      Type : {
+    AdEvent :
+    {
+      Type :
+      {
         ALL_ADS_COMPLETED : "allAdsCompleted",
         COMPLETE : "complete",
         SKIPPED : "skipped",
