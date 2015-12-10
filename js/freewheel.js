@@ -261,9 +261,29 @@ OO.Ads.manager(function(_, $) {
         ].join('')
       ];
 
-      // TODO: Implement a timeout here in case fw_onAdRequestComplete doesn't get called - PBI-731
+      // Set up function to log error if ad response is null after maximum duration allowed for ad request to respond
+      // has exceeded.
+      var adRequestTimeout = _.bind(function(){
+        if (!fwContext._adResponse) {
+          var error = "ad request timeout";
+          OO.log("FW: freewheel ad request timeout");
+          amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
+        }
+      });
+
       fwContext.submitRequest();
       fwAdDataRequested = true;
+      setAdRequestTimeout(adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
+    }, this);
+
+    /**
+     * Set timeout for ad request. Will call the provided callback
+     * if we timeout.
+     * @param callback The function to call when we time out
+     * @param duration the time to wait before timing out
+     */
+    var setAdRequestTimeout = _.bind(function(callback, duration){
+      _.delay(callback, duration);
     }, this);
 
     /**
@@ -274,6 +294,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} event The requestComplete event indicating success or failure
      */
     var fw_onAdRequestComplete = function(event) {
+      debugger;
       if (event.success) {
         slots = fwContext.getTemporalSlots();
         // TODO: Make sure to process these?
