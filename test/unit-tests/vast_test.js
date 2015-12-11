@@ -8,6 +8,7 @@ OO.log = function() {};
 require(COMMON_SRC_ROOT + "utils/utils.js");
 require(COMMON_SRC_ROOT + "utils/environment.js");
 require(COMMON_SRC_ROOT + "classes/emitter.js");
+
 var fs = require("fs");
 
 describe('ad_manager_vast', function() {
@@ -76,17 +77,10 @@ describe('ad_manager_vast', function() {
   });
 
   beforeEach(function() {
-    OO.supportedVideoTypes = {
-      m3u8: true,
-      mp4: true,
-      webm: true
-    };
     OO.playerParams.maxVastWrapperDepth = 2;
   });
 
   afterEach(_.bind(function() {
-    OO.supportedVideoTypes =
-    {};
     amc.timeline = [];
     vastAdManager.destroy();
     OO.playerParams.maxVastWrapperDepth = playerParamWrapperDepth;
