@@ -550,10 +550,8 @@ OO.Ads.manager(function(_, $) {
       //We want to force the renderer to reposition the overlay ads. The Freewheel SDK has functions
       //that accomplish this, but are undocumented.
       if(currentPlayingSlot){
-        //These two calls update Freewheel with the new video sizes. At this point
-        //Freewheel will attempt to resize any ads
-        fwContext.setContentVideoElement(amc.ui.ooyalaVideoElement[0]);
-        fwContext.registerVideoDisplayBase(amc.ui.adWrapper.attr("id"));
+        //Update Freewheel of size changes. At this point Freewheel will attempt to resize any ads
+        notifySizeChange();
         //Documentation (https://hub.freewheel.tv/api_docs/html5/) includes all function calls
         //in the next line up to getRendererController function, so up to this line is ok
         var rendererController = currentPlayingSlot.getCurrentAdInstance().getRendererController();
@@ -565,6 +563,26 @@ OO.Ads.manager(function(_, $) {
           renderer.presentInline();
         } catch(e){
           OO.log("FW overlay resize error!");
+        }
+      }
+    };
+
+    /**
+     * Notifies Freewheel of a size change.
+     * @private
+     * @method Freewheel#notifySizeChange
+     */
+    var notifySizeChange = function() {
+      //Freewheel SDK uses setContentVideoElement and registerVideoDisplayBase for size
+      //change notifications for the main content and ad content respectively.
+      //_registerDisplayForLinearAd calls registerVideoDisplayBase and
+      //_registerDisplayForNonlinearAd calls setContentVideoElement, so we'll call
+      //these here
+      if (currentPlayingSlot) {
+        if (currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
+          _registerDisplayForLinearAd();
+        } else {
+          _registerDisplayForNonlinearAd();
         }
       }
     };
