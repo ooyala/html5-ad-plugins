@@ -75,6 +75,7 @@ OO.Ads.manager(function(_, $) {
       amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(onContentCompleted, this));
       amc.addPlayerListener(amc.EVENTS.CONTENT_AND_ADS_COMPLETED, _.bind(onAllCompleted, this));
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(onContentChanged, this));
+      amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _.bind(onResize, this));
     };
 
     /**
@@ -540,6 +541,52 @@ OO.Ads.manager(function(_, $) {
       // if (fwContext && _.isFunction(fwContext.dispose)) fwContext.dispose();
     };
 
+    var onResize = function() {
+      //Overlay placement issue - PBI-1227 as of 12/9/2015
+      //The main issue with Freewheel is when notifying their SDK of video size changes,
+      //Freewheel only attempts to resize ads and not re-position ads.
+      //In the Freewheel SDK, overlay ads do not have a resize function and thus nothing happens.
+
+      //We want to force the renderer to reposition the overlay ads. The Freewheel SDK has functions
+      //that accomplish this, but are undocumented.
+      if(currentPlayingSlot){
+        //Update Freewheel of size changes. At this point Freewheel will attempt to resize any ads
+        notifySizeChange();
+        //Documentation (https://hub.freewheel.tv/api_docs/html5/) includes all function calls
+        //in the next line up to getRendererController function, so up to this line is ok
+        var rendererController = currentPlayingSlot.getCurrentAdInstance().getRendererController();
+        //From here on out are undocumented function calls. Since they are undocumented,
+        //they can be removed at any time. We will use a try/catch so when this happens,
+        //we fail gracefully
+        try {
+          var renderer = rendererController.getRenderer();
+          renderer.presentInline();
+        } catch(e){
+          OO.log("FW overlay resize error!");
+        }
+      }
+    };
+
+    /**
+     * Notifies Freewheel of a size change.
+     * @private
+     * @method Freewheel#notifySizeChange
+     */
+    var notifySizeChange = function() {
+      //Freewheel SDK uses setContentVideoElement and registerVideoDisplayBase for size
+      //change notifications for the main content and ad content respectively.
+      //_registerDisplayForLinearAd calls registerVideoDisplayBase and
+      //_registerDisplayForNonlinearAd calls setContentVideoElement, so we'll call
+      //these here
+      if (currentPlayingSlot) {
+        if (currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
+          _registerDisplayForLinearAd();
+        } else {
+          _registerDisplayForNonlinearAd();
+        }
+      }
+    };
+
     /**
      * Triggers a "click" on the currently playing ad.  This is currently used for testing purposes.
      * @public
@@ -550,7 +597,7 @@ OO.Ads.manager(function(_, $) {
         var instance = currentPlayingSlot.getCurrentAdInstance();
         // handlingClick makes sure the click is only triggered once, rather than repeatedly in a loop.
         if (!handlingClick) {
-          handlingClick = true
+          handlingClick = true;
           // NOTE: The below is more correct but is returning an empty array.  FW bug?
           //if (instance.getEventCallbackUrls(tv.freewheel.SDK.EVENT_AD_CLICK, tv.freewheel.SDK.EVENT_TYPE_CLICK).length > 0) {
           var callback = instance.getEventCallback(tv.freewheel.SDK.EVENT_AD_CLICK, tv.freewheel.SDK.EVENT_TYPE_CLICK);
