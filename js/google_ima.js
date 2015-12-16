@@ -553,13 +553,13 @@ require("../html5-common/js/utils/utils.js");
 
       this.setVolume = function(volume)
       {
-        if (_IMAAdsManager)
+        if (_IMAAdsManager && _linearAdIsPlaying)
         {
           _IMAAdsManager.setVolume(volume);
         }
         else
         {
-          //if IMA Ads Manager is not loaded yet, store the volume to set later when we start the video
+          //if ad is not playing, store the volume to set later when we start the video
           this.savedVolume = volume;
         }
       };
@@ -1271,6 +1271,8 @@ require("../html5-common/js/utils/utils.js");
               this.videoControllerWrapper.raiseTimeUpdate(currentTime, this.getDuration());
               this.videoControllerWrapper.raiseEndedEvent();
             }
+            //Save the volume so the volume can persist on future ad playbacks if we don't receive another volume update from VTC
+            this.savedVolume = this.getVolume();
             //change this to end ad
             _endCurrentAd(false);
             _linearAdIsPlaying = false;
