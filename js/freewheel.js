@@ -541,7 +541,7 @@ OO.Ads.manager(function(_, $) {
       // if (fwContext && _.isFunction(fwContext.dispose)) fwContext.dispose();
     };
 
-    var onResize = function() {
+    var updateOverlayPosition = function() {
       //Overlay placement issue - PBI-1227 as of 12/9/2015
       //The main issue with Freewheel is when notifying their SDK of video size changes,
       //Freewheel only attempts to resize ads and not re-position ads.
@@ -565,6 +565,10 @@ OO.Ads.manager(function(_, $) {
           OO.log("FW overlay resize error!");
         }
       }
+    };
+
+    var onResize = function() {
+      updateOverlayPosition();
     };
 
     /**
@@ -631,6 +635,22 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#showOverlay
      */
     this.showOverlay = function() {
+    };
+
+    /**
+     * This function is called by the ad manager controller when a video element comes into focus.
+     * @param videoId   the id of the video element that came into focus
+     */
+    this.videoElementInFocus = function(videoId) {
+      // The Freewheel SDK does not like when the video elements passed in via _registerDisplayForLinearAd
+      // and _registerDisplayForNonlinearAd have display set to none. This causes overlays to not
+      // be positioned and sized correctly (PBI-1307). When we get notified that the main video content
+      // is in focus, we need update the overlay position.
+      // Note: Updating overlay position uses undocumented methods and may break at any time. Also, simply
+      // notifying the SDK via _registerDisplayForNonlinearAd does not appear to be sufficient at this time
+      if (videoId === OO.VIDEO.MAIN) {
+        updateOverlayPosition();
+      }
     };
 
     /**
