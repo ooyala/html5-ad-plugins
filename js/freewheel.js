@@ -76,6 +76,7 @@ OO.Ads.manager(function(_, $) {
       amc.addPlayerListener(amc.EVENTS.CONTENT_AND_ADS_COMPLETED, _.bind(onAllCompleted, this));
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(onContentChanged, this));
       amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _.bind(onResize, this));
+      amc.addPlayerListener(amc.EVENTS.MAIN_CONTENT_IN_FOCUS, _.bind(onMainContentInFocus, this));
     };
 
     /**
@@ -638,19 +639,18 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * This function is called by the ad manager controller when a video element comes into focus.
-     * @param videoId   the id of the video element that came into focus
+     * This function is called by the ad manager controller when the main video element comes into focus.
+     * @private
+     * @method Freewheel#onMainContentInFocus
      */
-    this.videoElementInFocus = function(videoId) {
+    var onMainContentInFocus = function() {
       // The Freewheel SDK does not like when the video elements passed in via _registerDisplayForLinearAd
       // and _registerDisplayForNonlinearAd have display set to none. This causes overlays to not
       // be positioned and sized correctly (PBI-1307). When we get notified that the main video content
       // is in focus, we need update the overlay position.
       // Note: Updating overlay position uses undocumented methods and may break at any time. Also, simply
       // notifying the SDK via _registerDisplayForNonlinearAd does not appear to be sufficient at this time
-      if (videoId === OO.VIDEO.MAIN) {
-        updateOverlayPosition();
-      }
+      updateOverlayPosition();
     };
 
     /**
