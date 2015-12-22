@@ -269,8 +269,11 @@ OO.Ads.manager(function(_, $) {
           OO.log("FW: freewheel ad request timeout");
           amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
         }
+        console.log("THE TIME: ");
+        console.log(ad_request_timer.end_time - ad_request_timer.start_time);
       });
 
+      ad_request_timer.start_time = (new Date()).getTime();
       fwContext.submitRequest();
       fwAdDataRequested = true;
       setAdRequestTimeout(adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
@@ -286,6 +289,9 @@ OO.Ads.manager(function(_, $) {
       _.delay(callback, duration);
     }, this);
 
+    // Using this to time ad request
+    var ad_request_timer = {};
+
     /**
      * Called when the Freewheel ad xml request has completed.  If the result was success, read the ad slots.
      * Declare that the ad manager is ready for use by setting this.ready=true.
@@ -294,7 +300,8 @@ OO.Ads.manager(function(_, $) {
      * @param {object} event The requestComplete event indicating success or failure
      */
     var fw_onAdRequestComplete = function(event) {
-      debugger;
+      ad_request_timer.end_time = (new Date()).getTime();
+      //debugger;
       if (event.success) {
         slots = fwContext.getTemporalSlots();
         // TODO: Make sure to process these?
