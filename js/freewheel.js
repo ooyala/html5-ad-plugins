@@ -11,6 +11,8 @@
  *     http://hub.freewheel.tv/display/techdocs/How+to+Get+Ad+Level+Information+from+Events
  */
 
+require("../html5-common/js/utils/constants.js");
+
 OO.Ads.manager(function(_, $) {
   /**
    * @class Freewheel
@@ -20,8 +22,11 @@ OO.Ads.manager(function(_, $) {
    */
   var Freewheel = function() {
     // core
-    this.name       = "freewheel-ads-manager";
-    this.testMode   = false;
+    this.name              = "freewheel-ads-manager";
+    this.testMode          = false;
+    this.videoRestrictions = { "technology": OO.VIDEO.TECHNOLOGY.HTML5,
+                               "features": [OO.VIDEO.FEATURE.VIDEO_OBJECT_OPEN] };
+
     var amc         = null;
     var fwAdManager = null;
     var fwContext   = null;

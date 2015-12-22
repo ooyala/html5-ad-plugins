@@ -15,10 +15,13 @@ OO.Ads.manager(function(_, $) {
    * @property {boolean} ready Should be set to false initially.  Should be set to true when the ad manager
    *                           has loaded all external files and metadata to notify the controller that the
    *                           ad manager is ready for the user to hit play.
+   * @property {object} videoRestrictions Optional property that represents restrictions on the video plugin
+   *   used.  ex. {"technology":OO.VIDEO.TECHNOLOGY.HTML5, "features":[OO.VIDEO.FEATURE.VIDEO_OBJECT_OPEN]}
    */
   var AdManager = function() {
     this.name = "my-ads-manager";
-    this.ready  = false;
+    this.ready = false;
+    this.videoRestrictions = {};
 
     var amc  = null;
     var remoteModuleJs = "http://my.company/myAdModule.js";
