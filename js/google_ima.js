@@ -1684,6 +1684,8 @@ require("../html5-common/js/utils/utils.js");
   {
     this.name = "GoogleIMAVideoTech";
     this.encodings = ["ima"];
+    this.features = [];
+    this.technology = OO.VIDEO.TECHNOLOGY.HTML5;
 
     // This module defaults to ready because no setup or external loading is required
     this.ready = true;
