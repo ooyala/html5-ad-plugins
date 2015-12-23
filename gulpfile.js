@@ -10,7 +10,7 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     shell = require('gulp-shell'),
     rename = require('gulp-rename'),
-    _ = require('underscore');
+    _ = require('underscore'),
     listFiles = require('file-lister'),
     exec = require('child_process').exec;
 
