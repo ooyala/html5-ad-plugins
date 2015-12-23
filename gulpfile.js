@@ -11,17 +11,14 @@ var gulp = require('gulp'),
     shell = require('gulp-shell'),
     rename = require('gulp-rename');
     _ = require('underscore');
-    listFiles = require('file-lister');
+    listFiles = require('file-lister'),
+    exec = require('child_process').exec;
 
 var path = {
   originalJs: ['./js/']
 };
 
-// Build All
-gulp.task('build', ['browserify']);
-
-gulp.task('browserify', function() {
-
+var browserify_fn = function() {
   var bundleThis = function(srcArray)
   {
     _.each(srcArray, function(sourceFile)
@@ -50,7 +47,19 @@ gulp.task('browserify', function() {
       var filteredList = files.filter(_.bind(checkFileExtension,this,".js"));
       bundleThis(filteredList);
     }});
+}
 
+// Dependency task
+gulp.task('init_module', function(callback) {
+  exec("git submodule update --init && cd html5-common && npm install && cd ..", function(err) {
+    if (err) return callback(err);
+    callback();
+  });
+});
+
+// Build All
+gulp.task('build', ['init_module'], function () {
+  browserify_fn();
 });
 
 var checkFileExtension = function(extension, fileName)
