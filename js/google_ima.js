@@ -1733,7 +1733,7 @@ require("../html5-common/js/utils/utils.js");
       var wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
-      _ima._IMA_SDK_tryInitAdContainer();
+      googleIMA._IMA_SDK_tryInitAdContainer();
       return wrapper;
     };
 
@@ -1773,6 +1773,7 @@ require("../html5-common/js/utils/utils.js");
 
     this.controller = {};
     this.disableNativeSeek = true;
+    this.isControllingVideo = true;
 
     /************************************************************************************/
     // Required. Methods that Video Controller, Destroy, or Factory call
@@ -1780,10 +1781,11 @@ require("../html5-common/js/utils/utils.js");
 
     // TODO poc for iOS
     this.sharedElementTake = function() {
+      this.isControllingVideo = true;
     };
 
-    this.sharedElementReturn = function() {
-      // TODO: unsubscribe events
+    this.sharedElementGive = function() {
+      this.isControllingVideo = false;
     };
 
     /**
@@ -1902,27 +1904,34 @@ require("../html5-common/js/utils/utils.js");
       _ima.destroy();
     };
 
+    // TODO
+    this.notifyIfInControl = function(event, params) {
+      if (this.isControllingVideo) {
+        this.controller.notify(event, params);
+      }
+    };
+
     //Events
     this.raisePlayEvent = function()
     {
-      this.controller.notify(this.controller.EVENTS.PLAY, {});
-      this.controller.notify(this.controller.EVENTS.PLAYING);
+      this.notifyIfInControl(this.controller.EVENTS.PLAY, {});
+      this.notifyIfInControl(this.controller.EVENTS.PLAYING);
     };
 
     this.raiseEndedEvent = function()
     {
-      this.controller.notify(this.controller.EVENTS.ENDED);
+      this.notifyIfInControl(this.controller.EVENTS.ENDED);
     };
 
     this.raisePauseEvent = function()
     {
-      this.controller.notify(this.controller.EVENTS.PAUSED);
+      this.notifyIfInControl(this.controller.EVENTS.PAUSED);
     };
 
     this.raiseVolumeEvent = function()
     {
       var volume = _ima.getVolume();
-      this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
+      this.notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
     };
 
     this.raiseTimeUpdate = function(currentTime, duration)
@@ -1937,7 +1946,7 @@ require("../html5-common/js/utils/utils.js");
 
     var raisePlayhead = _.bind(function(eventname, currentTime, duration)
     {
-      this.controller.notify(eventname,
+      this.notifyIfInControl(eventname,
         { "currentTime" : currentTime,
           "duration" : duration,
           "buffer" : 0,
