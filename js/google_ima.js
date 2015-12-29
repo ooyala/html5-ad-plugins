@@ -14,6 +14,7 @@ require("../html5-common/js/utils/utils.js");
 (function(_, $)
 {
   var registeredGoogleIMAManagers = {};
+  var sharedVideoElement = null;
 
   OO.Ads.manager(function(_, $)
   {
@@ -272,7 +273,7 @@ require("../html5-common/js/utils/utils.js");
       this.registerUi = function()
       {
         this.uiRegistered = true;
-        _IMA_SDK_tryInitAdContainer();
+        this._IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
       };
 
@@ -902,7 +903,7 @@ require("../html5-common/js/utils/utils.js");
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
 
-        _IMA_SDK_tryInitAdContainer();
+        this._IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
 
         /*
@@ -917,23 +918,31 @@ require("../html5-common/js/utils/utils.js");
 
       /**
        * Tries to initialize the IMA SDK AdContainer.  This is where the ads will be located.
-       * @private
+       * @public
        * @method GoogleIMA#_IMA_SDK_tryInitAdContainer
        */
-      var _IMA_SDK_tryInitAdContainer = privateMember(function()
+      this._IMA_SDK_tryInitAdContainer = privateMember(function()
       {
-        if (!_IMAAdDisplayContainer && _adModuleJsReady && this.uiRegistered)
+        if (_IMAAdDisplayContainer) {
+          _IMAAdDisplayContainer.destroy();
+        }
+
+        if (_adModuleJsReady && this.uiRegistered)
         {
           if (!_isGoogleSDKValid())
           {
              _throwError("IMA SDK loaded but does not contain valid data");
           }
 
-          if (_amc.platform.isIos)
+          // TODO: for vtc + ima poc work with this section
+          //if (_amc.platform.isIos)
+          if (true)
           {
             //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
             //also doesn't not seem to work nicely with podded ads if you don't use it.
-            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0], _amc.ui.ooyalaVideoElement[0]);
+            //_IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0], _amc.ui.ooyalaVideoElement[0]);
+            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0],
+                                                                       sharedVideoElement);
           }
           else
           {
@@ -1684,7 +1693,7 @@ require("../html5-common/js/utils/utils.js");
   {
     this.name = "GoogleIMAVideoTech";
     this.encodings = ["ima"];
-    this.features = [];
+    this.features = [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_TAKE];
     this.technology = OO.VIDEO.TECHNOLOGY.HTML5;
 
     // This module defaults to ready because no setup or external loading is required
@@ -1711,6 +1720,24 @@ require("../html5-common/js/utils/utils.js");
     };
 
     /**
+     * Creates a video player instance using GoogleIMAVideoWrapper.
+     * @public
+     * @method GoogleIMAVideoFactory#createFromExisting
+     * // TODO
+     * @returns {object} A reference to the wrapper for the newly created element
+     */
+    this.createFromExisting = function(domId, ooyalaVideoController, playerId)
+    {
+      sharedVideoElement = $("#" + domId)[0];
+      var googleIMA = registeredGoogleIMAManagers[playerId];
+      var wrapper = new GoogleIMAVideoWrapper(googleIMA);
+      wrapper.controller = ooyalaVideoController;
+      wrapper.subscribeAllEvents();
+      _ima._IMA_SDK_tryInitAdContainer();
+      return wrapper;
+    };
+
+    /**
      * Destroys the video technology factory.
      * @public
      * @method GoogleIMAVideoFactory#destroy
@@ -1720,6 +1747,7 @@ require("../html5-common/js/utils/utils.js");
       this.ready = false;
       this.encodings = [];
       this.create = function() {};
+      this.createFromExisting = function() {};
     };
 
     /**
@@ -1749,6 +1777,14 @@ require("../html5-common/js/utils/utils.js");
     /************************************************************************************/
     // Required. Methods that Video Controller, Destroy, or Factory call
     /************************************************************************************/
+
+    // TODO poc for iOS
+    this.sharedElementTake = function() {
+    };
+
+    this.sharedElementReturn = function() {
+      // TODO: unsubscribe events
+    };
 
     /**
      * Subscribes to all events raised by the video element.
