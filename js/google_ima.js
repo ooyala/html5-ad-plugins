@@ -274,7 +274,7 @@ require("../html5-common/js/utils/utils.js");
       this.registerUi = function()
       {
         this.uiRegistered = true;
-        if (!this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0] &&
+        if (_amc.ui.useSingleVideoElement && !this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0] &&
             (_amc.ui.ooyalaVideoElement[0].className === "video")) {
           this.sharedVideoElement = _amc.ui.ooyalaVideoElement[0];
         }
@@ -929,15 +929,15 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_tryInitAdContainer = privateMember(function()
       {
-        if (_IMAAdDisplayContainer) {
-          _IMAAdDisplayContainer.destroy();
-        }
-
         if (_adModuleJsReady && this.uiRegistered)
         {
           if (!_isGoogleSDKValid())
           {
              _throwError("IMA SDK loaded but does not contain valid data");
+          }
+
+          if (_IMAAdDisplayContainer) {
+            _IMAAdDisplayContainer.destroy();
           }
 
           //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)

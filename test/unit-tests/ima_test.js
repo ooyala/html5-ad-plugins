@@ -1145,19 +1145,4 @@ describe('ad_manager_ima', function()
     notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
     expect(notified).to.be(false);
   });
-
-  it('SingleElement: Doesn\'t initialize the ad container on registerUi in single element mode', function()
-  {
-    // create a spy
-    var oldFunction = ima._IMA_SDK_tryInitAdContainer;
-    ima._IMA_SDK_tryInitAdContainer = function() { ima._IMA_SDK_tryInitAdContainer.count++; return oldFunction(); };
-    ima._IMA_SDK_tryInitAdContainer.count = 0;
-
-    OO.requiresSingleVideoElement = true;
-    ima.registerUi();
-    expect(ima._IMA_SDK_tryInitAdContainer.count).to.eql(0);
-    OO.requiresSingleVideoElement = false;
-    ima.registerUi();
-    expect(ima._IMA_SDK_tryInitAdContainer.count).to.eql(1);
-  });
 });
