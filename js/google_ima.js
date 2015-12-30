@@ -929,7 +929,7 @@ require("../html5-common/js/utils/utils.js");
        * @public
        * @method GoogleIMA#_IMA_SDK_tryInitAdContainer
        */
-      this._IMA_SDK_tryInitAdContainer = privateMember(function()
+      this._IMA_SDK_tryInitAdContainer = function()
       {
         if (_IMAAdDisplayContainer) {
           _IMAAdDisplayContainer.destroy();
@@ -949,7 +949,7 @@ require("../html5-common/js/utils/utils.js");
 
           _IMA_SDK_createAdsLoader();
         }
-      });
+      };
 
       /**
        * Tries to create an IMA SDK AdsLoader.  The AdsLoader notifies this ad manager when ad requests are completed.

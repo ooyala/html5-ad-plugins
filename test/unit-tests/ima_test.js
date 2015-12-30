@@ -186,6 +186,13 @@ describe('ad_manager_ima', function()
     expect(typeof videoWrapper).to.be("object");
   });
 
+  it('Init: VTC Integration is creatable from existin element after ad manager is initialized', function()
+  {
+    ima.initialize(amc, playerId);
+    var wrapper = imaVideoPluginFactory.createFromExisting("domId", {}, playerId);
+    expect(typeof wrapper).to.be("object");
+  });
+
   it('Init: ad manager handles the registerUi function', function()
   {
     expect(function()
@@ -1070,5 +1077,87 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.DURATION_CHANGE);
     expect(durationChanged).to.be(true);
     expect(currentDuration).to.be(30);
+  });
+
+  var checkNotifyCalled = _.bind(function(eventname, give) {
+    var notified = false;
+    initAndPlay(true, {
+      notify : function(eventName, params) { notified = true; },
+      EVENTS : vci.EVENTS
+    });
+    if (give) {
+      videoWrapper.sharedElementGive();
+    } else {
+      videoWrapper.sharedElementTake();
+    }
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(eventname);
+    return notified;
+  }, this);
+
+  it('SingleElement: Video wrapper only notifies of play event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.RESUMED, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.RESUMED, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.RESUMED, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of ended event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.COMPLETE, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.COMPLETE, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.COMPLETE, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of pause event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.PAUSED, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.PAUSED, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.PAUSED, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of volume change event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of duration change event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Doesn\'t initialize the ad container on registerUi in single element mode', function()
+  {
+    // create a spy
+    var oldFunction = ima._IMA_SDK_tryInitAdContainer;
+    ima._IMA_SDK_tryInitAdContainer = function() { ima._IMA_SDK_tryInitAdContainer.count++; return oldFunction(); };
+    ima._IMA_SDK_tryInitAdContainer.count = 0;
+
+    OO.requiresSingleVideoElement = true;
+    ima.registerUi();
+    expect(ima._IMA_SDK_tryInitAdContainer.count).to.eql(0);
+    OO.requiresSingleVideoElement = false;
+    ima.registerUi();
+    expect(ima._IMA_SDK_tryInitAdContainer.count).to.eql(1);
   });
 });

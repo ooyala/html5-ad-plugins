@@ -100,6 +100,7 @@ google =
               this.pause = function() {};
               this.resize = function() {};
               this.getRemainingTime = function() {};
+              this.getVolume = function() {};
               this.destroy = function()
               {
                 google.ima.adManagerInstance = null;
