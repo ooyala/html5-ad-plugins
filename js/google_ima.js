@@ -934,20 +934,10 @@ require("../html5-common/js/utils/utils.js");
              _throwError("IMA SDK loaded but does not contain valid data");
           }
 
-          // TODO: for vtc + ima poc work with this section
-          //if (_amc.platform.isIos)
-          if (true)
-          {
-            //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
-            //also doesn't not seem to work nicely with podded ads if you don't use it.
-            //_IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0], _amc.ui.ooyalaVideoElement[0]);
-            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0],
-                                                                       sharedVideoElement);
-          }
-          else
-          {
-            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0]);
-          }
+          //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
+          //also doesn't not seem to work nicely with podded ads if you don't use it.
+          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0],
+                                                                     sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
         }
@@ -1720,11 +1710,13 @@ require("../html5-common/js/utils/utils.js");
     };
 
     /**
-     * Creates a video player instance using GoogleIMAVideoWrapper.
+     * Creates a video player instance using GoogleIMAVideoWrapper which wraps and existing video element.
      * @public
      * @method GoogleIMAVideoFactory#createFromExisting
-     * // TODO
-     * @returns {object} A reference to the wrapper for the newly created element
+     * @param {string} domId The dom id of the video DOM object to use
+     * @param {object} ooyalaVideoController A reference to the video controller in the Ooyala player
+     * @param {string} playerId The unique player identifier of the player creating this instance
+     * @returns {object} A reference to the wrapper for the video element
      */
     this.createFromExisting = function(domId, ooyalaVideoController, playerId)
     {
@@ -1779,11 +1771,20 @@ require("../html5-common/js/utils/utils.js");
     // Required. Methods that Video Controller, Destroy, or Factory call
     /************************************************************************************/
 
-    // TODO poc for iOS
+    /**
+     * Takes control of the video element from another plugin.
+     * @public
+     * @method GoogleIMAVideoWrapper#sharedElementGive
+     */
     this.sharedElementTake = function() {
       this.isControllingVideo = true;
     };
 
+    /**
+     * Hands control of the video element off to another plugin.
+     * @public
+     * @method GoogleIMAVideoWrapper#sharedElementGive
+     */
     this.sharedElementGive = function() {
       this.isControllingVideo = false;
     };
@@ -1904,34 +1905,40 @@ require("../html5-common/js/utils/utils.js");
       _ima.destroy();
     };
 
-    // TODO
-    this.notifyIfInControl = function(event, params) {
+    /**
+     * Calls the controller notify function only if the video wrapper is controlling the video element.
+     * @private
+     * @method GoogleIMAVideoWrapper#notifyIfInControl
+     * @param {string} event The event to raise to the video controller
+     * @param {object} params [optional] Event parameters
+     */
+    var notifyIfInControl = _.bind(function(event, params) {
       if (this.isControllingVideo) {
         this.controller.notify(event, params);
       }
-    };
+    }, this);
 
     //Events
     this.raisePlayEvent = function()
     {
-      this.notifyIfInControl(this.controller.EVENTS.PLAY, {});
-      this.notifyIfInControl(this.controller.EVENTS.PLAYING);
+      notifyIfInControl(this.controller.EVENTS.PLAY, {});
+      notifyIfInControl(this.controller.EVENTS.PLAYING);
     };
 
     this.raiseEndedEvent = function()
     {
-      this.notifyIfInControl(this.controller.EVENTS.ENDED);
+      notifyIfInControl(this.controller.EVENTS.ENDED);
     };
 
     this.raisePauseEvent = function()
     {
-      this.notifyIfInControl(this.controller.EVENTS.PAUSED);
+      notifyIfInControl(this.controller.EVENTS.PAUSED);
     };
 
     this.raiseVolumeEvent = function()
     {
       var volume = _ima.getVolume();
-      this.notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
+      notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
     };
 
     this.raiseTimeUpdate = function(currentTime, duration)
@@ -1946,7 +1953,7 @@ require("../html5-common/js/utils/utils.js");
 
     var raisePlayhead = _.bind(function(eventname, currentTime, duration)
     {
-      this.notifyIfInControl(eventname,
+      notifyIfInControl(eventname,
         { "currentTime" : currentTime,
           "duration" : duration,
           "buffer" : 0,
