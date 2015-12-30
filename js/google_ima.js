@@ -273,7 +273,11 @@ require("../html5-common/js/utils/utils.js");
       this.registerUi = function()
       {
         this.uiRegistered = true;
-        this._IMA_SDK_tryInitAdContainer();
+        // If not on ios register the UI and create the video element
+        // If on ios only do after element is created
+        if (!OO.requiresSingleVideoElement) {
+          this._IMA_SDK_tryInitAdContainer();
+        }
         _trySetupAdsRequest();
       };
 
@@ -903,7 +907,11 @@ require("../html5-common/js/utils/utils.js");
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
 
-        this._IMA_SDK_tryInitAdContainer();
+        // If not on ios register the UI and create the video element
+        // If on ios only do after element is created
+        if (!OO.requiresSingleVideoElement) {
+          this._IMA_SDK_tryInitAdContainer();
+        }
         _trySetupAdsRequest();
 
         /*
