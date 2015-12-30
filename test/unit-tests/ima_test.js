@@ -1145,4 +1145,16 @@ describe('ad_manager_ima', function()
     notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
     expect(notified).to.be(false);
   });
+
+  it('SingleElement: Shared video element should be blank if in multi-element mode', function()
+  {
+    ima.sharedVideoElement = null;
+    amc.ui.useSingleVideoElement = false;
+    amc.ui.ooyalaVideoElement = [{ className: "video"}];
+    initialize(false);
+    expect(ima.sharedVideoElement).to.be(null);
+    amc.ui.useSingleVideoElement = true;
+    initialize(false);
+    expect(ima.sharedVideoElement).to.not.be(null);
+  });
 });
