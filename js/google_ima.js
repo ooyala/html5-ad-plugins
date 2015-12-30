@@ -14,7 +14,6 @@ require("../html5-common/js/utils/utils.js");
 (function(_, $)
 {
   var registeredGoogleIMAManagers = {};
-  var sharedVideoElement = null;
 
   OO.Ads.manager(function(_, $)
   {
@@ -27,12 +26,14 @@ require("../html5-common/js/utils/utils.js");
      *             **This must be updated with big updates to a different number.
      * @property {string} PLAYER_TYPE this is a variable that specifies the name of the player that is relayed to
      *             Google for tracking
+     * @property {object} sharedVideoElement The video element to use on iOS where only one video element is allowed.
      */
     var GoogleIMA = function()
     {
       this.name = "google-ima-ads-manager";
       this.ready = false;
       this.runningUnitTests = false;
+      this.sharedVideoElement = null;
 
       //private member variables of this GoogleIMA object
       var _amc = null;
@@ -273,11 +274,12 @@ require("../html5-common/js/utils/utils.js");
       this.registerUi = function()
       {
         this.uiRegistered = true;
-        // If not on ios register the UI and create the video element
-        // If on ios only do after element is created
-        if (!OO.requiresSingleVideoElement) {
-          this._IMA_SDK_tryInitAdContainer();
+        if (!this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0] &&
+            (_amc.ui.ooyalaVideoElement[0].className === "video")) {
+          this.sharedVideoElement = _amc.ui.ooyalaVideoElement[0];
         }
+
+        _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
       };
 
@@ -907,11 +909,7 @@ require("../html5-common/js/utils/utils.js");
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
 
-        // If not on ios register the UI and create the video element
-        // If on ios only do after element is created
-        if (!OO.requiresSingleVideoElement) {
-          this._IMA_SDK_tryInitAdContainer();
-        }
+        _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
 
         /*
@@ -926,10 +924,10 @@ require("../html5-common/js/utils/utils.js");
 
       /**
        * Tries to initialize the IMA SDK AdContainer.  This is where the ads will be located.
-       * @public
+       * @private
        * @method GoogleIMA#_IMA_SDK_tryInitAdContainer
        */
-      this._IMA_SDK_tryInitAdContainer = function()
+      var _IMA_SDK_tryInitAdContainer = privateMember(function()
       {
         if (_IMAAdDisplayContainer) {
           _IMAAdDisplayContainer.destroy();
@@ -945,11 +943,11 @@ require("../html5-common/js/utils/utils.js");
           //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
           //also doesn't not seem to work nicely with podded ads if you don't use it.
           _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0],
-                                                                     sharedVideoElement);
+                                                                     this.sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
         }
-      };
+      });
 
       /**
        * Tries to create an IMA SDK AdsLoader.  The AdsLoader notifies this ad manager when ad requests are completed.
@@ -1728,12 +1726,11 @@ require("../html5-common/js/utils/utils.js");
      */
     this.createFromExisting = function(domId, ooyalaVideoController, playerId)
     {
-      sharedVideoElement = $("#" + domId)[0];
       var googleIMA = registeredGoogleIMAManagers[playerId];
+      googleIMA.sharedVideoElement = $("#" + domId)[0];
       var wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
-      googleIMA._IMA_SDK_tryInitAdContainer();
       return wrapper;
     };
 
