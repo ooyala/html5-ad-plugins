@@ -785,7 +785,6 @@ describe('ad_manager_ima', function()
 
   it('VTC Integration: Saved volume is consumed when ad starts', function()
   {
-    debugger;
     initAndPlay(true, vci);
     var am = google.ima.adManagerInstance;
     var vol = 0;
