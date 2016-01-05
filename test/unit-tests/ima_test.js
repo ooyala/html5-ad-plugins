@@ -757,7 +757,7 @@ describe('ad_manager_ima', function()
     expect(startCount).to.be(1);
   });
 
-  it('VTC Integration: Video wrapper setVolume updates IMA with volume', function()
+  it('VTC Integration: Video wrapper setVolume updates IMA with volume if ad started', function()
   {
     initAndPlay(true, vci);
     var am = google.ima.adManagerInstance;
@@ -767,9 +767,40 @@ describe('ad_manager_ima', function()
     {
       vol = volume;
     };
+    //we tell IMA to start ad
     videoWrapper.play();
+    //IMA tells us ad is started
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
+  });
+
+  it('VTC Integration: Video wrapper setVolume saves volume if ad is not started', function()
+  {
+    initAndPlay(true, vci);
+    var TEST_VOLUME = 0.5;
+    videoWrapper.setVolume(TEST_VOLUME);
+    expect(ima.savedVolume).to.be(TEST_VOLUME);
+  });
+
+  it('VTC Integration: Saved volume is consumed when ad starts', function()
+  {
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    var vol = 0;
+    var TEST_VOLUME = 0.5;
+    am.setVolume = function(volume)
+    {
+      vol = volume;
+    };
+    videoWrapper.setVolume(TEST_VOLUME);
+    expect(ima.savedVolume).to.be(TEST_VOLUME);
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //IMA tells us ad is started
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(vol).to.be(TEST_VOLUME);
+    expect(ima.savedVolume).to.be(-1);
   });
 
   it('VTC Integration: Video wrapper getCurrentTime retrieves the current time', function()
@@ -830,7 +861,10 @@ describe('ad_manager_ima', function()
     {
       return vol;
     };
+    //we tell IMA to start ad
     videoWrapper.play();
+    //IMA tells us ad is started
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
     videoWrapper.raiseVolumeEvent();

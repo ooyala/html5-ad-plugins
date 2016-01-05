@@ -507,11 +507,6 @@ require("../html5-common/js/utils/utils.js");
           }
           else
           {
-            if (this.savedVolume >= 0)
-            {
-              this.setVolume(this.savedVolume);
-              this.savedVolume = -1;
-            }
             _IMAAdsManager.start();
             this.adPlaybackStarted = true;
           }
@@ -1245,6 +1240,11 @@ require("../html5-common/js/utils/utils.js");
             if(ad.isLinear())
             {
               _linearAdIsPlaying = true;
+              if (this.savedVolume >= 0)
+              {
+                this.setVolume(this.savedVolume);
+                this.savedVolume = -1;
+              }
             }
             this.currentIMAAd = ad;
             _onSizeChanged();
