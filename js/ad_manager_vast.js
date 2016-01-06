@@ -83,20 +83,41 @@ OO.Ads.manager(function(_, $) {
       'close' ];
 
     /**
-     * Helper function to verify that the xml has a valid vast ad in it and that it is a valid xml.
+     * Helper function to verify that XML is valid
      * @param {xml} vastXML Contains the vast ad data to be parsed.
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
     this.isValidVastXML = _.bind(function(vastXML) {
+      return this.isValidRootTagName(vastXML) && this.isValidVastVersion(vastXML);
+    }, this);
+
+    /**
+     * Helper function to verify XML has valid VAST root tag.
+     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
+     */
+    this.isValidRootTagName = function(vastXML) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
         return false;
       }
-      // TODO, when 3.0 is supported, update this check.
-      if ($(vastXML.firstChild).attr('version') !== '2.0') { return false; }
       return true;
-    }, this);
+    };
+
+    /**
+     * Helper function to verify XML is a valid VAST version.
+     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
+     */
+    this.isValidVastVersion = function(vastXML) {
+      var vastVersion = $(vastXML.firstChild).attr("version");
+      if ( vastVersion !== "2.0" && vastVersion !== "3.0") { 
+        OO.log("Invalid VAST version: " + vastVersion);
+        return false;
+      }
+      return true;
+    };
 
     /**
      * Default template to use when creating the vast ad object.
