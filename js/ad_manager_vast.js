@@ -87,7 +87,7 @@ OO.Ads.manager(function(_, $) {
      * @param {xml} vastXML Contains the vast ad data to be parsed.
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
-    var isValidVastXML = _.bind(function(vastXML) {
+    this.isValidVastXML = _.bind(function(vastXML) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
@@ -842,7 +842,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {object} If the ad is found it returns the object otherwise it returns null.
      */
     this.parser = function(vastXML) {
-      if (!isValidVastXML(vastXML)) {
+      if (!this.isValidVastXML(vastXML)) {
         return null;
       }
 
