@@ -282,12 +282,12 @@ OO.Ads.manager(function(_, $) {
         this.checkCompanionAds(adWrapper.ad);
         this.amc.showSkipVideoAdButton(true);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
+        var skippable = adWrapper.ad.data.linear.skippable;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
             duration: adWrapper.ad.durationInMilliseconds/1000,
             hasClickUrl: hasClickUrl,
-            indexInPod: 1,
-            skippable: false
+            indexInPod: 1
           });
       }
       else {
