@@ -75,7 +75,7 @@ OO.Ads.manager(function(_, $) {
     this.initialize = function(amcIn) {
       amc = amcIn;
       amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(onPlayRequested, this));
-      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(onRePlayRequested, this));
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(onReplayRequested, this));
       amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(onPlay, this));
       amc.addPlayerListener(amc.EVENTS.PAUSE, _.bind(onPause, this));
       amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(onContentCompleted, this));
@@ -659,6 +659,13 @@ OO.Ads.manager(function(_, $) {
       updateOverlayPosition();
     };
 
+    var setupAdsWrapper = function() {
+      shouldRequestAds = true;
+      if (freeWheelCompanionAdsWrapper) {
+        freeWheelCompanionAdsWrapper.show();
+      }
+    };
+
     /**
      * Called when the first playback is requested against the player.
      * Show the companion ads wrapper.
@@ -666,18 +673,19 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#onPlayRequested
      */
     var onPlayRequested = function() {
-      shouldRequestAds = true;
-      if (freeWheelCompanionAdsWrapper) {
-        freeWheelCompanionAdsWrapper.show();
-      }
+      setupAdsWrapper();
     };
 
-    var onRePlayRequested = function() {
+    /**
+     * Called when a replay is requested against the player.
+     * Resets the ad state.
+     * Show the companion ads wrapper.
+     * @private
+     * @method Freewheel#onReplayRequested
+     */
+    var onReplayRequested = function() {
       _resetAdState();
-      shouldRequestAds = true;
-      if (freeWheelCompanionAdsWrapper) {
-        freeWheelCompanionAdsWrapper.show();
-      }
+      setupAdsWrapper();
     };
 
     /**
