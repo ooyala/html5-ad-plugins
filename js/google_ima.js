@@ -1771,6 +1771,8 @@ require("../html5-common/js/utils/utils.js");
    * @property {object} controller A reference to the Ooyala Video Tech Controller
    * @property {boolean} disableNativeSeek When true, the plugin should supress or undo seeks that come from
    *                                       native video controls
+   * @property {boolean} readyForCss When true, css may be applied on the video element.  When false, css
+   *                                 should be stored for use later when this value is true.
    */
   var GoogleIMAVideoWrapper = function(ima)
   {
