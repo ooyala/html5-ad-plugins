@@ -1898,6 +1898,9 @@ require("../html5-common/js/utils/utils.js");
      */
     this.applyCss = function(css)
     {
+      if (this.isControllingVideo && _ima.sharedVideoElement) {
+        $(_ima.sharedVideoElement).css(css);
+      }
     };
 
     /**
