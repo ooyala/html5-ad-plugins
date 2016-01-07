@@ -541,6 +541,25 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+    * This method pings the error URI with a specific error code if the provided error URI contains "[ERRORCODE]".
+    * If URI does not contain "[ERRORCODE]", URI is still pinged.
+    *
+    * @public
+    * @method Vast#trackError
+    * @param {number} Error code.
+    */
+    this.trackError = function(code) {
+      if (!this.vastAdUnit || !this.vastAdUnit.data.error) {
+        return;
+      }
+      var url = this.vastAdUnit.data.error[0];
+
+      // if replace does not find a match, original string is returned
+      url = url.replace(/\[ERRORCODE\]/, code);
+      OO.pixelPing(url);
+    };
+
+    /**
      * If the ad fails to load a second time, this callback is called and triggers an error message, but doesn't try to
      * reload the ad.
      * @public
