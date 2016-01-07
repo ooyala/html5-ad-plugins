@@ -1103,6 +1103,14 @@ require("../html5-common/js/utils/utils.js");
         adsSettings.useStyledNonLinearAds = true;
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
 
+        // When the ads manager is ready, we are ready to apply css changes to the video element
+        // If the sharedVideoElement is not used, mark it as null before applying css
+        this.videoControllerWrapper.readyForCss = true;
+        if (!_IMAAdsManager.isCustomPlaybackUsed()) {
+          this.sharedVideoElement = null;
+        }
+        this.videoControllerWrapper.applyStoredCss();
+
         //a cue point index of 0 references a preroll, so we know we have a preroll if we find it in cuePoints
         var cuePoints = _IMAAdsManager.getCuePoints();
         this.hasPreroll = cuePoints.indexOf(0) >= 0;
@@ -1771,6 +1779,8 @@ require("../html5-common/js/utils/utils.js");
     this.controller = {};
     this.disableNativeSeek = true;
     this.isControllingVideo = true;
+    this.readyForCss = false;
+    var storedCss = null;
 
     /************************************************************************************/
     // Required. Methods that Video Controller, Destroy, or Factory call
@@ -1898,10 +1908,37 @@ require("../html5-common/js/utils/utils.js");
      */
     this.applyCss = function(css)
     {
-      if (this.isControllingVideo && _ima.sharedVideoElement) {
-        $(_ima.sharedVideoElement).css(css);
+      if (!this.readyForCss)
+      {
+        storedCss = css;
+      }
+      else
+      {
+        applyCssToElement(css);
       }
     };
+
+    /**
+     * Triggers application of css changes that have been previously stored.
+     * @public
+     * @method GoogleIMAVideoWrapper#applyStoredCss
+     */
+    this.applyStoredCss = function()
+    {
+      this.applyCss(storedCss);
+    };
+
+    /**
+     * Does the application of css to the video element if the video element is shared and under ima control.
+     * @private
+     * @method GoogleIMAVideoWrapper#applyCssToElemenet
+     */
+    var applyCssToElement = _.bind(function(css)
+    {
+      if (css && this.isControllingVideo && _ima.sharedVideoElement) {
+        $(_ima.sharedVideoElement).css(css);
+      }
+    }, this);
 
     /**
      * Destroys the individual video element.
