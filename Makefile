@@ -16,7 +16,7 @@ test-debug:
       --timeout 3500 \
       --require test/test_lib.js \
       --reporter $(REPORTER) \
-      --debug-brk --bail \
+      --debug --bail \
       $(UNIT_TESTS)
 
 .PHONY: test

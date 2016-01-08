@@ -935,9 +935,11 @@ require("../html5-common/js/utils/utils.js");
             _IMAAdDisplayContainer.destroy();
           }
 
+          var uiWrapper = this.sharedVideoElement ? _amc.ui.pluginsElement[0] : _amc.ui.adWrapper[0];
+
           //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
           //also doesn't not seem to work nicely with podded ads if you don't use it.
-          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0],
+          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(uiWrapper,
                                                                      this.sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
