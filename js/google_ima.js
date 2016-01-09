@@ -1094,7 +1094,7 @@ require("../html5-common/js/utils/utils.js");
         }
         // https://developers.google.com/interactive-media-ads/docs/sdks/googlehtml5_apis_v3#ima.AdsRenderingSettings
         var adsSettings = new google.ima.AdsRenderingSettings();
-        adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
+        adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
 
