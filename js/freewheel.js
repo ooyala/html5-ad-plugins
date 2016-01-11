@@ -271,7 +271,7 @@ OO.Ads.manager(function(_, $) {
           slotEndedCallbacks[adRequestType]();
           delete slotEndedCallbacks[adRequestType];
         }
-      });
+      }, this);
 
       fwContext.submitRequest();
       fwAdDataRequested = true;
