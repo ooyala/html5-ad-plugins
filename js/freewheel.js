@@ -288,9 +288,6 @@ OO.Ads.manager(function(_, $) {
       _.delay(callback, duration);
     }, this);
 
-    // Using this to time ad request
-    var ad_request_timer = {};
-
     /**
      * Called when the Freewheel ad xml request has completed.  If the result was success, read the ad slots.
      * Declare that the ad manager is ready for use by setting this.ready=true.
