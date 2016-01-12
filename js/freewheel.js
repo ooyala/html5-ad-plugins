@@ -277,16 +277,18 @@ OO.Ads.manager(function(_, $) {
 
       fwContext.submitRequest();
       fwAdDataRequested = true;
-      setAdRequestTimeout(adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
+      _setAdRequestTimeout(adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
     }, this);
 
     /**
      * Set timeout for ad request. Will call the provided callback
      * if we timeout.
+     * @private
+     * @method Freewheel#_setAdRequestTimeout
      * @param callback The function to call when we time out
      * @param duration the time to wait before timing out
      */
-    var setAdRequestTimeout = _.bind(function(callback, duration){
+    var _setAdRequestTimeout = _.bind(function(callback, duration){
       if (adRequestTimeout) {
         var error = "Ad Request Timeout already exists - bad state";
         amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
@@ -820,9 +822,9 @@ OO.Ads.manager(function(_, $) {
     /**
      * Helper function that checks if the ad request timeout exists and erases it.
      * @private
-     * @method Freewheel#clearAdRequestTimeout
+     * @method Freewheel#_clearAdRequestTimeout
      */
-    var clearAdRequestTimeout = _.bind(function() {
+    var _clearAdRequestTimeout = _.bind(function() {
       if (adRequestTimeout) {
         clearTimeout(adRequestTimeout);
         adRequestTimeout = null;
