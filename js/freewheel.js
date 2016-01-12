@@ -52,6 +52,7 @@ OO.Ads.manager(function(_, $) {
     var adStartedCallbacks   = {};
     var adEndedCallbacks     = {};
     var indexInPod           = 0;
+    var adRequestTimeout     = null;
 
     // ui - do I need this?
     var freeWheelCompanionAdsWrapperId = null;
@@ -59,6 +60,7 @@ OO.Ads.manager(function(_, $) {
 
     //configuration
     var marqueeCountdown = true;
+
 
     /**
      * Initializes the class by registering the ad manager controller.
@@ -285,7 +287,12 @@ OO.Ads.manager(function(_, $) {
      * @param duration the time to wait before timing out
      */
     var setAdRequestTimeout = _.bind(function(callback, duration){
-      _.delay(callback, duration);
+      if (adRequestTimeout) {
+        var error = "Ad Request Timeout already exists - bad state";
+        amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
+      } else {
+        adRequestTimeout = _.delay(callback, duration);
+      }
     }, this);
 
     /**
@@ -809,6 +816,18 @@ OO.Ads.manager(function(_, $) {
       delete adStartedCallbacks[event.slot.getCustomId()];
       delete adEndedCallbacks[event.slot.getCustomId()];
     };
+
+    /**
+     * Helper function that checks if the ad request timeout exists and erases it.
+     * @private
+     * @method Freewheel#clearAdRequestTimeout
+     */
+    var clearAdRequestTimeout = _.bind(function() {
+      if (adRequestTimeout) {
+        clearTimeout(adRequestTimeout);
+        adRequestTimeout = null;
+      }
+    }, this);
 
     /**
      * Cancel the current ad, reset the state variables, dispose the remote Freewheel class.
