@@ -196,6 +196,7 @@ OO.Ads.manager(function(_, $) {
       // If Freewheel SDK isn't properly loaded by the JS, unregister
       if (typeof(tv) == "undefined") {
         amc.removeAdManager(this.name);
+        _clearAdRequestTimeout();
         return;
       }
 
@@ -272,6 +273,7 @@ OO.Ads.manager(function(_, $) {
           amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
           slotEndedCallbacks[adRequestType]();
           delete slotEndedCallbacks[adRequestType];
+          _clearAdRequestTimeout();
         }
       }, this);
 
@@ -314,6 +316,7 @@ OO.Ads.manager(function(_, $) {
       } else {
         OO.log("FW: freewheel metadata request failure");
       }
+      _clearAdRequestTimeout();
       slotEndedCallbacks[adRequestType]();
       delete slotEndedCallbacks[adRequestType];
     };
@@ -838,6 +841,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.destroy = function() {
       _cancelCurrentAd();
+      _clearAdRequestTimeout();
 
       // state
       this.ready         = false;
