@@ -61,7 +61,6 @@ OO.Ads.manager(function(_, $) {
     //configuration
     var marqueeCountdown = true;
 
-
     /**
      * Initializes the class by registering the ad manager controller.
      * Adds listeners to Ooyala player events.
@@ -316,6 +315,7 @@ OO.Ads.manager(function(_, $) {
       } else {
         OO.log("FW: freewheel metadata request failure");
       }
+      // clear ad request timeout since fw_onAdRequestComplete was called
       _clearAdRequestTimeout();
       slotEndedCallbacks[adRequestType]();
       delete slotEndedCallbacks[adRequestType];
