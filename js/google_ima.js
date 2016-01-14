@@ -695,8 +695,6 @@ require("../html5-common/js/utils/utils.js");
                 _endCurrentAd(true);
             }
 
-            var w = _amc.ui.width;
-            var h = _amc.ui.height;
             _IMAAdsManager.init(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
             if(this.vcPlayRequested)
