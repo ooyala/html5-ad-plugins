@@ -49,7 +49,6 @@ require("../html5-common/js/utils/utils.js");
 
       //Constants
       var DEFAULT_ADS_REQUEST_TIME_OUT = 3000;
-      var OVERLAY_OFFSET = 40;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
@@ -695,9 +694,7 @@ require("../html5-common/js/utils/utils.js");
                 _endCurrentAd(true);
             }
 
-            var w = _amc.ui.width;
-            var h = _amc.ui.height;
-            _IMAAdsManager.init(w, h, google.ima.ViewMode.NORMAL);
+            _IMAAdsManager.init(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
             if(this.vcPlayRequested)
             {
@@ -776,19 +773,7 @@ require("../html5-common/js/utils/utils.js");
         if (_IMAAdsManager)
         {
           var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
-          if (this.currentIMAAd && !this.currentIMAAd.isLinear())
-          {
-            // For nonlinear ads, the ad slot can be adjusted at this time.
-            // In this example, we make the ad to be shown at the bottom
-            // of the slot. We also make the slot a bit shorter, so there is
-            // a padding at the bottom.
-            _IMAAdsManager.resize(_amc.ui.width, _amc.ui.height - OVERLAY_OFFSET, viewMode);
-          }
-          else
-          {
-            // For linear ad, set the size to the full video player size.
-            _IMAAdsManager.resize(_amc.ui.width, _amc.ui.height, viewMode);
-          }
+          _IMAAdsManager.resize(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, viewMode);
         }
       });
 
