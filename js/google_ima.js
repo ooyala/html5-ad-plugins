@@ -49,7 +49,6 @@ require("../html5-common/js/utils/utils.js");
 
       //Constants
       var DEFAULT_ADS_REQUEST_TIME_OUT = 3000;
-      var OVERLAY_OFFSET = 40;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
