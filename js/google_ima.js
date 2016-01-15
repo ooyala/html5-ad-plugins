@@ -920,12 +920,14 @@ require("../html5-common/js/utils/utils.js");
             _IMAAdDisplayContainer.destroy();
           }
 
+          //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
+          var uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
           //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
           //also doesn't not seem to work nicely with podded ads if you don't use it.
 
           //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
           //properly with the Alice skin.
-          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.playerSkinPluginsElement[0],
+          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(uiContainer,
                                                                      this.sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
