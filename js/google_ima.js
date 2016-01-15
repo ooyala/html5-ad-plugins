@@ -925,7 +925,7 @@ require("../html5-common/js/utils/utils.js");
 
           //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
           //properly with the Alice skin.
-          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.pluginsElement[0],
+          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.playerSkinPluginsElement[0],
                                                                      this.sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
