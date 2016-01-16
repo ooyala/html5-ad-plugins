@@ -49,7 +49,6 @@ require("../html5-common/js/utils/utils.js");
 
       //Constants
       var DEFAULT_ADS_REQUEST_TIME_OUT = 3000;
-      var OVERLAY_OFFSET = 40;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
@@ -695,9 +694,7 @@ require("../html5-common/js/utils/utils.js");
                 _endCurrentAd(true);
             }
 
-            var w = _amc.ui.width;
-            var h = _amc.ui.height;
-            _IMAAdsManager.init(w, h, google.ima.ViewMode.NORMAL);
+            _IMAAdsManager.init(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
             if(this.vcPlayRequested)
             {
@@ -776,19 +773,7 @@ require("../html5-common/js/utils/utils.js");
         if (_IMAAdsManager)
         {
           var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
-          if (this.currentIMAAd && !this.currentIMAAd.isLinear())
-          {
-            // For nonlinear ads, the ad slot can be adjusted at this time.
-            // In this example, we make the ad to be shown at the bottom
-            // of the slot. We also make the slot a bit shorter, so there is
-            // a padding at the bottom.
-            _IMAAdsManager.resize(_amc.ui.width, _amc.ui.height - OVERLAY_OFFSET, viewMode);
-          }
-          else
-          {
-            // For linear ad, set the size to the full video player size.
-            _IMAAdsManager.resize(_amc.ui.width, _amc.ui.height, viewMode);
-          }
+          _IMAAdsManager.resize(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, viewMode);
         }
       });
 
@@ -935,12 +920,14 @@ require("../html5-common/js/utils/utils.js");
             _IMAAdDisplayContainer.destroy();
           }
 
+          //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
+          var uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
           //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
           //also doesn't not seem to work nicely with podded ads if you don't use it.
 
           //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
           //properly with the Alice skin.
-          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.pluginsElement[0],
+          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(uiContainer,
                                                                      this.sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
