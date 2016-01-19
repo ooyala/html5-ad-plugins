@@ -1619,7 +1619,11 @@ require("../html5-common/js/utils/utils.js");
               var adPos = adPodInfo.getAdPosition();
               var totalAds = adPodInfo.getTotalAds();
               //IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
-              if (adPos == totalAds || forceEndAdPod)
+
+              //Wait until we receive content resume event from IMA before we end ad pod for
+              //single video element mode. This is to workaround an issue where the video controller
+              //and IMA are out of sync if we end ad pod too early for single video element mode
+              if ((!_amc.ui.useSingleVideoElement && adPos == totalAds) || forceEndAdPod)
               {
                 _endCurrentAdPod(true);
               }
