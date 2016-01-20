@@ -23,13 +23,9 @@ OO.Ads.manager(function(_, $) {
    *                            to the sdk.
    * @property {boolean} adModuleJsReady Set to true when the sdk is loaded successfully otherwise it is false. If false
    *                                     when it tries to get the sdk data, it will destroy the ad manager.
-   * @property {Image} overlayImg Contains the image object of the overlay that is or is going to be displayed.
-   * @property {boolean} controlsVisible A flag that keeps track of whether or not the controls are visible.
-   * @property {string} OVERLAY_AD_CONTAINER Contains the id of the container that holds the overlay.
    * @property {number} overlayTimer Keeps track of the timer object that was created for the overlay.
    * @property {number} timerRemainingTime The amount of seconds left in the timer when it is paused and resumed.
    * @property {number} timerStartTime The amount in seconds that the timer was started at.
-   * @property {object} overlayDiv Keeps track of the overlay div.
    * @property {number} overlayTimeoutTime Used to keep track of the overlay timer override that was set by a param.
    */
   var OoyalaAdTech = function() {
@@ -40,14 +36,11 @@ OO.Ads.manager(function(_, $) {
     this.lastVideoAd = null;
     this.tracker = null;
     this.adModuleJsReady = false;
-    this.overlayImg = new Image();
-    this.controlsVisible = false;
-    this.OVERLAY_AD_CONTAINER = '#overlay_ad_container';
     this.overlayTimer;
     this.timerRemainingTime;
     this.timerStartTime;
-    this.overlayDiv = null;
     this.overlayTimeoutTime = null;
+    var adCompletedCallback = null;
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -60,47 +53,7 @@ OO.Ads.manager(function(_, $) {
       this.amc = amc;
 
       // Add any player event listeners now
-      this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED , _.bind(onSizeChanged, this));
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(onFullscreenChanged, this));
-      this.amc.addPlayerListener(this.amc.EVENTS.CONTROLS_SHOWN , _.bind(onControlsShown, this));
-      this.amc.addPlayerListener(this.amc.EVENTS.CONTROLS_HIDDEN, _.bind(onControlsHidden, this));
-    };
-
-    /**
-     * When the user changes the screen size, normally from fullscreen to windowed mode, the overlay and video need to
-     * be adjusted to be centered. The video will also change size but the overlay will only reposition.
-     * @private
-     * @method OoyalaAdTech#onSizeChanged
-     */
-    var onSizeChanged = function() {
-      var overlayAdContainer = this.amc.ui.rootElement.find(this.OVERLAY_AD_CONTAINER);
-      var newHeight = '100%';
-      var newWidth = '100%';
-      if (this.overlayDiv) {
-        overlayAdContainer.css({ "width": newWidth, "height": newHeight});
-        this.setOverlayPadding();
-      }
-    };
-
-    /**
-     * When the controls are visible, the overlay needs to be adjusted to be above the controls.
-     * @private
-     * @method OoyalaAdTech#onControlsShown
-     */
-    var onControlsShown = function() {
-      this.controlsVisible = true;
-      this.setOverlayPadding();
-    };
-
-    /**
-     * When the controls are hidden the overlay needs to be adjusted to be at the bottom of the player, where the
-     * controls were.
-     * @private
-     * @method OoyalaAdTech#onControlsHidden
-     */
-    var onControlsHidden = function() {
-      this.controlsVisible = false;
-      this.setOverlayPadding();
     };
 
     /**
@@ -122,20 +75,25 @@ OO.Ads.manager(function(_, $) {
       var vpDomain = adManagerMetadata["vpDomain"];
       var remoteModuleJs = vpDomain + "/proxy/html5-sdk/2/latest/plugin.min.js";
       var durationOfMovieInSecs = movieMetadata.duration/1000;
-      var adTags = [adManagerMetadata["playerLevelTags"]];
-      var cuePoints = adManagerMetadata["playerLevelCuePoints"];
+      var adTags = adManagerMetadata["playerLevelTags"].split(',');
+      var linearAdBreaks = adManagerMetadata["playerLevelCuePoints"].split(',').map(Number);
+      var flags = adManagerMetadata["playerLevelFlags"].split(',');
+      var nonLinearAdBreaks = adManagerMetadata["nonLinearAdBreaks"].split(',').map(Number);
+
+      //TODO:SEND TO SDK
+      var longFormLimit = parseInt(adManagerMetadata["longFormLimit"]);
+      var playerLevelShares = adManagerMetadata["playerLevelShares"].split(',');
+
       var contentMetadata = {
         duration: durationOfMovieInSecs,
-        //TODO: make flags via metadata not hardcoded.
-        flags: [],
+        flags: flags,
         tags: adTags
       };
       var requestSettings = {
         width: 640,
         height: 480,
-        //TODO: Updated to be gathered via metadata and not hardcoded.
-        linearPlaybackPositions: [20,50],
-        nonlinearPlaybackPositions: [10]
+        linearPlaybackPositions: linearAdBreaks,
+        nonlinearPlaybackPositions: nonLinearAdBreaks
       };
 
       if (adManagerMetadata["overlayTimeoutTime"] != null) {
@@ -219,16 +177,22 @@ OO.Ads.manager(function(_, $) {
             var ad = session.insertionPoints[i].slots[s].ads[a];
             if (ad && ad.type != "inventory") {
               var type;
+              var streams = {};
               if (ad.creatives && ad.creatives.length > 0 && ad.creatives[0].type == "video"){
                 type = this.amc.ADTYPE.LINEAR_VIDEO;
                 if (!_.isEmpty(ad.creatives[0].mediaFiles)) {
-                  var streams = ad.creatives[0].mediaFiles;
-                  if (OO.supportedVideoTypes.webm) {
-                    ad.streamUrl = this._extractStreamForType(streams, "webm");
+                  var vpStreams = ad.creatives[0].mediaFiles;
+                  var videoEncodingsSupported = OO.VIDEO.ENCODING;
+                  var streamData = null;
+                  for (var encoding in videoEncodingsSupported) {
+                    streamData = null;
+                    streamData = this._extractStreamForType(vpStreams, videoEncodingsSupported[encoding]);
+                    if (streamData) {
+                      streams[videoEncodingsSupported[encoding]] = streamData;
+                    }
                   }
-
-                  if (ad.streamUrl == null && OO.supportedVideoTypes.mp4) {
-                    ad.streamUrl = this._extractStreamForType(streams, "mp4");
+                  if (ad.streamUrl != null ||  !_.isEmpty(streams)) {
+                    ad.streams = streams;
                   }
                   ad.clickThrough = ad.creatives[0].clickThroughUrl;
                 }
@@ -259,7 +223,7 @@ OO.Ads.manager(function(_, $) {
               var duration = ad.creatives[0].duration; //TODO support multiple creatives potentially.
               timeline.push(new this.amc.Ad({
                 position: timeToPlay, duration: duration, adManager: this.name,
-                ad: ad, adType: type
+                ad: ad, adType: type, streams: streams
               }));
             } else if (ad) {
               this.tracker.reportError(ad, videoplaza.tracking.Tracker.AdError.NO_AD);
@@ -272,6 +236,22 @@ OO.Ads.manager(function(_, $) {
       }
       this.amc.appendToTimeline(timeline);
     }, this);
+
+    /**
+     * Extracts the creative based on the format type that is expected.
+     * @public
+     * @method Vast#_extractStreamForType
+     * @param {object} streams The stream choices from the metadata.
+     * @param {string} type The type of video we want to use for the creative.
+     * @returns {string} The creative url if it finds one, otherwise null.
+     */
+    this._extractStreamForType = function(streams, type) {
+      var filter = [];
+      filter.push("video/" +type);
+      var stream = _.find(streams, function(v) { return (filter.indexOf(v.type) >= 0); }, this);
+      return stream ? stream.url : null;
+    };
+
     /**
      * Called by Ad Manager Controller.  This function asks the ad manager to pass a list of all ads to the
      * ad manager for addition in the timeline.
@@ -313,12 +293,26 @@ OO.Ads.manager(function(_, $) {
      * When the ad is finished playing we need to call the AMC callback that was provided to let the AMC know that the
      * ad is finished playing.
      * @public
-     * @method OoyalaAdTech#adCompleted
-     * @param {function} adCompletedCallback The callback that was provided via the AMC.
+     * @method OoyalaAdTech#adVideoEnded
      */
-    this.adCompleted = function(adCompletedCallback) {
+    this.adVideoEnded = function() {
       this.tracker.trackEvent(this.lastVideoAd.ad.creatives[0], videoplaza.tracking.Tracker.CreativeEventType.COMPETE);
-      adCompletedCallback();
+      if(typeof adCompletedCallback === "function") {
+        adCompletedCallback();
+        adCompletedCallback = null;
+      }
+    };
+
+    /**
+     * When the ad fails to play we need to call the AMC callback that was provided to let the AMC know that the
+     * ad is finished playing and we need to follow the process for cleaning up after an ad fails.
+     * @public
+     * @method OoyalaAdTech#adVideoError
+     */
+    this.adVideoError = function() {
+      this.adVideoEnded();
+      // VTC will pause the ad when the video element loses focus
+      cancelAd(null);
     };
 
     /**
@@ -363,25 +357,6 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Padding to position the overlay correctly is calculate using the controls height and the height of
-     * the innerWrapper and the height of the image.
-     * @public
-     * @method OoyalaAdTech#setOverlayPadding
-     */
-    this.setOverlayPadding = function() {
-      var controlsLayer = this.amc.ui.rootElement.find(".oo_controls.oo_full_controls");
-      var innerWrapper = this.amc.ui.videoWrapper;
-      var controlsLocation = 0;
-      if (this.controlsVisible) {
-        controlsLocation = controlsLayer.height() + OO.CONSTANTS.CONTROLS_BOTTOM_PADDING;
-      }
-      var newTopPadding  = innerWrapper.height() - this.overlayImg.height - controlsLocation;
-      if (this.overlayDiv) {
-        this.overlayDiv.css({"padding-top": newTopPadding});
-      }
-    };
-
-    /**
      * Once the overlay image has loaded, it is time to add it to the screen. Also the Ad Manager needs to be informed
      * that the ad has started playing.
      * @public
@@ -392,54 +367,35 @@ OO.Ads.manager(function(_, $) {
      * @param {object} ad Contains the Ad's metadata for this ad that will be needed if the user clicks ont he ad.
      */
     this.onOverlayImgLoaded = function(adElement, innerWrapper, adStartedCallback, ad){
-      this.overlayDiv = OO.$("<div></div>");
-      this.overlayDiv.css({"display": "inline-block", "width": this.overlayImg.width, "height": this.overlayImg.height});
-      var imageTag = OO.$("<img>");
-      imageTag.click(_.bind(this.overlayOnClick, this));
-      imageTag.attr("src", this.overlayImg.src);
-      this.overlayDiv.append(imageTag);
-      adElement.append(this.overlayDiv);
-      this.amc.ui.pluginsElement.append(adElement);
-      this.setOverlayPadding();
-      this.checkCompanionAds(ad.ad);
-      if (adStartedCallback) {
-        adStartedCallback();
-      }
-      if (this.overlayTimeoutTime != null && this.overlayTimeoutTime <= 0) {
-        OO.log("Ooyala Adtech:: Overlay Timeout Timer overridden on page level.");
-        return;
-      } else if (ad.duration > 0 || (this.overlayTimeoutTime && this.overlayTimeoutTime > 0)) {
-        this.timerStartTime = (new Date()).getTime();
-        clearTimeout(this.overlayTimer);
-        this.lastOverlayAd = ad;
-        var startTimeSecs = ad.duration;
-        if (this.overlayTimeoutTime != null && this.overlayTimeoutTime > 0) {
-          startTimeSecs = this.overlayTimeoutTime;
-        }
-        var startTimerTimeMS = startTimeSecs * 1000;
-        this.timerRemainingTime = startTimerTimeMS;
-        this.overlayTimer = setTimeout(_.bind(this.cancelAd, this), startTimerTimeMS);
-      }
-    };
-
-    /**
-     * Creates the overlay elements and loads the image that is provided via the Ad's metadata creative.
-     * @public
-     * @method OoyalaAdTech#createOverlay
-     * @param {object} ad The Ad's metadata
-     * @param {function} adStartedCallback The callback needed to be called from the Ad Manager Controller when the
-     * overlay is shown.
-     * @param {string} streamURL Contains the URL that contains the image to be shown.
-     */
-    this.createOverlay = function(ad, adStartedCallback, streamURL) {
-      var innerWrapper = this.amc.ui.videoWrapper;
-      var adElement = OO.$("<div></div>");
-      adElement.attr("id", "overlay_ad_container");
-      adElement.css({"display":"inline-block","position":"absolute", "top":"0px","margin": "0px", "padding": "0px",
-        "left": "0px", "align": "center", "width": "100%", "height": "100%", "text-align": "center"});
-      this.overlayImg.onload = _.bind(this.onOverlayImgLoaded, this, adElement, innerWrapper, adStartedCallback,
-        ad);
-      this.overlayImg.src = streamURL;
+      //TODO:Update Function to work with Alice.
+      //this.overlayDiv = OO.$("<div></div>");
+      //this.overlayDiv.css({"display": "inline-block", "width": this.overlayImg.width, "height": this.overlayImg.height});
+      //var imageTag = OO.$("<img>");
+      //imageTag.click(_.bind(this.overlayOnClick, this));
+      //imageTag.attr("src", this.overlayImg.src);
+      //this.overlayDiv.append(imageTag);
+      //adElement.append(this.overlayDiv);
+      //this.amc.ui.pluginsElement.append(adElement);
+      //this.setOverlayPadding();
+      //this.checkCompanionAds(ad.ad);
+      //if (adStartedCallback) {
+      //  adStartedCallback();
+      //}
+      //if (this.overlayTimeoutTime != null && this.overlayTimeoutTime <= 0) {
+      //  OO.log("Ooyala Adtech:: Overlay Timeout Timer overridden on page level.");
+      //  return;
+      //} else if (ad.duration > 0 || (this.overlayTimeoutTime && this.overlayTimeoutTime > 0)) {
+      //  this.timerStartTime = (new Date()).getTime();
+      //  clearTimeout(this.overlayTimer);
+      //  this.lastOverlayAd = ad;
+      //  var startTimeSecs = ad.duration;
+      //  if (this.overlayTimeoutTime != null && this.overlayTimeoutTime > 0) {
+      //    startTimeSecs = this.overlayTimeoutTime;
+      //  }
+      //  var startTimerTimeMS = startTimeSecs * 1000;
+      //  this.timerRemainingTime = startTimerTimeMS;
+      //  this.overlayTimer = setTimeout(_.bind(this.cancelAd, this), startTimerTimeMS);
+      //}
     };
 
     /**
@@ -455,7 +411,7 @@ OO.Ads.manager(function(_, $) {
      * @param {function} adStartedCallback Call this function each time an ad in the set starts
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
-    this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) {
+    this.playAd = function(ad) {
       // When the ad impression has started or when the first ad in a set of podded ads has begun,  trigger
       //   adStartedCallback
       // When the ad or group of podded ads are done, trigger adEndedCallback
@@ -464,56 +420,36 @@ OO.Ads.manager(function(_, $) {
       OO.log("ad found! " + ad);
       // When the ad is done, trigger callback
       var ui = this.amc.ui;
-      var streamUrl = ad.ad.streamUrl;
+
       this.lastVideoAd = null;
 
-      //There is a caching bug with chrome that this will fix.
-      if (OO.isChrome) {
-        streamUrl = streamUrl + (/\?/.test(streamUrl) ? "&" : "?") + "_=" + OO.getRandomString();
-      }
       if (ad.isLinear) {
-        var innerWrapper = this.amc.ui.videoWrapper;
-        var onTimeUpdate = _.bind(function (ad, adPodEndedCallback, streamUrl, event) {
-          // Originally [jigish] wrote This is a hack fix for m3u8, current iOS has a bug that if the m3u8 EXTINF indication
-          // a different duration, the ended event never got dispatched. Monkey patch here to manual trigger a onEnded event
-          // need to wait OTS to fix their end. [gfrank] Doesn't seem to be fixed so using it here.
-          var duration = ad.duration;
-          var durationInt = Math.floor(duration);
-          var isM3u8 = streamUrl.toLowerCase().indexOf("m3u8") > 0;
-          this.trackQuartiles(ad, duration, this.amc.ui.adVideoElement[0].currentTime);
-          if (isM3u8 && this.amc.ui.adVideoElement[0].currentTime >= duration && duration > durationInt) {
-            this.amc.ui.adVideoElement.off("timeupdate", onTimeUpdate);
-            this.amc.ui.adVideoElement.off("ended", onEnded);
-            _.delay(_.bind(this.adCompleted, this, adPodEndedCallback), 0, event);
-          }
-        }, this, ad, adPodEndedCallback, streamUrl);
-        var onEnded = _.bind(function (ad, adPodEndedCallback, event) {
-          this.amc.ui.adVideoElement.off("ended", onEnded);
-          this.amc.ui.adVideoElement.off("timeupdate", onTimeUpdate);
-          this.adCompleted(adPodEndedCallback);
-        }, this, ad, adPodEndedCallback);
-        ui.adVideoElement.on("ended", onEnded);
-        ui.adVideoElement.on("timeupdate", onTimeUpdate);
-        ui.adVideoElement[0].src = streamUrl;
-        ui.adVideoElement[0].load(false);
-        var widthOfPlayer = innerWrapper.width();
-        var heightOfPlayer = innerWrapper.height();
-        ui.adVideoElement.css({
-          "display": "block", "width": widthOfPlayer, "height": heightOfPlayer,
-          "text-align": "center"
-        });
-        this.checkCompanionAds(ad.ad);
-        this.quartileTracks = {};
-        ui.adVideoElement[0].play();
         this.lastVideoAd = ad;
-        this.tracker.trackEvent(ad.ad.creatives[0], videoplaza.tracking.Tracker.CreativeEventType.START);
-        adPodStartedCallback();
-        ui.rootElement.find('div.oo_tap_panel').css('display', 'block');
+        this.amc.notifyPodStarted(ad.id, 1);
+        adCompletedCallback = _.bind(function(amc, adId) {
+          amc.notifyLinearAdEnded(adId);
+          amc.notifyPodEnded(adId);
+        }, this, this.amc, ad.id);
+        this.checkCompanionAds(ad.ad);
+        this.amc.showSkipVideoAdButton(true);
+        var hasClickUrl = ad.ad.clickThrough.length > 0;
+        this.amc.notifyLinearAdStarted(this.name, {
+          name: ad.id,
+          duration: ad.duration,
+          hasClickUrl: hasClickUrl,
+          indexInPod: 1,
+          skippable: false
+        });
       } else {
-        ui.rootElement.find('div.oo_tap_panel').css('display', 'none');
-        ui.adVideoElement.css("display", "none");
-        this.adEndedAMCCallback = adPodEndedCallback;
-        this.createOverlay(ad, adPodStartedCallback, streamUrl);
+        var streamUrl;
+        if (ad.ad && ad.ad.streamUrl) {
+          streamUrl = ad.ad.streamUrl;
+        }
+        else if (ad.streamUrl) {
+          streamUrl = ad.streamUrl;
+        }
+        this.amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, streamUrl);
+        this.checkCompanionAds(ad.ad);
       }
     };
 
@@ -527,13 +463,17 @@ OO.Ads.manager(function(_, $) {
      * @param {object} ad The ad object to cancel.
      */
     this.cancelAd = function(ad) {
-      //TODO: cancel linear ads
-      var overlayContainer = this.amc.ui.rootElement.find(this.OVERLAY_AD_CONTAINER);
-      if (overlayContainer) {
-        overlayContainer.remove();
-        this.lastOverlayAd = null;
-        if (_.isFunction(this.adEndedAMCCallback)) {
-          this.adEndedAMCCallback();
+      if (!this.amc || !this.amc.ui) {
+        return;
+      }
+      if (ad) {
+        if (ad.isLinear) {
+          // The VTC should pause the ad when the video element loses focus
+          this.amc.notifyLinearAdEnded(ad.id);
+          this.amc.notifyPodEnded(ad.id);
+        } else {
+          this.lastOverlayAd = null;
+          this.amc.notifyNonlinearAdEnded(ad.id);
         }
       }
     };
@@ -545,10 +485,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} amcAd The current ad data.
      */
     this.pauseAd = function(amcAd) {
-      if (amcAd && amcAd.isLinear) {
-        this.tracker.trackEvent(amcAd.ad.creatives[0], videoplaza.tracking.Tracker.CreativeEventType.PAUSE);
-        this.amc.ui.adVideoElement[0].pause();
-      }
+      // No code required here as VTC will pause the ad
     };
 
     /**
@@ -558,10 +495,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} amcAd The current ad data.
      */
     this.resumeAd = function(amcAd) {
-      if (amcAd && amcAd.isLinear) {
-        this.tracker.trackEvent(amcAd.ad.creatives[0], videoplaza.tracking.Tracker.CreativeEventType.RESUME);
-        this.amc.ui.adVideoElement[0].play();
-      }
+      // No code required here as VTC will pause the ad
     };
 
     /**
@@ -588,18 +522,16 @@ OO.Ads.manager(function(_, $) {
      * @method OoyalaAdTech#showOverlay
      */
     this.showOverlay = function() {
-      if (!this.amc.ended && this.lastOverlayAd) {
-        var overlayContainer = this.amc.ui.rootElement.find(this.OVERLAY_AD_CONTAINER);
+      //TODO: Update to work with Alice
+      /*if (!this.amc.ended && this.lastOverlayAd) {
         if (overlayContainer) {
-          overlayContainer.css('display', 'inline-block');
-          this.amc.ui.rootElement.find('div.oo_tap_panel').css('display', 'none');
-          this.amc.ui.adVideoElement.css('display', 'none');
           this.unpauseOverlayTimer();
         }
       }
       else if (this.lastOverlayAd) {
         this.cancelAd(lastOverlayAd);
       }
+      */
     };
 
     /**
@@ -611,9 +543,6 @@ OO.Ads.manager(function(_, $) {
     this.destroy = function() {
       // Stop any running ads
       this.cancelAd(null);
-      if (this.overlayDiv) {
-        this.overlayDiv = null;
-      }
     };
 
     /**
