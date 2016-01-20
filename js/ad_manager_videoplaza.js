@@ -425,10 +425,10 @@ OO.Ads.manager(function(_, $) {
 
       if (ad.isLinear) {
         this.lastVideoAd = ad;
+        this.tracker.trackEvent(ad.ad.creatives[0], videoplaza.tracking.Tracker.CreativeEventType.START);
         this.amc.notifyPodStarted(ad.id, 1);
         adCompletedCallback = _.bind(function(amc, adId) {
-          amc.notifyLinearAdEnded(adId);
-          amc.notifyPodEnded(adId);
+          notifyAmcOfAdEnd(adId);
         }, this, this.amc, ad.id);
         this.checkCompanionAds(ad.ad);
         this.amc.showSkipVideoAdButton(true);
@@ -469,14 +469,24 @@ OO.Ads.manager(function(_, $) {
       if (ad) {
         if (ad.isLinear) {
           // The VTC should pause the ad when the video element loses focus
-          this.amc.notifyLinearAdEnded(ad.id);
-          this.amc.notifyPodEnded(ad.id);
+          notifyAmcOfAdEnd(this.amc, ad.id)
         } else {
           this.lastOverlayAd = null;
           this.amc.notifyNonlinearAdEnded(ad.id);
         }
       }
     };
+
+    /**
+     * Notifies the amc that the ad has ended.
+     * @method OoyalaAdTech#notifyAmcOfAdEnd
+     * @private
+     * @param {string} adId unique id that is given to the ad.
+     */
+    var notifyAmcOfAdEnd = _.bind(function(adId) {
+      this.amc.notifyLinearAdEnded(adId);
+      this.amc.notifyPodEnded(adId);
+    },this);
 
     /**
      * Pauses the ad element.
