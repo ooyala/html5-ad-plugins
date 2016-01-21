@@ -272,8 +272,6 @@ OO.Ads.manager(function(_, $) {
      */
     this.playAd = function(adWrapper) {
       // When the ad is done, trigger callback
-      var ui = this.amc.ui;
-
       if (adWrapper.isLinear) {
         this.amc.notifyPodStarted(adWrapper.id, 1);
         adCompletedCallback = _.bind(function(amc, adId) {
@@ -281,7 +279,7 @@ OO.Ads.manager(function(_, $) {
             amc.notifyPodEnded(adId);
           }, this, this.amc, adWrapper.id);
         this.checkCompanionAds(adWrapper.ad);
-        this.amc.showSkipVideoAdButton(true);
+        calculateSkipAdOffset(adWrapper);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
@@ -303,6 +301,38 @@ OO.Ads.manager(function(_, $) {
         this.checkCompanionAds(adWrapper.ad);
       }
     };
+
+    /**
+     * Determine if a Vast ad is skippable, and if so, when the skip ad button should be displayed.
+     * Notifies AMC of the result.
+     * @private
+     * @method Vast#calculateSkipAdOffset
+     * @param {object} adWrapper The current Ad's metadata.
+     */
+    var calculateSkipAdOffset = _.bind(function(adWrapper) {
+      var skipOffset = adWrapper.ad.data.linear.skipOffset;
+      if (skipOffset) {
+        if (skipOffset.indexOf('%') === skipOffset.length - 1) {
+          this.amc.showSkipVideoAdButton(true, skipOffset, true);
+        } else {
+          //Vast format: HH:MM:SS.mmm
+          var splits = skipOffset.split(':');
+          var hh = splits[0];
+          var mm = splits[1];
+          var ss = splits[2];
+          var ms = 0;
+          var secondsSplits = ss.split('.');
+          if (secondsSplits.length === 2) {
+            ss = secondsSplits[0];
+            ms = secondsSplits[1];
+          }
+          var offsetInMs = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
+          this.amc.showSkipVideoAdButton(true, offsetInMs.toString(), true);
+        }
+      } else {
+        this.amc.showSkipVideoAdButton(false);
+      }
+    }, this);
 
     /**
      * This is called by the Ad Manager Controller when it needs to cancel an Ad due to a timeout or skip button.
@@ -337,6 +367,7 @@ OO.Ads.manager(function(_, $) {
       // Stop any running ads
       this.cancelAd();
       this.ready = false;
+      this.currentDepth = 0;
     };
 
     /**
@@ -750,6 +781,9 @@ OO.Ads.manager(function(_, $) {
         ClickThrough: filterEmpty($(linearXml).find("ClickThrough").map(function() { return $(this).text(); })),
         CustomClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
       };
+
+      result.skipOffset = $(linearXml).attr("skipoffset");
+
       var mediaFile = linearXml.find("MediaFile");
 
       parseTrackingEvents(result.tracking, linearXml);
