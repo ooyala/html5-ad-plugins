@@ -886,6 +886,24 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Helper function
+     * TODO: make private for before PR
+     * @ppublic
+     */
+    this.groupAdTags = _.bind(function(vastXML) {
+      // finds tags named either Ad, Inline, or Wrapper
+      var tags = $(vastXML).find("Ad,Inline,Wrapper").toArray();
+      var groupedTags = [];
+      for (var i = 0; i < tags.length; i += 2) {
+        groupedTags.push({
+          ad: tags[i],
+          type: $(tags[i+1]).prop("tagName").toLowerCase()
+        });
+      }
+      return groupedTags;
+    }, this);
+
+    /**
      * When the vast Ad is loaded correctly it will call this callback. Here the data is parsed to see if it is a linear
      * or nonLinear Ad. It will pull the tracking, impression, companion and clicking information. Then merge the results
      * and send it to the correct handler based on if it is Linear or not.
