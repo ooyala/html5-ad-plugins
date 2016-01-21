@@ -871,6 +871,7 @@ OO.Ads.manager(function(_, $) {
       var wrapper = $(vastXML).find("Wrapper");
       var result = { ads: [] };
 
+      //TODO: use groupAdTags instead, then utilize VastAdSingleParser
       if (inline.size() > 0) {
         result.type = "inline";
       } else if (wrapper.size() > 0) {
@@ -913,6 +914,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} xml The xml returned from loading the ad.
      */
     this._onVastResponse = function(adLoaded, xml) {
+      //TODO: vastAd should be vastAds. iterate over array of ads to keep old code
       var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
         this.errorType = "parseError";
