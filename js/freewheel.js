@@ -275,13 +275,13 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#_adRequestTimeout
      */
     var _adRequestTimeout = _.bind(function(){
+      _clearAdRequestTimeout();
       if (!fwContext._adResponse) {
         var error = "ad request timeout";
         OO.log("FW: freewheel ad request timeout");
         amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
         slotEndedCallbacks[adRequestType]();
         delete slotEndedCallbacks[adRequestType];
-        _clearAdRequestTimeout();
       }
     }, this);
 
