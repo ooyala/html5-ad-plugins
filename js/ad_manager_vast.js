@@ -896,9 +896,11 @@ OO.Ads.manager(function(_, $) {
       var tags = $(vastXML).find("Ad,Inline,Wrapper").toArray();
       var groupedTags = [];
       for (var i = 0; i < tags.length; i += 2) {
+        var adElement = tags[i];
+        var adType = $(tags[i+1]).prop("tagName").toLowerCase();
         groupedTags.push({
-          ad: tags[i],
-          type: $(tags[i+1]).prop("tagName").toLowerCase()
+          ad: adElement,
+          type: adType
         });
       }
       return groupedTags;
