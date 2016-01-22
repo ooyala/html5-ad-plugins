@@ -263,22 +263,26 @@ OO.Ads.manager(function(_, $) {
         ].join('')
       ];
 
-      // Set up function to log error if ad response is null after maximum duration allowed for ad request to respond
-      // has exceeded.
-      var adRequestTimeout = _.bind(function(){
-        if (!fwContext._adResponse) {
-          var error = "ad request timeout";
-          OO.log("FW: freewheel ad request timeout");
-          amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
-          slotEndedCallbacks[adRequestType]();
-          delete slotEndedCallbacks[adRequestType];
-          _clearAdRequestTimeout();
-        }
-      }, this);
-
       fwContext.submitRequest();
       fwAdDataRequested = true;
-      _setAdRequestTimeout(adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
+      _setAdRequestTimeout(_adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
+    }, this);
+
+    /**
+     * Set up function to log error if ad response is null after maximum duration allowed for ad request to respond
+     * has exceeded.
+     * @private
+     * @method Freewheel#_adRequestTimeout
+     */
+    var _adRequestTimeout = _.bind(function(){
+      if (!fwContext._adResponse) {
+        var error = "ad request timeout";
+        OO.log("FW: freewheel ad request timeout");
+        amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
+        slotEndedCallbacks[adRequestType]();
+        delete slotEndedCallbacks[adRequestType];
+        _clearAdRequestTimeout();
+      }
     }, this);
 
     /**
