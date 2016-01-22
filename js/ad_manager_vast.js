@@ -75,6 +75,9 @@ OO.Ads.manager(function(_, $) {
                         nonLinear: { tracking: {} } };
     var adCompletedCallback = null;
 
+    var SUPPORTED_VERSIONS = ['2.0', '3.0'];
+    var SKIP_AD_SUPPORTED = ['3.0'];
+
     /**
      * Used to keep track of what events that are tracked for vast.
      */
@@ -93,9 +96,22 @@ OO.Ads.manager(function(_, $) {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
         return false;
       }
-      // TODO, when 3.0 is supported, update this check.
-      if ($(vastXML.firstChild).attr('version') !== '2.0') { return false; }
+
+      var version = getVastVersion(vastXML);
+      if (!_.contains(SUPPORTED_VERSIONS, version)) {
+        return false;
+      }
       return true;
+    }, this);
+
+    /**
+     * Returns the Vast version of the provided XML.
+     * @private
+     * @method Vast#getVastVersion
+     * @returns {number} the Vast version
+     */
+    var getVastVersion = _.bind(function(vastXML) {
+      return $(vastXML.firstChild).attr('version');
     }, this);
 
     /**
@@ -310,27 +326,34 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata.
      */
     var calculateSkipAdOffset = _.bind(function(adWrapper) {
+      var version = adWrapper.ad.data.version;
       var skipOffset = adWrapper.ad.data.linear.skipOffset;
-      if (skipOffset) {
-        if (skipOffset.indexOf('%') === skipOffset.length - 1) {
-          this.amc.showSkipVideoAdButton(true, skipOffset, true);
-        } else {
-          //Vast format: HH:MM:SS.mmm
-          var splits = skipOffset.split(':');
-          var hh = splits[0];
-          var mm = splits[1];
-          var ss = splits[2];
-          var ms = 0;
-          var secondsSplits = ss.split('.');
-          if (secondsSplits.length === 2) {
-            ss = secondsSplits[0];
-            ms = secondsSplits[1];
+      if (_.contains(SKIP_AD_SUPPORTED, version)) {
+        if (skipOffset) {
+          if (skipOffset.indexOf('%') === skipOffset.length - 1) {
+            this.amc.showSkipVideoAdButton(true, skipOffset, true);
+          } else {
+            //Vast format: HH:MM:SS.mmm
+            var splits = skipOffset.split(':');
+            var hh = splits[0];
+            var mm = splits[1];
+            var ss = splits[2];
+            var ms = 0;
+            var secondsSplits = ss.split('.');
+            if (secondsSplits.length === 2) {
+              ss = secondsSplits[0];
+              ms = secondsSplits[1];
+            }
+            var offsetInMs = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
+            this.amc.showSkipVideoAdButton(true, offsetInMs.toString(), true);
           }
-          var offsetInMs = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
-          this.amc.showSkipVideoAdButton(true, offsetInMs.toString(), true);
+        } else {
+          this.amc.showSkipVideoAdButton(false);
         }
       } else {
-        this.amc.showSkipVideoAdButton(false);
+        //For Vast versions that don't support the skipoffset attribute, we
+        //want to use Ooyala's settings for displaying the skip ad button
+        this.amc.showSkipVideoAdButton(true);
       }
     }, this);
 
@@ -771,6 +794,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Vast#parseLinearAd
      * @param {xml} Xml containing the ad data to be parsed.
+     * @param {number} version The Vast version
      * @returns {object} result An object containing the ad data.
      */
     var parseLinearAd = _.bind(function(linearXml) {
@@ -847,10 +871,12 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#VastAdSingleParser
      * @param {xml} xml Xml that contins the ad data.
      * @param {string} type The ad type.
+     * @param {number} version The Vast version
      * @returns {object} The ad object otherwise it returns 1.
      */
-    var VastAdSingleParser = _.bind(function(xml, type) {
+    var VastAdSingleParser = _.bind(function(xml, type, version) {
       var result = getVastTemplate();
+      result.version = version;
       var linear = $(xml).find("Linear").eq(0);
       var nonLinearAds = $(xml).find("NonLinearAds");
 
@@ -881,9 +907,10 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
 
+      var result = { ads: [] };
+      result.version = getVastVersion(vastXML);
       var inline = $(vastXML).find("InLine");
       var wrapper = $(vastXML).find("Wrapper");
-      var result = { ads: [] };
 
       if (inline.size() > 0) {
         result.type = "inline";
@@ -893,7 +920,7 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
       $(vastXML).find("Ad").each(function() {
-        result.ads.push(VastAdSingleParser(this, result.type));
+        result.ads.push(VastAdSingleParser(this, result.type, result.version));
       });
 
       return result;
