@@ -310,6 +310,8 @@ OO.Ads.manager(function(_, $) {
      * @param {object} event The requestComplete event indicating success or failure
      */
     var fw_onAdRequestComplete = function(event) {
+      // clear ad request timeout since fw_onAdRequestComplete was called
+      _clearAdRequestTimeout();
       if (event.success) {
         slots = fwContext.getTemporalSlots();
         // TODO: Make sure to process these?
@@ -319,8 +321,6 @@ OO.Ads.manager(function(_, $) {
       } else {
         OO.log("FW: freewheel metadata request failure");
       }
-      // clear ad request timeout since fw_onAdRequestComplete was called
-      _clearAdRequestTimeout();
       slotEndedCallbacks[adRequestType]();
       delete slotEndedCallbacks[adRequestType];
     };
