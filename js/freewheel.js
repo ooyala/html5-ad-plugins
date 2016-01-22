@@ -278,8 +278,8 @@ OO.Ads.manager(function(_, $) {
       _clearAdRequestTimeout();
       if (!fwContext._adResponse) {
         var error = "ad request timeout";
+        fw_onError(error);
         OO.log("FW: freewheel ad request timeout");
-        amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
         slotEndedCallbacks[adRequestType]();
         delete slotEndedCallbacks[adRequestType];
       }
@@ -296,7 +296,7 @@ OO.Ads.manager(function(_, $) {
     var _setAdRequestTimeout = _.bind(function(callback, duration){
       if (adRequestTimeout) {
         var error = "Ad Request Timeout already exists - bad state";
-        amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
+        fw_onError(error);
       } else {
         adRequestTimeout = _.delay(callback, duration);
       }
