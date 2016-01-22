@@ -7,7 +7,7 @@
 <Impression>impressionurl</Impression>
 <Creatives>
 <Creative sequence="1">
-<Linear>
+<Linear skipoffset="00:00:05">
 <Duration>00:00:52</Duration>
 <TrackingEvents>
 <Tracking event="start">starturl</Tracking>
