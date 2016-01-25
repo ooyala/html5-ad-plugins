@@ -75,51 +75,61 @@ OO.Ads.manager(function(_, $) {
                         nonLinear: { tracking: {} } };
 
     /**
+     * TODO: Support all error codes. Not all error events are tracked in our code.
      * Standard VAST 3 errors
      */
     this.ERROR_CODES = {
       /**
+       * TODO: Add support
        * XML Parsing Error.
        */
       XML_PARSING:                        100,
 
       /**
+       * TODO: Add support
        * VAST Schema Validation Error.
        */
       SCHEMA_VALIDATION:                  101,
 
       /**
+       * TODO: Add support
        * VAST Version of response not supported.
        */
       VERSION_UNSUPPORTED:                102,
 
       /**
+       * TODO: Add support
        * Trafficking error. Video Player received an ad type that it was not
        * expecting and/or cannot display.
        */
       AD_TYPE_UNSUPPORTED:                200,
 
       /**
+       * TODO: Add support
        * Video player expecting different linearity.
        */
       VIDEO_EXPECT_DIFFERENT_LINEARITY:   201,
 
       /**
+       * TODO: Add support
        * Video player expecting different duration.
        */
       VIDEO_EXPECT_DIFFERENT_DURATION:    202,
 
       /**
+       * TODO: Add support
        * Video player expecting different size.
        */
       VIDEO_EXPECT_DIFFERENT_SIZE:        203,
 
       /**
+       * TODO: Add support
        * General Wrapper Error.
        */
       WRAPPER:                            300,
 
       /**
+       * TODO: Add support
        * Timeout of VAST URI provided in Wrapper element, or of VAST URI
        * provided in a subsequent Wrapper element. Includes request errors
        * such as invalid URI, unreachable or request timeout for URI, and
@@ -134,90 +144,107 @@ OO.Ads.manager(function(_, $) {
       WRAPPER_LIMIT_REACHED:              302,
 
       /**
+       * TODO: Add support
        * No ads VAST response after one or more Wrappers. Also includes
        * number of empty VAST responses from fallback.
        */
       WRAPPER_NO_ADS:                     303,
 
       /**
+       * TODO: Add support
        * General linear error. Video player is unable to display the linear ad.
        */
       LINEAR_ADS:                         400,
 
       /**
+       * TODO: Add support
        * File not found. Unable to find Linear/MediaFile from URI.
        */
       FILE_NOT_FOUND:                     401,
 
       /**
+       * TODO: Add support
        * Timeout of MediaFile URI.
        */
       MEDIAFILE_TIMEOUT:                  402,
 
       /**
+       * TODO: Add support
        * Could not find MediaFile that is supported by this video player, based
        * on the attributes of the MediaFile element.
        */
       MEDIAFILE_UNSUPPORTED:              403,
 
       /**
+       * TODO: Add support
        * Problem displaying MediaFile.
        */
       MEDIAFILE_DISPLAY_PROBLEM:          405,
 
       /**
+       * TODO: Add support
        * General NonLinearAds error.
        */
       NONLINEAR_ADS:                      500,
 
       /**
+       * TODO: Add support
        * Unable to display NonLinear Ad because creative dimensions do not
        * align with creative display area(i.e., creative dimension too large).
        */
       NONLINEAR_ADS_DIMENSIONS:           501,
 
       /**
+       * TODO: Add support
        * Unable to fetch NonLinearAds/NonLinear resource.
        */
       NONLINEAR_ADS_UNABLE_TO_FETCH:      502,
 
       /**
+       * TODO: Add support
        * Could not find NonLinear resource with supported type.
        */
       NONLINEAR_ADS_RESOURCE_UNSUPPORTED: 503,
 
       /**
+       * TODO: Add support
        * General CompanionAds error.
        */
       COMPANION_ADS:                      600,
 
       /**
+       * TODO: Add support
        * Unable to display companion because creative dimensions do not fit
        * within Companion display area (i.e., no available space).
        */
       COMPANION_ADS_DIMENSIONS:           601,
 
       /**
+       * TODO: Add support
        * Unable to display Required Companion.
        */
       COMPANION_ADS_UNABLE_TO_DISPLAY:    602,
 
       /**
+       * TODO: Add support
        * Unable to fetch CompanionAds/Companion resource.
        */
       COMPANION_ADS_UNABLE_TO_FETCH:      603,
 
       /**
+       * TODO: Add support
        * Could not find Companion resource with supported type.
        */
       COMPANION_ADS_RESOURCE_UNSUPPORTED: 604,
 
       /**
+       * TODO: Add support
        * Undefined error.
        */
       UNDEFINED:                          900,
 
       /**
+       * TODO: Add support
        * General VPAID error.
        */
       VPAID:                              901
