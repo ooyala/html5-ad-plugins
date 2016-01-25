@@ -57,6 +57,7 @@ OO.Ads.manager(function(_, $) {
     var adStartedCallbacks   = {};
     var adEndedCallbacks     = {};
     var indexInPod           = 0;
+    var adRequestTimeout     = null;
 
     // ui - do I need this?
     var freeWheelCompanionAdsWrapperId = null;
@@ -202,6 +203,7 @@ OO.Ads.manager(function(_, $) {
       // If Freewheel SDK isn't properly loaded by the JS, unregister
       if (typeof(tv) == "undefined") {
         amc.removeAdManager(this.name);
+        _clearAdRequestTimeout();
         return;
       }
 
@@ -269,9 +271,43 @@ OO.Ads.manager(function(_, $) {
         ].join('')
       ];
 
-      // TODO: Implement a timeout here in case fw_onAdRequestComplete doesn't get called - PBI-731
       fwContext.submitRequest();
       fwAdDataRequested = true;
+      _setAdRequestTimeout(_adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
+    }, this);
+
+    /**
+     * Set up function to log error if ad response is null after maximum duration allowed for ad request to respond
+     * has exceeded.
+     * @private
+     * @method Freewheel#_adRequestTimeout
+     */
+    var _adRequestTimeout = _.bind(function(){
+      _clearAdRequestTimeout();
+      if (!fwContext._adResponse) {
+        var error = "ad request timeout";
+        fw_onError(error);
+        OO.log("FW: freewheel ad request timeout");
+        slotEndedCallbacks[adRequestType]();
+        delete slotEndedCallbacks[adRequestType];
+      }
+    }, this);
+
+    /**
+     * Set timeout for ad request. Will call the provided callback
+     * if we timeout.
+     * @private
+     * @method Freewheel#_setAdRequestTimeout
+     * @param callback The function to call when we time out
+     * @param duration the time to wait before timing out
+     */
+    var _setAdRequestTimeout = _.bind(function(callback, duration){
+      if (adRequestTimeout) {
+        var error = "Ad Request Timeout already exists - bad state";
+        fw_onError(error);
+      } else {
+        adRequestTimeout = _.delay(callback, duration);
+      }
     }, this);
 
     /**
@@ -282,6 +318,8 @@ OO.Ads.manager(function(_, $) {
      * @param {object} event The requestComplete event indicating success or failure
      */
     var fw_onAdRequestComplete = function(event) {
+      // clear ad request timeout since fw_onAdRequestComplete was called
+      _clearAdRequestTimeout();
       if (event.success) {
         slots = fwContext.getTemporalSlots();
         // TODO: Make sure to process these?
@@ -878,12 +916,25 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Helper function that checks if the ad request timeout exists and erases it.
+     * @private
+     * @method Freewheel#_clearAdRequestTimeout
+     */
+    var _clearAdRequestTimeout = _.bind(function() {
+      if (adRequestTimeout) {
+        clearTimeout(adRequestTimeout);
+        adRequestTimeout = null;
+      }
+    }, this);
+
+    /**
      * Cancel the current ad, reset the state variables, dispose the remote Freewheel class.
      * @public
      * @method Freewheel#destroy
      */
     this.destroy = function() {
       _cancelCurrentAd();
+      _clearAdRequestTimeout();
 
       // state
       this.ready         = false;
