@@ -73,19 +73,11 @@ OO.Ads.manager(function(_, $) {
                         companion: [],
                         linear: { tracking: {}, ClickTracking: [] },
                         nonLinear: { tracking: {} } };
-    var adCompletedCallback = null;
-
-    /**
-     * Used to keep track of what events that are tracked for vast.
-     */
-    var TrackingEvents = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
-      'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'expand', 'collapse', 'acceptInvitation',
-      'close' ];
 
     /**
      * Standard VAST 3 errors
      */
-    var ERROR_CODES = {
+    this.ERROR_CODES = {
       /**
        * XML Parsing Error.
        */
@@ -230,6 +222,15 @@ OO.Ads.manager(function(_, $) {
        */
       VPAID:                              901
     };
+
+    var adCompletedCallback = null;
+
+    /**
+     * Used to keep track of what events that are tracked for vast.
+     */
+    var TrackingEvents = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
+      'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'expand', 'collapse', 'acceptInvitation',
+      'close' ];
 
     /**
      * Helper function to verify that the xml has a valid vast ad in it and that it is a valid xml.
