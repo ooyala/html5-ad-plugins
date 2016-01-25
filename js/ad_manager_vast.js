@@ -83,6 +83,155 @@ OO.Ads.manager(function(_, $) {
       'close' ];
 
     /**
+     * Standard VAST 3 errors
+     */
+    var ERROR_CODES = {
+      /**
+       * XML Parsing Error.
+       */
+      XML_PARSING:                        100,
+
+      /**
+       * VAST Schema Validation Error.
+       */
+      SCHEMA_VALIDATION:                  101,
+
+      /**
+       * VAST Version of response not supported.
+       */
+      VERSION_UNSUPPORTED:                102,
+
+      /**
+       * Trafficking error. Video Player received an ad type that it was not
+       * expecting and/or cannot display.
+       */
+      AD_TYPE_UNSUPPORTED:                200,
+
+      /**
+       * Video player expecting different linearity.
+       */
+      VIDEO_EXPECT_DIFFERENT_LINEARITY:   201,
+
+      /**
+       * Video player expecting different duration.
+       */
+      VIDEO_EXPECT_DIFFERENT_DURATION:    202,
+
+      /**
+       * Video player expecting different size.
+       */
+      VIDEO_EXPECT_DIFFERENT_SIZE:        203,
+
+      /**
+       * General Wrapper Error.
+       */
+      WRAPPER:                            300,
+
+      /**
+       * Timeout of VAST URI provided in Wrapper element, or of VAST URI
+       * provided in a subsequent Wrapper element. Includes request errors
+       * such as invalid URI, unreachable or request timeout for URI, and
+       * security or other exceptions related to requesting a VAST URI.
+       */
+      WRAPPER_URI_TIMEOUT:                301,
+
+      /**
+       * Wrapper limit reached, as defined by the video player. Too many
+       * Wrapper responses have been received with no inLine response.
+       */
+      WRAPPER_LIMIT_REACHED:              302,
+
+      /**
+       * No ads VAST response after one or more Wrappers. Also includes
+       * number of empty VAST responses from fallback.
+       */
+      WRAPPER_NO_ADS:                     303,
+
+      /**
+       * General linear error. Video player is unable to display the linear ad.
+       */
+      LINEAR_ADS:                         400,
+
+      /**
+       * File not found. Unable to find Linear/MediaFile from URI.
+       */
+      FILE_NOT_FOUND:                     401,
+
+      /**
+       * Timeout of MediaFile URI.
+       */
+      MEDIAFILE_TIMEOUT:                  402,
+
+      /**
+       * Could not find MediaFile that is supported by this video player, based
+       * on the attributes of the MediaFile element.
+       */
+      MEDIAFILE_UNSUPPORTED:              403,
+
+      /**
+       * Problem displaying MediaFile.
+       */
+      MEDIAFILE_DISPLAY_PROBLEM:          405,
+
+      /**
+       * General NonLinearAds error.
+       */
+      NONLINEAR_ADS:                      500,
+
+      /**
+       * Unable to display NonLinear Ad because creative dimensions do not
+       * align with creative display area(i.e., creative dimension too large).
+       */
+      NONLINEAR_ADS_DIMENSIONS:           501,
+
+      /**
+       * Unable to fetch NonLinearAds/NonLinear resource.
+       */
+      NONLINEAR_ADS_UNABLE_TO_FETCH:      502,
+
+      /**
+       * Could not find NonLinear resource with supported type.
+       */
+      NONLINEAR_ADS_RESOURCE_UNSUPPORTED: 503,
+
+      /**
+       * General CompanionAds error.
+       */
+      COMPANION_ADS:                      600,
+
+      /**
+       * Unable to display companion because creative dimensions do not fit
+       * within Companion display area (i.e., no available space).
+       */
+      COMPANION_ADS_DIMENSIONS:           601,
+
+      /**
+       * Unable to display Required Companion.
+       */
+      COMPANION_ADS_UNABLE_TO_DISPLAY:    602,
+
+      /**
+       * Unable to fetch CompanionAds/Companion resource.
+       */
+      COMPANION_ADS_UNABLE_TO_FETCH:      603,
+
+      /**
+       * Could not find Companion resource with supported type.
+       */
+      COMPANION_ADS_RESOURCE_UNSUPPORTED: 604,
+
+      /**
+       * Undefined error.
+       */
+      UNDEFINED:                          900,
+
+      /**
+       * General VPAID error.
+       */
+      VPAID:                              901
+    };
+
+    /**
      * Helper function to verify that the xml has a valid vast ad in it and that it is a valid xml.
      * @param {xml} vastXML Contains the vast ad data to be parsed.
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
