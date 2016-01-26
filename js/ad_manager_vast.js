@@ -274,28 +274,28 @@ OO.Ads.manager(function(_, $) {
      * @param {xml} vastXML Contains the vast ad data to be parsed.
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
-    this.isValidRootTagName = function(vastXML) {
+    this.isValidRootTagName = _.bind(function(vastXML) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
         return false;
       }
       return true;
-    };
+    }, this);
 
     /**
      * Helper function to verify XML is a valid VAST version.
      * @param {xml} vastXML Contains the vast ad data to be parsed.
      * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
      */
-    this.isValidVastVersion = function(vastXML) {
+    this.isValidVastVersion = _.bind(function(vastXML) {
       var vastVersion = $(vastXML.firstChild).attr("version");
       if ( vastVersion !== "2.0" && vastVersion !== "3.0") { 
         OO.log("Invalid VAST version: " + vastVersion);
         return false;
       }
       return true;
-    };
+    }, this);
 
     /**
      * Hellper function to grab error information. VastAdSingleParser already grabs error data while
