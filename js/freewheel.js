@@ -298,7 +298,9 @@ OO.Ads.manager(function(_, $) {
         var error = "Ad Request Timeout already exists - bad state";
         fw_onError(error);
       } else {
-        adRequestTimeout = _.delay(callback, duration);
+        if (!this.testMode) {
+          adRequestTimeout = _.delay(callback, duration);
+        }
       }
     }, this);
 
