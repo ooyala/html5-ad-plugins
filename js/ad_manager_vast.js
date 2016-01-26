@@ -265,6 +265,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
     this.isValidVastXML = _.bind(function(vastXML) {
+      var error = this.getErrorInfo(vastXML);
       return this.isValidRootTagName(vastXML) && this.isValidVastVersion(vastXML);
     }, this);
 
@@ -295,6 +296,32 @@ OO.Ads.manager(function(_, $) {
       }
       return true;
     };
+
+    /**
+     * Hellper function to grab error information. VastAdSingleParser already grabs error data while
+     * creating ad object, but some errors may occur before the object is created.
+     *
+     * Note: <Error> can only live in three places: direclty under <VAST>, <Ad>, or <Wrapper> elements.
+     *
+     * <Error> tags are also optional so they may not always exist.
+     * @public
+     * @method Vast#getErrorInfo
+     * @returns {object} The error object with a list of error urls and whether or not there are no ads
+     */
+    this.getErrorInfo = _.bind(function(vastXML) {
+      var error = {
+        urls: [],
+        noAd: false
+      };
+      var ads =  $(vastXML).find("Ad");
+      if (ads.length === 0) {
+        noAd = true;
+      }
+      _.each(ads, function(ad) {
+        error.urls.push(($(ad).find("Error").text()));
+      });
+      return error;
+    }, this);
 
     /**
      * Default template to use when creating the vast ad object.
