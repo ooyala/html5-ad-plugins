@@ -297,10 +297,10 @@ OO.Ads.manager(function(_, $) {
       if (adRequestTimeout) {
         var error = "Ad Request Timeout already exists - bad state";
         fw_onError(error);
-      } else {
-        if (!this.testMode) {
-          adRequestTimeout = _.delay(callback, duration);
-        }
+      } 
+      // only set timeout if not in test mode otherwise it will break unit tests
+      else if (!this.testMode) {
+        adRequestTimeout = _.delay(callback, duration);
       }
     }, this);
 
