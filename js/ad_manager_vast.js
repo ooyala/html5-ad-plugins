@@ -64,6 +64,7 @@ OO.Ads.manager(function(_, $) {
     this.movieMd = null;
     this.adURLOverride;
     this.lastOverlayAd;
+    this.errorInfo = null;
     this.ERROR = 'vastError';
     this.READY = 'vastReady';
     this.VAST_AD_CONTAINER = '#vast_ad_container';
@@ -265,7 +266,6 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
     this.isValidVastXML = _.bind(function(vastXML) {
-      var error = this.getErrorInfo(vastXML);
       return this.isValidRootTagName(vastXML) && this.isValidVastVersion(vastXML);
     }, this);
 
@@ -1086,6 +1086,8 @@ OO.Ads.manager(function(_, $) {
      * @returns {object} If the ad is found it returns the object otherwise it returns null.
      */
     this.parser = function(vastXML) {
+      // need to get error information in case error events need to be reported
+      this.errorInfo = this.getErrorInfo(vastXML);
       if (!this.isValidVastXML(vastXML)) {
         return null;
       }
