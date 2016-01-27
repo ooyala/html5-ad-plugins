@@ -121,7 +121,6 @@ OO.Ads.manager(function(_, $) {
       VIDEO_EXPECT_DIFFERENT_SIZE:        203,
 
       /**
-       * TODO: Add support
        * General Wrapper Error.
        */
       WRAPPER:                            300,
@@ -1176,6 +1175,7 @@ OO.Ads.manager(function(_, $) {
           }
           else {
             this.errorType = "wrapperParseError";
+            this.trackError(this.ERROR_CODES.WRAPPER, false);
             this.trigger(this.ERROR, this);
             failedAd();
           }
