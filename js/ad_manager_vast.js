@@ -766,27 +766,30 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-    * This method pings the error URI with a specific error code if the provided error URI contains "[ERRORCODE]".
-    * If URI does not contain "[ERRORCODE]", URI is still pinged.
+    * If the optionalPingAll is true, this method pings all the ads' error URLs with a specific 
+    * error code if the error URL contains the macro, "[ERRORCODE]". If the optionalPingAll is 
+    * false, this method only pings the current vast ad's error URI.
     * @public
     * @method Vast#trackError
     * @param {number} Error code.
-    * @param {string} URL to ping.
+    * @param {boolean} If true, ping all error URLs (means there is a podded ad).
     */
-    this.trackError = function(code, optionalURL) {
+    this.trackError = function(code, optionalPingAll) {
       var url = "";
-      if (typeof optionalURL === "undefined") {
+      if (typeof optionalPingAll === "undefined" || !optionalPingAll) {
         if (!this.vastAdUnit || !this.vastAdUnit.data.error) {
           return;
         }
         url = this.vastAdUnit.data.error[0];
+        url = url.replace(/\[ERRORCODE\]/, code);
+        OO.pixelPing(url);
       }
       else {
-        url = optionalURL;
+        _.each(this.errorInfo.urls, function(url) {
+          url = url.replace(/\[ERRORCODE\]/, code);
+          OO.pixelPing(url);
+        });
       }
-      // if replace does not find a match, original string is returned
-      url = url.replace(/\[ERRORCODE\]/, code);
-      OO.pixelPing(url);
     };
 
     /**
