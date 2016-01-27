@@ -87,7 +87,6 @@ OO.Ads.manager(function(_, $) {
       XML_PARSING:                        100,
 
       /**
-       * TODO: Add support
        * VAST Schema Validation Error.
        */
       SCHEMA_VALIDATION:                  101,
@@ -278,6 +277,7 @@ OO.Ads.manager(function(_, $) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
+        this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, true);
         return false;
       }
       return true;
