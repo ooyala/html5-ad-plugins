@@ -106,7 +106,7 @@ OO.Ads.manager(function(_, $) {
       }
 
       var version = getVastVersion(vastXML);
-      if (!_.contains(SUPPORTED_VERSIONS, version)) {
+      if (!supportsVersion(version)) {
         return false;
       }
       return true;
@@ -120,6 +120,28 @@ OO.Ads.manager(function(_, $) {
      */
     var getVastVersion = _.bind(function(vastXML) {
       return $(vastXML.firstChild).attr('version');
+    }, this);
+
+    /**
+     * Checks to see if this ad manager supports a given Vast version.
+     * @private
+     * @method Vast#supportsVersion
+     * @returns {boolean} true if the version is supported by this ad manager, false otherwise
+     */
+    var supportsVersion = _.bind(function(version) {
+      return _.contains(SUPPORTED_VERSIONS, version);
+    }, this);
+
+    /**
+     * Checks to see if the given Vast version supports the skip ad functionality, as per Vast specs
+     * for different versions.
+     * @private
+     * @method Vast#supportsSkipAd
+     * @returns {boolean} true if the skip ad functionality is supported in the specified Vast version,
+     *                    false otherwise
+     */
+    var supportsSkipAd = _.bind(function(version) {
+      return _.contains(SUPPORTED_FEATURES[version], FEATURES.SKIP_AD);
     }, this);
 
     /**
@@ -334,9 +356,8 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata.
      */
     var calculateSkipAdOffset = _.bind(function(adWrapper) {
-      var version = adWrapper.ad.data.version;
-      var skipOffset = adWrapper.ad.data.linear.skipOffset;
-      if (_.contains(SUPPORTED_FEATURES[version], FEATURES.SKIP_AD)) {
+      if (supportsSkipAd(adWrapper.ad.data.version)) {
+        var skipOffset = adWrapper.ad.data.linear.skipOffset;
         if (skipOffset) {
           if (skipOffset.indexOf('%') === skipOffset.length - 1) {
             this.amc.showSkipVideoAdButton(true, skipOffset, true);
