@@ -781,15 +781,26 @@ OO.Ads.manager(function(_, $) {
           return;
         }
         url = this.vastAdUnit.data.error[0];
-        url = url.replace(/\[ERRORCODE\]/, code);
-        OO.pixelPing(url);
+        pingURL(code, url);
       }
       else {
         _.each(this.errorInfo.urls, function(url) {
-          url = url.replace(/\[ERRORCODE\]/, code);
-          OO.pixelPing(url);
+          pingURL(code, url);
         });
       }
+    }, this);
+
+
+    /**
+     * Helper function to ping error URL. Replaces error macro if it exists.
+     * @private
+     * @method Vast#pingURL
+     * @param {code} Error code.
+     * @param {string} URL to ping.
+     */
+    var pingURL = _.bind(function(code, url) {
+      url = url.replace(/\[ERRORCODE\]/, code);
+      OO.pixelPing(url);
     }, this);
 
     /**
