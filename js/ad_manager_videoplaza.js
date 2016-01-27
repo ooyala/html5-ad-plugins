@@ -13,20 +13,20 @@ OO.Ads.manager(function(_, $) {
    * @property {string} name The name of the ad manager. This should match the name used by the server to
    *                         provide metadata.
    * @property {object} amc A reference to the Ad Manager Controller received when the initialize function
-   *                        is called.
+   *                        is called
    * @property {boolean} ready True if the ad manager has loaded the metadata for all ads to play with the
-   *                           current video.
+   *                           current video
    * @property {object} quartileTracks Used to keep track of what quartiles we need to alert the sdk when it has been
-   *                                  reached.
-   * @property {object} lastVideoAd Keeps track of the last video ad that was played or currently playing.
+   *                                  reached
+   * @property {object} lastVideoAd Keeps track of the last video ad that was played or currently playing
    * @property {object} tracker Used to keep track of the tracker object sent from the SDK. Used to send tracking info
-   *                            to the sdk.
+   *                            to the sdk
    * @property {boolean} adModuleJsReady Set to true when the sdk is loaded successfully otherwise it is false. If false
    *                                     when it tries to get the sdk data, it will destroy the ad manager.
-   * @property {number} overlayTimer Keeps track of the timer object that was created for the overlay.
-   * @property {number} timerRemainingTime The amount of seconds left in the timer when it is paused and resumed.
-   * @property {number} timerStartTime The amount in seconds that the timer was started at.
-   * @property {number} overlayTimeoutTime Used to keep track of the overlay timer override that was set by a param.
+   * @property {number} overlayTimer Keeps track of the timer object that was created for the overlay
+   * @property {number} timerRemainingTime The amount of seconds left in the timer when it is paused and resumed
+   * @property {number} timerStartTime The amount in seconds that the timer was started at
+   * @property {number} overlayTimeoutTime Used to keep track of the overlay timer override that was set by a parameter
    */
   var OoyalaAdTech = function() {
     this.name = "videoplaza-ads-manager";
@@ -47,7 +47,7 @@ OO.Ads.manager(function(_, $) {
      * remote JS files.
      * @method OoyalaAdTech#initialize
      * @public
-     * @param {object} amc A reference to the Ad Manager Controller.
+     * @param {object} amc A reference to the Ad Manager Controller
      */
     this.initialize = function(amc) {
       this.amc = amc;
@@ -59,12 +59,12 @@ OO.Ads.manager(function(_, $) {
     /**
      * Called by Ad Manager Controller.  When this function is called, all movie and server metadata are
      * ready to be parsed.
-     * This metadata may contain the adTagUrl and other ad manager and movie specific configuration.
+     * This metadata may contain the adTagUrl and other ad manager and movie-specific configuration.
      * @method OoyalaAdTech#loadMetadata
      * @public
-     * @param {object} adManagerMetadata Ad manager specific metadata.
-     * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot.
-     * @param {object} movieMetadata Metadata for the main video.
+     * @param {object} adManagerMetadata Ad manager-specific metadata
+     * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
+     * @param {object} movieMetadata Metadata for the main video
      */
     this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata) {
       if (!adManagerMetadata || !adManagerMetadata["vpDomain"]) {
@@ -111,9 +111,9 @@ OO.Ads.manager(function(_, $) {
      * getting ad info. If it fails we need to display a message and move on.
      * @method OoyalaAdTech#doSDKRequestForData
      * @public
-     * @param contentMetadata Metadata set from backlot and page level.
-     * @param requestSettings The settings that were setup to send to the sdk to prepare ad data.
-     * @param vpDomain The domain of which account contains the ad data.
+     * @param contentMetadata Metadata set from backlot and page level
+     * @param requestSettings The settings that were setup to send to the sdk to prepare ad data
+     * @param vpDomain The domain of which account contains the ad data
      */
     this.doSDKRequestForData = function(contentMetadata, requestSettings, vpDomain) {
       if (!this.adModuleJsReady || !videoplaza ) {
@@ -269,8 +269,8 @@ OO.Ads.manager(function(_, $) {
      * Extracts the creative based on the format type that is expected.
      * @public
      * @method OoyalaAdTech#_extractStreamForType
-     * @param {object} streams The stream choices from the metadata.
-     * @param {string} type The type of video we want to use for the creative.
+     * @param {object} streams The stream choices from the metadata
+     * @param {string} type The type of video we want to use for the creative
      * @returns {string} The creative url if it finds one, otherwise null.
      */
     this._extractStreamForType = function(streams, type) {
@@ -320,7 +320,7 @@ OO.Ads.manager(function(_, $) {
      * Controller to show it.
      * @public
      * @method OoyalaAdTech#checkCompanionAds
-     * @param {object} adInfo The Ad metadata.
+     * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = function(adInfo) {
       if (_.isNull(adInfo) || _.isEmpty(adInfo.companions)) {
@@ -334,9 +334,9 @@ OO.Ads.manager(function(_, $) {
      * then it will track it and inform the sdk.
      * @public
      * @method OoyalaAdTech#trackQuartiles
-     * @param {object} ad The Ad metadata.
-     * @param {number} duration The total duration of the ad.
-     * @param {number} time The current playhead time of the ad.
+     * @param {object} ad The Ad metadata
+     * @param {number} duration The total duration of the ad
+     * @param {number} time The current playhead time of the ad
      */
     this.trackQuartiles = function(ad, duration, time)
     {
@@ -357,14 +357,14 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Once the overlay image has loaded, it is time to add it to the screen. Also the Ad Manager needs to be informed
+     * Once the overlay image has loaded, it is time to add it to the screen. The Ad Manager also needs to be informed
      * that the ad has started playing.
      * @public
      * @method OoyalaAdTech#onOverlayImgLoaded
-     * @param {object} adElement All the ad div container that was created.
+     * @param {object} adElement All the ad div container that was created
      * @param {object} innerWrapper The inner wrapper layer
-     * @param {function} adStartedCallback A callback that the Ad Manager Controller needs to have called when the ad is displayed.
-     * @param {object} ad Contains the Ad's metadata for this ad that will be needed if the user clicks ont he ad.
+     * @param {function} adStartedCallback A callback that the Ad Manager Controller needs to have called when the ad is displayed
+     * @param {object} ad Contains the Ad's metadata for this ad that will be needed if the user clicks on the ad
      */
     this.onOverlayImgLoaded = function(adElement, innerWrapper, adStartedCallback, ad){
       //TODO:Update Function to work with Alice.
@@ -403,11 +403,11 @@ OO.Ads.manager(function(_, $) {
      * the function as a parameter.
      * @method OoyalaAdTech#playAd
      * @public
-     * @param {object} ad The ad object to play.
+     * @param {object} ad The ad object to play
      * @param {function} adPodStartedCallback Call this function when the ad or group of podded ads have
-     *                                        started.
+     *                                        started
      * @param {function} adPodEndedCallback Call this function when the ad or group of podded ads have
-     *                                      completed.
+     *                                      completed
      * @param {function} adStartedCallback Call this function each time an ad in the set starts
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
@@ -460,7 +460,7 @@ OO.Ads.manager(function(_, $) {
      * already been called, then no action is required.
      * @method OoyalaAdTech#cancelAd
      * @public
-     * @param {object} ad The ad object to cancel.
+     * @param {object} ad The ad object to cancel
      */
     this.cancelAd = function(ad) {
       if (!this.amc || !this.amc.ui) {
@@ -492,7 +492,7 @@ OO.Ads.manager(function(_, $) {
      * Pauses the ad element.
      * @public
      * @method AdTech#pauseAd
-     * @param {object} amcAd The current ad data.
+     * @param {object} amcAd The current ad data
      */
     this.pauseAd = function(amcAd) {
       // No code required here as VTC will pause the ad
@@ -512,7 +512,7 @@ OO.Ads.manager(function(_, $) {
      * When the Ad Manager Controller needs to hide the overlay it will call this function.
      * @public
      * @method OoyalaAdTech#hideOverlay
-     * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC.
+     * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
      */
     this.hideOverlay = function(currentAd) {
       this.pauseOverlayTimer();
@@ -603,7 +603,7 @@ OO.Ads.manager(function(_, $) {
      * Opens a new page pointing to the URL provided.
      * @public
      * @method OoyalaAdTech#openUrl
-     * @param {string} url The url that we need to open in a new page.
+     * @param {string} url The url that we need to open in a new page
      */
     this.openUrl = function(url) {
       if (!url) { return; }
@@ -614,8 +614,8 @@ OO.Ads.manager(function(_, $) {
      * Opens a page based on the clickthrough url when the user click on the Ad.
      * @public
      * @method OoyalaAdTech#playerClicked
-     * @param {object} amcAd Ad wrapper that is sent from the Ad Manager Controller that contains the data.
-     * @param {boolean} showPage If set to true then we show the page, if it is false then we don't show the page.
+     * @param {object} amcAd Ad wrapper that is sent from the Ad Manager Controller that contains the data
+     * @param {boolean} showPage If set to true then we show the page, if it is false then we don't show the page
      */
     this.playerClicked = function(amcAd, showPage) {
       if (!showPage) {
