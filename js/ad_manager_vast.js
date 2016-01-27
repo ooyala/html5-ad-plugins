@@ -92,7 +92,6 @@ OO.Ads.manager(function(_, $) {
       SCHEMA_VALIDATION:                  101,
 
       /**
-       * TODO: Add support
        * VAST Version of response not supported.
        */
       VERSION_UNSUPPORTED:                102,
