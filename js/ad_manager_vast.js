@@ -1182,7 +1182,7 @@ OO.Ads.manager(function(_, $) {
           }
         } else {
           OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
-          this.trackError(ERROR_CODES.WRAPPER_LIMIT_REACHED);
+          this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED);
           this.errorType = "tooManyWrapper";
           this.trigger(this.ERROR, this);
           failedAd();
