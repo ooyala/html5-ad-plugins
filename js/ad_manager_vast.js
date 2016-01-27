@@ -292,6 +292,7 @@ OO.Ads.manager(function(_, $) {
       var vastVersion = $(vastXML.firstChild).attr("version");
       if ( vastVersion !== "2.0" && vastVersion !== "3.0") { 
         OO.log("Invalid VAST version: " + vastVersion);
+        this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, true);
         return false;
       }
       return true;
