@@ -81,7 +81,6 @@ OO.Ads.manager(function(_, $) {
      */
     this.ERROR_CODES = {
       /**
-       * TODO: Add support
        * XML Parsing Error.
        */
       XML_PARSING:                        100,
@@ -1141,6 +1140,7 @@ OO.Ads.manager(function(_, $) {
       var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
         this.errorType = "parseError";
+        this.trackError(this.ERROR_CODES.XML_PARSING, true);
         this.trigger(this.ERROR, this);
         failedAd();
       }
