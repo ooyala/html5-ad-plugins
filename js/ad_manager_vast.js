@@ -75,8 +75,16 @@ OO.Ads.manager(function(_, $) {
                         nonLinear: { tracking: {} } };
     var adCompletedCallback = null;
 
-    var SUPPORTED_VERSIONS = ['2.0', '3.0'];
-    var SKIP_AD_SUPPORTED = ['3.0'];
+    var VERSION_2_0 = '2.0';
+    var VERSION_3_0 = '3.0';
+    var SUPPORTED_VERSIONS = [VERSION_2_0, VERSION_3_0];
+    var FEATURES = {
+      SKIP_AD : "skipAd"
+    };
+    var SUPPORTED_FEATURES = {};
+    SUPPORTED_FEATURES[VERSION_2_0] = [];
+    SUPPORTED_FEATURES[VERSION_3_0] = [FEATURES.SKIP_AD];
+
 
     /**
      * Used to keep track of what events that are tracked for vast.
@@ -328,7 +336,7 @@ OO.Ads.manager(function(_, $) {
     var calculateSkipAdOffset = _.bind(function(adWrapper) {
       var version = adWrapper.ad.data.version;
       var skipOffset = adWrapper.ad.data.linear.skipOffset;
-      if (_.contains(SKIP_AD_SUPPORTED, version)) {
+      if (_.contains(SUPPORTED_FEATURES[version], FEATURES.SKIP_AD)) {
         if (skipOffset) {
           if (skipOffset.indexOf('%') === skipOffset.length - 1) {
             this.amc.showSkipVideoAdButton(true, skipOffset, true);
