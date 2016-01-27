@@ -790,7 +790,6 @@ OO.Ads.manager(function(_, $) {
       }
     }, this);
 
-
     /**
      * Helper function to ping error URL. Replaces error macro if it exists.
      * @private
