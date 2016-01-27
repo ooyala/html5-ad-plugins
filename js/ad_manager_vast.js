@@ -768,17 +768,22 @@ OO.Ads.manager(function(_, $) {
     /**
     * This method pings the error URI with a specific error code if the provided error URI contains "[ERRORCODE]".
     * If URI does not contain "[ERRORCODE]", URI is still pinged.
-    *
     * @public
     * @method Vast#trackError
     * @param {number} Error code.
+    * @param {string} URL to ping.
     */
-    this.trackError = function(code) {
-      if (!this.vastAdUnit || !this.vastAdUnit.data.error) {
-        return;
+    this.trackError = function(code, optionalURL) {
+      var url = "";
+      if (typeof optionalURL === "undefined") {
+        if (!this.vastAdUnit || !this.vastAdUnit.data.error) {
+          return;
+        }
+        url = this.vastAdUnit.data.error[0];
       }
-      var url = this.vastAdUnit.data.error[0];
-
+      else {
+        url = optionalURL;
+      }
       // if replace does not find a match, original string is returned
       url = url.replace(/\[ERRORCODE\]/, code);
       OO.pixelPing(url);
