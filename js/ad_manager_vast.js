@@ -774,7 +774,7 @@ OO.Ads.manager(function(_, $) {
     * @param {number} Error code.
     * @param {boolean} If true, ping all error URLs (means there is a podded ad).
     */
-    this.trackError = function(code, optionalPingAll) {
+    this.trackError = _.bind(function(code, optionalPingAll) {
       var url = "";
       if (typeof optionalPingAll === "undefined" || !optionalPingAll) {
         if (!this.vastAdUnit || !this.vastAdUnit.data.error) {
@@ -790,7 +790,7 @@ OO.Ads.manager(function(_, $) {
           OO.pixelPing(url);
         });
       }
-    };
+    }, this);
 
     /**
      * If the ad fails to load a second time, this callback is called and triggers an error message, but doesn't try to
