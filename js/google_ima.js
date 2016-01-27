@@ -19,14 +19,14 @@ require("../html5-common/js/utils/utils.js");
   {
     /**
      * @class GoogleIMA
-     * @classDesc The GoogleIMA Ads Manager class, registered as an ads manager with the Ad Manager Controller.
-     * Communicates between the player's ad manager controller and the GoogleIMA sdk.  This implementation handles both
+     * @classDesc The GoogleIMA Ads Manager class is registered as an ads manager with the Ad Manager Controller.
+     * This class communicates between the player's ad manager controller and the GoogleIMA sdk.  This implementation handles both
      * AdRules ads and Non AdRules ads.
-     * @property {string} PLUGIN_VERSION This is a variable version number of the player sent to Google for tracking.
-     *             **This must be updated with big updates to a different number.
-     * @property {string} PLAYER_TYPE this is a variable that specifies the name of the player that is relayed to
+     * @property {string} PLUGIN_VERSION This is a variable version number of the player sent to Google for tracking
+     *             **This must be updated with big updates to a different number**
+     * @property {string} PLAYER_TYPE This is a variable that specifies the name of the player that is relayed to
      *             Google for tracking
-     * @property {object} sharedVideoElement The video element to use on iOS where only one video element is allowed.
+     * @property {object} sharedVideoElement The video element to use on iOS where only one video element is allowed
      */
     var GoogleIMA = function()
     {
@@ -196,7 +196,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#loadMetadata
        * @param {object} metadata Ad manager metadata from Backlot and from the page level
        * @param {object} baseMetadata Base level metadata from Backlot
-       * @param {object} movieMetadata Metadata pertaining specifically to the movie being played.
+       * @param {object} movieMetadata Metadata pertaining specifically to the movie being played
        */
       this.loadMetadata = function(metadata, baseMetadata, movieMetadata)
       {
@@ -265,7 +265,7 @@ require("../html5-common/js/utils/utils.js");
       };
 
       /**
-       * Called when the UI has been setup.  Sets up the native element listeners and style for the overlay.
+       * Called when the UI has been set up.  Sets up the native element listeners and style for the overlay.
        * Checks if the module is ready to send the request for ads.
        * @public
        * @method GoogleIMA#registerUi
@@ -454,7 +454,7 @@ require("../html5-common/js/utils/utils.js");
        * so it just cancels the overlay.
        * @public
        * @method GoogleIMA#hideOverlay
-       * @param {object} ad The ad to hide.
+       * @param {object} ad The ad to hide
        */
       this.cancelOverlay = function(ad)
       {
@@ -755,7 +755,7 @@ require("../html5-common/js/utils/utils.js");
        * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
        * @public
        * @method GoogleIMA#onFullScreenChanged
-       * @param {boolean} shouldEnterFullscreen True if going into fullscreen.
+       * @param {boolean} shouldEnterFullscreen True if going into fullscreen
        */
       var _onFullscreenChanged = privateMember(function(event, shouldEnterFullscreen)
       {
@@ -1192,7 +1192,7 @@ require("../html5-common/js/utils/utils.js");
        * Controller to show it.
        * @public
        * @method GoogleIMA#checkCompanionAds
-       * @param {object} ad The Ad metadata.
+       * @param {object} ad The Ad metadata
        */
       var _checkCompanionAds = privateMember(function(ad) {
         // companionAd slots are required
@@ -1684,7 +1684,7 @@ require("../html5-common/js/utils/utils.js");
    * @class GoogleIMAVideoFactory
    * @classdesc Factory for creating video player objects that use HTML5 video tags.
    * @property {string} name The name of the plugin
-   * @property {boolean} ready The readiness of the plugin for use.  True if elements can be created.
+   * @property {boolean} ready The readiness of the plugin for use (true if elements can be created)
    * @property {object} streams An array of supported encoding types (ex. m3u8, mp4)
    */
   var GoogleIMAVideoFactory = function()

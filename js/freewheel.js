@@ -665,7 +665,7 @@ OO.Ads.manager(function(_, $) {
      * When the Ad Manager Controller needs to cancel the overlay it will call this function.
      * @public
      * @method Freewheel#cancelOverlay
-     * @param {object} currentAd The overlay ad object that is to be cancelled and removed.
+     * @param {object} currentAd The overlay ad object that is to be cancelled and removed
      */
     this.cancelOverlay = function(currentAd) {
       // Consider instead, hiding the span with _fw_ad_container_html
