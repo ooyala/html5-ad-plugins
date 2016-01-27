@@ -519,11 +519,9 @@ describe('ad_manager_vast', function() {
   it('should provide skip ad parameters to AMC on playAd', function(){
     var allowSkipButton = false;
     var skipOffset = 0;
-    var skipButtonOverride = false;
-    amc.showSkipVideoAdButton = function(allowButton, offset, override) {
+    amc.showSkipVideoAdButton = function(allowButton, offset) {
       allowSkipButton = allowButton;
       skipOffset = offset;
-      skipButtonOverride = override;
     };
     var embed_code = "embed_code";
     var vast_ad_mid = {
@@ -550,7 +548,6 @@ describe('ad_manager_vast', function() {
     expect(allowSkipButton).to.be(true);
     //value in MS. vast_3_0_linear.xml mock response has value of 00:00:05, which is 5 seconds
     expect(skipOffset).to.be('5000');
-    expect(skipButtonOverride).to.be(true);
   });
 
   //TODO: Unit test for testing skipoffset with percentage value
