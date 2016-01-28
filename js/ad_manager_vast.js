@@ -312,7 +312,7 @@ OO.Ads.manager(function(_, $) {
       };
       var ads =  $(vastXML).find("Ad");
       if (ads.length === 0) {
-        noAd = true;
+        error.noAd = true;
       }
       _.each(ads, function(ad) {
         error.urls.push(($(ad).find("Error").text()));
