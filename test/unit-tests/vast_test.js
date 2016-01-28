@@ -25,6 +25,13 @@ describe('ad_manager_vast', function() {
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
 
+  // need to redefine pixelPing because mocha has not yet implemented Image() so
+  // use document.createElement('img') instead
+  OO.pixelPing = function (url) {
+    var img = document.createElement('img');
+    img.onerror = img.onabort = function() { OO.d("onerror:", url); };
+    img.src = OO.getNormalizedTagUrl(url);
+  };
 
   // Helper functions
   fakeAd = function(timePositionClass, position, duration) {
