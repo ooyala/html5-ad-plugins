@@ -1144,7 +1144,7 @@ OO.Ads.manager(function(_, $) {
       }
       // no-ad response will have neither inline/wrapper element
       else if (vastAd.ads.length === 0) {
-        this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS);
+        this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, true);
       }
       else if (vastAd.type == "wrapper") {
         this.currentDepth++;
@@ -1178,13 +1178,13 @@ OO.Ads.manager(function(_, $) {
           }
           else {
             this.errorType = "wrapperParseError";
-            this.trackError(this.ERROR_CODES.WRAPPER, false);
+            this.trackError(this.ERROR_CODES.WRAPPER, true);
             this.trigger(this.ERROR, this);
             failedAd();
           }
         } else {
           OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
-          this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED);
+          this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, true);
           this.errorType = "tooManyWrapper";
           this.trigger(this.ERROR, this);
           failedAd();
@@ -1197,7 +1197,7 @@ OO.Ads.manager(function(_, $) {
             this.trigger(this.READY, this);
           } else {
             // Vast 3.0 guidelines does not specify an error code for non-wrapper no-ads response (?)
-            this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS);
+            this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, true);
             this.errorType = "noAd";
             this.trigger(this.ERROR, this);
             failedAd();
