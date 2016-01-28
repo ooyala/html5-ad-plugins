@@ -373,8 +373,10 @@ OO.Ads.manager(function(_, $) {
               ss = secondsSplits[0];
               ms = secondsSplits[1];
             }
-            var offsetInMs = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
-            this.amc.showSkipVideoAdButton(true, offsetInMs.toString(), true);
+            var offset = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
+            //Provide the offset to the AMC in seconds
+            offset = Math.round(offset / 1000);
+            this.amc.showSkipVideoAdButton(true, offset.toString(), true);
           }
         } else {
           this.amc.showSkipVideoAdButton(false);

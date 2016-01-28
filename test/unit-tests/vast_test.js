@@ -547,7 +547,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
     //value in MS. vast_3_0_linear.xml mock response has value of 00:00:05, which is 5 seconds
-    expect(skipOffset).to.be('5000');
+    expect(skipOffset).to.be('5');
   });
 
   //TODO: Unit test for testing skipoffset with percentage value
