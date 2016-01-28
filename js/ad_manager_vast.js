@@ -141,7 +141,6 @@ OO.Ads.manager(function(_, $) {
       WRAPPER_LIMIT_REACHED:              302,
 
       /**
-       * TODO: Add support
        * No ads VAST response after one or more Wrappers. Also includes
        * number of empty VAST responses from fallback.
        */
@@ -1143,6 +1142,10 @@ OO.Ads.manager(function(_, $) {
         this.trigger(this.ERROR, this);
         failedAd();
       }
+      // no-ad response will have neither inline/wrapper element
+      else if (vastAd.ads.length === 0) {
+        this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS);
+      }
       else if (vastAd.type == "wrapper") {
         this.currentDepth++;
         if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
@@ -1193,6 +1196,8 @@ OO.Ads.manager(function(_, $) {
             this.loaded = true;
             this.trigger(this.READY, this);
           } else {
+            // Vast 3.0 guidelines does not specify an error code for non-wrapper no-ads response (?)
+            this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS);
             this.errorType = "noAd";
             this.trigger(this.ERROR, this);
             failedAd();
