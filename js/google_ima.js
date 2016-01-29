@@ -1289,7 +1289,7 @@ require("../html5-common/js/utils/utils.js");
             //Save the volume so the volume can persist on future ad playbacks if we don't receive another volume update from VTC
             this.savedVolume = this.getVolume();
 
-            if (!ad.isLinear())
+            if (!ad || !ad.isLinear())
             {
               this.currentNonLinearAd = null;
             }
