@@ -64,7 +64,7 @@ OO.Ads.manager(function(_, $) {
     this.movieMd = null;
     this.adURLOverride;
     this.lastOverlayAd;
-    this.errorInfo = null;
+    this.errorInfo = {};
     this.ERROR = 'vastError';
     this.READY = 'vastReady';
     this.VAST_AD_CONTAINER = '#vast_ad_container';
@@ -295,7 +295,7 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Hellper function to grab error information. VastAdSingleParser already grabs error data while
+     * Helper function to grab error information. VastAdSingleParser already grabs error data while
      * creating ad object, but some errors may occur before the object is created.
      *
      * Note: <Error> can only live in three places: direclty under <VAST>, <Ad>, or <Wrapper> elements.
@@ -303,21 +303,21 @@ OO.Ads.manager(function(_, $) {
      * <Error> tags are also optional so they may not always exist.
      * @public
      * @method Vast#getErrorInfo
+     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. Could be
+     * undefined if ad does not have parent/wrapper.
      * @returns {object} The error object with a list of error urls and whether or not there are no ads
      */
-    this.getErrorInfo = _.bind(function(vastXML) {
-      var error = {
-        urls: [],
-        noAd: false
-      };
+    this.getErrorInfo = _.bind(function(vastXML, wrapperParentIdArg) {
       var ads =  $(vastXML).find("Ad");
-      if (ads.length === 0) {
-        error.noAd = true;
-      }
       _.each(ads, function(ad) {
-        error.urls.push(($(ad).find("Error").text()));
-      });
-      return error;
+        var error = {
+          errorUrls: [$(ad).find("Error").text()],
+          wrapperParentId: wrapperParentIdArg || null
+        };
+        var adId = $(ad).prop("id");
+        this.errorInfo[adId] = error;
+      }, this);
     }, this);
 
     /**
@@ -618,8 +618,11 @@ OO.Ads.manager(function(_, $) {
      * @param {string} dataType Type of data, currently either "xml" if vast fails to load and "script" if it loads
      * successfully.
      * @param {object} loadingAd The current Ad metadata that is being loaded.
+     * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
+     * undefined if ad does not have parent/wrapper. We want to pass this in to the next vast response
+     * so the new ad knows who its parent is for error reporting purposing.
      */
-    this._ajax = function(url, errorCallback, dataType, loadingAd) {
+    this._ajax = function(url, errorCallback, dataType, loadingAd, wrapperParentId) {
       $.ajax({
         url: OO.getNormalizedTagUrl(url, this.embedCode),
         type: 'GET',
@@ -630,7 +633,7 @@ OO.Ads.manager(function(_, $) {
         crossDomain: true,
         cache:false,
         success: (dataType == "script") ? function() {} : _.bind(this._onVastResponse, this, loadingAd
-          || this.currentAdBeingLoaded),
+          || this.currentAdBeingLoaded, wrapperParentId),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
       this.currentAdBeingLoaded = null;
@@ -1079,6 +1082,7 @@ OO.Ads.manager(function(_, $) {
       var nonLinearAds = $(xml).find("NonLinearAds");
 
       if (type === "wrapper") { result.VASTAdTagURI = $(xml).find("VASTAdTagURI").text(); }
+      result.id = $(xml).prop("id");
       result.error = filterEmpty($(xml).find("Error").map(function() { return $(this).text(); }));
       result.impression = filterEmpty($(xml).find("Impression").map(function() { return $(this).text(); }));
       result.title = _.first(filterEmpty($(xml).find("AdTitle").map(function() { return $(this).text(); })));
@@ -1098,11 +1102,13 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#parser
      * @param {xml} vastXML The xml that contains the ad data.
+     * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
+     * undefined if ad does not have parent/wrapper.
      * @returns {object} If the ad is found it returns the object otherwise it returns null.
      */
-    this.parser = function(vastXML) {
+    this.parser = function(vastXML, wrapperParentId) {
       // need to get error information in case error events need to be reported
-      this.errorInfo = this.getErrorInfo(vastXML);
+      this.getErrorInfo(vastXML, wrapperParentId);
       if (!this.isValidVastXML(vastXML)) {
         return null;
       }
@@ -1133,9 +1139,11 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_onVastResponse
      * @param {object} adLoaded The ad loaded object and metadata.
      * @param {object} xml The xml returned from loading the ad.
+     * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
+     * undefined if ad does not have parent/wrapper.
      */
-    this._onVastResponse = function(adLoaded, xml) {
-      var vastAd = this.parser(xml);
+    this._onVastResponse = function(adLoaded, xml, wrapperParentId) {
+      var vastAd = this.parser(xml, wrapperParentId);
       if (!vastAd || !adLoaded) {
         this.errorType = "parseError";
         this.trackError(this.ERROR_CODES.XML_PARSING, true);
@@ -1169,7 +1177,7 @@ OO.Ads.manager(function(_, $) {
                                                     value;
             });
             if (!this.testMode) {
-              this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml');
+              this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml', null, firstWrapperAd.id);
             } else {
               this._handleLinearAd(adLoaded);
               this._handleNonLinearAd(adLoaded);
