@@ -771,8 +771,8 @@ OO.Ads.manager(function(_, $) {
     * false, this method only pings the current vast ad's error URI.
     * @public
     * @method Vast#trackError
-    * @param {number} Error code.
-    * @param {boolean} If true, ping all error URLs (means there is a podded ad).
+    * @param {number} code Error code.
+    * @param {boolean} optionalPingAll If true, ping all error URLs (means there is a podded ad).
     */
     this.trackError = _.bind(function(code, optionalPingAll) {
       var url = "";
@@ -794,8 +794,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function to ping error URL. Replaces error macro if it exists.
      * @private
      * @method Vast#pingURL
-     * @param {code} Error code.
-     * @param {string} URL to ping.
+     * @param {code} code Error code.
+     * @param {string} url URL to ping.
      */
     var pingURL = _.bind(function(code, url) {
       url = url.replace(/\[ERRORCODE\]/, code);
