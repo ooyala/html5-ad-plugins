@@ -516,7 +516,7 @@ describe('ad_manager_vast', function() {
   //Vast 3.0 Tests
 
   //Skip Ad functionality
-  it('should provide skip ad parameters to AMC on playAd', function(){
+  it('Vast 3.0: should provide skip ad parameters to AMC on playAd', function(){
     var allowSkipButton = false;
     var skipOffset = 0;
     amc.showSkipVideoAdButton = function(allowButton, offset) {
@@ -548,6 +548,39 @@ describe('ad_manager_vast', function() {
     expect(allowSkipButton).to.be(true);
     //value in MS. vast_3_0_linear.xml mock response has value of 00:00:05, which is 5 seconds
     expect(skipOffset).to.be('5');
+  });
+
+  it('Vast 2.0: should not provide skip ad parameters to AMC on playAd', function(){
+    var allowSkipButton = false;
+    var skipOffset = 0;
+    amc.showSkipVideoAdButton = function(allowButton, offset) {
+      allowSkipButton = allowButton;
+      skipOffset = offset;
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(allowSkipButton).to.be(true);
+    expect(skipOffset).to.be(undefined);
   });
 
   //TODO: Unit test for testing skipoffset with percentage value

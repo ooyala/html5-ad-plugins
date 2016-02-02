@@ -75,15 +75,15 @@ OO.Ads.manager(function(_, $) {
                         nonLinear: { tracking: {} } };
     var adCompletedCallback = null;
 
-    var VERSION_2_0 = '2.0';
-    var VERSION_3_0 = '3.0';
-    var SUPPORTED_VERSIONS = [VERSION_2_0, VERSION_3_0];
+    var VERSION_MAJOR_2 = '2';
+    var VERSION_MAJOR_3 = '3';
+    var SUPPORTED_VERSIONS = [VERSION_MAJOR_2, VERSION_MAJOR_3];
     var FEATURES = {
       SKIP_AD : "skipAd"
     };
     var SUPPORTED_FEATURES = {};
-    SUPPORTED_FEATURES[VERSION_2_0] = [];
-    SUPPORTED_FEATURES[VERSION_3_0] = [FEATURES.SKIP_AD];
+    SUPPORTED_FEATURES[VERSION_MAJOR_2] = [];
+    SUPPORTED_FEATURES[VERSION_MAJOR_3] = [FEATURES.SKIP_AD];
 
 
     /**
@@ -116,10 +116,23 @@ OO.Ads.manager(function(_, $) {
      * Returns the Vast version of the provided XML.
      * @private
      * @method Vast#getVastVersion
-     * @returns {number} the Vast version
+     * @returns {string} the Vast version
      */
     var getVastVersion = _.bind(function(vastXML) {
       return $(vastXML.firstChild).attr('version');
+    }, this);
+
+    /**
+     * Returns the Vast major version. For example, the '3' in 3.0.
+     * @private
+     * @method Vast#getMajorVersion
+     * @param {string} version the Vast version as parsed from the XML
+     * @returns {string} the major version
+     */
+    var getMajorVersion = _.bind(function(version) {
+      if(typeof version === 'string') {
+        return version.split('.')[0];
+      }
     }, this);
 
     /**
@@ -129,7 +142,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} true if the version is supported by this ad manager, false otherwise
      */
     var supportsVersion = _.bind(function(version) {
-      return _.contains(SUPPORTED_VERSIONS, version);
+      return _.contains(SUPPORTED_VERSIONS, getMajorVersion(version));
     }, this);
 
     /**
@@ -141,7 +154,7 @@ OO.Ads.manager(function(_, $) {
      *                    false otherwise
      */
     var supportsSkipAd = _.bind(function(version) {
-      return _.contains(SUPPORTED_FEATURES[version], FEATURES.SKIP_AD);
+      return _.contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.SKIP_AD);
     }, this);
 
     /**
@@ -325,7 +338,7 @@ OO.Ads.manager(function(_, $) {
             amc.notifyPodEnded(adId);
           }, this, this.amc, adWrapper.id);
         this.checkCompanionAds(adWrapper.ad);
-        calculateSkipAdOffset(adWrapper);
+        initSkipAdOffset(adWrapper);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
@@ -352,10 +365,10 @@ OO.Ads.manager(function(_, $) {
      * Determine if a Vast ad is skippable, and if so, when the skip ad button should be displayed.
      * Notifies AMC of the result.
      * @private
-     * @method Vast#calculateSkipAdOffset
+     * @method Vast#initSkipAdOffset
      * @param {object} adWrapper The current Ad's metadata.
      */
-    var calculateSkipAdOffset = _.bind(function(adWrapper) {
+    var initSkipAdOffset = _.bind(function(adWrapper) {
       if (supportsSkipAd(adWrapper.ad.data.version)) {
         var skipOffset = adWrapper.ad.data.linear.skipOffset;
         if (skipOffset) {
@@ -825,7 +838,6 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Vast#parseLinearAd
      * @param {xml} Xml containing the ad data to be parsed.
-     * @param {number} version The Vast version
      * @returns {object} result An object containing the ad data.
      */
     var parseLinearAd = _.bind(function(linearXml) {
