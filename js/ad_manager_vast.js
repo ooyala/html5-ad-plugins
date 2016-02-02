@@ -766,40 +766,38 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-    * If the optionalPingAll is true, this method pings all the ads' error URLs with a specific 
-    * error code if the error URL contains the macro, "[ERRORCODE]". If the optionalPingAll is 
-    * false, this method only pings the current vast ad's error URI.
+    * This method pings all the ad's error URLs with a specific error code if the error URL
+    * contains the macro, "[ERRORCODE]". If ad has a parent wrapper, then go up the chain and ping
+    * wrapper's error urls as well.
     * @public
     * @method Vast#trackError
     * @param {number} code Error code.
-    * @param {boolean} optionalPingAll If true, ping all error URLs (means there is a podded ad).
+    * @param {boolean} currentAdId Ad ID of current ad.
     */
-    this.trackError = _.bind(function(code, optionalPingAll) {
-      var url = "";
-      if (typeof optionalPingAll === "undefined" || !optionalPingAll) {
-        if (!this.vastAdUnit || !this.vastAdUnit.data.error) {
-          return;
+    this.trackError = _.bind(function(code, currentAdId) {
+      if (currentAdId in this.errorInfo) {
+        pingURLs(this.errorInfo[currentAdId].errorUrls);
+        var parentId = this.errorInfo[currentAdId].wrapperParentId;
+
+        // ping parent wrapper's error urls too if ad had parent
+        if (parentId) {
+          this.trackError(code, parentId, this.errorInfo);
         }
-        url = this.vastAdUnit.data.error[0];
-        pingURL(code, url);
-      }
-      else {
-        _.each(this.errorInfo.urls, function(url) {
-          pingURL(code, url);
-        });
       }
     }, this);
 
     /**
-     * Helper function to ping error URL. Replaces error macro if it exists.
+     * Helper function to ping error URLs. Replaces error macro if it exists.
      * @private
      * @method Vast#pingURL
      * @param {code} code Error code.
-     * @param {string} url URL to ping.
+     * @param {string} urls URLs to ping.
      */
-    var pingURL = _.bind(function(code, url) {
-      url = url.replace(/\[ERRORCODE\]/, code);
-      OO.pixelPing(url);
+    var pingURLs = _.bind(function(code, urls) {
+      _.each(urls, function() {
+        url = url.replace(/\[ERRORCODE\]/, code);
+        OO.pixelPings(url);
+      }, this);
     }, this);
 
     /**
