@@ -15,12 +15,15 @@ describe('ad_manager_freewheel', function() {
 
   // Helper functions
   var fakeAd = function(timePositionClass, position, duration, customId) {
-    var timePositionClass = timePositionClass;
-    var position = position;
-    var duration = duration;
-    this.getTimePositionClass = function(){ return timePositionClass; };
-    this.getTimePosition = function() { return position; };
-    this.getTotalDuration = function() { return duration; };
+    this.getTimePositionClass = function() {
+      return timePositionClass;
+    };
+    this.getTimePosition = function() {
+      return position;
+    };
+    this.getTotalDuration = function() {
+      return duration;
+    };
     this.getCustomId = function() {
       return customId;
     };
