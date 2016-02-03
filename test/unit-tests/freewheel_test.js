@@ -14,13 +14,17 @@ describe('ad_manager_freewheel', function() {
   require(TEST_ROOT + "unit-test-helpers/mock_fw.js");
 
   // Helper functions
-  fakeAd = function(timePositionClass, position, duration) {
+  var fakeAd = function(timePositionClass, position, duration, customId) {
     var timePositionClass = timePositionClass;
     var position = position;
     var duration = duration;
     this.getTimePositionClass = function(){ return timePositionClass; };
     this.getTimePosition = function() { return position; };
     this.getTotalDuration = function() { return duration; };
+    this.getCustomId = function() {
+      return customId;
+    };
+    this.play = function() {};
   };
 
   var initialize = function() {
@@ -47,7 +51,6 @@ describe('ad_manager_freewheel', function() {
 
     delete require.cache[require.resolve(SRC_ROOT + "freewheel.js")];
     require(SRC_ROOT + "freewheel.js");
-    amc = new fake_amc();
   }, this));
 
   after(function() {
@@ -63,6 +66,7 @@ describe('ad_manager_freewheel', function() {
   });
 
   beforeEach(function() {
+    amc = new fake_amc();
   });
 
   afterEach(_.bind(function() {
@@ -133,20 +137,102 @@ describe('ad_manager_freewheel', function() {
   it('Timeline: adds all valid slots', function() {
     getTemporalSlots = function(){
       return [
-          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000),
-          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000),
-          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 15, 5000),
-          new fakeAd("Not an ad", 15, 5000),
-          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 10, 5000),
-          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000),
-          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_POSTROLL, 100000000, 5000)
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1002),
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 15, 5000, 1003),
+          new fakeAd("Not an ad", 15, 5000, 1004),
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 10, 5000, 1005),
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, 1006),
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_POSTROLL, 100000000, 5000, 1007)
       ];
     };
     initialize();
     expect(amc.timeline.length).to.be(1);
     play();
-    fw.playAd(amc.timeline[0], function(){}, function(){}, function(){}, function(){});
+    fw.playAd(amc.timeline[0]);
     fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
     expect(amc.timeline.length).to.be(7);
+  });
+
+  it('Non-linear overlay: width and height are sent to AMC. No url is sent to the AMC', function() {
+    var customId = 1234;
+    var overlay = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
+    var width = -1;
+    var height = -1;
+    var sentUrl = null;
+    amc.sendURLToLoadAndPlayNonLinearAd = function(ad, adId, url) {
+      if (ad) {
+        width = ad.width;
+        height = ad.height;
+        sentUrl = url;
+      }
+    };
+    var adInstance = new AdInstance({
+      name : "blah",
+      width : 300,
+      height : 50,
+      duration : 5
+    });
+    getTemporalSlots = function(){
+      return [
+        overlay
+      ];
+    };
+    initialize();
+    expect(amc.timeline.length).to.be(1);
+    play();
+    //play ad request ad
+    fw.playAd(amc.timeline[0]);
+    debugger;
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
+    expect(amc.timeline.length).to.be(2);
+    //play overlay
+    fw.playAd(amc.timeline[1]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+      slotCustomId : customId,
+      adInstance : adInstance
+    });
+    expect(width).to.be(300);
+    expect(height).to.be(50);
+    expect(sentUrl).to.not.be.ok();
+  });
+
+  it('Non-linear overlay: notifies AMC of end of non-linear ad', function() {
+    var customId = 1234;
+    var overlay = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
+    var notified = false;
+    amc.notifyNonlinearAdEnded = function(adId) {
+      notified = true;
+    };
+    var adInstance = new AdInstance({
+      name : "blah",
+      width : 300,
+      height : 50,
+      duration : 5,
+      customId : customId
+    });
+    getTemporalSlots = function(){
+      return [
+        overlay
+      ];
+    };
+    initialize();
+    expect(amc.timeline.length).to.be(1);
+    play();
+    //play ad request ad
+    fw.playAd(amc.timeline[0]);
+    debugger;
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
+    expect(amc.timeline.length).to.be(2);
+    //play overlay
+    fw.playAd(amc.timeline[1]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+      slotCustomId : customId,
+      adInstance : adInstance
+    });
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION_END]({
+      adInstance : adInstance
+    });
+    expect(notified).to.be(true);
   });
 });

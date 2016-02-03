@@ -27,7 +27,7 @@ describe('ad_manager_vast', function() {
 
 
   // Helper functions
-  fakeAd = function(timePositionClass, position, duration) {
+  var fakeAd = function(timePositionClass, position, duration) {
     var timePositionClass = timePositionClass;
     var position = position;
     var duration = duration;
