@@ -476,14 +476,21 @@ OO.Ads.manager(function(_, $) {
             }
           } else {
             fwContext.setParameter("renderer.video.clickDetection", true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-            slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
-                amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
-              }, this, ad.id);
-            slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
-                amc.notifyNonlinearAdEnded(adId);
-              }, this, ad.id);
-            delete adStartedCallbacks[ad.ad.getCustomId()];
-            delete adEndedCallbacks[ad.ad.getCustomId()];
+            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(details) {
+              //provide width and height values if available. Alice will use these to resize
+              //the skin plugins div when a non linear overlay is on screen
+              if (details) {
+                ad.width = details.width;
+                ad.height = details.height;
+              }
+              amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
+            }, this);
+
+            adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
+              amc.notifyNonlinearAdEnded(adId);
+            }, this, ad.id);
+            delete slotStartedCallbacks[ad.ad.getCustomId()];
+            delete slotEndedCallbacks[ad.ad.getCustomId()];
           }
 
           // Register the content video wrapper to align the overlay to the correct elements
@@ -831,12 +838,15 @@ OO.Ads.manager(function(_, $) {
         var clickEvents = _.filter(event.adInstance._eventCallbacks,
                                    function(callback){ return callback._name == "defaultClick" });
         var hasClickUrl = clickEvents.length > 0;
+        var activeCreativeRendition = event.adInstance.getActiveCreativeRendition();
         adStartedCallbacks[event.slotCustomId]({
-            name: event.adInstance.getActiveCreativeRendition().getPrimaryCreativeRenditionAsset().getName(),
+            name: activeCreativeRendition.getPrimaryCreativeRenditionAsset().getName(),
             duration: event.adInstance._creative.getDuration(),
             hasClickUrl: hasClickUrl,
             indexInPod: indexInPod,
-            skippable: false
+            skippable: false,
+            width: activeCreativeRendition.getWidth(),
+            height: activeCreativeRendition.getHeight()
           });
       }
 

@@ -133,6 +133,7 @@ require("../html5-common/js/utils/utils.js");
         this.allAdInfo = null;
         this.currentAMCAdPod = null;
         this.currentIMAAd = null;
+        this.currentNonLinearIMAAd = null;
         this.isReplay = false;
         this.requestAdsOnReplay = true;
         _linearAdIsPlaying = false;
@@ -442,6 +443,13 @@ require("../html5-common/js/utils/utils.js");
           //displaying it, so just notify AMC that we are showing an overlay.
           else
           {
+            //provide width and height values if available. Alice will use these to resize
+            //the skin plugins div when a non linear overlay is on screen
+            if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
+            {
+              this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
+              this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
+            }
             // raise WILL_PLAY_NONLINEAR_AD event and alert AMC and player that a nonlinear ad is started.
             // Nonlinear ad is rendered by IMA.
             _amc.sendURLToLoadAndPlayNonLinearAd(this.currentAMCAdPod, this.currentAMCAdPod.id, null);
@@ -987,6 +995,7 @@ require("../html5-common/js/utils/utils.js");
         if (_IMAAdsManager)
         {
           this.currentIMAAd = null;
+          this.currentNonLinearIMAAd = null;
           _IMAAdsManager.stop();
           _IMAAdsManager.destroy();
           _IMAAdsManager = null;
@@ -1248,6 +1257,8 @@ require("../html5-common/js/utils/utils.js");
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }
+            } else {
+              this.currentNonLinearIMAAd = ad;
             }
             this.currentIMAAd = ad;
             _onSizeChanged();
@@ -1279,7 +1290,12 @@ require("../html5-common/js/utils/utils.js");
             }
             //Save the volume so the volume can persist on future ad playbacks if we don't receive another volume update from VTC
             this.savedVolume = this.getVolume();
-            //change this to end ad
+
+            if (!ad || !ad.isLinear())
+            {
+              this.currentNonLinearIMAAd = null;
+            }
+
             _endCurrentAd(false);
             _linearAdIsPlaying = false;
             _onAdMetrics(adEvent);

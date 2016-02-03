@@ -143,7 +143,7 @@ describe('ad_manager_ima', function()
     {
       google.ima.adManagerInstance.destroy();
     }
-    google.ima.linearAds = true;
+    google.ima.resetDefaultValues();
     notifyEventName = null;
     notifyParams = null;
     amc = originalMockAmc;
@@ -341,8 +341,56 @@ describe('ad_manager_ima', function()
         notified = true;
       }
     };
+    //original ad definition
+    ima.playAd(amc.timeline[0]);
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    //forced ad playback
     ima.playAd(adPod);
     expect(notified).to.be(true);
+  });
+
+  it('AMC Integration, Non-Ad Rules: non-linear ad provides amc with its width and height', function()
+  {
+    var nonLinearWidth = -1;
+    var nonLinearHeight = -1;
+    google.ima.linearAds = false;
+    debugger;
+    initAndPlay(false, vci);
+    var id = "blah";
+    var adPod =
+    {
+      id : id,
+      ad :
+      {
+        forced_ad_type : amc.ADTYPE.NONLINEAR_OVERLAY
+      }
+    };
+    amc.sendURLToLoadAndPlayNonLinearAd = function(currentAdPod, adPodId, url)
+    {
+      if (adPod === currentAdPod && id === adPodId)
+      {
+        nonLinearWidth = currentAdPod.width;
+        nonLinearHeight = currentAdPod.height;
+      }
+    };
+    //original ad definition
+    ima.playAd(amc.timeline[0]);
+    var am = google.ima.adManagerInstance;
+    var currentAd = am.getCurrentAd();
+    currentAd.getWidth = function()
+    {
+      return 300;
+    };
+    currentAd.getHeight = function()
+    {
+      return 50;
+    };
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    //forced ad playback
+    ima.playAd(adPod);
+    expect(nonLinearWidth).to.be(300);
+    expect(nonLinearHeight).to.be(50);
   });
 
   it('AMC Integration, IMA Event: IMA CLICK event notifies amc of an ad click', function()
@@ -591,7 +639,7 @@ describe('ad_manager_ima', function()
     expect(notified).to.be(true);
   });
 
-  it('AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) notifies amc of non linear ad end', function()
+  it('AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) notifies amc of non-linear ad end', function()
   {
     var notified = false;
     google.ima.linearAds = false;

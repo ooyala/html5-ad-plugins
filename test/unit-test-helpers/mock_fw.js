@@ -1,5 +1,37 @@
 fwContext = null;
 getTemporalSlots = function() {};
+AdInstance = function(params) {
+  this._eventCallbacks = {};
+  this._creative = {
+    getDuration : function() {
+      return params.duration;
+    }
+  };
+  this.getSlot = function() {
+    return {
+      getCustomId : function() {
+        return params.customId;
+      }
+    };
+  };
+  this.getActiveCreativeRendition = function() {
+    return {
+      getPrimaryCreativeRenditionAsset : function() {
+        return {
+          getName : function() {
+            return params.name;
+          }
+        }
+      },
+      getWidth : function() {
+        return params.width;
+      },
+      getHeight : function() {
+        return params.height;
+      }
+    };
+  };
+};
 tv = {
   freewheel : {
     SDK : {
@@ -34,7 +66,7 @@ tv = {
             this.setContentVideoElement = function(){};
             this.setVideoState = function(){};
             this.dispose = function(){};
-          }
+          };
           return fwContext;
         };
       }
