@@ -868,8 +868,9 @@ OO.Ads.manager(function(_, $) {
       }
       var result = [];
       var groupedAdTags = this.groupAdTags(vastXML);
-      _.each(groupedAdTags, function(ad) {
-        result.push(VastAdSingleParser(ad.ad, ad.type));
+      _.each(groupedAdTags, function(adTag) {
+        adTag.ad = VastAdSingleParser(ad.ad, ad.type);
+        result.push(adTag);
       });
       return result;
     };
