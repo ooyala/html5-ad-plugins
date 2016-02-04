@@ -275,7 +275,7 @@ OO.Ads.manager(function(_, $) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
-        this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, true);
+        this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
         return false;
       }
       return true;
@@ -290,7 +290,7 @@ OO.Ads.manager(function(_, $) {
       var vastVersion = $(vastXML.firstChild).attr("version");
       if ( vastVersion !== "2.0" && vastVersion !== "3.0") { 
         OO.log("Invalid VAST version: " + vastVersion);
-        this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, true);
+        this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, this.wrapperParentId);
         return false;
       }
       return true;
@@ -320,9 +320,7 @@ OO.Ads.manager(function(_, $) {
           pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdErrorURL);
         }
         // if the ad response came from a wrapper, then go up the chain and ping those error urls
-        if (this.wrapperParentId) {
-          this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
-        }
+        this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
       }
       else {
         _.each(ads, function(ad) {
@@ -791,7 +789,7 @@ OO.Ads.manager(function(_, $) {
     * @param {boolean} currentAdId Ad ID of current ad.
     */
     this.trackError = _.bind(function(code, currentAdId) {
-      if (currentAdId in this.errorInfo) {
+      if (currentAdId && currentAdId in this.errorInfo) {
         pingURLs(this.errorInfo[currentAdId].errorUrls);
         url = url.replace(/\[ERRORCODE\]/, code);
         OO.pixelPings(url);
@@ -799,7 +797,7 @@ OO.Ads.manager(function(_, $) {
 
         // ping parent wrapper's error urls too if ad had parent
         if (parentId) {
-          this.trackError(code, parentId, this.errorInfo);
+          this.trackError(code, parentId);
         }
       }
     }, this);
@@ -1172,14 +1170,14 @@ OO.Ads.manager(function(_, $) {
       var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
         this.errorType = "parseError";
-        this.trackError(this.ERROR_CODES.XML_PARSING, true);
+        this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
         this.trigger(this.ERROR, this);
         failedAd();
       }
       else if (vastAd.type == "wrapper") {
         this.currentDepth++;
+        var firstWrapperAd = vastAd.ads[0];
         if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
-          var firstWrapperAd = vastAd.ads[0];
           var _wrapperAds = this.wrapperAds;
           OO.log("vast tag url is", firstWrapperAd.VASTAdTagURI, this.currentDepth);
           if (firstWrapperAd) {
@@ -1204,17 +1202,16 @@ OO.Ads.manager(function(_, $) {
               this._handleLinearAd(adLoaded);
               this._handleNonLinearAd(adLoaded);
             }
-
           }
           else {
             this.errorType = "wrapperParseError";
-            this.trackError(this.ERROR_CODES.WRAPPER, true);
+            this.trackError(this.ERROR_CODES.WRAPPER, this.wrapperParentId);
             this.trigger(this.ERROR, this);
             failedAd();
           }
         } else {
           OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
-          this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, true);
+          this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, firstWrapperAd.id);
           this.errorType = "tooManyWrapper";
           this.trigger(this.ERROR, this);
           failedAd();
@@ -1226,8 +1223,6 @@ OO.Ads.manager(function(_, $) {
             this.loaded = true;
             this.trigger(this.READY, this);
           } else {
-            // Vast 3.0 guidelines does not specify an error code for non-wrapper no-ads response (?)
-            this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, true);
             this.errorType = "noAd";
             this.trigger(this.ERROR, this);
             failedAd();
