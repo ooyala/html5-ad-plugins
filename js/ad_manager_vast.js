@@ -791,8 +791,6 @@ OO.Ads.manager(function(_, $) {
     this.trackError = _.bind(function(code, currentAdId) {
       if (currentAdId && currentAdId in this.errorInfo) {
         pingURLs(this.errorInfo[currentAdId].errorUrls);
-        url = url.replace(/\[ERRORCODE\]/, code);
-        OO.pixelPings(url);
         var parentId = this.errorInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
