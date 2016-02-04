@@ -74,6 +74,8 @@ OO.Ads.manager(function(_, $) {
                         companion: [],
                         linear: { tracking: {}, ClickTracking: [] },
                         nonLinear: { tracking: {} } };
+    // when wrapper ajax callback returns, wrapperParentId will be properly set
+    this.wrapperParentId = null;
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -298,7 +300,7 @@ OO.Ads.manager(function(_, $) {
      * Helper function to grab error information. VastAdSingleParser already grabs error data while
      * creating ad object, but some errors may occur before the object is created.
      *
-     * Note: <Error> can only live in three places: direclty under <VAST>, <Ad>, or <Wrapper> elements.
+     * Note: <Error> can only live in three places: directly under <VAST>, <Ad>, or <Wrapper> elements.
      *
      * <Error> tags are also optional so they may not always exist.
      * @public
@@ -308,16 +310,30 @@ OO.Ads.manager(function(_, $) {
      * undefined if ad does not have parent/wrapper.
      * @returns {object} The error object with a list of error urls and whether or not there are no ads
      */
-    this.getErrorInfo = _.bind(function(vastXML, wrapperParentIdArg) {
+    this.getErrorInfo = _.bind(function(vastXML) {
       var ads =  $(vastXML).find("Ad");
-      _.each(ads, function(ad) {
-        var error = {
-          errorUrls: [$(ad).find("Error").text()],
-          wrapperParentId: wrapperParentIdArg || null
-        };
-        var adId = $(ad).prop("id");
-        this.errorInfo[adId] = error;
-      }, this);
+      // if there are no ads in ad response then track error
+      if (ads.length === 0) {
+        // there could be an <Error> element in the vast response
+        var noAdErrorURL = $(vastXML).find("Error").text();
+        if (noAdErrorURL) {
+          pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdErrorURL);
+        }
+        // if the ad response came from a wrapper, then go up the chain and ping those error urls
+        if (this.wrapperParentId) {
+          this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
+        }
+      }
+      else {
+        _.each(ads, function(ad) {
+          var error = {
+            errorUrls: [$(ad).find("Error").text()],
+            wrapperParentId: this.wrapperParentId|| null
+          };
+          var adId = $(ad).prop("id");
+          this.errorInfo[adId] = error;
+        }, this);
+      }
     }, this);
 
     /**
@@ -620,7 +636,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} loadingAd The current Ad metadata that is being loaded.
      * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
      * undefined if ad does not have parent/wrapper. We want to pass this in to the next vast response
-     * so the new ad knows who its parent is for error reporting purposing.
+     * so the new ad knows who its parent is for error reporting purposes.
      */
     this._ajax = function(url, errorCallback, dataType, loadingAd, wrapperParentId) {
       $.ajax({
@@ -633,7 +649,7 @@ OO.Ads.manager(function(_, $) {
         crossDomain: true,
         cache:false,
         success: (dataType == "script") ? function() {} : _.bind(this._onVastResponse, this, loadingAd
-          || this.currentAdBeingLoaded, wrapperParentId),
+          || this.currentAdBeingLoaded, null, wrapperParentId),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
       this.currentAdBeingLoaded = null;
@@ -777,6 +793,8 @@ OO.Ads.manager(function(_, $) {
     this.trackError = _.bind(function(code, currentAdId) {
       if (currentAdId in this.errorInfo) {
         pingURLs(this.errorInfo[currentAdId].errorUrls);
+        url = url.replace(/\[ERRORCODE\]/, code);
+        OO.pixelPings(url);
         var parentId = this.errorInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
@@ -787,7 +805,19 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Helper function to ping error URLs. Replaces error macro if it exists.
+     * Helper function to ping error URL. Replaces error macro if it exists.
+     * @private
+     * @method Vast#pingURL
+     * @param {code} code Error code.
+     * @param {string} url URLs to ping.
+     */
+    var pingURL = _.bind(function(code, url) {
+      url = url.replace(/\[ERRORCODE\]/, code);
+      OO.pixelPings(url);
+    }, this);
+
+    /**
+     * Helper function to ping error URLs.
      * @private
      * @method Vast#pingURL
      * @param {code} code Error code.
@@ -795,8 +825,7 @@ OO.Ads.manager(function(_, $) {
      */
     var pingURLs = _.bind(function(code, urls) {
       _.each(urls, function() {
-        url = url.replace(/\[ERRORCODE\]/, code);
-        OO.pixelPings(url);
+        pingURL(code, url);
       }, this);
     }, this);
 
@@ -1100,13 +1129,11 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#parser
      * @param {xml} vastXML The xml that contains the ad data.
-     * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
-     * undefined if ad does not have parent/wrapper.
      * @returns {object} If the ad is found it returns the object otherwise it returns null.
      */
-    this.parser = function(vastXML, wrapperParentId) {
+    this.parser = function(vastXML) {
       // need to get error information in case error events need to be reported
-      this.getErrorInfo(vastXML, wrapperParentId);
+      this.getErrorInfo(vastXML);
       if (!this.isValidVastXML(vastXML)) {
         return null;
       }
@@ -1137,20 +1164,17 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_onVastResponse
      * @param {object} adLoaded The ad loaded object and metadata.
      * @param {object} xml The xml returned from loading the ad.
-     * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
-     * undefined if ad does not have parent/wrapper.
+     * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
+     * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
-    this._onVastResponse = function(adLoaded, xml, wrapperParentId) {
-      var vastAd = this.parser(xml, wrapperParentId);
+    this._onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
+      this.wrapperParentId = wrapperParentIdArg;
+      var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
         this.errorType = "parseError";
         this.trackError(this.ERROR_CODES.XML_PARSING, true);
         this.trigger(this.ERROR, this);
         failedAd();
-      }
-      // no-ad response will have neither inline/wrapper element
-      else if (vastAd.ads.length === 0) {
-        this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, true);
       }
       else if (vastAd.type == "wrapper") {
         this.currentDepth++;
