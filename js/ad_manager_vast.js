@@ -94,11 +94,20 @@ OO.Ads.manager(function(_, $) {
       'close' ];
 
     /**
-     * Helper function to verify that the xml has a valid vast ad in it and that it is a valid xml.
+     * Helper function to verify that XML is valid
      * @param {xml} vastXML Contains the vast ad data to be parsed.
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
-    var isValidVastXML = _.bind(function(vastXML) {
+    this.isValidVastXML = _.bind(function(vastXML) {
+      return this.isValidRootTagName(vastXML);
+    }, this);
+
+    /**
+     * Helper function to verify XML has valid VAST root tag.
+     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
+     */
+    this.isValidRootTagName = function(vastXML) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
@@ -110,7 +119,7 @@ OO.Ads.manager(function(_, $) {
         return false;
       }
       return true;
-    }, this);
+    };
 
     /**
      * Returns the Vast version of the provided XML.
@@ -939,35 +948,47 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * The xml needs to get parsed and and ad object is returned.
+     * The xml needs to get parsed and and an array of ad objects is returned.
      * @public
      * @method Vast#parser
      * @param {xml} vastXML The xml that contains the ad data
-     * @returns {object} If the ad is found it returns the object otherwise it returns null.
+     * @returns {object} If ads are found, an array containing the ad(s) is returned, otherwise it returns null.
      */
     this.parser = function(vastXML) {
-      if (!isValidVastXML(vastXML)) {
+      if (!this.isValidVastXML(vastXML)) {
         return null;
       }
 
-      var result = { ads: [] };
-      result.version = getVastVersion(vastXML);
-      var inline = $(vastXML).find("InLine");
-      var wrapper = $(vastXML).find("Wrapper");
-
-      if (inline.size() > 0) {
-        result.type = "inline";
-      } else if (wrapper.size() > 0) {
-        result.type = "wrapper";
-      } else {
-        return null;
-      }
-      $(vastXML).find("Ad").each(function() {
-        result.ads.push(VastAdSingleParser(this, result.type, result.version));
+      var result = [];
+      var groupedAdTags = this.groupAdTags(vastXML);
+      _.each(groupedAdTags, function(ad) {
+        result.push(VastAdSingleParser(ad.ad, ad.type));
       });
-
       return result;
     };
+
+    /**
+     * Helper function to parse xml for multiple ad elements
+     * @public
+     * @method Vast#groupAdTags
+     * @param {xml} vastXML The xml that contains the ad data.
+     * @return {object} Returns an array of objects such that each object contains both
+     * the ad element itself, and it's associated "ad type" (aka inline/wrapper ad)
+     */
+    this.groupAdTags = _.bind(function(vastXML) {
+      // finds tags named either Ad, Inline, or Wrapper
+      var tags = $(vastXML).find("Ad,Inline,Wrapper").toArray();
+      var groupedTags = [];
+      for (var i = 0; i < tags.length; i += 2) {
+        var adElement = tags[i];
+        var adType = $(tags[i+1]).prop("tagName").toLowerCase();
+        groupedTags.push({
+          ad: adElement,
+          type: adType
+        });
+      }
+      return groupedTags;
+    }, this);
 
     /**
      * When the vast Ad is loaded correctly it will call this callback. Here the data is parsed to see if it is a linear
@@ -979,65 +1000,67 @@ OO.Ads.manager(function(_, $) {
      * @param {object} xml The xml returned from loading the ad
      */
     this._onVastResponse = function(adLoaded, xml) {
-      var vastAd = this.parser(xml);
-      if (!vastAd || !adLoaded) {
-        this.errorType = "parseError";
-        this.trigger(this.ERROR, this);
-        failedAd();
-      }
-      else if (vastAd.type == "wrapper") {
-        this.currentDepth++;
-        if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
-          var firstWrapperAd = vastAd.ads[0];
-          var _wrapperAds = this.wrapperAds;
-          OO.log("vast tag url is", firstWrapperAd.VASTAdTagURI, this.currentDepth);
-          if (firstWrapperAd) {
-            this.wrapperAds.error = this.wrapperAds.error.concat(firstWrapperAd.error);
-            this.wrapperAds.impression = this.wrapperAds.impression.concat(firstWrapperAd.impression);
-            this.wrapperAds.companion = this.wrapperAds.companion.concat(firstWrapperAd.companion);
-            this.wrapperAds.linear.ClickTracking = this.wrapperAds.linear.ClickTracking
-                .concat(firstWrapperAd.linear.ClickTracking);
-            _.each(firstWrapperAd.linear.tracking, function(value, key) {
-              _wrapperAds.linear.tracking[key] = _wrapperAds.linear.tracking[key] ?
-                                                 value.concat(_wrapperAds.linear.tracking[key]) :
-                                                 value;
-            });
-            _.each(firstWrapperAd.nonLinear.tracking, function(value, key) {
-              _wrapperAds.nonLinear.tracking[key] = _wrapperAds.nonLinear.tracking[key] ?
-                                                    value.concat(_wrapperAds.nonLinear.tracking[key]) :
-                                                    value;
-            });
-            if (!this.testMode) {
-              this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml');
-            } else {
-              this._handleLinearAd(adLoaded);
-              this._handleNonLinearAd(adLoaded);
-            }
-
-          }
-          else {
-            this.errorType = "wrapperParseError";
-            this.trigger(this.ERROR, this);
-            failedAd();
-          }
-        } else {
-          OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
-          this.errorType = "tooManyWrapper";
-          this.trigger(this.ERROR, this);
-          failedAd();
-        }
-      } else if (vastAd.type == "inline") {
-          this.inlineAd = vastAd;
-          this._mergeVastAdResult();
-          if (this._handleLinearAd(adLoaded) || this._handleNonLinearAd(adLoaded)) {
-            this.loaded = true;
-            this.trigger(this.READY, this);
-          } else {
-            this.errorType = "noAd";
-            this.trigger(this.ERROR, this);
-            failedAd();
-        }
-      }
+      //TODO: vastAd should be vastAds. iterate over array of ads to keep old code
+      var vastAds = this.parser(xml);
+      //if (!vastAd || !adLoaded) {
+      //  this.errorType = "parseError";
+      //  this.trigger(this.ERROR, this);
+      //  failedAd();
+      //}
+      //TODO: would iterate over vastAds here
+      //else if (vastAd.type == "wrapper") {
+      //  this.currentDepth++;
+      //  if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
+      //    var firstWrapperAd = vastAd.ads[0];
+      //    var _wrapperAds = this.wrapperAds;
+      //    OO.log("vast tag url is", firstWrapperAd.VASTAdTagURI, this.currentDepth);
+      //    if (firstWrapperAd) {
+      //      this.wrapperAds.error = this.wrapperAds.error.concat(firstWrapperAd.error);
+      //      this.wrapperAds.impression = this.wrapperAds.impression.concat(firstWrapperAd.impression);
+      //      this.wrapperAds.companion = this.wrapperAds.companion.concat(firstWrapperAd.companion);
+      //      this.wrapperAds.linear.ClickTracking = this.wrapperAds.linear.ClickTracking
+      //          .concat(firstWrapperAd.linear.ClickTracking);
+      //      _.each(firstWrapperAd.linear.tracking, function(value, key) {
+      //        _wrapperAds.linear.tracking[key] = _wrapperAds.linear.tracking[key] ?
+      //                                           value.concat(_wrapperAds.linear.tracking[key]) :
+      //                                           value;
+      //      });
+      //      _.each(firstWrapperAd.nonLinear.tracking, function(value, key) {
+      //        _wrapperAds.nonLinear.tracking[key] = _wrapperAds.nonLinear.tracking[key] ?
+      //                                              value.concat(_wrapperAds.nonLinear.tracking[key]) :
+      //                                              value;
+      //      });
+      //      if (!this.testMode) {
+      //        this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml');
+      //      } else {
+      //        this._handleLinearAd(adLoaded);
+      //        this._handleNonLinearAd(adLoaded);
+      //      }
+      //
+      //    }
+      //    else {
+      //      this.errorType = "wrapperParseError";
+      //      this.trigger(this.ERROR, this);
+      //      failedAd();
+      //    }
+      //  } else {
+      //    OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
+      //    this.errorType = "tooManyWrapper";
+      //    this.trigger(this.ERROR, this);
+      //    failedAd();
+      //  }
+      //} else if (vastAd.type == "inline") {
+      //    this.inlineAd = vastAd;
+      //    this._mergeVastAdResult();
+      //    if (this._handleLinearAd(adLoaded) || this._handleNonLinearAd(adLoaded)) {
+      //      this.loaded = true;
+      //      this.trigger(this.READY, this);
+      //    } else {
+      //      this.errorType = "noAd";
+      //      this.trigger(this.ERROR, this);
+      //      failedAd();
+      //  }
+      //}
     };
   });
   return new Vast();
