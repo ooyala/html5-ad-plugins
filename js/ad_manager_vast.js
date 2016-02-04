@@ -866,30 +866,21 @@ OO.Ads.manager(function(_, $) {
       if (!this.isValidVastXML(vastXML)) {
         return null;
       }
-
-      var inline = $(vastXML).find("InLine");
-      var wrapper = $(vastXML).find("Wrapper");
-      var result = { ads: [] };
-
-      //TODO: use groupAdTags instead, then utilize VastAdSingleParser
-      if (inline.size() > 0) {
-        result.type = "inline";
-      } else if (wrapper.size() > 0) {
-        result.type = "wrapper";
-      } else {
-        return null;
-      }
-      $(vastXML).find("Ad").each(function() {
-        result.ads.push(VastAdSingleParser(this, result.type));
+      var result = [];
+      var groupedAdTags = this.groupAdTags(vastXML);
+      _.each(groupedAdTags, function(ad) {
+        result.push(VastAdSingleParser(ad.ad, ad.type));
       });
-
       return result;
     };
 
     /**
-     * Helper function
-     * TODO: make private for before PR
-     * @ppublic
+     * Helper function to parse xml for multiple ad elements
+     * @public
+     * @method Vast#groupAdTags
+     * @param {xml} vastXML The xml that contains the ad data.
+     * @return {object} Returns an array of objects such that each object contains both
+     * the ad element itself, and it's associated "ad type" (aka inline/wrapper ad)
      */
     this.groupAdTags = _.bind(function(vastXML) {
       // finds tags named either Ad, Inline, or Wrapper
@@ -923,6 +914,7 @@ OO.Ads.manager(function(_, $) {
         this.trigger(this.ERROR, this);
         failedAd();
       }
+      //TODO: would iterate over vastAds here
       else if (vastAd.type == "wrapper") {
         this.currentDepth++;
         if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
