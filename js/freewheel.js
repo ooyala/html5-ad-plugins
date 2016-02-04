@@ -464,7 +464,7 @@ OO.Ads.manager(function(_, $) {
           indexInPod = 0;
           if (ad.isLinear) {
             _registerDisplayForLinearAd();
-            fwContext.setParameter("renderer.video.clickDetection", false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+            fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad) {
                 amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
               }, this, ad);
@@ -493,13 +493,20 @@ OO.Ads.manager(function(_, $) {
             }
           } else {
             _registerDisplayForNonlinearAd();
-            fwContext.setParameter("renderer.video.clickDetection", true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+            fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(details) {
               //provide width and height values if available. Alice will use these to resize
               //the skin plugins div when a non linear overlay is on screen
               if (details) {
                 ad.width = details.width;
                 ad.height = details.height;
+                //the width and height of the fake video must be equal
+                //to or greater than the size of the overlay creative
+                //or else FW won't display it
+                if (fakeVideo) {
+                  fakeVideo.style.width = details.width + 'px';
+                  fakeVideo.style.height = details.height + 'px';
+                }
               }
               amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
             }, this);
