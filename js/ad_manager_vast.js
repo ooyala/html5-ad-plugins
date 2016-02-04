@@ -1177,10 +1177,10 @@ OO.Ads.manager(function(_, $) {
       else if (vastAd.type == "wrapper") {
         this.currentDepth++;
         var firstWrapperAd = vastAd.ads[0];
-        if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
-          var _wrapperAds = this.wrapperAds;
+        if (firstWrapperAd) {
           OO.log("vast tag url is", firstWrapperAd.VASTAdTagURI, this.currentDepth);
-          if (firstWrapperAd) {
+          if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
+            var _wrapperAds = this.wrapperAds;
             this.wrapperAds.error = this.wrapperAds.error.concat(firstWrapperAd.error);
             this.wrapperAds.impression = this.wrapperAds.impression.concat(firstWrapperAd.impression);
             this.wrapperAds.companion = this.wrapperAds.companion.concat(firstWrapperAd.companion);
@@ -1204,15 +1204,15 @@ OO.Ads.manager(function(_, $) {
             }
           }
           else {
-            this.errorType = "wrapperParseError";
-            this.trackError(this.ERROR_CODES.WRAPPER, this.wrapperParentId);
+            OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
+            this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, firstWrapperAd.id);
+            this.errorType = "tooManyWrapper";
             this.trigger(this.ERROR, this);
             failedAd();
           }
         } else {
-          OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
-          this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, firstWrapperAd.id);
-          this.errorType = "tooManyWrapper";
+          this.errorType = "wrapperParseError";
+          this.trackError(this.ERROR_CODES.WRAPPER, this.wrapperParentId);
           this.trigger(this.ERROR, this);
           failedAd();
         }
