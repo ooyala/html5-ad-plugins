@@ -75,6 +75,17 @@ OO.Ads.manager(function(_, $) {
                         nonLinear: { tracking: {} } };
     var adCompletedCallback = null;
 
+    var VERSION_MAJOR_2 = '2';
+    var VERSION_MAJOR_3 = '3';
+    var SUPPORTED_VERSIONS = [VERSION_MAJOR_2, VERSION_MAJOR_3];
+    var FEATURES = {
+      SKIP_AD : "skipAd"
+    };
+    var SUPPORTED_FEATURES = {};
+    SUPPORTED_FEATURES[VERSION_MAJOR_2] = [];
+    SUPPORTED_FEATURES[VERSION_MAJOR_3] = [FEATURES.SKIP_AD];
+
+
     /**
      * Used to keep track of what events that are tracked for vast.
      */
@@ -93,9 +104,57 @@ OO.Ads.manager(function(_, $) {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
         return false;
       }
-      // TODO, when 3.0 is supported, update this check.
-      if ($(vastXML.firstChild).attr('version') !== '2.0') { return false; }
+
+      var version = getVastVersion(vastXML);
+      if (!supportsVersion(version)) {
+        return false;
+      }
       return true;
+    }, this);
+
+    /**
+     * Returns the Vast version of the provided XML.
+     * @private
+     * @method Vast#getVastVersion
+     * @returns {string} the Vast version
+     */
+    var getVastVersion = _.bind(function(vastXML) {
+      return $(vastXML.firstChild).attr('version');
+    }, this);
+
+    /**
+     * Returns the Vast major version. For example, the '3' in 3.0.
+     * @private
+     * @method Vast#getMajorVersion
+     * @param {string} version the Vast version as parsed from the XML
+     * @returns {string} the major version
+     */
+    var getMajorVersion = _.bind(function(version) {
+      if(typeof version === 'string') {
+        return version.split('.')[0];
+      }
+    }, this);
+
+    /**
+     * Checks to see if this ad manager supports a given Vast version.
+     * @private
+     * @method Vast#supportsVersion
+     * @returns {boolean} true if the version is supported by this ad manager, false otherwise
+     */
+    var supportsVersion = _.bind(function(version) {
+      return _.contains(SUPPORTED_VERSIONS, getMajorVersion(version));
+    }, this);
+
+    /**
+     * Checks to see if the given Vast version supports the skip ad functionality, as per Vast specs
+     * for different versions.
+     * @private
+     * @method Vast#supportsSkipAd
+     * @returns {boolean} true if the skip ad functionality is supported in the specified Vast version,
+     *                    false otherwise
+     */
+    var supportsSkipAd = _.bind(function(version) {
+      return _.contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.SKIP_AD);
     }, this);
 
     /**
@@ -272,8 +331,6 @@ OO.Ads.manager(function(_, $) {
      */
     this.playAd = function(adWrapper) {
       // When the ad is done, trigger callback
-      var ui = this.amc.ui;
-
       if (adWrapper.isLinear) {
         this.amc.notifyPodStarted(adWrapper.id, 1);
         adCompletedCallback = _.bind(function(amc, adId) {
@@ -281,7 +338,7 @@ OO.Ads.manager(function(_, $) {
             amc.notifyPodEnded(adId);
           }, this, this.amc, adWrapper.id);
         this.checkCompanionAds(adWrapper.ad);
-        this.amc.showSkipVideoAdButton(true);
+        initSkipAdOffset(adWrapper);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
@@ -303,6 +360,46 @@ OO.Ads.manager(function(_, $) {
         this.checkCompanionAds(adWrapper.ad);
       }
     };
+
+    /**
+     * Determine if a Vast ad is skippable, and if so, when the skip ad button should be displayed.
+     * Notifies AMC of the result.
+     * @private
+     * @method Vast#initSkipAdOffset
+     * @param {object} adWrapper The current Ad's metadata.
+     */
+    var initSkipAdOffset = _.bind(function(adWrapper) {
+      if (supportsSkipAd(adWrapper.ad.data.version)) {
+        var skipOffset = adWrapper.ad.data.linear.skipOffset;
+        if (skipOffset) {
+          if (skipOffset.indexOf('%') === skipOffset.length - 1) {
+            this.amc.showSkipVideoAdButton(true, skipOffset, true);
+          } else {
+            //Vast format: HH:MM:SS.mmm
+            var splits = skipOffset.split(':');
+            var hh = splits[0];
+            var mm = splits[1];
+            var ss = splits[2];
+            var ms = 0;
+            var secondsSplits = ss.split('.');
+            if (secondsSplits.length === 2) {
+              ss = secondsSplits[0];
+              ms = secondsSplits[1];
+            }
+            var offset = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
+            //Provide the offset to the AMC in seconds
+            offset = Math.round(offset / 1000);
+            this.amc.showSkipVideoAdButton(true, offset.toString(), true);
+          }
+        } else {
+          this.amc.showSkipVideoAdButton(false);
+        }
+      } else {
+        //For Vast versions that don't support the skipoffset attribute, we
+        //want to use Ooyala's settings for displaying the skip ad button
+        this.amc.showSkipVideoAdButton(true);
+      }
+    }, this);
 
     /**
      * This is called by the Ad Manager Controller when it needs to cancel an Ad due to a timeout or skip button.
@@ -337,6 +434,7 @@ OO.Ads.manager(function(_, $) {
       // Stop any running ads
       this.cancelAd();
       this.ready = false;
+      this.currentDepth = 0;
     };
 
     /**
@@ -750,6 +848,9 @@ OO.Ads.manager(function(_, $) {
         ClickThrough: filterEmpty($(linearXml).find("ClickThrough").map(function() { return $(this).text(); })),
         CustomClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
       };
+
+      result.skipOffset = $(linearXml).attr("skipoffset");
+
       var mediaFile = linearXml.find("MediaFile");
 
       parseTrackingEvents(result.tracking, linearXml);
@@ -813,10 +914,12 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#VastAdSingleParser
      * @param {xml} xml Xml that contins the ad data.
      * @param {string} type The ad type.
+     * @param {number} version The Vast version
      * @returns {object} The ad object otherwise it returns 1.
      */
-    var VastAdSingleParser = _.bind(function(xml, type) {
+    var VastAdSingleParser = _.bind(function(xml, type, version) {
       var result = getVastTemplate();
+      result.version = version;
       var linear = $(xml).find("Linear").eq(0);
       var nonLinearAds = $(xml).find("NonLinearAds");
 
@@ -847,9 +950,10 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
 
+      var result = { ads: [] };
+      result.version = getVastVersion(vastXML);
       var inline = $(vastXML).find("InLine");
       var wrapper = $(vastXML).find("Wrapper");
-      var result = { ads: [] };
 
       if (inline.size() > 0) {
         result.type = "inline";
@@ -859,7 +963,7 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
       $(vastXML).find("Ad").each(function() {
-        result.ads.push(VastAdSingleParser(this, result.type));
+        result.ads.push(VastAdSingleParser(this, result.type, result.version));
       });
 
       return result;
