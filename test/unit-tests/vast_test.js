@@ -586,6 +586,50 @@ describe('ad_manager_vast', function() {
 
   //TODO: Unit test for testing skipoffset with percentage value
 
+  it('Vast 2.0: should provide ad pod position and length of 1 to AMC on playAd', function(){
+    var allowSkipButton = false;
+    var skipOffset = 0;
+    var adPodLength = -1;
+    var indexInPod = -1;
+    amc.showSkipVideoAdButton = function(allowButton, offset) {
+      allowSkipButton = allowButton;
+      skipOffset = offset;
+    };
+    amc.notifyPodStarted = function(id, podLength) {
+      adPodLength = podLength;
+    };
+    amc.notifyLinearAdStarted = function(name, props) {
+      if (props) {
+        indexInPod = props.indexInPod;
+      }
+    };
+
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(1);
+    expect(indexInPod).to.be(1);
+  });
+
   it('Vast 3.0: should parse inline linear podded ads', function(){
     var embed_code = "embed_code";
     var vast_ad_mid = {
@@ -628,5 +672,54 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654644');
+  });
+
+  it('Vast 3.0: should provide proper ad pod positions and length to AMC on playAd', function(){
+    var adPodLength = -1;
+    var indexInPod = -1;
+    amc.notifyPodStarted = function(id, podLength) {
+      adPodLength = podLength;
+    };
+    amc.notifyLinearAdStarted = function(name, props) {
+      if (props) {
+        indexInPod = props.indexInPod;
+      }
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    //TODO: expand on these tests
+    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(3);
+    expect(indexInPod).to.be(1);
+
+    vastAd = amc.timeline[1];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(3);
+    expect(indexInPod).to.be(2);
+
+    vastAd = amc.timeline[2];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(3);
+    expect(indexInPod).to.be(3);
   });
 });

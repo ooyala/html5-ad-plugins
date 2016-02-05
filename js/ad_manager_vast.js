@@ -349,7 +349,7 @@ OO.Ads.manager(function(_, $) {
     this.playAd = function(adWrapper) {
       // When the ad is done, trigger callback
       if (adWrapper.isLinear) {
-        this.amc.notifyPodStarted(adWrapper.id, 1);
+        this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
         adCompletedCallback = _.bind(function(amc, adId) {
             amc.notifyLinearAdEnded(adId);
             amc.notifyPodEnded(adId);
@@ -361,7 +361,7 @@ OO.Ads.manager(function(_, $) {
             name: adWrapper.ad.data.title,
             duration: adWrapper.ad.durationInMilliseconds/1000,
             hasClickUrl: hasClickUrl,
-            indexInPod: 1,
+            indexInPod: adWrapper.ad.adPodIndex,
             skippable: false
           });
       }
@@ -690,11 +690,13 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_handleLinearAd
      * @param {object} ad The ad object
      * @param {object} adLoaded The ad that was loaded
+     * @param {object} params Additional params
      * @returns {boolean} True if the ad was loaded and a stream was found; else false.
      */
-    this._handleLinearAd = function(ad, adLoaded) {
+    this._handleLinearAd = function(ad, adLoaded, params) {
       // filter our playable stream:
       if (_.isEmpty(ad.linear.mediaFiles)) { return false; }
+      params = params ? params : {};
       var streams = ad.linear.mediaFiles;
       var maxMedia = _.max(streams, function(v) { return parseInt(v.bitrate, 10); });
       var vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
@@ -702,6 +704,8 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(ad.linear.Duration) * 1000;
       _.extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.linear.tracking;
+      vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
+      vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       addToTimeline(vastAdUnit, adLoaded);
       if (_.isEmpty(vastAdUnit.streams)) {
         // No Playable stream, report error.
@@ -717,16 +721,20 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_handleNonLinearAd
      * @param {object} ad The ad object
      * @param {object} adLoaded The ad that was loaded
+     * @param {object} params Additional params
      * @returns {boolean} True if the load was successful and a stream was found otherwise false.
      */
-    this._handleNonLinearAd = function(ad, adLoaded) {
+    this._handleNonLinearAd = function(ad, adLoaded, params) {
       // filter our playable stream:
       if (_.isEmpty(ad.nonLinear.url)) { return false; }
+      params = params ? params : {};
       var adURL = ad.nonLinear.url;
       var vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.streamUrl = adURL;
       _.extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.nonLinear.tracking;
+      vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
+      vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
 
       if (vastAdUnit.streamUrl == null) {
         // No Playable stream, report error.
@@ -1037,15 +1045,19 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adLoaded The ad loaded object and metadata
      */
     var handleAds = _.bind(function(ads, adLoaded) {
-      _.each(ads, _.bind(function(ad) {
+      _.each(ads, _.bind(function(ad, index) {
         if (ad.type === AD_TYPE.INLINE) {
           var wrapperAds = { error: [],
             impression: [],
             companion: [],
             linear: { tracking: {}, ClickTracking: [] },
             nonLinear: { tracking: {} } };
+          var params = {
+            adPodIndex : index + 1,
+            adPodLength : ads.length
+          };
           this._mergeVastAdResult(ad, wrapperAds);
-          if (this._handleLinearAd(ad, adLoaded) || this._handleNonLinearAd(ad, adLoaded)) {
+          if (this._handleLinearAd(ad, adLoaded, params) || this._handleNonLinearAd(ad, adLoaded, params)) {
             this.loaded = true;
             this.trigger(this.READY, this);
           } else {
