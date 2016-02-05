@@ -349,15 +349,16 @@ OO.Ads.manager(function(_, $) {
     this.playAd = function(adWrapper) {
       // When the ad is done, trigger callback
       if (adWrapper.isLinear) {
-        this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
-        adCompletedCallback = _.bind(function(amc, adId) {
-            amc.notifyLinearAdEnded(adId);
-            amc.notifyPodEnded(adId);
-          }, this, this.amc, adWrapper.id);
+        if (adWrapper.ad.adPodIndex === 1) {
+          this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
+        }
+        adCompletedCallback = _.bind(function(ad) {
+            this.endAd(ad);
+          }, this, adWrapper);
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
-        this.amc.notifyLinearAdStarted(this.name, {
+        this.amc.notifyLinearAdStarted(adWrapper.id, {
             name: adWrapper.ad.data.title,
             duration: adWrapper.ad.durationInMilliseconds/1000,
             hasClickUrl: hasClickUrl,
@@ -429,11 +430,21 @@ OO.Ads.manager(function(_, $) {
       if (!this.amc || !this.amc.ui) {
         return;
       }
+      this.endAd(ad);
+    };
+
+    /**
+     *
+     * @param ad
+     */
+    this.endAd = function(ad) {
       if (ad) {
         if (ad.isLinear) {
           // The VTC should pause the ad when the video element loses focus
-          this.amc.notifyLinearAdEnded(ad.id);
-          this.amc.notifyPodEnded(ad.id);
+          this.amc.notifyLinearAdEnded(ad.id, true);
+          if(ad.ad.adPodIndex === ad.ad.adPodLength) {
+            this.amc.notifyPodEnded(ad.id);
+          }
         } else {
           this.lastOverlayAd = null;
           this.amc.notifyNonlinearAdEnded(ad.id);
