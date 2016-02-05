@@ -794,14 +794,14 @@ OO.Ads.manager(function(_, $) {
     * @param {number} code Error code.
     * @param {boolean} currentAdId Ad ID of current ad.
     */
-    this.trackError = _.bind(function(code, currentAdId) {
+    this.trackError = _.bind(function trackErrorHelper(code, currentAdId) {
       if (currentAdId && currentAdId in this.errorInfo) {
         pingURLs(this.errorInfo[currentAdId].errorUrls);
         var parentId = this.errorInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
         if (parentId) {
-          this.trackError(code, parentId);
+          this.trackErrorHelper(code, parentId);
         }
       }
     }, this);
