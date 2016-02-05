@@ -652,8 +652,9 @@ OO.Ads.manager(function(_, $) {
         dataType: dataType,
         crossDomain: true,
         cache:false,
+        //TODO: should pass wrapperParentId here for wrapper
         success: (dataType == "script") ? function() {} : _.bind(this._onVastResponse, this, loadingAd
-          || this.currentAdBeingLoaded, null, wrapperParentId),
+          || this.currentAdBeingLoaded),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
       this.currentAdBeingLoaded = null;
