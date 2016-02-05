@@ -1188,6 +1188,11 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to handle Wrapper Ad
+     * @public
+     * @method Vast#handleWrapper
+     * @param {object} adLoaded The ad loaded object and metadata.
+     * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
+     * ad information, companion ads, etc)
      */
     this.handleWrapper = _.bind(function(adLoaded, vastAd) {
       this.currentDepth++;
@@ -1237,6 +1242,11 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to handle Inline Ad
+     * @public
+     * @method Vast#handleInline
+     * @param {object} adLoaded The ad loaded object and metadata.
+     * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
+     * ad information, companion ads, etc)
      */
     this.handleInline = _.bind(function(adLoaded, vastAd) {
       this.inlineAd = vastAd;
