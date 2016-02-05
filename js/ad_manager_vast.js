@@ -276,6 +276,8 @@ OO.Ads.manager(function(_, $) {
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
         this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
+        this.errorType = "schemaValidationError";
+        this.trigger(this.ERROR, this);
         return false;
       }
       return true;
@@ -291,6 +293,8 @@ OO.Ads.manager(function(_, $) {
       if ( vastVersion !== "2.0" && vastVersion !== "3.0") { 
         OO.log("Invalid VAST version: " + vastVersion);
         this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, this.wrapperParentId);
+        this.errorType = "versionUnsupportedError";
+        this.trigger(this.ERROR, this);
         return false;
       }
       return true;
@@ -315,12 +319,14 @@ OO.Ads.manager(function(_, $) {
       // if there are no ads in ad response then track error
       if (ads.length === 0) {
         // there could be an <Error> element in the vast response
-        var noAdErrorURL = $(vastXML).find("Error").text();
-        if (noAdErrorURL) {
-          pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdErrorURL);
+        var noAdsErrorURL = $(vastXML).find("Error").text();
+        if (noAdsErrorURL) {
+          pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
         }
         // if the ad response came from a wrapper, then go up the chain and ping those error urls
         this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
+        this.errorType = "wrapperNoAdsError";
+        this.trigger(this.ERROR, this);
       }
       else {
         _.each(ads, function(ad) {
@@ -1163,7 +1169,7 @@ OO.Ads.manager(function(_, $) {
      * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
      * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
-    this._onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
+    this._onVastResponse = _.bind(function(adLoaded, xml, wrapperParentIdArg) {
       this.wrapperParentId = wrapperParentIdArg;
       var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
@@ -1173,60 +1179,78 @@ OO.Ads.manager(function(_, $) {
         failedAd();
       }
       else if (vastAd.type == "wrapper") {
-        this.currentDepth++;
+        this.handleWrapper(adLoaded, vastAd);
+      }
+      else if (vastAd.type == "inline") {
+        this.handleInline(adLoaded, vastAd);
+      }
+    }, this);
+
+    /**
+     * Helper function to handle Wrapper Ad
+     */
+    this.handleWrapper = _.bind(function(adLoaded, vastAd) {
+      this.currentDepth++;
+      if (vastAd.ads && !_.isEmpty(vastAd.ads)) {
         var firstWrapperAd = vastAd.ads[0];
-        if (firstWrapperAd) {
-          OO.log("vast tag url is", firstWrapperAd.VASTAdTagURI, this.currentDepth);
-          if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
-            var _wrapperAds = this.wrapperAds;
-            this.wrapperAds.error = this.wrapperAds.error.concat(firstWrapperAd.error);
-            this.wrapperAds.impression = this.wrapperAds.impression.concat(firstWrapperAd.impression);
-            this.wrapperAds.companion = this.wrapperAds.companion.concat(firstWrapperAd.companion);
-            this.wrapperAds.linear.ClickTracking = this.wrapperAds.linear.ClickTracking
-                .concat(firstWrapperAd.linear.ClickTracking);
-            _.each(firstWrapperAd.linear.tracking, function(value, key) {
-              _wrapperAds.linear.tracking[key] = _wrapperAds.linear.tracking[key] ?
-                                                 value.concat(_wrapperAds.linear.tracking[key]) :
-                                                 value;
-            });
-            _.each(firstWrapperAd.nonLinear.tracking, function(value, key) {
-              _wrapperAds.nonLinear.tracking[key] = _wrapperAds.nonLinear.tracking[key] ?
-                                                    value.concat(_wrapperAds.nonLinear.tracking[key]) :
-                                                    value;
-            });
-            if (!this.testMode) {
-              this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml', null, firstWrapperAd.id);
-            } else {
-              this._handleLinearAd(adLoaded);
-              this._handleNonLinearAd(adLoaded);
-            }
+        OO.log("vast tag url is", firstWrapperAd.VASTAdTagURI, this.currentDepth);
+        if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
+          var _wrapperAds = this.wrapperAds;
+          this.wrapperAds.error = this.wrapperAds.error.concat(firstWrapperAd.error);
+          this.wrapperAds.impression = this.wrapperAds.impression.concat(firstWrapperAd.impression);
+          this.wrapperAds.companion = this.wrapperAds.companion.concat(firstWrapperAd.companion);
+          this.wrapperAds.linear.ClickTracking = this.wrapperAds.linear.ClickTracking
+              .concat(firstWrapperAd.linear.ClickTracking);
+          _.each(firstWrapperAd.linear.tracking, function(value, key) {
+            _wrapperAds.linear.tracking[key] = _wrapperAds.linear.tracking[key] ?
+                                               value.concat(_wrapperAds.linear.tracking[key]) :
+                                               value;
+          });
+          _.each(firstWrapperAd.nonLinear.tracking, function(value, key) {
+            _wrapperAds.nonLinear.tracking[key] = _wrapperAds.nonLinear.tracking[key] ?
+                                                  value.concat(_wrapperAds.nonLinear.tracking[key]) :
+                                                  value;
+          });
+          if (!this.testMode) {
+            this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml', null, firstWrapperAd.id);
           }
           else {
-            OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
-            this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, firstWrapperAd.id);
-            this.errorType = "tooManyWrapper";
-            this.trigger(this.ERROR, this);
-            failedAd();
+            this._handleLinearAd(adLoaded);
+            this._handleNonLinearAd(adLoaded);
           }
-        } else {
-          this.errorType = "wrapperParseError";
-          this.trackError(this.ERROR_CODES.WRAPPER, this.wrapperParentId);
+        }
+        else {
+          OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
+          this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, firstWrapperAd.id);
+          this.errorType = "tooManyWrapper";
           this.trigger(this.ERROR, this);
           failedAd();
         }
-      } else if (vastAd.type == "inline") {
-          this.inlineAd = vastAd;
-          this._mergeVastAdResult();
-          if (this._handleLinearAd(adLoaded) || this._handleNonLinearAd(adLoaded)) {
-            this.loaded = true;
-            this.trigger(this.READY, this);
-          } else {
-            this.errorType = "noAd";
-            this.trigger(this.ERROR, this);
-            failedAd();
-        }
       }
-    };
+      else {
+        this.trackError(this.ERROR_CODES.WRAPPER, this.wrapperParentId);
+        this.errorType = "wrapperParseError";
+        this.trigger(this.ERROR, this);
+        failedAd();
+      }
+    }, this);
+
+    /**
+     * Helper function to handle Inline Ad
+     */
+    this.handleInline = _.bind(function(adLoaded, vastAd) {
+      this.inlineAd = vastAd;
+      this._mergeVastAdResult();
+      if (this._handleLinearAd(adLoaded) || this._handleNonLinearAd(adLoaded)) {
+        this.loaded = true;
+        this.trigger(this.READY, this);
+      }
+      else {
+        this.errorType = "noAd";
+        this.trigger(this.ERROR, this);
+        failedAd();
+      }
+    }, this);
   });
   return new Vast();
 });
