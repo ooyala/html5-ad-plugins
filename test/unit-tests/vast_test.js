@@ -536,7 +536,7 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    vastAdManager.currentDepth = 999;
+    vastAdManager.currentDepth = OO.playerParams.maxVastWrapperDepth;
     vastAdManager._onVastResponse(vast_ad_mid, wrapperXML);
     expect(vastAdManager.errorType).to.be("tooManyWrapper");
   });
@@ -600,10 +600,6 @@ describe('ad_manager_vast', function() {
     vastAdManager.errorType = '';
 
     vastAdManager._onVastResponse(null, wrapperXML);
-    expect(vastAdManager.errorType).to.be("parseError");
-    vastAdManager.errorType = '';
-
-    vastAdManager._onVastResponse(null, linearAdPodXML);
     expect(vastAdManager.errorType).to.be("parseError");
     vastAdManager.errorType = '';
   });
