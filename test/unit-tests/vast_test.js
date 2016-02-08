@@ -471,6 +471,7 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
   });
 
+  //TODO: Fix wrapper ads test
   //it('should parse wrapper ads', function(){
   //  var embed_code = "embed_code";
   //  var vast_ad_mid = {

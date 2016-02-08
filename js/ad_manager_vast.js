@@ -463,6 +463,7 @@ OO.Ads.manager(function(_, $) {
       this.cancelAd();
       this.ready = false;
       this.currentDepth = 0;
+      this.inlineAd = null;
     };
 
     /**
@@ -972,7 +973,7 @@ OO.Ads.manager(function(_, $) {
       var linear = $(xml).find("Linear").eq(0);
       var nonLinearAds = $(xml).find("NonLinearAds");
 
-      if (result.type === "wrapper") { result.VASTAdTagURI = $(xml).find("VASTAdTagURI").text(); }
+      if (result.type === AD_TYPE.WRAPPER) { result.VASTAdTagURI = $(xml).find("VASTAdTagURI").text(); }
       result.error = filterEmpty($(xml).find("Error").map(function() { return $(this).text(); }));
       result.impression = filterEmpty($(xml).find("Impression").map(function() { return $(this).text(); }));
       result.title = _.first(filterEmpty($(xml).find("AdTitle").map(function() { return $(this).text(); })));
@@ -1076,6 +1077,8 @@ OO.Ads.manager(function(_, $) {
             this.trigger(this.ERROR, this);
             failedAd();
           }
+        } else if (ad.type === AD_TYPE.WRAPPER) {
+          //TODO: Wrapper ads
         }
       }, this));
     }, this);
@@ -1090,7 +1093,6 @@ OO.Ads.manager(function(_, $) {
      * @param {object} xml The xml returned from loading the ad
      */
     this._onVastResponse = function(adLoaded, xml) {
-      //TODO: vastAd should be vastAds. iterate over array of ads to keep old code
       var vastAds = this.parser(xml);
       if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
         this.errorType = "parseError";
