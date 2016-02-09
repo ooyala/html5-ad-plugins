@@ -149,7 +149,6 @@ OO.Ads.manager(function(_, $) {
       WRAPPER_NO_ADS:                     303,
 
       /**
-       * TODO: Add support
        * General linear error. Video player is unable to display the linear ad.
        */
       LINEAR_ADS:                         400,
@@ -180,7 +179,6 @@ OO.Ads.manager(function(_, $) {
       MEDIAFILE_DISPLAY_PROBLEM:          405,
 
       /**
-       * TODO: Add support
        * General NonLinearAds error.
        */
       NONLINEAR_ADS:                      500,
@@ -867,10 +865,21 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adLoaded The ad that was loaded.
      * @returns {boolean} True if the ad was loaded and a stream was found; else false.
      */
-    this._handleLinearAd = function(adLoaded) {
+    this._handleLinearAd = function(adLoaded, vastXML) {
+      // See if the <Linear> even exists
+      var LinearElement = $(vastXML).find("Linear");
+      if (LinearElement.size() === 0) {
+        return false;
+      }
       // filter our playable stream:
       var firstLinearAd = _.find(this.inlineAd.ads, function(v){ return !_.isEmpty(v.linear.mediaFiles); }, this);
-      if (!firstLinearAd) { return false; }
+      if (!firstLinearAd) {
+        OO.log("General Linear Ads Error: no mediafiles", this.inlineAd);
+        this.trackError(this.ERROR_CODES.LINEAR_ADS, this.wrapperParentId);
+        this.errorType = "generalLinearAdsError";
+        this.trigger(this.ERROR, this);
+        return false;
+      }
       var streams = firstLinearAd.linear.mediaFiles;
       var maxMedia = _.max(streams, function(v) { return parseInt(v.bitrate, 10); });
       this.vastAdUnit.maxBitrateStream = maxMedia && maxMedia.url;
@@ -893,20 +902,25 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adLoaded The ad that was loaded.
      * @returns {boolean} True if the load was successful and a stream was found otherwise false.
      */
-    this._handleNonLinearAd = function(adLoaded) {
+    this._handleNonLinearAd = function(adLoaded, vastXML) {
+      // See if the <NonLinear> even exists
+      var nonLinearElement = $(vastXML).find("NonLinear");
+      if (nonLinearElement.size() === 0) {
+        return false;
+      }
       // filter our playable stream:
       var firstNonLinearAd = _.find(this.inlineAd.ads, function(v){ return !_.isEmpty(v.nonLinear.url); }, this);
-      if (!firstNonLinearAd) { return false; }
+      if (!firstNonLinearAd) {
+        OO.log("General NonLinear Ads Error: can not find playable stream in vast result", this.inlineAd);
+        this.trackError(this.ERROR_CODES.NONLINEAR_ADS, this.wrapperParentId);
+        this.errorType = "generalNonLinearAdsError";
+        this.trigger(this.ERROR, this);
+        return false;
+      }
       var adURL = firstNonLinearAd.nonLinear.url;
       this.vastAdUnit.streamUrl = adURL;
       _.extend(this.vastAdUnit.data, firstNonLinearAd);
       this.vastAdUnit.data.tracking = firstNonLinearAd.nonLinear.tracking;
-
-      if (this.vastAdUnit.streamUrl == null) {
-        // No Playable stream, report error.
-        OO.log("Can not find playable stream in vast result", this.inlineAd);
-        return false;
-      }
       addToTimeline(this.vastAdUnit, adLoaded);
       return true;
     };
@@ -1180,10 +1194,10 @@ OO.Ads.manager(function(_, $) {
         failedAd();
       }
       else if (vastAd.type == "wrapper") {
-        this.handleWrapper(adLoaded, vastAd);
+        this.handleWrapper(adLoaded, vastAd, xml);
       }
       else if (vastAd.type == "inline") {
-        this.handleInline(adLoaded, vastAd);
+        this.handleInline(adLoaded, vastAd, xml);
       }
     }, this);
 
@@ -1195,7 +1209,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
      * ad information, companion ads, etc)
      */
-    this.handleWrapper = _.bind(function(adLoaded, vastAd) {
+    this.handleWrapper = _.bind(function(adLoaded, vastAd, vastXML) {
       this.currentDepth++;
       if (vastAd.ads && !_.isEmpty(vastAd.ads)) {
         var firstWrapperAd = vastAd.ads[0];
@@ -1221,8 +1235,9 @@ OO.Ads.manager(function(_, $) {
             this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml', null, firstWrapperAd.id);
           }
           else {
-            this._handleLinearAd(adLoaded);
-            this._handleNonLinearAd(adLoaded);
+            this._handleLinearAd(adLoaded, vastXML);
+            this._handleNonLinearAd(adLoaded, vastXML);
+            addToTimeline(this.vastAdUnit, adLoaded);
           }
         }
         else {
@@ -1249,10 +1264,10 @@ OO.Ads.manager(function(_, $) {
      * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
      * ad information, companion ads, etc)
      */
-    this.handleInline = _.bind(function(adLoaded, vastAd) {
+    this.handleInline = _.bind(function(adLoaded, vastAd, vastXML) {
       this.inlineAd = vastAd;
       this._mergeVastAdResult();
-      if (this._handleLinearAd(adLoaded) || this._handleNonLinearAd(adLoaded)) {
+      if (this._handleLinearAd(adLoaded, vastXML) || this._handleNonLinearAd(adLoaded, vastXML)) {
         this.loaded = true;
         this.trigger(this.READY, this);
       }
