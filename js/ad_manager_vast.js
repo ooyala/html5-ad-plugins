@@ -354,6 +354,7 @@ OO.Ads.manager(function(_, $) {
         }
         adCompletedCallback = _.bind(function(ad) {
             this.endAd(ad);
+          adCompletedCallback = null;
           }, this, adWrapper);
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
@@ -427,10 +428,14 @@ OO.Ads.manager(function(_, $) {
      */
     this.cancelAd = function(ad) {
       //TODO: add timout logic if needed here as well.
-      if (!this.amc || !this.amc.ui) {
+      if (!this.amc || !this.amc.ui || !ad) {
         return;
       }
-      this.endAd(ad);
+      if (ad.isLinear) {
+        this.adVideoEnded();
+      } else {
+        this.endAd(ad);
+      }
     };
 
     /**
@@ -440,9 +445,12 @@ OO.Ads.manager(function(_, $) {
     this.endAd = function(ad) {
       if (ad) {
         if (ad.isLinear) {
+          var endOfPod = ad.ad.adPodIndex === ad.ad.adPodLength;
           // The VTC should pause the ad when the video element loses focus
-          this.amc.notifyLinearAdEnded(ad.id, true);
-          if(ad.ad.adPodIndex === ad.ad.adPodLength) {
+          // Ask AMC to handle next ad only if not the end of pod. If end of pod,
+          // notify pod ended will make this ask
+          this.amc.notifyLinearAdEnded(ad.id, !endOfPod);
+          if(endOfPod) {
             this.amc.notifyPodEnded(ad.id);
           }
         } else {
@@ -463,7 +471,7 @@ OO.Ads.manager(function(_, $) {
       this.cancelAd();
       this.ready = false;
       this.currentDepth = 0;
-      this.inlineAd = null;
+      this.lastOverlayAd = null;
     };
 
     /**
@@ -1026,7 +1034,6 @@ OO.Ads.manager(function(_, $) {
         }
       }, this));
 
-
       return result;
     };
 
@@ -1057,6 +1064,15 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adLoaded The ad loaded object and metadata
      */
     var handleAds = _.bind(function(ads, adLoaded) {
+      //find out how many non linear ads we have so as to not count them
+      //when determining ad pod length
+      var nonLinearAdCount = 0;
+      _.each(ads, _.bind(function(ad) {
+        if (!_.isEmpty(ad.nonLinear)) {
+          nonLinearAdCount++;
+        }
+      }, this));
+
       _.each(ads, _.bind(function(ad, index) {
         if (ad.type === AD_TYPE.INLINE) {
           var wrapperAds = { error: [],
@@ -1066,7 +1082,7 @@ OO.Ads.manager(function(_, $) {
             nonLinear: { tracking: {} } };
           var params = {
             adPodIndex : index + 1,
-            adPodLength : ads.length
+            adPodLength : ads.length - nonLinearAdCount
           };
           this._mergeVastAdResult(ad, wrapperAds);
           if (this._handleLinearAd(ad, adLoaded, params) || this._handleNonLinearAd(ad, adLoaded, params)) {
