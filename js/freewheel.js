@@ -25,7 +25,7 @@ OO.Ads.manager(function(_, $) {
     this.name              = "freewheel-ads-manager";
     this.testMode          = false;
     this.videoRestrictions = { "technology": OO.VIDEO.TECHNOLOGY.HTML5,
-                               "features": [OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE] };
+                               "features": [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] };
 
     var amc         = null;
     var fwAdManager = null;
