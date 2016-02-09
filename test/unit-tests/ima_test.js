@@ -350,10 +350,11 @@ describe('ad_manager_ima', function()
     expect(notified).to.be(true);
   });
 
-  it('AMC Integration, Non-Ad Rules: non-linear ad provides amc with its width and height', function()
+  it('AMC Integration, Non-Ad Rules: non-linear ad provides amc with its width, height, and padding requirement', function()
   {
     var nonLinearWidth = -1;
     var nonLinearHeight = -1;
+    var paddingRequired = false;
     google.ima.linearAds = false;
     debugger;
     initAndPlay(false, vci);
@@ -372,6 +373,7 @@ describe('ad_manager_ima', function()
       {
         nonLinearWidth = currentAdPod.width;
         nonLinearHeight = currentAdPod.height;
+        paddingRequired = currentAdPod.paddingRequired;
       }
     };
     //original ad definition
@@ -391,6 +393,7 @@ describe('ad_manager_ima', function()
     ima.playAd(adPod);
     expect(nonLinearWidth).to.be(300);
     expect(nonLinearHeight).to.be(50);
+    expect(paddingRequired).to.be(true);
   });
 
   it('AMC Integration, IMA Event: IMA CLICK event notifies amc of an ad click', function()

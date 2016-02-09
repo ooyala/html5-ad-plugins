@@ -449,6 +449,11 @@ require("../html5-common/js/utils/utils.js");
             {
               this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
               this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
+              //IMA requires some padding in order to have the overlay render or else
+              //IMA thinks the available real estate is too small.
+              //There is no requirement for this to be customizable but we could include
+              //the ability to specify the padding in the future.
+              this.currentAMCAdPod.paddingRequired = true;
             }
             // raise WILL_PLAY_NONLINEAR_AD event and alert AMC and player that a nonlinear ad is started.
             // Nonlinear ad is rendered by IMA.
