@@ -1112,17 +1112,17 @@ OO.Ads.manager(function(_, $) {
       } else {
         var ad;
         //TODO: Determine when we show standalone ads if podded ads are available
-        //Show podded ads if available
-        if(!_.isEmpty(vastAds.podded)) {
-          handleAds(vastAds.podded, adLoaded);
-        }
-        //else show first standalone ad
-        else {
+        //If there are no podded ads
+        if(_.isEmpty(vastAds.podded)) {
+          //show the first standalone ad
           ad = vastAds.standalone[0];
+          if (ad) {
+            handleAds([ad], adLoaded);
+          }
         }
-
-        if (ad) {
-          handleAds([ad], adLoaded);
+        //else show the podded ads
+        else {
+          handleAds(vastAds.podded, adLoaded);
         }
       }
     };
