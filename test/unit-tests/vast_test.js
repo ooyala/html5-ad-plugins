@@ -519,7 +519,6 @@ describe('ad_manager_vast', function() {
 
   //TODO: Need to cover PlayADs, overlays and companions once v4 is integrated.
 
-
   it('Vast 3.0, Error Reporting: Should report too many wrappers error', function(){
     var embed_code = "embed_code";
     var vast_ad_mid = {
@@ -561,14 +560,14 @@ describe('ad_manager_vast', function() {
     var vastAd = {
       ads: null
     };
-    vastAdManager.handleWrapper(vast_ad_mid, vastAd);
+    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
     expect(vastAdManager.errorType).to.be("wrapperParseError");
     vastAdManager.errorType = '';
 
     vastAd = {
       ads: []
     };
-    vastAdManager.handleWrapper(vast_ad_mid, vastAd);
+    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
     expect(vastAdManager.errorType).to.be("wrapperParseError");
     vastAdManager.errorType = '';
   });
@@ -667,6 +666,52 @@ describe('ad_manager_vast', function() {
 
     vastAdManager.getErrorInfo("");
     expect(vastAdManager.errorType).to.be("wrapperNoAdsError");
+    vastAdManager.errorType = '';
+  });
+
+  it('Vast 3.0, Error Reporting: Should report general linear ads error', function(){
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+
+    vastAdManager.inlineAd.ads = null;
+    vastAdManager._handleLinearAd(vast_ad_mid, linearXML);
+    expect(vastAdManager.errorType).to.be("generalLinearAdsError");
+    vastAdManager.errorType = '';
+  });
+
+  it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', function(){
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+
+    vastAdManager.inlineAd.ads = null;
+    vastAdManager._handleNonLinearAd(vast_ad_mid, nonLinearXML);
+    expect(vastAdManager.errorType).to.be("generalNonLinearAdsError");
     vastAdManager.errorType = '';
   });
 
