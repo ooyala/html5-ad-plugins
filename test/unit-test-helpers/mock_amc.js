@@ -29,9 +29,11 @@ fake_amc = function() {
   this.ui = {
     rootElement : $("<div>", {}),
     videoWrapper : $("<div>", {}),
+    playerSkinVideoWrapper : $("<div>", {}),
     ooyalaVideoElement : $("<div>", {class: "video"}),
     adVideoElement : $("<div>", {class: "video"}),
     pluginsElement : $("<div>", {}),
+    playerSkinPluginsElement : $("<div>", {}),
     adWrapper : $("<div>", {})
   };
   this.platform = {};

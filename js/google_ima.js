@@ -26,12 +26,14 @@ require("../html5-common/js/utils/utils.js");
      *             **This must be updated with big updates to a different number.
      * @property {string} PLAYER_TYPE this is a variable that specifies the name of the player that is relayed to
      *             Google for tracking
+     * @property {object} sharedVideoElement The video element to use on iOS where only one video element is allowed.
      */
     var GoogleIMA = function()
     {
       this.name = "google-ima-ads-manager";
       this.ready = false;
       this.runningUnitTests = false;
+      this.sharedVideoElement = null;
 
       //private member variables of this GoogleIMA object
       var _amc = null;
@@ -47,7 +49,6 @@ require("../html5-common/js/utils/utils.js");
 
       //Constants
       var DEFAULT_ADS_REQUEST_TIME_OUT = 3000;
-      var OVERLAY_OFFSET = 40;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
@@ -272,6 +273,11 @@ require("../html5-common/js/utils/utils.js");
       this.registerUi = function()
       {
         this.uiRegistered = true;
+        if (_amc.ui.useSingleVideoElement && !this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0] &&
+            (_amc.ui.ooyalaVideoElement[0].className === "video")) {
+          this.sharedVideoElement = _amc.ui.ooyalaVideoElement[0];
+        }
+
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
       };
@@ -688,9 +694,7 @@ require("../html5-common/js/utils/utils.js");
                 _endCurrentAd(true);
             }
 
-            var w = _amc.ui.width;
-            var h = _amc.ui.height;
-            _IMAAdsManager.init(w, h, google.ima.ViewMode.NORMAL);
+            _IMAAdsManager.init(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
             if(this.vcPlayRequested)
             {
@@ -769,19 +773,7 @@ require("../html5-common/js/utils/utils.js");
         if (_IMAAdsManager)
         {
           var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
-          if (this.currentIMAAd && !this.currentIMAAd.isLinear())
-          {
-            // For nonlinear ads, the ad slot can be adjusted at this time.
-            // In this example, we make the ad to be shown at the bottom
-            // of the slot. We also make the slot a bit shorter, so there is
-            // a padding at the bottom.
-            _IMAAdsManager.resize(_amc.ui.width, _amc.ui.height - OVERLAY_OFFSET, viewMode);
-          }
-          else
-          {
-            // For linear ad, set the size to the full video player size.
-            _IMAAdsManager.resize(_amc.ui.width, _amc.ui.height, viewMode);
-          }
+          _IMAAdsManager.resize(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, viewMode);
         }
       });
 
@@ -917,23 +909,26 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_tryInitAdContainer = privateMember(function()
       {
-        if (!_IMAAdDisplayContainer && _adModuleJsReady && this.uiRegistered)
+        if (_adModuleJsReady && this.uiRegistered)
         {
           if (!_isGoogleSDKValid())
           {
              _throwError("IMA SDK loaded but does not contain valid data");
           }
 
-          if (_amc.platform.isIos)
-          {
-            //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
-            //also doesn't not seem to work nicely with podded ads if you don't use it.
-            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0], _amc.ui.ooyalaVideoElement[0]);
+          if (_IMAAdDisplayContainer) {
+            _IMAAdDisplayContainer.destroy();
           }
-          else
-          {
-            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_amc.ui.adWrapper[0]);
-          }
+
+          //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
+          var uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
+          //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
+          //also doesn't not seem to work nicely with podded ads if you don't use it.
+
+          //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
+          //properly with the Alice skin.
+          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(uiContainer,
+                                                                     this.sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
         }
@@ -1089,9 +1084,17 @@ require("../html5-common/js/utils/utils.js");
         }
         // https://developers.google.com/interactive-media-ads/docs/sdks/googlehtml5_apis_v3#ima.AdsRenderingSettings
         var adsSettings = new google.ima.AdsRenderingSettings();
-        adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
+        adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
+
+        // When the ads manager is ready, we are ready to apply css changes to the video element
+        // If the sharedVideoElement is not used, mark it as null before applying css
+        this.videoControllerWrapper.readyForCss = true;
+        if (!_IMAAdsManager.isCustomPlaybackUsed()) {
+          this.sharedVideoElement = null;
+        }
+        this.videoControllerWrapper.applyStoredCss();
 
         //a cue point index of 0 references a preroll, so we know we have a preroll if we find it in cuePoints
         var cuePoints = _IMAAdsManager.getCuePoints();
@@ -1616,7 +1619,11 @@ require("../html5-common/js/utils/utils.js");
               var adPos = adPodInfo.getAdPosition();
               var totalAds = adPodInfo.getTotalAds();
               //IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
-              if (adPos == totalAds || forceEndAdPod)
+
+              //Wait until we receive content resume event from IMA before we end ad pod for
+              //single video element mode. This is to workaround an issue where the video controller
+              //and IMA are out of sync if we end ad pod too early for single video element mode
+              if ((!_amc.ui.useSingleVideoElement && adPos == totalAds) || forceEndAdPod)
               {
                 _endCurrentAdPod(true);
               }
@@ -1684,7 +1691,7 @@ require("../html5-common/js/utils/utils.js");
   {
     this.name = "GoogleIMAVideoTech";
     this.encodings = ["ima"];
-    this.features = [];
+    this.features = [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_TAKE];
     this.technology = OO.VIDEO.TECHNOLOGY.HTML5;
 
     // This module defaults to ready because no setup or external loading is required
@@ -1711,6 +1718,25 @@ require("../html5-common/js/utils/utils.js");
     };
 
     /**
+     * Creates a video player instance using GoogleIMAVideoWrapper which wraps and existing video element.
+     * @public
+     * @method GoogleIMAVideoFactory#createFromExisting
+     * @param {string} domId The dom id of the video DOM object to use
+     * @param {object} ooyalaVideoController A reference to the video controller in the Ooyala player
+     * @param {string} playerId The unique player identifier of the player creating this instance
+     * @returns {object} A reference to the wrapper for the video element
+     */
+    this.createFromExisting = function(domId, ooyalaVideoController, playerId)
+    {
+      var googleIMA = registeredGoogleIMAManagers[playerId];
+      googleIMA.sharedVideoElement = $("#" + domId)[0];
+      var wrapper = new GoogleIMAVideoWrapper(googleIMA);
+      wrapper.controller = ooyalaVideoController;
+      wrapper.subscribeAllEvents();
+      return wrapper;
+    };
+
+    /**
      * Destroys the video technology factory.
      * @public
      * @method GoogleIMAVideoFactory#destroy
@@ -1720,6 +1746,7 @@ require("../html5-common/js/utils/utils.js");
       this.ready = false;
       this.encodings = [];
       this.create = function() {};
+      this.createFromExisting = function() {};
     };
 
     /**
@@ -1738,6 +1765,8 @@ require("../html5-common/js/utils/utils.js");
    * @property {object} controller A reference to the Ooyala Video Tech Controller
    * @property {boolean} disableNativeSeek When true, the plugin should supress or undo seeks that come from
    *                                       native video controls
+   * @property {boolean} readyForCss When true, css may be applied on the video element.  When false, css
+   *                                 should be stored for use later when this value is true.
    */
   var GoogleIMAVideoWrapper = function(ima)
   {
@@ -1745,10 +1774,31 @@ require("../html5-common/js/utils/utils.js");
 
     this.controller = {};
     this.disableNativeSeek = true;
+    this.isControllingVideo = true;
+    this.readyForCss = false;
+    var storedCss = null;
 
     /************************************************************************************/
     // Required. Methods that Video Controller, Destroy, or Factory call
     /************************************************************************************/
+
+    /**
+     * Takes control of the video element from another plugin.
+     * @public
+     * @method GoogleIMAVideoWrapper#sharedElementGive
+     */
+    this.sharedElementTake = function() {
+      this.isControllingVideo = true;
+    };
+
+    /**
+     * Hands control of the video element off to another plugin.
+     * @public
+     * @method GoogleIMAVideoWrapper#sharedElementGive
+     */
+    this.sharedElementGive = function() {
+      this.isControllingVideo = false;
+    };
 
     /**
      * Subscribes to all events raised by the video element.
@@ -1854,7 +1904,37 @@ require("../html5-common/js/utils/utils.js");
      */
     this.applyCss = function(css)
     {
+      if (!this.readyForCss)
+      {
+        storedCss = css;
+      }
+      else
+      {
+        applyCssToElement(css);
+      }
     };
+
+    /**
+     * Triggers application of css changes that have been previously stored.
+     * @public
+     * @method GoogleIMAVideoWrapper#applyStoredCss
+     */
+    this.applyStoredCss = function()
+    {
+      this.applyCss(storedCss);
+    };
+
+    /**
+     * Does the application of css to the video element if the video element is shared and under ima control.
+     * @private
+     * @method GoogleIMAVideoWrapper#applyCssToElemenet
+     */
+    var applyCssToElement = _.bind(function(css)
+    {
+      if (css && this.isControllingVideo && _ima.sharedVideoElement) {
+        $(_ima.sharedVideoElement).css(css);
+      }
+    }, this);
 
     /**
      * Destroys the individual video element.
@@ -1866,27 +1946,40 @@ require("../html5-common/js/utils/utils.js");
       _ima.destroy();
     };
 
+    /**
+     * Calls the controller notify function only if the video wrapper is controlling the video element.
+     * @private
+     * @method GoogleIMAVideoWrapper#notifyIfInControl
+     * @param {string} event The event to raise to the video controller
+     * @param {object} params [optional] Event parameters
+     */
+    var notifyIfInControl = _.bind(function(event, params) {
+      if (this.isControllingVideo) {
+        this.controller.notify(event, params);
+      }
+    }, this);
+
     //Events
     this.raisePlayEvent = function()
     {
-      this.controller.notify(this.controller.EVENTS.PLAY, {});
-      this.controller.notify(this.controller.EVENTS.PLAYING);
+      notifyIfInControl(this.controller.EVENTS.PLAY, {});
+      notifyIfInControl(this.controller.EVENTS.PLAYING);
     };
 
     this.raiseEndedEvent = function()
     {
-      this.controller.notify(this.controller.EVENTS.ENDED);
+      notifyIfInControl(this.controller.EVENTS.ENDED);
     };
 
     this.raisePauseEvent = function()
     {
-      this.controller.notify(this.controller.EVENTS.PAUSED);
+      notifyIfInControl(this.controller.EVENTS.PAUSED);
     };
 
     this.raiseVolumeEvent = function()
     {
       var volume = _ima.getVolume();
-      this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
+      notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
     };
 
     this.raiseTimeUpdate = function(currentTime, duration)
@@ -1901,7 +1994,7 @@ require("../html5-common/js/utils/utils.js");
 
     var raisePlayhead = _.bind(function(eventname, currentTime, duration)
     {
-      this.controller.notify(eventname,
+      notifyIfInControl(eventname,
         { "currentTime" : currentTime,
           "duration" : duration,
           "buffer" : 0,

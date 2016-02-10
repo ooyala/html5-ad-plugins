@@ -124,6 +124,10 @@ google =
               {        //convenience function for unit tests
                 return currentAd;
               };
+              this.isCustomPlaybackUsed = function()
+              {
+                return false;
+              };
             };
             google.ima.adManagerInstance = new mockAdManager();
           }

@@ -483,6 +483,7 @@ OO.Ads.manager(function(_, $) {
     this.adVideoEnded = function() {
       if (typeof adCompletedCallback === "function") {
         adCompletedCallback();
+        adCompletedCallback = null;
       }
     };
 

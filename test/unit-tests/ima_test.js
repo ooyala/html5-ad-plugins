@@ -186,6 +186,13 @@ describe('ad_manager_ima', function()
     expect(typeof videoWrapper).to.be("object");
   });
 
+  it('Init: VTC Integration is creatable from existin element after ad manager is initialized', function()
+  {
+    ima.initialize(amc, playerId);
+    var wrapper = imaVideoPluginFactory.createFromExisting("domId", {}, playerId);
+    expect(typeof wrapper).to.be("object");
+  });
+
   it('Init: ad manager handles the registerUi function', function()
   {
     expect(function()
@@ -1104,5 +1111,84 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.DURATION_CHANGE);
     expect(durationChanged).to.be(true);
     expect(currentDuration).to.be(30);
+  });
+
+  var checkNotifyCalled = _.bind(function(eventname, give) {
+    var notified = false;
+    initAndPlay(true, {
+      notify : function(eventName, params) { notified = true; },
+      EVENTS : vci.EVENTS
+    });
+    if (give) {
+      videoWrapper.sharedElementGive();
+    } else {
+      videoWrapper.sharedElementTake();
+    }
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(eventname);
+    return notified;
+  }, this);
+
+  it('SingleElement: Video wrapper only notifies of play event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.RESUMED, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.RESUMED, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.RESUMED, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of ended event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.COMPLETE, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.COMPLETE, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.COMPLETE, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of pause event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.PAUSED, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.PAUSED, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.PAUSED, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of volume change event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Video wrapper only notifies of duration change event when in control of the element', function()
+  {
+    var notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
+    expect(notified).to.be(false);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, false);
+    expect(notified).to.be(true);
+    notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
+    expect(notified).to.be(false);
+  });
+
+  it('SingleElement: Shared video element should be blank if in multi-element mode', function()
+  {
+    ima.sharedVideoElement = null;
+    amc.ui.useSingleVideoElement = false;
+    amc.ui.ooyalaVideoElement = [{ className: "video"}];
+    initialize(false);
+    expect(ima.sharedVideoElement).to.be(null);
+    amc.ui.useSingleVideoElement = true;
+    initialize(false);
+    expect(ima.sharedVideoElement).to.not.be(null);
   });
 });
