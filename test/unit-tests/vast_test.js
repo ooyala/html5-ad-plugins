@@ -538,6 +538,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.currentDepth = OO.playerParams.maxVastWrapperDepth;
     vastAdManager._onVastResponse(vast_ad_mid, wrapperXML);
     expect(vastAdManager.errorType).to.be("tooManyWrapper");
+    vastAdManager.errorType = '';
   });
 
   it('Vast 3.0, Error Reporting: Should report general wrapper error', function(){
