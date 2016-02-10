@@ -12,7 +12,6 @@ require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
 
 require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
-require("../html5-common/js/classes/emitter.js");
 require("../html5-common/js/utils/environment.js");
 
 OO.Ads.manager(function(_, $) {
@@ -38,13 +37,11 @@ OO.Ads.manager(function(_, $) {
    * @property {string} adURLOverride If the page level params override the ad url then it is stored here
    * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
-   * @property {string} ERROR Constant used when triggering an error to indicate it was a Vast error
-   * @property {string} READY Constant used to trigger an event to indicate that the vast ad is ready for use
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
    * show the ads
    * @property {object} currentAdBeingLoaded Stores the ad data of the ad that is currently being loaded
    */
-  var Vast = OO.inherit(OO.Emitter, function() {
+  var Vast = function() {
     // this.name should match the key in metadata form the server
     this.name = "vast";
     this.amc  = null;
@@ -59,8 +56,6 @@ OO.Ads.manager(function(_, $) {
     this.movieMd = null;
     this.adURLOverride;
     this.lastOverlayAd;
-    this.ERROR = 'vastError';
-    this.READY = 'vastReady';
     this.VAST_AD_CONTAINER = '#vast_ad_container';
     this.currentAdBeingLoaded = null;
     var adCompletedCallback = null;
@@ -223,6 +218,7 @@ OO.Ads.manager(function(_, $) {
         this.adURLOverride = pbMetadata.tagUrl;
       }
       this.ready = true;
+      this.amc.onAdManagerReady();
       return this.loadPreRolls();
     };
 
@@ -252,7 +248,7 @@ OO.Ads.manager(function(_, $) {
      * @method vast#failedAd
      */
     var failedAd = _.bind(function() {
-      // TODO: Do not destory the whole ad manager if one ad fails!
+      // TODO: Do not destroy the whole ad manager if one ad fails!
       this.destroy();
     }, this);
 
@@ -673,11 +669,10 @@ OO.Ads.manager(function(_, $) {
     this._onVastError = function() {
       this.errorType = 'directAjaxFailed';
       this._ajax(this._getProxyUrl(), this._onFinalError, 'script');
-      this.trigger(this.ERROR, this);
     };
 
     /**
-     * If the ad fails to load a second time, this callback is called and triggers an error message, but doesn't try to
+     * If the ad fails to load a second time, this callback is called. Doesn't try to
      * reload the ad.
      * @public
      * @method Vast#_onFinalError
@@ -685,7 +680,6 @@ OO.Ads.manager(function(_, $) {
      */
     this._onFinalError = function() {
       this.errorType = "proxyAjaxFailed";
-      this.trigger(this.ERROR, this);
       failedAd();
     };
 
@@ -715,7 +709,9 @@ OO.Ads.manager(function(_, $) {
      */
     this._handleLinearAd = function(ad, adLoaded, params) {
       // filter our playable stream:
-      if (_.isEmpty(ad.linear.mediaFiles)) { return false; }
+      if (_.isEmpty(ad.linear.mediaFiles)) {
+        return false;
+      }
       params = params ? params : {};
       var streams = ad.linear.mediaFiles;
       var maxMedia = _.max(streams, function(v) { return parseInt(v.bitrate, 10); });
@@ -746,7 +742,9 @@ OO.Ads.manager(function(_, $) {
      */
     this._handleNonLinearAd = function(ad, adLoaded, params) {
       // filter our playable stream:
-      if (_.isEmpty(ad.nonLinear.url)) { return false; }
+      if (_.isEmpty(ad.nonLinear.url)) {
+        return false;
+      }
       params = params ? params : {};
       var adURL = ad.nonLinear.url;
       var vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
@@ -1087,10 +1085,8 @@ OO.Ads.manager(function(_, $) {
           this._mergeVastAdResult(ad, wrapperAds);
           if (this._handleLinearAd(ad, adLoaded, params) || this._handleNonLinearAd(ad, adLoaded, params)) {
             this.loaded = true;
-            this.trigger(this.READY, this);
           } else {
             this.errorType = "noAd";
-            this.trigger(this.ERROR, this);
             failedAd();
           }
         } else if (ad.type === AD_TYPE.WRAPPER) {
@@ -1112,7 +1108,6 @@ OO.Ads.manager(function(_, $) {
       var vastAds = this.parser(xml);
       if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
         this.errorType = "parseError";
-        this.trigger(this.ERROR, this);
         failedAd();
       } else {
         var ad;
@@ -1131,6 +1126,6 @@ OO.Ads.manager(function(_, $) {
         }
       }
     };
-  });
+  };
   return new Vast();
 });
