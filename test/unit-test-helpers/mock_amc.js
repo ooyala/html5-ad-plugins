@@ -60,5 +60,7 @@ fake_amc = function() {
   this.unregisterAdManager = function() {};
   this.forceAdToPlay = function() {};
   this.sendURLToLoadAndPlayNonLinearAd = function() {};
+  this.showSkipVideoAdButton = function() {};
+  this.showCompanion = function() {};
   this.adManagerSettings = {};
 };
