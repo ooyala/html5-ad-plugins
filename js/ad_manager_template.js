@@ -198,6 +198,15 @@ OO.Ads.manager(function(_, $) {
     this.playerClicked = function(amcAd, showPage) {
     };
 
+    /**
+     * <i>Optional.</i><br/>
+     * Called when the player detects start of ad video playback.
+     * @method AdManager#adVideoPlaying
+     * @public
+     */
+    this.adVideoPlaying = function() {
+
+    };
 
     /**
      * <i>Optional.</i><br/>
@@ -222,7 +231,7 @@ OO.Ads.manager(function(_, $) {
     var _onContentChanged = function() {
       // Callback for example listener registered in this.initialize
     }
-  }
+  };
 
   return new AdManager();
 });
