@@ -449,16 +449,21 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#cancelAd
      * @param {object} ad The Ad that needs to be cancelled
+     * @param {object} params An object containing information about the cancellation
      */
-    this.cancelAd = function(ad) {
+    this.cancelAd = function(ad, params) {
       //TODO: add timout logic if needed here as well.
       if (!this.amc || !this.amc.ui || !ad) {
         return;
       }
-      if (ad.isLinear) {
-        this.adVideoEnded();
+      if(params && params.code === this.amc.AD_CANCEL_CODE.TIMEOUT) {
+        failedAd();
       } else {
-        this.endAd(ad);
+        if (ad.isLinear) {
+          this.adVideoEnded();
+        } else {
+          this.endAd(ad);
+        }
       }
     };
 

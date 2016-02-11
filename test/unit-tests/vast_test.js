@@ -842,6 +842,68 @@ describe('ad_manager_vast', function() {
     expect(nonLinearStartNotified).to.be(1);
   });
 
+  it('Vast 3.0: On ad timeout, fallback ad will be shown', function(){
+    var nonLinearStartNotified = 0;
+    var podStartNotified = 0;
+    var podEndNotified = 0;
+    var linearStartNotified = 0;
+    var linearEndNotified = 0;
+
+    amc.notifyPodStarted = function() {
+      podStartNotified++;
+    };
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+    amc.notifyLinearAdStarted = function() {
+      linearStartNotified++;
+    };
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+      nonLinearStartNotified++;
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654646');
+
+    vastAdManager.cancelAd(vastAd, {
+      code : amc.AD_CANCEL_CODE.TIMEOUT
+    });
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654600');
+  });
+
   it('Vast 3.0: On ad playback error, fallback ad will be shown', function(){
     var nonLinearStartNotified = 0;
     var podStartNotified = 0;
