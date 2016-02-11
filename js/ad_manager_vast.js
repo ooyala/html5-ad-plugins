@@ -40,12 +40,15 @@ OO.Ads.manager(function(_, $) {
    * @property {string} adURLOverride If the page level params override the ad url then it is stored here
    * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
+   * @property {object} errorInfo The object that holds each individual ad id's error urls. Used for error reporting.
    * @property {string} ERROR Constant used when triggering an error to indicate it was a Vast error
    * @property {string} READY Constant used to trigger an event to indicate that the vast ad is ready for use
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
    * show the ads
    * @property {object} currentAdBeingLoaded Stores the ad data of the ad that is currently being loaded
    * @property {object} wrapperAds Is used to keep track of the analytic and clickthrough info of an ad
+   * @property {string} wrapperParentId Used to keep track of ad's wrapper parent ID
+   * @property {object} ERROR_CODES Used to define the VAST 3.0 error codes
    */
   var Vast = OO.inherit(OO.Emitter, function() {
     // this.name should match the key in metadata form the server
@@ -125,7 +128,7 @@ OO.Ads.manager(function(_, $) {
       /**
        * General Wrapper Error.
        */
-      WRAPPER:                            300,
+      GENERAL_WRAPPER:                    300,
 
       /**
        * TODO: Add support
@@ -151,7 +154,7 @@ OO.Ads.manager(function(_, $) {
       /**
        * General linear error. Video player is unable to display the linear ad.
        */
-      LINEAR_ADS:                         400,
+      GENERAL_LINEAR_ADS:                 400,
 
       /**
        * TODO: Add support
@@ -181,7 +184,7 @@ OO.Ads.manager(function(_, $) {
       /**
        * General NonLinearAds error.
        */
-      NONLINEAR_ADS:                      500,
+      GENERAL_NONLINEAR_ADS:              500,
 
       /**
        * TODO: Add support
@@ -206,7 +209,7 @@ OO.Ads.manager(function(_, $) {
        * TODO: Add support
        * General CompanionAds error.
        */
-      COMPANION_ADS:                      600,
+      GENERAL_COMPANION_ADS:              600,
 
       /**
        * TODO: Add support
@@ -243,7 +246,7 @@ OO.Ads.manager(function(_, $) {
        * TODO: Add support
        * General VPAID error.
        */
-      VPAID:                              901
+      GENERAL_VPAID:                      901
     };
 
     var adCompletedCallback = null;
@@ -375,10 +378,10 @@ OO.Ads.manager(function(_, $) {
         // there could be an <Error> element in the vast response
         var noAdsErrorURL = $(vastXML).find("Error").text();
         if (noAdsErrorURL) {
-          pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
+          pingURL(this.ERROR_CODES.GENERAL_WRAPPER_NO_ADS, noAdsErrorURL);
         }
         // if the ad response came from a wrapper, then go up the chain and ping those error urls
-        this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
+        this.trackError(this.ERROR_CODES.GENERAL_WRAPPER_NO_ADS, this.wrapperParentId);
         this.errorType = "wrapperNoAdsError";
         this.trigger(this.ERROR, this);
       }
@@ -969,7 +972,7 @@ OO.Ads.manager(function(_, $) {
         var firstLinearAd = _.find(this.inlineAd.ads, function(v){ return !_.isEmpty(v.linear.mediaFiles); }, this);
         if (!firstLinearAd) {
           OO.log("General Linear Ads Error: no mediafiles", this.inlineAd);
-          this.trackError(this.ERROR_CODES.LINEAR_ADS, this.wrapperParentId);
+          this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, this.wrapperParentId);
           this.errorType = "generalLinearAdsError";
           this.trigger(this.ERROR, this);
           return false;
@@ -1022,7 +1025,7 @@ OO.Ads.manager(function(_, $) {
         var firstNonLinearAd = _.find(this.inlineAd.ads, function(v){ return !_.isEmpty(v.nonLinear.url); }, this);
         if (!firstNonLinearAd) {
           OO.log("General NonLinear Ads Error: can not find playable stream in vast result", this.inlineAd);
-          this.trackError(this.ERROR_CODES.NONLINEAR_ADS, this.wrapperParentId);
+          this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, this.wrapperParentId);
           this.errorType = "generalNonLinearAdsError";
           this.trigger(this.ERROR, this);
           return false;
