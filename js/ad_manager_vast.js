@@ -21,31 +21,31 @@ OO.Ads.manager(function(_, $) {
    * @classDesc The Vast Ads Manager class, registered as an ads manager with the ad manager controller.
    * Controls how Vast ads are loaded and played while communicating with the ad manager framework.
    * @public
-   * @property {string} name Name of the vast manager, must match what is sent from Backlot and used at page level.
-   * @property {object} amc An internal reference to the Ad Manager Framework.
-   * @property {boolean} testMode If enabled it will put the ad manager in test mode causing certain functions to not load.
+   * @property {string} name Name of the vast manager, must match what is sent from Backlot and used at the page level
+   * @property {object} amc An internal reference to the Ad Manager Framework
+   * @property {boolean} testMode If enabled, it will put the ad manager in test mode causing certain functions to not load
    * @property {string} ADTYPE Which ad manger the ad belongs to. This should match the this.name of the ad manager,
    * but doesn't have to.
-   * @property {boolean} ready Is used to communicate with the ad manger controller if the manager is ready to go. Default
+   * @property {boolean} ready Used to communicate with the ad manger controller if the manager is ready to go. Default
    * is false and if the ad manager controller sees it as false after initialization then it will destroy the manager.
-   * @property {object} inlineAd The stream url of the current ad to be played.
+   * @property {object} inlineAd The stream url of the current ad to be played
    * @property {number} currentDepth Keeps track of how many layers the Ad is wrapped in and sets off a warning if the
-   * max is reached.
-   * @property {object} vastAdUnit Contains the ad once it has been loaded.
-   * @property {boolean} loaded Set to true once the ad has been loaded successfully.
-   * @property {string} errorType If an error occurs, this will save the type of error, in order to log it.
-   * @property {string} embedCode Keeps track of the embed code of the movie that is currently playing.
-   * @property {string} loaderId Unique id name for the loader, which is required by the API.
-   * @property {object} movieMd Contains the metadata of the main movie.
-   * @property {string} adURLOverride If the page level params override the ad url then it is stored here.
+   * maximum is reached
+   * @property {object} vastAdUnit Contains the ad once it has been loaded
+   * @property {boolean} loaded Set to true once the ad has been loaded successfully
+   * @property {string} errorType If an error occurs, this will save the type of error, in order to log it
+   * @property {string} embedCode Keeps track of the embed code of the movie that is currently playing
+   * @property {string} loaderId Unique id name for the loader, which is required by the API
+   * @property {object} movieMd Contains the metadata of the main movie
+   * @property {string} adURLOverride If the page level params override the ad url then it is stored here
    * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
-   * @property {string} ERROR Constant used when triggering an error to indicate it was a Vast error.
-   * @property {string} READY Constant used to trigger an event to indicate that the vast ad is ready for use.
+   * @property {string} ERROR Constant used when triggering an error to indicate it was a Vast error
+   * @property {string} READY Constant used to trigger an event to indicate that the vast ad is ready for use
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
-   * show the ads.
-   * @property {object} currentAdBeingLoaded Stores the ad data of the ad that is currently being loaded.
-   * @property {object} wrapperAds Is used to keep track of the analytic and clickthrough info of an ad.
+   * show the ads
+   * @property {object} currentAdBeingLoaded Stores the ad data of the ad that is currently being loaded
+   * @property {object} wrapperAds Is used to keep track of the analytic and clickthrough info of an ad
    */
   var Vast = OO.inherit(OO.Emitter, function() {
     // this.name should match the key in metadata form the server
@@ -248,6 +248,16 @@ OO.Ads.manager(function(_, $) {
 
     var adCompletedCallback = null;
 
+    var VERSION_MAJOR_2 = '2';
+    var VERSION_MAJOR_3 = '3';
+    var SUPPORTED_VERSIONS = [VERSION_MAJOR_2, VERSION_MAJOR_3];
+    var FEATURES = {
+      SKIP_AD : "skipAd"
+    };
+    var SUPPORTED_FEATURES = {};
+    SUPPORTED_FEATURES[VERSION_MAJOR_2] = [];
+    SUPPORTED_FEATURES[VERSION_MAJOR_3] = [FEATURES.SKIP_AD];
+
     /**
      * Used to keep track of what events that are tracked for vast.
      */
@@ -257,7 +267,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to verify that XML is valid
-     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @param {xml} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
     this.isValidVastXML = _.bind(function(vastXML) {
@@ -266,7 +276,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to verify XML has valid VAST root tag.
-     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @param {xml} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
     this.isValidRootTagName = _.bind(function(vastXML) {
@@ -283,13 +293,13 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to verify XML is a valid VAST version.
-     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @param {xml} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
      */
     this.isValidVastVersion = _.bind(function(vastXML) {
-      var vastVersion = $(vastXML.firstChild).attr("version");
-      if ( vastVersion !== "2.0" && vastVersion !== "3.0") { 
-        OO.log("Invalid VAST version: " + vastVersion);
+      var version = getVastVersion(vastXML);
+      if (!supportsVersion(version)) {
+        OO.log("Invalid VAST version: " + version);
         this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, this.wrapperParentId);
         this.errorType = "versionUnsupportedError";
         this.trigger(this.ERROR, this);
@@ -299,18 +309,64 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
+     * Returns the Vast version of the provided XML.
+     * @private
+     * @method Vast#getVastVersion
+     * @param {xml} vastXML Contains the vast ad data to be parsed
+     * @returns {string} the Vast version.
+     */
+    var getVastVersion = _.bind(function(vastXML) {
+      return $(vastXML.firstChild).attr('version');
+    }, this);
+
+    /**
+     * Returns the Vast major version. For example, the '3' in 3.0.
+     * @private
+     * @method Vast#getMajorVersion
+     * @param {string} version The Vast version as parsed from the XML
+     * @returns {string} The major version.
+     */
+    var getMajorVersion = _.bind(function(version) {
+      if(typeof version === 'string') {
+        return version.split('.')[0];
+      }
+    }, this);
+
+    /**
+     * Checks to see if this ad manager supports a given Vast version.
+     * @private
+     * @method Vast#supportsVersion
+     * @param {string} version The Vast version as parsed from the XML
+     * @returns {boolean} true if the version is supported by this ad manager, false otherwise.
+     */
+    var supportsVersion = _.bind(function(version) {
+      return _.contains(SUPPORTED_VERSIONS, getMajorVersion(version));
+    }, this);
+
+    /**
+     * Checks to see if the given Vast version supports the skip ad functionality, as per Vast specs
+     * for different versions.
+     * @private
+     * @method Vast#supportsSkipAd
+     * @param {string} version The Vast version as parsed from the XML
+     * @returns {boolean} true if the skip ad functionality is supported in the specified Vast version,
+     *                    false otherwise.
+     */
+    var supportsSkipAd = _.bind(function(version) {
+      return _.contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.SKIP_AD);
+    }, this);
+
+    /**
      * Helper function to grab error information. VastAdSingleParser already grabs error data while
      * creating ad object, but some errors may occur before the object is created.
-     *
      * Note: <Error> can only live in three places: directly under <VAST>, <Ad>, or <Wrapper> elements.
-     *
      * <Error> tags are also optional so they may not always exist.
      * @public
      * @method Vast#getErrorInfo
-     * @param {xml} vastXML Contains the vast ad data to be parsed.
+     * @param {xml} vastXML Contains the vast ad data to be parsed
      * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. Could be
      * undefined if ad does not have parent/wrapper.
-     * @returns {object} The error object with a list of error urls and whether or not there are no ads
+     * @returns {object} The error object with a list of error urls and whether or not there are no ads.
      */
     this.getErrorInfo = _.bind(function(vastXML) {
       var ads =  $(vastXML).find("Ad");
@@ -363,7 +419,7 @@ OO.Ads.manager(function(_, $) {
      * comes out of it.
      * @public
      * @method Vast#initialize
-     * @param {object} amc The current instance of the ad manager controller.
+     * @param {object} amc The current instance of the ad manager controller
      */
     this.initialize = function(amc) {
       this.amc = amc;
@@ -375,9 +431,9 @@ OO.Ads.manager(function(_, $) {
      * Currently the vast ad manager will use the metadata to load any pre-rolls that are specified by the user.
      * @public
      * @method Vast#loadMetadata
-     * @param {object} pbMetadata contains the page level and backlot metadata of the specific Ad Manager.
-     * @param {object} baseBacklotMetadata contains the backlot base metadata
-     * @param {object} movieMetadata contains the movie metadata that is currently loaded.
+     * @param {object} pbMetadata Contains the page level and Backlot metadata of the specific Ad Manager
+     * @param {object} baseBacklotMetadata Contains the Backlot base metadata
+     * @param {object} movieMetadata Contains the movie metadata that is currently loaded
      */
     this.loadMetadata = function(pbMetadata, baseBacklotMetadata, movieMetadata) {
     // Interpret the data from the page and backlot - possibly combine this function with initialize
@@ -391,7 +447,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Checks to see if the current metadata contains any ads that are pre-rolls and of type vast, if there are any
+     * Checks to see if the current metadata contains any ads that are pre-rolls and of type vast. If there are any
      * then it will load the ads.
      * @public
      * @method Vast#loadPreRolls
@@ -401,8 +457,8 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Checks the metadata for any remaining ads of type vast that are not pre-rolls,
-     * if it finds any then it will load them.
+     * Checks the metadata for any remaining ads of type vast that are not pre-rolls.
+     * If it finds any then it will load them.
      * @public
      * @method Vast#loadAllVastAds
      */
@@ -426,7 +482,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#findAndLoadAd
      * @param {string} position The position of the ad to be loaded. "pre" (preroll), "midPost" (midroll and post rolls)
      * "all" (all positions).
-     * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
+     * @returns {boolean} true if it found an ad or ads to load otherwise it returns false. This is only used for
      * unit tests.
      */
     var findAndLoadAd = _.bind(function(position) {
@@ -508,12 +564,10 @@ OO.Ads.manager(function(_, $) {
      * are added to know when the video ends. However, if the ad is a non-linear ad, then createOverlay is called.
      * @public
      * @method Vast#playAd
-     * @param {object} adWrapper The current Ad's metadata.
+     * @param {object} adWrapper The current Ad's metadata
      */
     this.playAd = function(adWrapper) {
       // When the ad is done, trigger callback
-      var ui = this.amc.ui;
-
       if (adWrapper.isLinear) {
         this.amc.notifyPodStarted(adWrapper.id, 1);
         adCompletedCallback = _.bind(function(amc, adId) {
@@ -521,7 +575,7 @@ OO.Ads.manager(function(_, $) {
             amc.notifyPodEnded(adId);
           }, this, this.amc, adWrapper.id);
         this.checkCompanionAds(adWrapper.ad);
-        this.amc.showSkipVideoAdButton(true);
+        initSkipAdOffset(adWrapper);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(this.name, {
             name: adWrapper.ad.data.title,
@@ -545,10 +599,50 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Determine if a Vast ad is skippable, and if so, when the skip ad button should be displayed.
+     * Notifies AMC of the result.
+     * @private
+     * @method Vast#initSkipAdOffset
+     * @param {object} adWrapper The current Ad's metadata
+     */
+    var initSkipAdOffset = _.bind(function(adWrapper) {
+      if (supportsSkipAd(adWrapper.ad.data.version)) {
+        var skipOffset = adWrapper.ad.data.linear.skipOffset;
+        if (skipOffset) {
+          if (skipOffset.indexOf('%') === skipOffset.length - 1) {
+            this.amc.showSkipVideoAdButton(true, skipOffset, true);
+          } else {
+            //Vast format: HH:MM:SS.mmm
+            var splits = skipOffset.split(':');
+            var hh = splits[0];
+            var mm = splits[1];
+            var ss = splits[2];
+            var ms = 0;
+            var secondsSplits = ss.split('.');
+            if (secondsSplits.length === 2) {
+              ss = secondsSplits[0];
+              ms = secondsSplits[1];
+            }
+            var offset = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
+            //Provide the offset to the AMC in seconds
+            offset = Math.round(offset / 1000);
+            this.amc.showSkipVideoAdButton(true, offset.toString(), true);
+          }
+        } else {
+          this.amc.showSkipVideoAdButton(false);
+        }
+      } else {
+        //For Vast versions that don't support the skipoffset attribute, we
+        //want to use Ooyala's settings for displaying the skip ad button
+        this.amc.showSkipVideoAdButton(true);
+      }
+    }, this);
+
+    /**
      * This is called by the Ad Manager Controller when it needs to cancel an Ad due to a timeout or skip button.
      * @public
      * @method Vast#cancelAd
-     * @param {object} ad The Ad that needs to be cancelled.
+     * @param {object} ad The Ad that needs to be cancelled
      */
     this.cancelAd = function(ad) {
       //TODO: add timout logic if needed here as well.
@@ -571,12 +665,13 @@ OO.Ads.manager(function(_, $) {
      * Called by the Ad Manager Controller when the module is unregistered, we need to remove any overlays that are visible.
      * @public
      * @method Vast#destroy
-     * @param {object} ad Ad to cancel if it is not null;
+     * @param {object} ad Ad to cancel if it is not null
      */
     this.destroy = function() {
       // Stop any running ads
       this.cancelAd();
       this.ready = false;
+      this.currentDepth = 0;
     };
 
     /**
@@ -584,8 +679,8 @@ OO.Ads.manager(function(_, $) {
      * Also the properties of whether an ad is linear or not, and whether or not the marquee should show are set here.
      * @private
      * @method Vast#addToTimeline
-     * @param {object} ad The ad metadata that is being added to the timeline.
-     * @param {object} adLoaded The ad object that has been loaded.
+     * @param {object} ad The ad metadata that is being added to the timeline
+     * @param {object} adLoaded The ad object that has been loaded
      */
     var addToTimeline = _.bind(function(ad, adLoaded) {
       if (!ad) return;
@@ -633,10 +728,10 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#_ajax
      * @param {string} url The url that contains the Ad creative
-     * @param {function} errorCallback callback in case there is an error in loading.
+     * @param {function} errorCallback callback in case there is an error in loading
      * @param {string} dataType Type of data, currently either "xml" if vast fails to load and "script" if it loads
      * successfully.
-     * @param {object} loadingAd The current Ad metadata that is being loaded.
+     * @param {object} loadingAd The current Ad metadata that is being loaded
      * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
      * undefined if ad does not have parent/wrapper. We want to pass this in to the next vast response
      * so the new ad knows who its parent is for error reporting purposes.
@@ -663,8 +758,8 @@ OO.Ads.manager(function(_, $) {
      * Opens a page based on the clickthrough url when the user click on the Ad.
      * @public
      * @method Vast#playerClicked
-     * @param {object} amcAd Ad wrapper that is sent from the Ad Manager Controller that contains the data.
-     * @param {boolean} showPage If set to true then we show the page, if it is false then we don't show the page.
+     * @param {object} amcAd Ad wrapper that is sent from the Ad Manager Controller that contains the data
+     * @param {boolean} showPage If set to true then we show the page, if it is false then we don't show the page
      */
     this.playerClicked = function(amcAd, showPage) {
       if (!showPage) {
@@ -689,7 +784,7 @@ OO.Ads.manager(function(_, $) {
      * Pauses the ad element.
      * @public
      * @method Vast#pauseAd
-     * @param {object} amcAd The current ad data.
+     * @param {object} amcAd The current ad data
      */
     this.pauseAd = function(amcAd) {
       // No code required here as VTC will pause the ad
@@ -699,7 +794,7 @@ OO.Ads.manager(function(_, $) {
      * Resume the ad element.
      * @public
      * @method Vast#resumeAd
-     * @param {object} amcAd The current ad data.
+     * @param {object} amcAd The current ad data
      */
     this.resumeAd = function(amcAd) {
       // No code required here as VTC will resume the ad
@@ -711,7 +806,7 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#hideOverlay
      * @param {object} currentAd In order to not lose reference to the overlay object that is currently being shown, it
-     * is stored in this object.
+     * is stored in this object
      */
     this.hideOverlay = function(currentAd) {
       this.lastOverlayAd = currentAd;
@@ -734,7 +829,7 @@ OO.Ads.manager(function(_, $) {
      * Opens a new page pointing to the URL provided.
      * @public
      * @method Vast#openUrl
-     * @param {string} url The url that we need to open in a new page.
+     * @param {string} url The url that we need to open in a new page
      */
     this.openUrl = function(url) {
       if (!url) { return; }
@@ -745,7 +840,7 @@ OO.Ads.manager(function(_, $) {
      * Calls _ajax to load the Ad via the url provided.
      * @public
      * @method Vast#loadUrl
-     * @param {string} url The Ad creative url.
+     * @param {string} url The Ad creative url
      */
     this.loadUrl = function(url) {
       this.vastUrl = url;
@@ -791,8 +886,8 @@ OO.Ads.manager(function(_, $) {
     * wrapper's error urls as well.
     * @public
     * @method Vast#trackError
-    * @param {number} code Error code.
-    * @param {boolean} currentAdId Ad ID of current ad.
+    * @param {number} code Error code
+    * @param {boolean} currentAdId Ad ID of current ad
     */
     this.trackError = _.bind(function trackErrorHelper(code, currentAdId) {
       if (currentAdId && currentAdId in this.errorInfo) {
@@ -810,8 +905,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function to ping error URL. Replaces error macro if it exists.
      * @private
      * @method Vast#pingURL
-     * @param {code} code Error code.
-     * @param {string} url URLs to ping.
+     * @param {code} code Error code
+     * @param {string} url URLs to ping
      */
     var pingURL = _.bind(function(code, url) {
       url = url.replace(/\[ERRORCODE\]/, code);
@@ -822,8 +917,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function to ping error URLs.
      * @private
      * @method Vast#pingURL
-     * @param {code} code Error code.
-     * @param {string} urls URLs to ping.
+     * @param {code} code Error code
+     * @param {string} urls URLs to ping
      */
     var pingURLs = _.bind(function(code, urls) {
       _.each(urls, function() {
@@ -848,8 +943,8 @@ OO.Ads.manager(function(_, $) {
      * Extracts the creative based on the format type that is expected.
      * @public
      * @method Vast#_extractStreamForType
-     * @param {object} streams The stream choices from the metadata.
-     * @param {string} type The type of video we want to use for the creative.
+     * @param {object} streams The stream choices from the metadata
+     * @param {string} type The type of video we want to use for the creative
      * @returns {string} The creative url if it finds one, otherwise null.
      */
     this._extractStreamForType = function(streams, type) {
@@ -863,7 +958,8 @@ OO.Ads.manager(function(_, $) {
      *  If a linear ad is found, then it is parsed and sent to be added to the time via addToTimeLine.
      * @public
      * @method Vast#_handleLinearAd
-     * @param {object} adLoaded The ad that was loaded.
+     * @param {object} adLoaded The ad that was loaded
+     * @param {xml} vastXML The current vast xml that contains the ad data
      * @returns {boolean} True if the ad was loaded and a stream was found; else false.
      */
     this._handleLinearAd = function(adLoaded, vastXML) {
@@ -899,8 +995,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function to determine whether a linear ad exists
      * @public
      * @method Vast#hasLinear
-     * @param {xml} vastXML The current vast xml that contains the ad data.
-     * @returns {boolean} True if vastXML has an Inline Linear ad, False otherwise.
+     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @returns {boolean} true if vastXML has an Inline Linear ad, false otherwise.
      */
     this.hasLinear = _.bind(function(vastXML) {
       var inlineElement = $(vastXML).find("InLine");
@@ -915,9 +1011,9 @@ OO.Ads.manager(function(_, $) {
      * If a non-linear Ad is found then it is parsed and added to the timeline via the addToTimeline function.
      * @public
      * @method Vast#_handleNonLinearAd
-     * @param {object} adLoaded The ad that was loaded.
-     *
-     * @returns {boolean} True if the load was successful and a stream was found otherwise false.
+     * @param {object} adLoaded The ad that was loaded
+     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @returns {boolean} true if the load was successful and a stream was found otherwise false.
      */
     this._handleNonLinearAd = function(adLoaded, vastXML) {
       // See if the <NonLinear> even exists
@@ -945,8 +1041,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function to determine whether a nonlinear ad exists
      * @public
      * @method Vast#hasNonLinear
-     * @param {xml} vastXML The current vast xml that contains the ad data.
-     * @returns {boolean} True if vastXML has an Inline NonLinear ad, False otherwise.
+     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @returns {boolean} true if vastXML has an Inline NonLinear ad, false otherwise.
      */
     this.hasNonLinear = _.bind(function(vastXML) {
       var inlineElement = $(vastXML).find("InLine");
@@ -991,7 +1087,7 @@ OO.Ads.manager(function(_, $) {
      * Controller to show it.
      * @public
      * @method Vast#checkCompanionAds
-     * @param {object} adInfo The Ad metadata.
+     * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = function(adInfo) {
       if (_.isNull(adInfo.data) || _.isEmpty(adInfo.data.companion)) {
@@ -1004,7 +1100,7 @@ OO.Ads.manager(function(_, $) {
      * If using the proxy url doesn't fail, then we parse the data into xml and call the vastResponse callback.
      * @public
      * @method Vast#_onVastProxyResult
-     * @param {string} value The new proxy url to use and try to load the ad again with.
+     * @param {string} value The new proxy url to use and try to load the ad again with
      */
     this._onVastProxyResult = function(value) {
       var xml = $.parseXML(value);
@@ -1015,10 +1111,10 @@ OO.Ads.manager(function(_, $) {
      * The xml is parsed to find any tracking events and then returned as part of an object.
      * @private
      * @method Vast#parseTrackingEvents
-     * @param {array} tracking to add the tracking info to and return.
-     * @param {xml} xml The data of the ad with tracking info.
-     * @param {array} trackingEvents List of events that are tracked, if null then it uses the global one.
-     * @returns {array} tracking An array of tracking items.
+     * @param {array} tracking to add the tracking info to and return
+     * @param {xml} xml The data of the ad with tracking info
+     * @param {array} trackingEvents List of events that are tracked, if null then it uses the global one
+     * @returns {array} An array of tracking items.
      */
     var parseTrackingEvents = _.bind(function(tracking, xml, trackingEvents) {
       var events = trackingEvents || TrackingEvents;
@@ -1032,7 +1128,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function that make sure the array is not empty.
      * @private
      * @method Vast#filterEmpty
-     * @param {array} array An array that is the be checked if it is empty.
+     * @param {array} array An array that is the be checked if it is empty
+     * @returns {array} The filtered array.
      */
     var filterEmpty = _.bind(function(array) {
       return _.reject(array, function(x){
@@ -1044,8 +1141,8 @@ OO.Ads.manager(function(_, $) {
      * While getting the ad data the manager needs to parse the companion ad data as well and add it to the object.
      * @private
      * @method Vast#parseCompanionAd
-     * @param {xml} companionAdXML Xml that contains the companion ad data.
-     * @returns {object} Ad object with companion ad.
+     * @param {xml} companionAdXML Xml that contains the companion ad data
+     * @returns {object} The ad object with companion ad.
      */
     var parseCompanionAd = _.bind(function(companionAdXml) {
       var result = { tracking: {} };
@@ -1076,8 +1173,8 @@ OO.Ads.manager(function(_, $) {
      * The xml needs to be parsed to grab all the linear data of the ad and create an object.
      * @private
      * @method Vast#parseLinearAd
-     * @param {xml} Xml containing the ad data to be parsed.
-     * @returns {object} result An object containing the ad data.
+     * @param {xml} linearXml The xml containing the ad data to be parsed
+     * @returns {object} An object containing the ad data.
      */
     var parseLinearAd = _.bind(function(linearXml) {
       var result = {
@@ -1087,6 +1184,9 @@ OO.Ads.manager(function(_, $) {
         ClickThrough: filterEmpty($(linearXml).find("ClickThrough").map(function() { return $(this).text(); })),
         CustomClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
       };
+
+      result.skipOffset = $(linearXml).attr("skipoffset");
+
       var mediaFile = linearXml.find("MediaFile");
 
       parseTrackingEvents(result.tracking, linearXml);
@@ -1110,8 +1210,8 @@ OO.Ads.manager(function(_, $) {
      * The xml needs to be parsed in order to grab all the non-linear ad data.
      * @private
      * @method Vast#parseNonLinearAd
-     * @param {xml} nonLinearAdsXml Contains the ad data that needs to be parsed.
-     * @returns {object} result An object that contains the ad data.
+     * @param {xml} nonLinearAdsXml Contains the ad data that needs to be parsed
+     * @returns {object} An object that contains the ad data.
      */
     var parseNonLinearAds = _.bind(function(nonLinearAdsXml) {
       var result = { tracking: {} };
@@ -1148,12 +1248,14 @@ OO.Ads.manager(function(_, $) {
      * Takes the xml and ad type and find the ad within the xml and returns it.
      * @private
      * @method Vast#VastAdSingleParser
-     * @param {xml} xml Xml that contins the ad data.
+     * @param {xml} xml The xml that contains the ad data
      * @param {string} type The ad type.
+     * @param {number} version The Vast version
      * @returns {object} The ad object otherwise it returns 1.
      */
-    var VastAdSingleParser = _.bind(function(xml, type) {
+    var VastAdSingleParser = _.bind(function(xml, type, version) {
       var result = getVastTemplate();
+      result.version = version;
       var linear = $(xml).find("Linear").eq(0);
       var nonLinearAds = $(xml).find("NonLinearAds");
 
@@ -1177,8 +1279,8 @@ OO.Ads.manager(function(_, $) {
      * The xml needs to get parsed and and ad object is returned.
      * @public
      * @method Vast#parser
-     * @param {xml} vastXML The xml that contains the ad data.
-     * @returns {object} If the ad is found it returns the object otherwise it returns null.
+     * @param {xml} vastXML The xml that contains the ad data
+     * @returns {object} The object if an ad was found otherwise it returns null.
      */
     this.parser = function(vastXML) {
       // need to get error information in case error events need to be reported
@@ -1187,9 +1289,10 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
 
+      var result = { ads: [] };
+      result.version = getVastVersion(vastXML);
       var inline = $(vastXML).find("InLine");
       var wrapper = $(vastXML).find("Wrapper");
-      var result = { ads: [] };
 
       if (inline.size() > 0) {
         result.type = "inline";
@@ -1199,7 +1302,7 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
       $(vastXML).find("Ad").each(function() {
-        result.ads.push(VastAdSingleParser(this, result.type));
+        result.ads.push(VastAdSingleParser(this, result.type, result.version));
       });
 
       return result;
@@ -1211,8 +1314,8 @@ OO.Ads.manager(function(_, $) {
      * and send it to the correct handler based on if it is Linear or not.
      * @public
      * @method Vast#_onVastResponse
-     * @param {object} adLoaded The ad loaded object and metadata.
-     * @param {object} xml The xml returned from loading the ad.
+     * @param {object} adLoaded The ad loaded object and metadata
+     * @param {object} xml The xml returned from loading the ad
      * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
      * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
@@ -1234,13 +1337,13 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Helper function to handle Wrapper Ad
+     * Helper function to handle Wrapper Ad.
      * @public
      * @method Vast#handleWrapper
-     * @param {object} adLoaded The ad loaded object and metadata.
+     * @param {object} adLoaded The ad loaded object and metadata
      * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
      * ad information, companion ads, etc)
-     * @param {xml} vastXML The current vast xml that contains the ad data.
+     * @param {xml} vastXML The current vast xml that contains the ad data
      */
     this.handleWrapper = _.bind(function(adLoaded, vastAd, vastXML) {
       this.currentDepth++;
@@ -1290,10 +1393,10 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Helper function to handle Inline Ad
+     * Helper function to handle Inline Ad.
      * @public
      * @method Vast#handleInline
-     * @param {object} adLoaded The ad loaded object and metadata.
+     * @param {object} adLoaded The ad loaded object and metadata
      * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
      * ad information, companion ads, etc)
      * @param {xml} vastXML The current vast xml that contains the ad data.

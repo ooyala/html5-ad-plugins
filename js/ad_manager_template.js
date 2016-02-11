@@ -32,7 +32,7 @@ OO.Ads.manager(function(_, $) {
      * remote JS files.
      * @method AdManager#initialize
      * @public
-     * @param {object} adManagerController A reference to the Ad Manager Controller.
+     * @param {object} adManagerController A reference to the Ad Manager Controller
      * @param {string} playerId The unique player identifier of the player initializing the class
      */
     this.initialize = function(adManagerController, playerId) {
@@ -65,9 +65,9 @@ OO.Ads.manager(function(_, $) {
      * This metadata may contain the adTagUrl and other ad manager and movie specific configuration.
      * @method AdManager#loadMetadata
      * @public
-     * @param {object} adManagerMetadata Ad manager specific metadata.
-     * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot.
-     * @param {object} movieMetadata Metadata for the main video.
+     * @param {object} adManagerMetadata Ad manager-specific metadata
+     * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
+     * @param {object} movieMetadata Metadata for the main video
      */
     this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata) {
       this.ready = true;
@@ -105,11 +105,11 @@ OO.Ads.manager(function(_, $) {
      * the function as a parameter.
      * @method AdManager#playAd
      * @public
-     * @param {object} ad The ad object to play.
+     * @param {object} ad The ad object to play
      * @param {function} adPodStartedCallback Call this function when the ad or group of podded ads have
-     *                                        started.
+     *                                        started
      * @param {function} adPodEndedCallback Call this function when the ad or group of podded ads have
-     *                                      completed.
+     *                                      completed
      * @param {function} adStartedCallback Call this function each time an ad in the set starts
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
@@ -128,7 +128,7 @@ OO.Ads.manager(function(_, $) {
      * already been called, then no action is required.
      * @method AdManager#cancelAd
      * @public
-     * @param {object} ad The ad object to cancel.
+     * @param {object} ad The ad object to cancel
      */
     this.cancelAd = function(ad) {
     };
@@ -138,7 +138,7 @@ OO.Ads.manager(function(_, $) {
      * parameter.  If the given ad is not currently playing, no action is required.
      * @method AdManager#pauseAd
      * @public
-     * @param {object} ad The ad object to pause.
+     * @param {object} ad The ad object to pause
      */
     this.pauseAd = function(ad) {
     };
@@ -148,7 +148,7 @@ OO.Ads.manager(function(_, $) {
      * parameter.  If the given ad is not currently loaded or not paused, no action is required.
      * @method AdManager#resumeAd
      * @public
-     * @param {object} ad The ad object to resume.
+     * @param {object} ad The ad object to resume
      */
     this.resumeAd = function(ad) {
     };
@@ -160,7 +160,7 @@ OO.Ads.manager(function(_, $) {
      * NOTE 2: Only implement this function if you plan to hide and reshow the overlay. Otherwise delete it or leave it commented.
      * @method AdManager#hideOverlay
      * @public
-     * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC.
+     * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
      */
     //this.hideOverlay = function(currentAd) {
     //};
@@ -172,7 +172,7 @@ OO.Ads.manager(function(_, $) {
      * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delete it.
      * @method AdManager#cancelOverlay
      * @public
-     * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed.
+     * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
      */
     //this.cancelOverlay = function(currentAd) {
     //};
