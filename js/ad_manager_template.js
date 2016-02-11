@@ -129,8 +129,9 @@ OO.Ads.manager(function(_, $) {
      * @method AdManager#cancelAd
      * @public
      * @param {object} ad The ad object to cancel
+     * @param {object} params An object containing information about the cancellation
      */
-    this.cancelAd = function(ad) {
+    this.cancelAd = function(ad, params) {
     };
 
     /**
