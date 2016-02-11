@@ -883,7 +883,6 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    debugger;
     vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
 
     var vastAd = amc.timeline[0];
