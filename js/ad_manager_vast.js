@@ -896,7 +896,7 @@ OO.Ads.manager(function(_, $) {
     * @param {number} code Error code
     * @param {boolean} currentAdId Ad ID of current ad
     */
-    this.trackError = _.bind(function trackErrorHelper(code, currentAdId) {
+    this.trackError = function trackErrorHelper(code, currentAdId) {
       if (currentAdId && currentAdId in this.errorInfo) {
         pingURLs(this.errorInfo[currentAdId].errorUrls);
         var parentId = this.errorInfo[currentAdId].wrapperParentId;
@@ -906,7 +906,7 @@ OO.Ads.manager(function(_, $) {
           this.trackErrorHelper(code, parentId);
         }
       }
-    }, this);
+    };
 
     /**
      * Helper function to ping error URL. Replaces error macro if it exists.
@@ -1321,7 +1321,7 @@ OO.Ads.manager(function(_, $) {
      * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
      * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
-    this._onVastResponse = _.bind(function(adLoaded, xml, wrapperParentIdArg) {
+    this._onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
       this.wrapperParentId = wrapperParentIdArg;
       var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
@@ -1336,7 +1336,7 @@ OO.Ads.manager(function(_, $) {
       else if (vastAd.type == "inline") {
         this.handleInline(adLoaded, vastAd, xml);
       }
-    }, this);
+    };
 
     /**
      * Helper function to handle Wrapper Ad.
@@ -1347,7 +1347,7 @@ OO.Ads.manager(function(_, $) {
      * ad information, companion ads, etc)
      * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      */
-    this.handleWrapper = _.bind(function(adLoaded, vastAd, vastXML) {
+    this.handleWrapper = function(adLoaded, vastAd, vastXML) {
       this.currentDepth++;
       if (vastAd.ads && !_.isEmpty(vastAd.ads)) {
         var firstWrapperAd = vastAd.ads[0];
@@ -1392,7 +1392,7 @@ OO.Ads.manager(function(_, $) {
         this.trigger(this.ERROR, this);
         failedAd();
       }
-    }, this);
+    };
 
     /**
      * Helper function to handle Inline Ad.
@@ -1403,7 +1403,7 @@ OO.Ads.manager(function(_, $) {
      * ad information, companion ads, etc)
      * @param {XMLDocument} vastXML The current vast xml that contains the ad data.
      */
-    this.handleInline = _.bind(function(adLoaded, vastAd, vastXML) {
+    this.handleInline = function(adLoaded, vastAd, vastXML) {
       this.inlineAd = vastAd;
       this._mergeVastAdResult();
       if (this._handleLinearAd(adLoaded, vastXML) || this._handleNonLinearAd(adLoaded, vastXML)) {
@@ -1415,7 +1415,7 @@ OO.Ads.manager(function(_, $) {
         this.trigger(this.ERROR, this);
         failedAd();
       }
-    }, this);
+    };
   });
   return new Vast();
 });
