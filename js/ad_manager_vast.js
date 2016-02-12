@@ -91,9 +91,9 @@ OO.Ads.manager(function(_, $) {
      * @param {xml} vastXML Contains the vast ad data to be parsed.
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
-    this.isValidVastXML = _.bind(function(vastXML) {
+    this.isValidVastXML = function(vastXML) {
       return this.isValidRootTagName(vastXML);
-    }, this);
+    };
 
     /**
      * Helper function to verify XML has valid VAST root tag.
@@ -474,7 +474,10 @@ OO.Ads.manager(function(_, $) {
     this.endAd = function(ad) {
       if (ad) {
         if (ad.isLinear) {
-          var endOfPod = ad.ad.adPodIndex === ad.ad.adPodLength;
+          var endOfPod = false;
+          if (ad.ad.adPodIndex === ad.ad.adPodLength) {
+            endOfPod = true;
+          }
           // The VTC should pause the ad when the video element loses focus
           // Ask AMC to handle next ad only if not the end of pod. If end of pod,
           // notify pod ended will make this ask
