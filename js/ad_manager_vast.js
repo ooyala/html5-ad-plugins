@@ -60,6 +60,8 @@ OO.Ads.manager(function(_, $) {
     this.currentAdBeingLoaded = null;
     var adCompletedCallback = null;
     var currentAd = null;
+    var nextAd = null;
+    var adPodPrimary = null;
 
     var VERSION_MAJOR_2 = '2';
     var VERSION_MAJOR_3 = '3';
@@ -262,10 +264,32 @@ OO.Ads.manager(function(_, $) {
      * @method vast#failedAd
      */
     var failedAd = _.bind(function() {
-      if (currentAd && currentAd.ad.fallbackAd) {
-        addToTimeline(currentAd.ad.fallbackAd);
+      var metadata = null;
+      var badAd = currentAd;
+      currentAd = null;
+
+      if (badAd) {
+        if(badAd.ad.fallbackAd) {
+          metadata = badAd.ad.fallbackAd;
+        }
+        //notify amc of the end of the failed ad
+        if (badAd.isLinear) {
+          this.amc.notifyLinearAdEnded(badAd.id);
+        } else {
+          this.lastOverlayAd = null;
+          this.amc.notifyNonlinearAdEnded(badAd.id);
+        }
+        //force fallback ad to play if it exists
+        //otherwise end the ad pod
+        if (metadata) {
+          var ad = generateAd(metadata);
+          this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
+        } else {
+          var adPod = adPodPrimary;
+          adPodPrimary = null;
+          this.amc.notifyPodEnded(adPod.id);
+        }
       }
-      this.cancelAd(currentAd);
     }, this);
 
     /**
@@ -328,9 +352,13 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#adVideoPlaying
      */
     this.adVideoPlaying = function() {
-      //Push the next ad in the ad pod to the timeline
       if (currentAd && currentAd.ad.nextAdInPod) {
-        addToTimeline(currentAd.ad.nextAdInPod);
+        var metadata = currentAd.ad.nextAdInPod;
+        var ad = generateAd(metadata);
+
+        if (metadata.streamUrl != null || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
+          nextAd = ad;
+        }
       }
     };
 
@@ -345,6 +373,11 @@ OO.Ads.manager(function(_, $) {
         adCompletedCallback();
         adCompletedCallback = null;
       }
+      if (nextAd) {
+        var ad = nextAd;
+        nextAd = null;
+        this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
+      }
     };
 
     /**
@@ -357,7 +390,6 @@ OO.Ads.manager(function(_, $) {
       // VTC will pause the ad when the video element loses focus
       failedAd();
     };
-
 
     /**
      * The Ad Manager Controller will call this function when it finds an Ad to play. The type of Ad is checked to see
@@ -374,7 +406,12 @@ OO.Ads.manager(function(_, $) {
       // When the ad is done, trigger callback
       if (adWrapper.isLinear) {
         if (adWrapper.ad.adPodIndex === 1) {
-          this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
+          //Only handle primary if it is null, to prevent fallback ad from staring
+          //another ad pod
+          if (adPodPrimary === null) {
+            adPodPrimary = adWrapper;
+            this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
+          }
         }
         adCompletedCallback = _.bind(function(ad) {
             this.endAd(ad);
@@ -474,16 +511,11 @@ OO.Ads.manager(function(_, $) {
     this.endAd = function(ad) {
       if (ad) {
         if (ad.isLinear) {
-          var endOfPod = false;
-          if (ad.ad.adPodIndex === ad.ad.adPodLength) {
-            endOfPod = true;
-          }
-          // The VTC should pause the ad when the video element loses focus
-          // Ask AMC to handle next ad only if not the end of pod. If end of pod,
-          // notify pod ended will make this ask
-          this.amc.notifyLinearAdEnded(ad.id, !endOfPod);
-          if(endOfPod) {
-            this.amc.notifyPodEnded(ad.id);
+          this.amc.notifyLinearAdEnded(ad.id);
+          if(ad.ad.adPodIndex === ad.ad.adPodLength) {
+            var adPod = adPodPrimary;
+            adPodPrimary = null;
+            this.amc.notifyPodEnded(adPod.id);
           }
         } else {
           this.lastOverlayAd = null;
@@ -505,19 +537,18 @@ OO.Ads.manager(function(_, $) {
       this.ready = false;
       this.currentDepth = 0;
       this.lastOverlayAd = null;
+      adPodPrimary = null;
     };
 
     /**
-     * Takes an ad and adds it to the timeline by calling appenedToTimeline which is an Ad Manager Controller function.
-     * Also the properties of whether an ad is linear or not, and whether or not the marquee should show are set here.
+     * Generates an AdManagerController (AMC) Ad object from the provided metadata.
      * @private
-     * @method Vast#addToTimeline
-     * @param {object} metadata The ad metadata that is being added to the timeline.
-     * @param {boolean} True if the ad was added to the timeline successfully, false otherwise
+     * @method Vast#generateAd
+     * @param {object} metadata The ad metadata to be used for the AMC Ad object
+     * @return {object} The AMC Ad object
      */
-    var addToTimeline = _.bind(function(metadata) {
+    var generateAd = _.bind(function(metadata) {
       if (!metadata) return false;
-      var timeline = [];
       var type, duration;
 
       if (!_.isEmpty(metadata.data.linear.mediaFiles)) {
@@ -530,11 +561,26 @@ OO.Ads.manager(function(_, $) {
         duration = metadata.data.nonLinear.Duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.Duration) : 0;
       }
 
-      if (metadata.streamUrl != null || (type == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
-        timeline.push(new this.amc.Ad({
-          position: metadata.positionSeconds, duration: duration, adManager: this.name,
-          ad: metadata, adType: type, streams: metadata.streams
-        }));
+      return new this.amc.Ad({
+        position: metadata.positionSeconds, duration: duration, adManager: this.name,
+        ad: metadata, adType: type, streams: metadata.streams
+      })
+    }, this);
+
+    /**
+     * Takes an ad and adds it to the timeline by calling appenedToTimeline which is an Ad Manager Controller function.
+     * Also the properties of whether an ad is linear or not, and whether or not the marquee should show are set here.
+     * @private
+     * @method Vast#addToTimeline
+     * @param {object} metadata The ad metadata that is being added to the timeline.
+     * @param {boolean} True if the ad was added to the timeline successfully, false otherwise
+     */
+    var addToTimeline = _.bind(function(metadata) {
+      var timeline = [];
+      var ad = generateAd(metadata);
+
+      if (metadata.streamUrl != null || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
+        timeline.push(ad);
         this.amc.appendToTimeline(timeline);
         return true;
       }
@@ -1124,7 +1170,7 @@ OO.Ads.manager(function(_, $) {
           var linearAdUnit = this._handleLinearAd(ad, adLoaded, params);
           if (linearAdUnit) {
             //The ad can have both a linear and non linear creative. We'll
-            //split these up into separate objects to push into the timeline
+            //split these up into separate objects for ad playback
             linearAdUnit = _.clone(linearAdUnit);
             linearAdUnit.data.nonLinear = {};
             adUnits.push(linearAdUnit);
@@ -1132,7 +1178,7 @@ OO.Ads.manager(function(_, $) {
           var nonLinearAdUnit = this._handleNonLinearAd(ad, adLoaded, params);
           if (nonLinearAdUnit) {
             //The ad can have both a linear and non linear creative. We'll
-            //split these up into separate objects to push into the timeline
+            //split these up into separate objects for ad playback
             nonLinearAdUnit = _.clone(nonLinearAdUnit);
             nonLinearAdUnit.data.linear = {};
             adUnits.push(nonLinearAdUnit);
@@ -1164,8 +1210,8 @@ OO.Ads.manager(function(_, $) {
 
       if (adUnits.length > 0) {
         var previousAdUnit;
-        //Set fallback ad and next ad for each ad unit. When we receive a playback notification
-        //for an ad in a pod, the next ad in the pod will be pushed into the timeline (see adVideoPlaying)
+        //Set fallback ad and next ad for each ad unit. Depending on if an ad plays successfully
+        //or fails to play, the next ad or fallback ad will be forced to play
         _.each(adUnits, _.bind(function(adUnit) {
           adUnit.fallbackAd = processedFallbackAd;
           if (previousAdUnit) {

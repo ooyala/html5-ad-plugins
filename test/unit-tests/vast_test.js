@@ -632,6 +632,19 @@ describe('ad_manager_vast', function() {
   });
 
   it('Vast 3.0: should parse inline linear podded ads', function(){
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
     var embed_code = "embed_code";
     var vast_ad_mid = {
       type: "vast",
@@ -663,7 +676,7 @@ describe('ad_manager_vast', function() {
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = amc.timeline[1];
+    vastAd = adQueue[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
@@ -673,12 +686,13 @@ describe('ad_manager_vast', function() {
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = amc.timeline[2];
+    vastAd = adQueue[1];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654644');
+    vastAdManager.playAd(vastAd);
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
@@ -687,6 +701,20 @@ describe('ad_manager_vast', function() {
   it('Vast 3.0: should provide proper ad pod positions and length to AMC on playAd', function(){
     var adPodLength = -1;
     var indexInPod = -1;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
     amc.notifyPodStarted = function(id, podLength) {
       adPodLength = podLength;
     };
@@ -724,14 +752,14 @@ describe('ad_manager_vast', function() {
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = amc.timeline[1];
+    vastAd = adQueue[0];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(3);
     expect(indexInPod).to.be(2);
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = amc.timeline[2];
+    vastAd = adQueue[1];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(3);
     expect(indexInPod).to.be(3);
@@ -746,6 +774,19 @@ describe('ad_manager_vast', function() {
     var podEndNotified = 0;
     var linearStartNotified = 0;
     var linearEndNotified = 0;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
 
     amc.notifyPodStarted = function() {
       podStartNotified++;
@@ -800,7 +841,7 @@ describe('ad_manager_vast', function() {
     expect(linearEndNotified).to.be(1);
     expect(nonLinearStartNotified).to.be(0);
 
-    vastAd = amc.timeline[1];
+    vastAd = adQueue[0];
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(0);
@@ -816,7 +857,7 @@ describe('ad_manager_vast', function() {
     expect(linearEndNotified).to.be(2);
     expect(nonLinearStartNotified).to.be(0);
 
-    vastAd = amc.timeline[2];
+    vastAd = adQueue[1];
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(0);
@@ -833,7 +874,7 @@ describe('ad_manager_vast', function() {
     expect(nonLinearStartNotified).to.be(0);
 
     //overlay
-    vastAd = amc.timeline[3];
+    vastAd = adQueue[2];
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(1);
@@ -848,6 +889,19 @@ describe('ad_manager_vast', function() {
     var podEndNotified = 0;
     var linearStartNotified = 0;
     var linearEndNotified = 0;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
 
     amc.notifyPodStarted = function() {
       podStartNotified++;
@@ -896,7 +950,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.cancelAd(vastAd, {
       code : amc.AD_CANCEL_CODE.TIMEOUT
     });
-    vastAd = amc.timeline[1];
+    vastAd = adQueue[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
@@ -910,6 +964,19 @@ describe('ad_manager_vast', function() {
     var podEndNotified = 0;
     var linearStartNotified = 0;
     var linearEndNotified = 0;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
 
     amc.notifyPodStarted = function() {
       podStartNotified++;
@@ -956,7 +1023,7 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.id).to.be('6654646');
 
     vastAdManager.adVideoError();
-    vastAd = amc.timeline[1];
+    vastAd = adQueue[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
