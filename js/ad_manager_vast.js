@@ -270,19 +270,23 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to verify that XML is valid
-     * @param {xml} vastXML Contains the vast ad data to be parsed
+     * @public
+     * @method Vast#isValidVastXML
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
-    this.isValidVastXML = _.bind(function(vastXML) {
+    this.isValidVastXML = function(vastXML) {
       return this.isValidRootTagName(vastXML) && this.isValidVastVersion(vastXML);
-    }, this);
+    };
 
     /**
      * Helper function to verify XML has valid VAST root tag.
-     * @param {xml} vastXML Contains the vast ad data to be parsed
+     * @public
+     * @method Vast#isValidRootTagName
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
-    this.isValidRootTagName = _.bind(function(vastXML) {
+    this.isValidRootTagName = function(vastXML) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
         OO.log("Invalid VAST XML for tag name: " + rootTagName);
@@ -292,14 +296,16 @@ OO.Ads.manager(function(_, $) {
         return false;
       }
       return true;
-    }, this);
+    };
 
     /**
      * Helper function to verify XML is a valid VAST version.
-     * @param {xml} vastXML Contains the vast ad data to be parsed
+     * @public
+     * @method Vast#isValidVastVersion
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
      */
-    this.isValidVastVersion = _.bind(function(vastXML) {
+    this.isValidVastVersion = function(vastXML) {
       var version = getVastVersion(vastXML);
       if (!supportsVersion(version)) {
         OO.log("Invalid VAST version: " + version);
@@ -309,14 +315,14 @@ OO.Ads.manager(function(_, $) {
         return false;
       }
       return true;
-    }, this);
+    };
 
     /**
      * Returns the Vast version of the provided XML.
      * @private
      * @method Vast#getVastVersion
-     * @param {xml} vastXML Contains the vast ad data to be parsed
-     * @returns {string} the Vast version.
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
+     * @returns {string} The Vast version.
      */
     var getVastVersion = _.bind(function(vastXML) {
       return $(vastXML.firstChild).attr('version');
@@ -366,12 +372,10 @@ OO.Ads.manager(function(_, $) {
      * <Error> tags are also optional so they may not always exist.
      * @public
      * @method Vast#getErrorInfo
-     * @param {xml} vastXML Contains the vast ad data to be parsed
-     * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. Could be
-     * undefined if ad does not have parent/wrapper.
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {object} The error object with a list of error urls and whether or not there are no ads.
      */
-    this.getErrorInfo = _.bind(function(vastXML) {
+    this.getErrorInfo = function(vastXML) {
       var ads =  $(vastXML).find("Ad");
       // if there are no ads in ad response then track error
       if (ads.length === 0) {
@@ -395,7 +399,7 @@ OO.Ads.manager(function(_, $) {
           this.errorInfo[adId] = error;
         }, this);
       }
-    }, this);
+    };
 
     /**
      * Default template to use when creating the vast ad object.
@@ -475,7 +479,7 @@ OO.Ads.manager(function(_, $) {
      * @method vast#failedAd
      */
     var failedAd = _.bind(function() {
-      // TODO: Do not destory the whole ad manager if one ad fails!
+      // TODO: Do not destroy the whole ad manager if one ad fails!
       this.destroy();
     }, this);
 
@@ -908,8 +912,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function to ping error URL. Replaces error macro if it exists.
      * @private
      * @method Vast#pingURL
-     * @param {code} code Error code
-     * @param {string} url URLs to ping
+     * @param {number} code Error code
+     * @param {string} url URL to ping
      */
     var pingURL = _.bind(function(code, url) {
       url = url.replace(/\[ERRORCODE\]/, code);
@@ -920,8 +924,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function to ping error URLs.
      * @private
      * @method Vast#pingURL
-     * @param {code} code Error code
-     * @param {string} urls URLs to ping
+     * @param {number} code Error code
+     * @param {string[]} urls URLs to ping
      */
     var pingURLs = _.bind(function(code, urls) {
       _.each(urls, function() {
@@ -946,7 +950,7 @@ OO.Ads.manager(function(_, $) {
      * Extracts the creative based on the format type that is expected.
      * @public
      * @method Vast#_extractStreamForType
-     * @param {object} streams The stream choices from the metadata
+     * @param {Object[]} streams The stream choices from the metadata
      * @param {string} type The type of video we want to use for the creative
      * @returns {string} The creative url if it finds one, otherwise null.
      */
@@ -962,7 +966,7 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#_handleLinearAd
      * @param {object} adLoaded The ad that was loaded
-     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      * @returns {boolean} True if the ad was loaded and a stream was found; else false.
      */
     this._handleLinearAd = function(adLoaded, vastXML) {
@@ -998,24 +1002,21 @@ OO.Ads.manager(function(_, $) {
      * Helper function to determine whether a linear ad exists
      * @public
      * @method Vast#hasLinear
-     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      * @returns {boolean} true if vastXML has an Inline Linear ad, false otherwise.
      */
-    this.hasLinear = _.bind(function(vastXML) {
+    this.hasLinear = function(vastXML) {
       var inlineElement = $(vastXML).find("InLine");
       var linearElement = $(inlineElement).find("Linear");
-      if (linearElement.length > 0) {
-        return true;
-      }
-      return false;
-    }, this);
+      return (linearElement.length > 0);
+    };
 
     /**
      * If a non-linear Ad is found then it is parsed and added to the timeline via the addToTimeline function.
      * @public
      * @method Vast#_handleNonLinearAd
      * @param {object} adLoaded The ad that was loaded
-     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      * @returns {boolean} true if the load was successful and a stream was found otherwise false.
      */
     this._handleNonLinearAd = function(adLoaded, vastXML) {
@@ -1044,17 +1045,14 @@ OO.Ads.manager(function(_, $) {
      * Helper function to determine whether a nonlinear ad exists
      * @public
      * @method Vast#hasNonLinear
-     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      * @returns {boolean} true if vastXML has an Inline NonLinear ad, false otherwise.
      */
-    this.hasNonLinear = _.bind(function(vastXML) {
+    this.hasNonLinear = function(vastXML) {
       var inlineElement = $(vastXML).find("InLine");
       var nonLinearElement = $(inlineElement).find("NonLinear");
-      if (nonLinearElement.length > 0) {
-        return true;
-      }
-      return false;
-    }, this);
+      return (nonLinearElement.length > 0);
+    };
 
     /**
      * Takes all the ad data that is in the inline xml and merges them all together into the ad object.
@@ -1114,10 +1112,10 @@ OO.Ads.manager(function(_, $) {
      * The xml is parsed to find any tracking events and then returned as part of an object.
      * @private
      * @method Vast#parseTrackingEvents
-     * @param {array} tracking to add the tracking info to and return
-     * @param {xml} xml The data of the ad with tracking info
-     * @param {array} trackingEvents List of events that are tracked, if null then it uses the global one
-     * @returns {array} An array of tracking items.
+     * @param {object} tracking The tracking object to be mutated
+     * @param {XMLDocument} xml The data of the ad with tracking info
+     * @param {string[]} trackingEvents List of events that are tracked, if null then it uses the global one
+     * @returns {object} An array of tracking items.
      */
     var parseTrackingEvents = _.bind(function(tracking, xml, trackingEvents) {
       var events = trackingEvents || TrackingEvents;
@@ -1131,8 +1129,8 @@ OO.Ads.manager(function(_, $) {
      * Helper function that make sure the array is not empty.
      * @private
      * @method Vast#filterEmpty
-     * @param {array} array An array that is the be checked if it is empty
-     * @returns {array} The filtered array.
+     * @param {Array} array An array that is the be checked if it is empty
+     * @returns {Array} The filtered array.
      */
     var filterEmpty = _.bind(function(array) {
       return _.reject(array, function(x){
@@ -1144,7 +1142,7 @@ OO.Ads.manager(function(_, $) {
      * While getting the ad data the manager needs to parse the companion ad data as well and add it to the object.
      * @private
      * @method Vast#parseCompanionAd
-     * @param {xml} companionAdXML Xml that contains the companion ad data
+     * @param {XMLDocument} companionAdXML XML that contains the companion ad data
      * @returns {object} The ad object with companion ad.
      */
     var parseCompanionAd = _.bind(function(companionAdXml) {
@@ -1176,7 +1174,7 @@ OO.Ads.manager(function(_, $) {
      * The xml needs to be parsed to grab all the linear data of the ad and create an object.
      * @private
      * @method Vast#parseLinearAd
-     * @param {xml} linearXml The xml containing the ad data to be parsed
+     * @param {XMLDocument} linearXml The xml containing the ad data to be parsed
      * @returns {object} An object containing the ad data.
      */
     var parseLinearAd = _.bind(function(linearXml) {
@@ -1213,7 +1211,7 @@ OO.Ads.manager(function(_, $) {
      * The xml needs to be parsed in order to grab all the non-linear ad data.
      * @private
      * @method Vast#parseNonLinearAd
-     * @param {xml} nonLinearAdsXml Contains the ad data that needs to be parsed
+     * @param {XMLDocument} nonLinearAdsXml Contains the ad data that needs to be parsed
      * @returns {object} An object that contains the ad data.
      */
     var parseNonLinearAds = _.bind(function(nonLinearAdsXml) {
@@ -1251,8 +1249,8 @@ OO.Ads.manager(function(_, $) {
      * Takes the xml and ad type and find the ad within the xml and returns it.
      * @private
      * @method Vast#VastAdSingleParser
-     * @param {xml} xml The xml that contains the ad data
-     * @param {string} type The ad type.
+     * @param {XMLDocument} xml The xml that contains the ad data
+     * @param {string} type The ad type
      * @param {number} version The Vast version
      * @returns {object} The ad object otherwise it returns 1.
      */
@@ -1282,10 +1280,11 @@ OO.Ads.manager(function(_, $) {
      * The xml needs to get parsed and and ad object is returned.
      * @public
      * @method Vast#parser
-     * @param {xml} vastXML The xml that contains the ad data
+     * @param {XMLDocument} vastXML The xml that contains the ad data
      * @returns {object} The object if an ad was found otherwise it returns null.
      */
     this.parser = function(vastXML) {
+      debugger;
       // need to get error information in case error events need to be reported
       this.getErrorInfo(vastXML);
       if (!this.isValidVastXML(vastXML)) {
@@ -1318,7 +1317,7 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#_onVastResponse
      * @param {object} adLoaded The ad loaded object and metadata
-     * @param {object} xml The xml returned from loading the ad
+     * @param {XMLDocument} xml The xml returned from loading the ad
      * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
      * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
@@ -1346,7 +1345,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
      * ad information, companion ads, etc)
-     * @param {xml} vastXML The current vast xml that contains the ad data
+     * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      */
     this.handleWrapper = _.bind(function(adLoaded, vastAd, vastXML) {
       this.currentDepth++;
@@ -1402,7 +1401,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {object} vastAd The object returned from parser, containing ad information (tracking events, linear/nonlinear
      * ad information, companion ads, etc)
-     * @param {xml} vastXML The current vast xml that contains the ad data.
+     * @param {XMLDocument} vastXML The current vast xml that contains the ad data.
      */
     this.handleInline = _.bind(function(adLoaded, vastAd, vastXML) {
       this.inlineAd = vastAd;
