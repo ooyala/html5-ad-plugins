@@ -1129,16 +1129,14 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Helper function that make sure the array is not empty.
+     * Helper function to remove empty items.
      * @private
      * @method Vast#filterEmpty
      * @param {Array} array An array that is the be checked if it is empty
      * @returns {Array} The filtered array.
      */
     var filterEmpty = _.bind(function(array) {
-      return _.reject(array, function(x){
-        return x === null || x === "";
-      }, {});
+      return _.without(array, null, "");
     }, this);
 
     /**
