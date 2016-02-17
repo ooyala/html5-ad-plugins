@@ -25,7 +25,7 @@ OO.Ads.manager(function(_, $) {
     this.name              = "freewheel-ads-manager";
     this.testMode          = false;
     this.videoRestrictions = { "technology": OO.VIDEO.TECHNOLOGY.HTML5,
-                               "features": [OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE] };
+                               "features": [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] };
 
     var amc         = null;
     var fwAdManager = null;
@@ -471,15 +471,15 @@ OO.Ads.manager(function(_, $) {
             slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyPodEnded(adId);
               }, this, ad.id);
-            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(details) {
+            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId, details) {
                 //We need to remove the fake video element so that Alice
                 //can properly render the UI for a linear ad
                 if (fakeVideo && overlayContainer) {
                   overlayContainer.removeChild(fakeVideo);
                   fakeVideo = null;
                 }
-                amc.notifyLinearAdStarted(this.name, details);
-              }, this);
+                amc.notifyLinearAdStarted(adId, details);
+              }, this, ad.id);
             adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyLinearAdEnded(adId);
               }, this, ad.id);
