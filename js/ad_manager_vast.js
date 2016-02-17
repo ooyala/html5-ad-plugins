@@ -1257,19 +1257,20 @@ OO.Ads.manager(function(_, $) {
      */
     var VastAdSingleParser = _.bind(function(xml, type, version) {
       var result = getVastTemplate();
+      var jquery_xml = $(xml);
       result.version = version;
-      var linear = $(xml).find("Linear").eq(0);
-      var nonLinearAds = $(xml).find("NonLinearAds");
+      var linear = jquery_xml.find("Linear").eq(0);
+      var nonLinearAds = jquery_xml.find("NonLinearAds");
 
-      if (type === "wrapper") { result.VASTAdTagURI = $(xml).find("VASTAdTagURI").text(); }
-      result.id = $(xml).prop("id");
-      result.error = filterEmpty($(xml).find("Error").map(function() { return $(this).text(); }));
-      result.impression = filterEmpty($(xml).find("Impression").map(function() { return $(this).text(); }));
-      result.title = _.first(filterEmpty($(xml).find("AdTitle").map(function() { return $(this).text(); })));
+      if (type === "wrapper") { result.VASTAdTagURI = jquery_xml.find("VASTAdTagURI").text(); }
+      result.id = jquery_xml.prop("id");
+      result.error = filterEmpty(jquery_xml.find("Error").map(function() { return $(this).text(); }));
+      result.impression = filterEmpty(jquery_xml.find("Impression").map(function() { return $(this).text(); }));
+      result.title = _.first(filterEmpty(jquery_xml.find("AdTitle").map(function() { return $(this).text(); })));
 
       if (linear.size() > 0) { result.linear = parseLinearAd(linear); }
       if (nonLinearAds.size() > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
-      $(xml).find("Companion").map(function(i, v){
+      jquery_xml.find("Companion").map(function(i, v){
         result.companion.push(parseCompanionAd($(v)));
         return 1;
       });
