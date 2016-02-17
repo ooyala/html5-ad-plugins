@@ -401,7 +401,7 @@ OO.Ads.manager(function(_, $) {
         // there could be an <Error> element in the vast response
         var noAdsErrorURL = $(vastXML).find("Error").text();
         if (noAdsErrorURL) {
-          pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
+          this.pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
         }
         // if the ad response came from a wrapper, then go up the chain and ping those error urls
         this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);

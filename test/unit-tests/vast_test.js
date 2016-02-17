@@ -786,8 +786,15 @@ describe('ad_manager_vast', function() {
     };
     vastAdManager.initialize(amc);
 
+    // no error url exists so url is not pinged
     vastAdManager.checkNoAds("", []);
     expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_NO_ADS);
+    expect(pixelPingCalled).to.be(false);
+
+    // error url exists so url should be pinged
+    vastAdManager.checkNoAds(linearXML, []);
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_NO_ADS);
+    expect(pixelPingCalled).to.be(true);
   });
 
   it('Vast 3.0, Error Reporting: Should report general linear ads error', function(){
