@@ -130,6 +130,7 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @param {object} ad The ad object to cancel
      * @param {object} params An object containing information about the cancellation
+     *                 code : The amc.AD_CANCEL_CODE for the cancellation
      */
     this.cancelAd = function(ad, params) {
     };

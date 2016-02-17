@@ -269,15 +269,13 @@ OO.Ads.manager(function(_, $) {
       currentAd = null;
 
       if (badAd) {
-        if(badAd.ad.fallbackAd) {
+        if(badAd.ad && badAd.ad.fallbackAd) {
           metadata = badAd.ad.fallbackAd;
         }
         //notify amc of the end of the failed ad
-        if (badAd.isLinear) {
-          this.amc.notifyLinearAdEnded(badAd.id);
-        } else {
-          this.lastOverlayAd = null;
-          this.amc.notifyNonlinearAdEnded(badAd.id);
+        if (typeof adCompletedCallback === "function") {
+          adCompletedCallback(badAd, true);
+          adCompletedCallback = null;
         }
         //force fallback ad to play if it exists
         //otherwise end the ad pod
@@ -352,12 +350,14 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#adVideoPlaying
      */
     this.adVideoPlaying = function() {
-      if (currentAd && currentAd.ad.nextAdInPod) {
+      if (currentAd && currentAd.ad && currentAd.ad.nextAdInPod) {
         var metadata = currentAd.ad.nextAdInPod;
-        var ad = generateAd(metadata);
+        if (metadata) {
+          var ad = generateAd(metadata);
 
-        if (metadata.streamUrl != null || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
-          nextAd = ad;
+          if (metadata.streamUrl != null || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
+            nextAd = ad;
+          }
         }
       }
     };
@@ -370,7 +370,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.adVideoEnded = function() {
       if (typeof adCompletedCallback === "function") {
-        adCompletedCallback();
+        adCompletedCallback(currentAd, false);
         adCompletedCallback = null;
       }
       if (nextAd) {
@@ -413,10 +413,10 @@ OO.Ads.manager(function(_, $) {
             this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
           }
         }
-        adCompletedCallback = _.bind(function(ad) {
-            this.endAd(ad);
+        adCompletedCallback = _.bind(function(ad, failed) {
+            this.endAd(ad, failed);
             adCompletedCallback = null;
-          }, this, adWrapper);
+          }, this);
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
@@ -487,6 +487,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#cancelAd
      * @param {object} ad The Ad that needs to be cancelled
      * @param {object} params An object containing information about the cancellation
+     *                        code : The amc.AD_CANCEL_CODE for the cancellation
      */
     this.cancelAd = function(ad, params) {
       //TODO: add timout logic if needed here as well.
@@ -505,14 +506,18 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     *
-     * @param ad
+     * Ends an ad. Notifies the AMC about the end of the ad. If it is the last linear ad in the pod,
+     * will also notify the AMC of the end of the ad pod.
+     * @public
+     * @method Vast#endAd
+     * @param {object} ad The ad to end
+     * @param {boolean} failed If true, the ending of this ad was caused by a failure
      */
-    this.endAd = function(ad) {
+    this.endAd = function(ad, failed) {
       if (ad) {
         if (ad.isLinear) {
           this.amc.notifyLinearAdEnded(ad.id);
-          if(ad.ad.adPodIndex === ad.ad.adPodLength) {
+          if(ad.ad.adPodIndex === ad.ad.adPodLength && !failed) {
             var adPod = adPodPrimary;
             adPodPrimary = null;
             this.amc.notifyPodEnded(adPod.id);
@@ -768,14 +773,16 @@ OO.Ads.manager(function(_, $) {
 
     /**
      *  If a linear ad is found, then it is parsed and sent to be added to the time via addToTimeLine.
-     * @public
+     * @private
      * @method Vast#_handleLinearAd
      * @param {object} ad The ad object
      * @param {object} adLoaded The ad that was loaded
      * @param {object} params Additional params
+     *                        adPodIndex : the index of the ad pod this ad is housed in
+     *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
      */
-    this._handleLinearAd = function(ad, adLoaded, params) {
+    var _handleLinearAd = _.bind(function(ad, adLoaded, params) {
       // filter our playable stream:
       if (_.isEmpty(ad.linear.mediaFiles)) {
         return false;
@@ -810,18 +817,20 @@ OO.Ads.manager(function(_, $) {
 
       vastAdUnit.streams = streams;
       return vastAdUnit;
-    };
+    }, this);
 
     /**
      * If a non-linear Ad is found then it is parsed and added to the timeline via the addToTimeline function.
-     * @public
+     * @private
      * @method Vast#_handleNonLinearAd
      * @param {object} ad The ad object
      * @param {object} adLoaded The ad that was loaded
      * @param {object} params Additional params
+     *                        adPodIndex : the index of the ad pod this ad is housed in
+     *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
      */
-    this._handleNonLinearAd = function(ad, adLoaded, params) {
+    var _handleNonLinearAd = _.bind(function(ad, adLoaded, params) {
       // filter our playable stream:
       if (_.isEmpty(ad.nonLinear.url)) {
         return false;
@@ -837,7 +846,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.positionSeconds = adLoaded.time/1000;
 
       return vastAdUnit;
-    };
+    }, this);
 
     /**
      * Takes all the ad data that is in the inline xml and merges them all together into the ad object.
@@ -1167,7 +1176,7 @@ OO.Ads.manager(function(_, $) {
             adPodLength : linearAdCount
           };
           this._mergeVastAdResult(ad, wrapperAds);
-          var linearAdUnit = this._handleLinearAd(ad, adLoaded, params);
+          var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
           if (linearAdUnit) {
             //The ad can have both a linear and non linear creative. We'll
             //split these up into separate objects for ad playback
@@ -1175,7 +1184,7 @@ OO.Ads.manager(function(_, $) {
             linearAdUnit.data.nonLinear = {};
             adUnits.push(linearAdUnit);
           }
-          var nonLinearAdUnit = this._handleNonLinearAd(ad, adLoaded, params);
+          var nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
           if (nonLinearAdUnit) {
             //The ad can have both a linear and non linear creative. We'll
             //split these up into separate objects for ad playback
@@ -1201,9 +1210,9 @@ OO.Ads.manager(function(_, $) {
           };
           this._mergeVastAdResult(fallbackAd, wrapperAds);
           //Prefer to show linear fallback ad
-          processedFallbackAd = this._handleLinearAd(fallbackAd, adLoaded);
+          processedFallbackAd = _handleLinearAd(fallbackAd, adLoaded);
           if (!processedFallbackAd) {
-            processedFallbackAd = this._handleNonLinearAd(fallbackAd, adLoaded);
+            processedFallbackAd = _handleNonLinearAd(fallbackAd, adLoaded);
           }
         }
       }
