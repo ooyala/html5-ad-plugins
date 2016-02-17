@@ -521,10 +521,6 @@ OO.Ads.manager(function(_, $) {
             delete slotStartedCallbacks[ad.ad.getCustomId()];
             delete slotEndedCallbacks[ad.ad.getCustomId()];
           }
-
-          // Register the content video wrapper to align the overlay to the correct elements
-          // TODO: We also need to call this on vpaid
-          // getCurrentAdInstance()._creativeRenditions[0].getCreativeApi() == "VPAID"
           ad.ad.play();
         }
       }
