@@ -367,10 +367,35 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#getErrorInfo
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
+     * @param {object} ads A jQuery object which contains the collection of ad elements found
      * @returns {object} The error object with a list of error urls and whether or not there are no ads.
      */
-    this.getErrorInfo = function(vastXML) {
-      var ads =  $(vastXML).find("Ad");
+    this.getErrorInfo = function(vastXML, ads) {
+      _.each(ads, function(ad) {
+        var error = {
+          errorURLs: [],
+          wrapperParentId: this.wrapperParentId || null
+        };
+
+        var errorElement = $(ad).find("Error");
+        if (errorElement.length > 0){
+          error.errorURLs = [errorElement.text()];
+        }
+        var adId = $(ad).prop("id");
+        this.errorInfo[adId] = error;
+      }, this);
+    };
+
+    /**
+     * This should be the first thing that happens in the parser function: check if the vast XML has no ads.
+     * If it does not have ads, track error urls
+     * @public
+     * @method Vast#checkNoAds
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
+     * @param {object} ads A jQuery object which contains the collection of ad elements found
+     * @returns {boolean} true if there are no ads, false otherwise.
+     */
+    this.checkNoAds = function(vastXML, ads) {
       // if there are no ads in ad response then track error
       if (ads.length === 0) {
         // there could be an <Error> element in the vast response
@@ -380,22 +405,9 @@ OO.Ads.manager(function(_, $) {
         }
         // if the ad response came from a wrapper, then go up the chain and ping those error urls
         this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
+        return true;
       }
-      else {
-        _.each(ads, function(ad) {
-          var error = {
-            errorURLs: [],
-            wrapperParentId: this.wrapperParentId || null
-          };
-
-          var errorElement = $(ad).find("Error");
-          if (errorElement.length > 0){
-            error.errorURLs = [errorElement.text()];
-          }
-          var adId = $(ad).prop("id");
-          this.errorInfo[adId] = error;
-        }, this);
-      }
+      return false;
     };
 
     /**
@@ -1286,8 +1298,13 @@ OO.Ads.manager(function(_, $) {
      * @returns {object} The object if an ad was found otherwise it returns null.
      */
     this.parser = function(vastXML) {
-      // need to get error information in case error events need to be reported
-      this.getErrorInfo(vastXML);
+      var jqueryAds =  $(vastXML).find("Ad");
+      if (!this.checkNoAds(vastXML, jqueryAds)){
+        // need to get error tracking information early in case error events need to be reported
+        // before the ad object is created
+        this.getErrorInfo(vastXML, jqueryAds);
+      }
+
       if (!this.isValidVastXML(vastXML)) {
         return null;
       }
@@ -1304,7 +1321,7 @@ OO.Ads.manager(function(_, $) {
       } else {
         return null;
       }
-      $(vastXML).find("Ad").each(function() {
+      jqueryAds.each(function() {
         result.ads.push(VastAdSingleParser(this, result.type, result.version));
       });
 
