@@ -363,7 +363,6 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#getErrorInfo
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @param {object} ads A jQuery object which contains the collection of ad elements found
-     * @returns {object} The error object with a list of error urls and whether or not there are no ads.
      */
     this.getErrorInfo = function(vastXML, ads) {
       _.each(ads, function(ad) {
