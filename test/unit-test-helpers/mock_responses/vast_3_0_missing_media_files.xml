@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0"><Ad id="6654644">
+<InLine>
+<AdSystem>GDFP</AdSystem>
+<AdTitle>video</AdTitle>
+<Description>video ad</Description>
+<Error>errorurl</Error>
+<Impression>impressionurl</Impression>
+<Creatives>
+<Creative sequence="1">
+<Linear skipoffset="00:00:05">
+<Duration>00:00:52</Duration>
+<TrackingEvents>
+<Tracking event="start">starturl</Tracking>
+<Tracking event="firstQuartile">firstQuartileurl</Tracking>
+<Tracking event="midpoint">midpointUrl</Tracking>
+<Tracking event="thirdQuartile">thirdQuartileUrl</Tracking>
+<Tracking event="complete">completeUrl</Tracking>
+<Tracking event="mute">muteUrl</Tracking>
+<Tracking event="unmute">unmuteUrl</Tracking>
+<Tracking event="rewind">rewindUrl</Tracking>
+<Tracking event="pause">pauseUrl</Tracking>
+<Tracking event="resume">resumeUrl</Tracking>
+<Tracking event="fullscreen">fullScreenUrl</Tracking>
+<Tracking event="acceptInvitation"></Tracking>
+<Tracking event="creativeView">creativeViewUrl</Tracking>
+</TrackingEvents>
+<VideoClicks>
+<ClickThrough id="GDFP">clickThroughUrl</ClickThrough>
+</VideoClicks>
+<MediaFiles>
+</MediaFiles>
+</Linear>
+</Creative>
+<Creative sequence="1">
+<CompanionAds>
+<Companion id="GDFP" width="728" height="90" >
+<StaticResource creativeType="image/jpeg">1.jpg</StaticResource>
+<TrackingEvents>
+<Tracking event="creativeView">companionCreativeViewUrl</Tracking>
+</TrackingEvents>
+<CompanionClickThrough>companionClickThrough</CompanionClickThrough>
+
+</Companion>
+<Companion id="GDFP" width="300" height="250" >
+<StaticResource creativeType="image/jpeg">2.jpg</StaticResource>
+<TrackingEvents>
+<Tracking event="creativeView">companion2CreativeViewUrl</Tracking>
+</TrackingEvents>
+<CompanionClickThrough>companion2ClickThrough</CompanionClickThrough>
+
+</Companion>
+</CompanionAds>
+</Creative>
+</Creatives>
+<Extensions>
+<Extension>
+<PreviousAdInformation>pK-gf_pnFp8KDQoLCLSVlgMQ7MS3ryY</PreviousAdInformation>
+</Extension>
+<Extension type="geo">
+<Bandwidth>4</Bandwidth>
+</Extension>
+</Extensions>
+</InLine>
+</Ad>
+</VAST>
