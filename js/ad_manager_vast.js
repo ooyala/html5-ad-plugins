@@ -416,7 +416,7 @@ OO.Ads.manager(function(_, $) {
           }
         }
         adCompletedCallback = _.bind(function(ad, failed) {
-            this.endAd(ad, failed);
+            endAd(ad, failed);
             adCompletedCallback = null;
           }, this);
         this.checkCompanionAds(adWrapper.ad);
@@ -502,7 +502,7 @@ OO.Ads.manager(function(_, $) {
         if (ad.isLinear) {
           this.adVideoEnded();
         } else {
-          this.endAd(ad);
+          endAd(ad);
         }
       }
     };
@@ -510,12 +510,12 @@ OO.Ads.manager(function(_, $) {
     /**
      * Ends an ad. Notifies the AMC about the end of the ad. If it is the last linear ad in the pod,
      * will also notify the AMC of the end of the ad pod.
-     * @public
+     * @private
      * @method Vast#endAd
      * @param {object} ad The ad to end
      * @param {boolean} failed If true, the ending of this ad was caused by a failure
      */
-    this.endAd = function(ad, failed) {
+    var endAd = _.bind(function(ad, failed) {
       if (ad) {
         if (ad.isLinear) {
           this.amc.notifyLinearAdEnded(ad.id);
@@ -530,7 +530,7 @@ OO.Ads.manager(function(_, $) {
         }
       }
       currentAd = null;
-    };
+    }, this);
 
     /**
      * Called by the Ad Manager Controller when the module is unregistered, we need to remove any overlays that are visible.
