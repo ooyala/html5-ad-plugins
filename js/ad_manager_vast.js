@@ -416,7 +416,7 @@ OO.Ads.manager(function(_, $) {
           }
         }
         adCompletedCallback = _.bind(function(ad, failed) {
-            endAd(ad, failed);
+          _endAd(ad, failed);
             adCompletedCallback = null;
           }, this);
         this.checkCompanionAds(adWrapper.ad);
@@ -502,7 +502,7 @@ OO.Ads.manager(function(_, $) {
         if (ad.isLinear) {
           this.adVideoEnded();
         } else {
-          endAd(ad);
+          _endAd(ad);
         }
       }
     };
@@ -511,11 +511,11 @@ OO.Ads.manager(function(_, $) {
      * Ends an ad. Notifies the AMC about the end of the ad. If it is the last linear ad in the pod,
      * will also notify the AMC of the end of the ad pod.
      * @private
-     * @method Vast#endAd
+     * @method Vast#_endAd
      * @param {object} ad The ad to end
      * @param {boolean} failed If true, the ending of this ad was caused by a failure
      */
-    var endAd = _.bind(function(ad, failed) {
+    var _endAd = _.bind(function(ad, failed) {
       if (ad) {
         if (ad.isLinear) {
           this.amc.notifyLinearAdEnded(ad.id);
@@ -787,7 +787,7 @@ OO.Ads.manager(function(_, $) {
     var _handleLinearAd = _.bind(function(ad, adLoaded, params) {
       // filter our playable stream:
       if (_.isEmpty(ad.linear.mediaFiles)) {
-        return false;
+        return null;
       }
       params = params ? params : {};
       var mediaFiles = ad.linear.mediaFiles;
@@ -835,7 +835,7 @@ OO.Ads.manager(function(_, $) {
     var _handleNonLinearAd = _.bind(function(ad, adLoaded, params) {
       // filter our playable stream:
       if (_.isEmpty(ad.nonLinear.url)) {
-        return false;
+        return null;
       }
       params = params ? params : {};
       var adURL = ad.nonLinear.url;
