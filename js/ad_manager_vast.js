@@ -892,14 +892,14 @@ OO.Ads.manager(function(_, $) {
     * @param {number} code Error code
     * @param {boolean} currentAdId Ad ID of current ad
     */
-    this.trackError = function trackErrorHelper(code, currentAdId) {
+    this.trackError = function(code, currentAdId) {
       if (currentAdId && currentAdId in this.errorInfo) {
         this.pingURLs(this.errorInfo[currentAdId].errorURLs);
         var parentId = this.errorInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
         if (parentId) {
-          this.trackErrorHelper(code, parentId);
+          this.trackError(code, parentId);
         }
       }
     };
