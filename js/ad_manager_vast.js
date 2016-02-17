@@ -711,7 +711,7 @@ OO.Ads.manager(function(_, $) {
         var streamData = null;
         for (var encoding in videoEncodingsSupported) {
           streamData = null;
-          streamData = this._extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
+          streamData = this.extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
           if (streamData) {
             streams[videoEncodingsSupported[encoding]] = streamData;
           }
@@ -730,7 +730,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Attempts to load the Ad after normalizing the url.
      * @public
-     * @method Vast#_ajax
+     * @method Vast#ajax
      * @param {string} url The url that contains the Ad creative
      * @param {function} errorCallback callback in case there is an error in loading
      * @param {string} dataType Type of data, currently either "xml" if vast fails to load and "script" if it loads
@@ -740,7 +740,7 @@ OO.Ads.manager(function(_, $) {
      * undefined if ad does not have parent/wrapper. We want to pass this in to the next vast response
      * so the new ad knows who its parent is for error reporting purposes.
      */
-    this._ajax = function(url, errorCallback, dataType, loadingAd, wrapperParentId) {
+    this.ajax = function(url, errorCallback, dataType, loadingAd, wrapperParentId) {
       $.ajax({
         url: OO.getNormalizedTagUrl(url, this.embedCode),
         type: 'GET',
@@ -751,7 +751,7 @@ OO.Ads.manager(function(_, $) {
         crossDomain: true,
         cache:false,
         //TODO: should pass wrapperParentId here for wrapper
-        success: (dataType == "script") ? function() {} : _.bind(this._onVastResponse, this, loadingAd
+        success: (dataType == "script") ? function() {} : _.bind(this.onVastResponse, this, loadingAd
           || this.currentAdBeingLoaded),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
@@ -841,14 +841,14 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Calls _ajax to load the Ad via the url provided.
+     * Calls ajax to load the Ad via the url provided.
      * @public
      * @method Vast#loadUrl
      * @param {string} url The Ad creative url
      */
     this.loadUrl = function(url) {
       this.vastUrl = url;
-      this._ajax(url, this._onVastError, 'xml');
+      this.ajax(url, this.onVastError, 'xml');
     };
 
     /**
@@ -856,11 +856,11 @@ OO.Ads.manager(function(_, $) {
      * using a proxy url, if one is set in the player params, attach an encoded original url as a parameter, then
      * it will return the new Url to be used. If a proxy url was not provided then one is created and returned.
      * @public
-     * @method Vast#_getProxyUrl
+     * @method Vast#getProxyUrl
      * @returns {string} the proxy url with all the data and encoding that is necessary to make it able to be used for loading.
      */
-    this._getProxyUrl = function() {
-      OO.publicApi[this.loaderId] = _.bind(this._onVastProxyResult, this);
+    this.getProxyUrl = function() {
+      OO.publicApi[this.loaderId] = _.bind(this.onVastProxyResult, this);
       if (OO.playerParams.vast_proxy_url) {
         return [OO.playerParams.vast_proxy_url, "?callback=OO.", this.loaderId, "&tag_url=",
             encodeURI(this.vastUrl), "&embed_code=", this.embedCode].join("");
@@ -876,11 +876,11 @@ OO.Ads.manager(function(_, $) {
     /**
      *  If the Ad fails to load this callback is called. It will try to load again using a proxy url.
      *  @public
-     *  @method Vast#_onVastError
+     *  @method Vast#onVastError
      */
-    this._onVastError = function() {
+    this.onVastError = function() {
       OO.log("VAST: Direct Ajax Failed Error");
-      this._ajax(this._getProxyUrl(), this._onFinalError, 'script');
+      this.ajax(this.getProxyUrl(), this.onFinalError, 'script');
     };
 
     /**
@@ -933,10 +933,10 @@ OO.Ads.manager(function(_, $) {
      * If the ad fails to load a second time, this callback is called and triggers an error message, but doesn't try to
      * reload the ad.
      * @public
-     * @method Vast#_onFinalError
+     * @method Vast#onFinalError
      * @fires this.Error
      */
-    this._onFinalError = function() {
+    this.onFinalError = function() {
       OO.log("VAST: Proxy Ajax Failed Error");
       failedAd();
     };
@@ -944,12 +944,12 @@ OO.Ads.manager(function(_, $) {
     /**
      * Extracts the creative based on the format type that is expected.
      * @public
-     * @method Vast#_extractStreamForType
+     * @method Vast#extractStreamForType
      * @param {Object[]} streams The stream choices from the metadata
      * @param {string} type The type of video we want to use for the creative
      * @returns {string} The creative url if it finds one, otherwise null.
      */
-    this._extractStreamForType = function(streams, type) {
+    this.extractStreamForType = function(streams, type) {
       var filter = [];
       filter.push("video/" +type);
       var stream = _.find(streams, function(v) { return (filter.indexOf(v.type) >= 0); }, this);
@@ -959,12 +959,12 @@ OO.Ads.manager(function(_, $) {
     /**
      *  If a linear ad is found, then it is parsed and sent to be added to the time via addToTimeLine.
      * @public
-     * @method Vast#_handleLinearAd
+     * @method Vast#handleLinearAd
      * @param {object} adLoaded The ad that was loaded
      * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      * @returns {boolean} True if the ad was loaded and a stream was found; else false.
      */
-    this._handleLinearAd = function(adLoaded, vastXML) {
+    this.handleLinearAd = function(adLoaded, vastXML) {
       // See if the <Linear> even exists
       if (this.hasLinear(vastXML)) {
         // filter our playable stream:
@@ -1013,12 +1013,12 @@ OO.Ads.manager(function(_, $) {
     /**
      * If a non-linear Ad is found then it is parsed and added to the timeline via the addToTimeline function.
      * @public
-     * @method Vast#_handleNonLinearAd
+     * @method Vast#handleNonLinearAd
      * @param {object} adLoaded The ad that was loaded
      * @param {XMLDocument} vastXML The current vast xml that contains the ad data
      * @returns {boolean} true if the load was successful and a stream was found otherwise false.
      */
-    this._handleNonLinearAd = function(adLoaded, vastXML) {
+    this.handleNonLinearAd = function(adLoaded, vastXML) {
       // See if the <NonLinear> even exists
       if (this.hasNonLinear(vastXML)) {
         // filter our playable stream:
@@ -1060,9 +1060,9 @@ OO.Ads.manager(function(_, $) {
     /**
      * Takes all the ad data that is in the inline xml and merges them all together into the ad object.
      * @public
-     * @method Vast#_mergeVastAdResult
+     * @method Vast#mergeVastAdResult
      */
-    this._mergeVastAdResult = function() {
+    this.mergeVastAdResult = function() {
       this.vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       _.each(this.inlineAd.ads, function(ad) {
         ad.error = this.wrapperAds.error.concat(ad.error);
@@ -1103,12 +1103,12 @@ OO.Ads.manager(function(_, $) {
     /**
      * If using the proxy url doesn't fail, then we parse the data into xml and call the vastResponse callback.
      * @public
-     * @method Vast#_onVastProxyResult
+     * @method Vast#onVastProxyResult
      * @param {string} value The new proxy url to use and try to load the ad again with
      */
-    this._onVastProxyResult = function(value) {
+    this.onVastProxyResult = function(value) {
       var xml = $.parseXML(value);
-      this._onVastResponse(this.currentAdBeingLoaded, xml);
+      this.onVastResponse(this.currentAdBeingLoaded, xml);
     };
 
     /**
@@ -1316,13 +1316,13 @@ OO.Ads.manager(function(_, $) {
      * or nonLinear Ad. It will pull the tracking, impression, companion and clicking information. Then merge the results
      * and send it to the correct handler based on if it is Linear or not.
      * @public
-     * @method Vast#_onVastResponse
+     * @method Vast#onVastResponse
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {XMLDocument} xml The xml returned from loading the ad
      * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
      * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
-    this._onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
+    this.onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
       this.wrapperParentId = wrapperParentIdArg;
       var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
@@ -1369,11 +1369,11 @@ OO.Ads.manager(function(_, $) {
                                                   value;
           });
           if (!this.testMode) {
-            this._ajax(firstWrapperAd.VASTAdTagURI, this._onFinalError, 'xml', null, firstWrapperAd.id);
+            this.ajax(firstWrapperAd.VASTAdTagURI, this.onFinalError, 'xml', null, firstWrapperAd.id);
           }
           else {
-            this._handleLinearAd(adLoaded, vastXML);
-            this._handleNonLinearAd(adLoaded, vastXML);
+            this.handleLinearAd(adLoaded, vastXML);
+            this.handleNonLinearAd(adLoaded, vastXML);
             addToTimeline(this.vastAdUnit, adLoaded);
           }
         }
@@ -1400,8 +1400,8 @@ OO.Ads.manager(function(_, $) {
      */
     this.handleInline = function(adLoaded, vastAd, vastXML) {
       this.inlineAd = vastAd;
-      this._mergeVastAdResult();
-      if (this._handleLinearAd(adLoaded, vastXML) || this._handleNonLinearAd(adLoaded, vastXML)) {
+      this.mergeVastAdResult();
+      if (this.handleLinearAd(adLoaded, vastXML) || this.handleNonLinearAd(adLoaded, vastXML)) {
         this.loaded = true;
         this.trigger(this.READY, this);
       }

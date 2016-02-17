@@ -232,7 +232,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad, linearXML);
+    vastAdManager.onVastResponse(vast_ad, linearXML);
     expect(amc.timeline.length).to.be(1);
   });
   it('Init: preroll loaded before play and midroll after initial play', function(){
@@ -262,11 +262,11 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_pre, linearXML);
+    vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(amc.timeline.length).to.be(1);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(amc.timeline.length).to.be(2);
   });
 
@@ -292,7 +292,7 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(0);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_post, linearXML);
+    vastAdManager.onVastResponse(vast_ad_post, linearXML);
     expect(amc.timeline.length).to.be(1);
   });
   it('Init: preroll loaded before play, then midroll and postroll after initial play', function(){
@@ -331,13 +331,13 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_pre, linearXML);
+    vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(amc.timeline.length).to.be(1);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(amc.timeline.length).to.be(2);
-    vastAdManager._onVastResponse(vast_ad_post, linearXML);
+    vastAdManager.onVastResponse(vast_ad_post, linearXML);
     expect(amc.timeline.length).to.be(3);
   });
 
@@ -361,13 +361,13 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad,'<VAST></VAST>')
+    vastAdManager.onVastResponse(vast_ad,'<VAST></VAST>')
     expect(amc.timeline.length).to.be(0);
-    vastAdManager._onVastResponse(null,linearXML);
+    vastAdManager.onVastResponse(null,linearXML);
     expect(amc.timeline.length).to.be(0);
-    vastAdManager._onVastResponse(vast_ad, '<VAST version="2.1"></VAST>');
+    vastAdManager.onVastResponse(vast_ad, '<VAST version="2.1"></VAST>');
     expect(amc.timeline.length).to.be(0);
-    vastAdManager._onVastResponse(null, '<VAST version="2.0"></VAST>');
+    vastAdManager.onVastResponse(null, '<VAST version="2.0"></VAST>');
     expect(amc.timeline.length).to.be(0);
   });
 
@@ -391,7 +391,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -449,7 +449,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, nonLinearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, nonLinearXML);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([]);
@@ -518,7 +518,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, wrapperXML);
+    vastAdManager.onVastResponse(vast_ad_mid, wrapperXML);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.impression).to.eql(['impressionOverlayUrl', 'impressionOverlay2Url', 'impressionOverlay3Url',
@@ -570,7 +570,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XML);
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0XML);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
@@ -604,7 +604,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
@@ -715,13 +715,13 @@ describe('ad_manager_vast', function() {
 
     vastAdManager.initialize(amc);
 
-    vastAdManager._onVastResponse(null, linearXML);
+    vastAdManager.onVastResponse(null, linearXML);
     expect(errorType).to.be(vastAdManager.ERROR_CODES.XML_PARSING);
 
-    vastAdManager._onVastResponse(null, nonLinearXML);
+    vastAdManager.onVastResponse(null, nonLinearXML);
     expect(errorType).to.be(vastAdManager.ERROR_CODES.XML_PARSING);
 
-    vastAdManager._onVastResponse(null, wrapperXML);
+    vastAdManager.onVastResponse(null, wrapperXML);
     expect(errorType).to.be(vastAdManager.ERROR_CODES.XML_PARSING);
   });
 
@@ -819,7 +819,7 @@ describe('ad_manager_vast', function() {
       "linearAd1": {} 
     };
 
-    vastAdManager._handleLinearAd(vast_ad_mid, linearXML);
+    vastAdManager.handleLinearAd(vast_ad_mid, linearXML);
     expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_LINEAR_ADS);
     expect(pixelPingCalled).to.be(true);
   });
@@ -855,7 +855,7 @@ describe('ad_manager_vast', function() {
       "nonLinearAd1": {} 
     };
 
-    vastAdManager._handleNonLinearAd(vast_ad_mid, nonLinearXML);
+    vastAdManager.handleNonLinearAd(vast_ad_mid, nonLinearXML);
     expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_NONLINEAR_ADS);
     expect(pixelPingCalled).to.be(true);
   });
