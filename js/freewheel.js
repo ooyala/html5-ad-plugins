@@ -66,6 +66,10 @@ OO.Ads.manager(function(_, $) {
     //configuration
     var marqueeCountdown = true;
 
+    //fake video for overlays to work with player_skin_plugins div
+    var fakeVideo = null;
+    var overlayContainer = null;
+
     /**
      * Initializes the class by registering the ad manager controller.
      * Adds listeners to Ooyala player events.
@@ -244,12 +248,10 @@ OO.Ads.manager(function(_, $) {
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_DISPLAY_CONTROLS_WHEN_PAUSE, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
 
-      // position the overlay y index
+      // position the overlay y index to 0. Alice will take care of positioning the overlay above the control bar
       // NOTE: If we set renderer.html.coadScriptName we can probably render overlays on our own
       //       (coad stands for customer owned ad renderer)
-      var controlHeight = amc.ui.rootElement.find(".controlBar");
-      controlHeight = (controlHeight.length == 0) ? 60 : controlHeight.height() + OO.CONSTANTS.CONTROLS_BOTTOM_PADDING;
-      fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, controlHeight, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+      fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, 0, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
 
       var companionAds = [
         [
@@ -422,7 +424,17 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#_registerDisplayForNonlinearAd
      */
     var _registerDisplayForNonlinearAd = _.bind(function() {
-      fwContext.setContentVideoElement(amc.ui.ooyalaVideoElement[0]);
+      if (!overlayContainer) {
+        overlayContainer = amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0];
+      }
+
+      //We need to create a fake video because the setContentVideoElement API requires a video element. The overlay
+      //will be placed in the parent of the provided video element, the player skin plugins element
+      if (!fakeVideo) {
+        fakeVideo = document.createElement('video');
+        overlayContainer.appendChild(fakeVideo);
+      }
+      fwContext.setContentVideoElement(fakeVideo);
     }, this);
 
     /**
@@ -448,12 +460,11 @@ OO.Ads.manager(function(_, $) {
         }
         else {
           // Trigger the ad
-          _registerDisplayForNonlinearAd();
-          _registerDisplayForLinearAd();
           currentPlayingSlot = ad.ad;
           indexInPod = 0;
           if (ad.isLinear) {
-            fwContext.setParameter("renderer.video.clickDetection", false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+            _registerDisplayForLinearAd();
+            fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad) {
                 amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
               }, this, ad);
@@ -461,6 +472,12 @@ OO.Ads.manager(function(_, $) {
                 amc.notifyPodEnded(adId);
               }, this, ad.id);
             adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId, details) {
+                //We need to remove the fake video element so that Alice
+                //can properly render the UI for a linear ad
+                if (fakeVideo && overlayContainer) {
+                  overlayContainer.removeChild(fakeVideo);
+                  fakeVideo = null;
+                }
                 amc.notifyLinearAdStarted(adId, details);
               }, this, ad.id);
             adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
@@ -475,22 +492,34 @@ OO.Ads.manager(function(_, $) {
               amc.showSkipVideoAdButton(false);
             }
           } else {
-            fwContext.setParameter("renderer.video.clickDetection", true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-            slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
-                amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
-              }, this, ad.id);
-            slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
-                amc.notifyNonlinearAdEnded(adId);
-              }, this, ad.id);
-            delete adStartedCallbacks[ad.ad.getCustomId()];
-            delete adEndedCallbacks[ad.ad.getCustomId()];
-          }
-
-          // Register the content video wrapper to align the overlay to the correct elements
-          // TODO: We also need to call this on vpaid
-          // getCurrentAdInstance()._creativeRenditions[0].getCreativeApi() == "VPAID"
-          if (!ad.isLinear) {
             _registerDisplayForNonlinearAd();
+            fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(details) {
+              //provide width and height values if available. Alice will use these to resize
+              //the skin plugins div when a non linear overlay is on screen
+              if (details) {
+                ad.width = details.width;
+                ad.height = details.height;
+                //the width and height of the fake video must be equal
+                //to or greater than the size of the overlay creative
+                //or else FW won't display it
+                if (fakeVideo) {
+                  fakeVideo.style.width = details.width + 'px';
+                  fakeVideo.style.height = details.height + 'px';
+                }
+              }
+              amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
+            }, this);
+
+            adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
+              if (fakeVideo && overlayContainer) {
+                overlayContainer.removeChild(fakeVideo);
+                fakeVideo = null;
+              }
+              amc.notifyNonlinearAdEnded(adId);
+            }, this, ad.id);
+            delete slotStartedCallbacks[ad.ad.getCustomId()];
+            delete slotEndedCallbacks[ad.ad.getCustomId()];
           }
           ad.ad.play();
         }
@@ -831,12 +860,15 @@ OO.Ads.manager(function(_, $) {
         var clickEvents = _.filter(event.adInstance._eventCallbacks,
                                    function(callback){ return callback._name == "defaultClick" });
         var hasClickUrl = clickEvents.length > 0;
+        var activeCreativeRendition = event.adInstance.getActiveCreativeRendition();
         adStartedCallbacks[event.slotCustomId]({
-            name: event.adInstance.getActiveCreativeRendition().getPrimaryCreativeRenditionAsset().getName(),
+            name: activeCreativeRendition.getPrimaryCreativeRenditionAsset().getName(),
             duration: event.adInstance._creative.getDuration(),
             hasClickUrl: hasClickUrl,
             indexInPod: indexInPod,
-            skippable: false
+            skippable: false,
+            width: activeCreativeRendition.getWidth(),
+            height: activeCreativeRendition.getHeight()
           });
       }
 

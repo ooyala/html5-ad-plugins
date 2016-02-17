@@ -3,7 +3,10 @@ google =
   ima :
   {
     adManagerInstance : null,   //for unit test convenience
-    linearAds : true,          //for unit test convenience
+    resetDefaultValues : function()
+    {
+      google.ima.linearAds = true;
+    },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
       this.getAdId = function()
@@ -31,13 +34,19 @@ google =
       {
         return -1;
       };
-      //getHeight,
+      this.getHeight = function()
+      {
+        return -1;
+      };
       //getMinSuggestedDuration,
       //getTitle,
       //getTraffickingParameters,
       //getTraffickingParametersString,
       //getUiElements,
-      //getWidth,
+      this.getWidth = function()
+      {
+        return -1;
+      };
       //getWrapperAdIds,
       //getWrapperAdSystems,
       this.isLinear = function()
