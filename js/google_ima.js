@@ -1001,10 +1001,10 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_destroyAdsManager = privateMember(function()
       {
+        this.currentIMAAd = null;
+        this.currentNonLinearIMAAd = null;
         if (_IMAAdsManager)
         {
-          this.currentIMAAd = null;
-          this.currentNonLinearIMAAd = null;
           _IMAAdsManager.stop();
           _IMAAdsManager.destroy();
           _IMAAdsManager = null;
@@ -1268,7 +1268,9 @@ require("../html5-common/js/utils/utils.js");
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }
-            } else {
+            }
+            else
+            {
               this.currentNonLinearIMAAd = ad;
             }
             this.currentIMAAd = ad;
