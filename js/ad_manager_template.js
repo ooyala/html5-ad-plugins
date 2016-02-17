@@ -216,8 +216,10 @@ OO.Ads.manager(function(_, $) {
      * this error itself, it can use this time to end the ad playback.
      * @method AdManager#adVideoError
      * @public
+     * @param {object} adWrapper The current Ad's metadata
+     * @param {number} errorCode The error code associated with the video playback error
      */
-    this.adVideoError = function() {
+    this.adVideoError = function(adWrapper, errorCode) {
     };
 
     /**
