@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?><VAST version="2.0">    <Ad id="2281331">
+    	<InLine>
+    		<AdSystem version="4.6.0-5">LiveRail</AdSystem>
+    		<AdTitle>TV Overlay PNG</AdTitle>
+    		<Description>fake test</Description>
+    		<Impression id="LR">impressionOverlayUrl</Impression>
+            <Impression id="QC">impressionOverlay2Url</Impression>
+			<Impression>impressionOverlay3Url</Impression>
+			<Impression>impressionOverlay4Url</Impression>
+			<Impression>impressionOverlay5Url</Impression>
+			<Impression>impressionOverlay6Url</Impression>
+			<Creatives>
+				<Creative sequence="1" id="8455">
+        			<NonLinearAds>
+            			<NonLinear width="300" height="60">
+            				                			<NonLinearClickThrough>nonLinearClickThroughUrl</NonLinearClickThrough>                			            			</NonLinear>
+            			<TrackingEvents>
+							<Tracking event="acceptInvitation">acceptInvitationUrl</Tracking>
+							<Tracking event="collapse">collapseUrl</Tracking>
+    					</TrackingEvents>	
+    				</NonLinearAds>
+				</Creative>
+    			<Creative sequence="1" id="8455">
+    				<CompanionAds>
+        				<Companion width="300" height="60">
+                            <StaticResource creativeType="image/jpeg">companion.jpg</StaticResource>
+                                                        <TrackingEvents>
+                                <Tracking event="creativeView">companionCreativeViewUrl</Tracking>
+                              
+                            </TrackingEvents>
+                            <CompanionClickThrough>companionClickThroughUrl</CompanionClickThrough>
+                        </Companion>
+        				<Companion width="300" height="250">
+                            <StaticResource creativeType="image/jpeg">companion2.jpg</StaticResource>
+                                                        <TrackingEvents>
+                                <Tracking event="creativeView">companion2CreativeViewUrl</Tracking>
+                              
+                            </TrackingEvents>
+                            <CompanionClickThrough>companion2ClickThroughUrl</CompanionClickThrough>
+                        </Companion>
+    				</CompanionAds>
+    			</Creative>
+    		</Creatives>
+    	</InLine>
+    </Ad>
+</VAST>

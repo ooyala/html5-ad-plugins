@@ -20,15 +20,20 @@ describe('ad_manager_vast', function() {
   var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
   var linear3_0XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_linear.xml"), "utf8");
   var linear3_0PoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml"), "utf8");
+  var linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml"), "utf8");
   var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
+  var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var linearXML = OO.$.parseXML(linearXMLString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
   var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
+  var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
+  var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
-
+  var errorType = [];
+  var pixelPingCalled = false;
 
   // Helper functions
   fakeAd = function(timePositionClass, position, duration) {
@@ -73,6 +78,30 @@ describe('ad_manager_vast', function() {
     };
     delete require.cache[require.resolve(SRC_ROOT + "ad_manager_vast.js")];
     require(SRC_ROOT + "ad_manager_vast.js");
+
+    // mock pixelPing to test error tracking
+    OO.pixelPing = function(code) {
+      pixelPingCalled= true;
+    };
+
+    // mock trackError function to test error tracking
+    vastAdManager.trackError = function (code, currentAdId) {
+      errorType.push(code);
+      if (currentAdId) {
+        if (currentAdId && currentAdId in this.errorInfo) {
+
+          //directly ping url
+          OO.pixelPing(code);
+          var parentId = this.errorInfo[currentAdId].wrapperParentId;
+
+          // ping parent wrapper's error urls too if ad had parent
+          if (parentId) {
+            this.trackError(code, parentId);
+          }
+        }
+      }
+    };
+
   }, this));
 
   after(function() {
@@ -82,6 +111,9 @@ describe('ad_manager_vast', function() {
   beforeEach(function() {
     amc = new fake_amc();
     OO.playerParams.maxVastWrapperDepth = 2;
+    errorType = [];
+    pixelPingCalled= false;
+    vastAdManager.errorInfo = {};
   });
 
   afterEach(_.bind(function() {
@@ -206,7 +238,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad, linearXML);
+    vastAdManager.onVastResponse(vast_ad, linearXML);
     expect(amc.timeline.length).to.be(1);
   });
   it('Init: preroll loaded before play and midroll after initial play', function(){
@@ -236,11 +268,11 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_pre, linearXML);
+    vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(amc.timeline.length).to.be(1);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(amc.timeline.length).to.be(2);
   });
 
@@ -266,7 +298,7 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(0);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_post, linearXML);
+    vastAdManager.onVastResponse(vast_ad_post, linearXML);
     expect(amc.timeline.length).to.be(1);
   });
   it('Init: preroll loaded before play, then midroll and postroll after initial play', function(){
@@ -305,13 +337,13 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_pre, linearXML);
+    vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(amc.timeline.length).to.be(1);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(amc.timeline.length).to.be(2);
-    vastAdManager._onVastResponse(vast_ad_post, linearXML);
+    vastAdManager.onVastResponse(vast_ad_post, linearXML);
     expect(amc.timeline.length).to.be(3);
   });
 
@@ -335,13 +367,13 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad,'<VAST></VAST>')
+    vastAdManager.onVastResponse(vast_ad,'<VAST></VAST>')
     expect(amc.timeline.length).to.be(0);
-    vastAdManager._onVastResponse(null,linearXML);
+    vastAdManager.onVastResponse(null,linearXML);
     expect(amc.timeline.length).to.be(0);
-    vastAdManager._onVastResponse(vast_ad, '<VAST version="2.1"></VAST>');
+    vastAdManager.onVastResponse(vast_ad, '<VAST version="2.1"></VAST>');
     expect(amc.timeline.length).to.be(0);
-    vastAdManager._onVastResponse(null, '<VAST version="2.0"></VAST>');
+    vastAdManager.onVastResponse(null, '<VAST version="2.0"></VAST>');
     expect(amc.timeline.length).to.be(0);
   });
 
@@ -365,7 +397,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -422,7 +454,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, nonLinearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, nonLinearXML);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([]);
@@ -492,7 +524,7 @@ describe('ad_manager_vast', function() {
   //    "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
   //  initalPlay();
   //  expect(vastAdManager.initialPlay()).to.be(true);
-  //  vastAdManager._onVastResponse(vast_ad_mid, wrapperXML);
+  //  vastAdManager.onVastResponse(vast_ad_mid, wrapperXML);
   //  var vastAd = amc.timeline[0];
   //  expect(vastAd.ad).to.be.an('object');
   //  expect(vastAd.ad.data.impression).to.eql(['impressionOverlayUrl', 'impressionOverlay2Url', 'impressionOverlay3Url',
@@ -544,7 +576,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XML);
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0XML);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
@@ -578,7 +610,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
@@ -624,7 +656,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(1);
@@ -665,7 +697,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
 
-    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -743,7 +775,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
 
-    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -823,7 +855,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
 
-    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -937,7 +969,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -1012,7 +1044,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -1029,5 +1061,247 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654600');
+  });
+
+  it('Vast 3.0, Error Reporting - errorInfo should parse the correct number of errorURLs and ads', function(){
+    var jqueryAds = $(linearXML).find("Ad");
+    vastAdManager.getErrorTrackingInfo(linearXML, jqueryAds);
+    // should have one ad
+    var adIDs = _.keys(vastAdManager.errorInfo);
+    expect(adIDs.length).to.be(1);
+    // should have only one errorurl
+    var adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    expect(adErrorInfo.errorURLs.length).to.be(1);
+    vastAdManager.errorInfo = {};
+
+    jqueryAds = $(nonLinearXML).find("Ad");
+    vastAdManager.getErrorTrackingInfo(nonLinearXML, jqueryAds);
+    // should have one ad
+    adIDs = _.keys(vastAdManager.errorInfo);
+    expect(adIDs.length).to.be(1);
+    // should have only no errorurls
+    adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    expect(adErrorInfo.errorURLs.length).to.be(0);
+  });
+
+/*
+ *  it('Vast 3.0, Error Reporting: Should report too many wrappers error', function(){
+ *    var embed_code = "embed_code";
+ *    var vast_ad_mid = {
+ *      type: "vast",
+ *      first_shown: 0,
+ *      frequency: 2,
+ *      ad_set_code: "ad_set_code",
+ *      time:10,
+ *      position_type:"t",
+ *      url:"1.jpg"
+ *    };
+ *    var content = {
+ *      embed_code: embed_code,
+ *      ads: [vast_ad_mid]
+ *    };
+ *    vastAdManager.initialize(amc);
+ *
+ *    // setup parameters so wrapper code will fail
+ *    vastAdManager.currentDepth = OO.playerParams.maxVastWrapperDepth;
+ *    var vastAd = {
+ *      ads:[
+ *        {
+ *          id: "wrapperId",
+ *        }
+ *      ]
+ *    };
+ *    vastAdManager.errorInfo = {
+ *      "wrapperId": {}
+ *    };
+ *    
+ *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
+ *    expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_LIMIT_REACHED);
+ *    expect(pixelPingCalled).to.be(true);
+ *  });
+ *
+ *  it('Vast 3.0, Error Reporting: Should report general wrapper error', function(){
+ *    var embed_code = "embed_code";
+ *    var vast_ad_mid = {
+ *      type: "vast",
+ *      first_shown: 0,
+ *      frequency: 2,
+ *      ad_set_code: "ad_set_code",
+ *      time:10,
+ *      position_type:"t",
+ *      url:"1.jpg"
+ *    };
+ *    var content = {
+ *      embed_code: embed_code,
+ *      ads: [vast_ad_mid]
+ *    };
+ *    vastAdManager.initialize(amc);
+ *
+ *    var vastAd = {
+ *      ads: null
+ *    };
+ *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
+ *    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_WRAPPER);
+ *
+ *    vastAd = {
+ *      ads: []
+ *    };
+ *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
+ *    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_WRAPPER);
+ *  });
+ */
+
+  it('Vast 3.0, Error Reporting: should report XML parsing error', function(){
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+
+    vastAdManager.initialize(amc);
+
+    vastAdManager.onVastResponse(null, linearXML);
+    expect(_.contains(errorType, vastAdManager.ERROR_CODES.XML_PARSING)).to.be(true);
+    errorType = [];
+
+    vastAdManager.onVastResponse(null, nonLinearXML);
+    expect(_.contains(errorType, vastAdManager.ERROR_CODES.XML_PARSING)).to.be(true);
+  });
+
+  it('Vast 3.0, Error Reporting: Should report unsupported vast version error', function(){
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+
+    vastAdManager.isValidVastVersion("");
+    expect(_.contains(errorType, vastAdManager.ERROR_CODES.VERSION_UNSUPPORTED)).to.be(true);
+  });
+
+  it('Vast 3.0, Error Reporting: Should report schema validation error', function(){
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+
+    vastAdManager.isValidRootTagName("");
+    expect(_.contains(errorType, vastAdManager.ERROR_CODES.SCHEMA_VALIDATION)).to.be(true);
+  });
+
+/*
+ *  it('Vast 3.0, Error Reporting: Should report wrapper no ads error', function(){
+ *    var embed_code = "embed_code";
+ *    var vast_ad_mid = {
+ *      type: "vast",
+ *      first_shown: 0,
+ *      frequency: 2,
+ *      ad_set_code: "ad_set_code",
+ *      time:10,
+ *      position_type:"t",
+ *      url:"1.jpg"
+ *    };
+ *    var content = {
+ *      embed_code: embed_code,
+ *      ads: [vast_ad_mid]
+ *    };
+ *    vastAdManager.initialize(amc);
+ *
+ *    // no error url exists so url is not pinged
+ *    vastAdManager.checkNoAds("", []);
+ *    expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_NO_ADS);
+ *    expect(pixelPingCalled).to.be(false);
+ *
+ *    // error url exists so url should be pinged
+ *    vastAdManager.checkNoAds(linearXML, []);
+ *    expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_NO_ADS);
+ *    expect(pixelPingCalled).to.be(true);
+ *  });
+ */
+
+  it('Vast 3.0, Error Reporting: Should report general linear ads error', function(){
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+
+    // setup parameters so nonlinear ad fails because there are no mediaFiles in XML
+    // but still pings error url if there is an error tag
+    vastAdManager.errorInfo = {
+      "linearAd1": {} 
+    };
+
+    vastAdManager.onVastResponse(vast_ad_mid, linear3_0MissingMediaFiles);
+    expect(_.contains(errorType, vastAdManager.ERROR_CODES.GENERAL_LINEAR_ADS)).to.be(true);
+    expect(pixelPingCalled).to.be(true);
+  });
+
+  it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', function(){
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+
+    // setup parameters so nonlinear ad fails because there is no ad url
+    // but still pings error url if there is an error tag
+    vastAdManager.errorInfo = {
+      "nonLinearAd1": {} 
+    };
+
+    vastAdManager.onVastResponse(vast_ad_mid, nonLinearXMLMissingURL);
+    expect(_.contains(errorType, vastAdManager.ERROR_CODES.GENERAL_NONLINEAR_ADS)).to.be(true);
+    expect(pixelPingCalled).to.be(true);
   });
 });
