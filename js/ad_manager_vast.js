@@ -385,8 +385,10 @@ OO.Ads.manager(function(_, $) {
      * ad is finished playing and we need to follow the process for cleaning up after an ad fails.
      * @public
      * @method Vast#adVideoError
+     * @param {object} adWrapper The current Ad's metadata
+     * @param {number} errorCode The error code associated with the VTC error
      */
-    this.adVideoError = function() {
+    this.adVideoError = function(adWrapper, errorCode) {
       // VTC will pause the ad when the video element loses focus
       failedAd();
     };
