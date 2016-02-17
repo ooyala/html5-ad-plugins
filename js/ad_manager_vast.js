@@ -777,7 +777,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_handleLinearAd
      * @param {object} ad The ad object
      * @param {object} adLoaded The ad that was loaded
-     * @param {object} params Additional params
+     * @param {object} params Additional parameters associated with this ad
      *                        adPodIndex : the index of the ad pod this ad is housed in
      *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
@@ -825,7 +825,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_handleNonLinearAd
      * @param {object} ad The ad object
      * @param {object} adLoaded The ad that was loaded
-     * @param {object} params Additional params
+     * @param {object} params Additional parameters associated with this ad
      *                        adPodIndex : the index of the ad pod this ad is housed in
      *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
