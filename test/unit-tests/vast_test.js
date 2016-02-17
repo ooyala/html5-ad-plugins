@@ -26,14 +26,8 @@ describe('ad_manager_vast', function() {
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
-
-  // need to redefine pixelPing because mocha has not yet implemented Image() so
-  // use document.createElement('img') instead
-  OO.pixelPing = function (url) {
-    var img = document.createElement('img');
-    img.onerror = img.onabort = function() { OO.d("onerror:", url); };
-    img.src = OO.getNormalizedTagUrl(url);
-  };
+  var errorType = "";
+  var pixelPingCalled = false;
 
   // Helper functions
   fakeAd = function(timePositionClass, position, duration) {
@@ -78,6 +72,30 @@ describe('ad_manager_vast', function() {
     };
     delete require.cache[require.resolve(SRC_ROOT + "ad_manager_vast.js")];
     require(SRC_ROOT + "ad_manager_vast.js");
+
+    // mock pixelPing to test error tracking
+    OO.pixelPing = function(code) {
+      pixelPingCalled= true;
+    };
+
+    // mock trackError function to test error tracking
+    vastAdManager.trackError = function (code, currentAdId) {
+      errorType = code;
+      if (currentAdId) {
+        if (currentAdId && currentAdId in this.errorInfo) {
+
+          //directly ping url
+          OO.pixelPing(code);
+          var parentId = this.errorInfo[currentAdId].wrapperParentId;
+
+          // ping parent wrapper's error urls too if ad had parent
+          if (parentId) {
+            this.trackError(code, parentId);
+          }
+        }
+      }
+    };
+
   }, this));
 
   after(function() {
@@ -87,6 +105,9 @@ describe('ad_manager_vast', function() {
   beforeEach(function() {
     amc = new fake_amc();
     OO.playerParams.maxVastWrapperDepth = 2;
+    errorType = "";
+    pixelPingCalled= false;
+    vastAdManager.errorInfo = {};
   });
 
   afterEach(_.bind(function() {
@@ -592,6 +613,25 @@ describe('ad_manager_vast', function() {
 
   //TODO: Unit test for testing skipoffset with percentage value
 
+  it('Vast 3.0, Error Reporting - errorInfo should parse the correct number of errorURLs and ads', function(){
+    vastAdManager.getErrorInfo(linearXML);
+    // should have one ad
+    var adIDs = _.keys(vastAdManager.errorInfo);
+    expect(adIDs.length).to.be(1);
+    // should have only one errorurl
+    var adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    expect(adErrorInfo.errorURLs.length).to.be(1);
+    vastAdManager.errorInfo = {};
+
+    vastAdManager.getErrorInfo(nonLinearXML);
+    // should have one ad
+    adIDs = _.keys(vastAdManager.errorInfo);
+    expect(adIDs.length).to.be(1);
+    // should have only no errorurls
+    adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    expect(adErrorInfo.errorURLs.length).to.be(0);
+  });
+
   it('Vast 3.0, Error Reporting: Should report too many wrappers error', function(){
     var embed_code = "embed_code";
     var vast_ad_mid = {
@@ -608,10 +648,23 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
+
+    // setup parameters so wrapper code will fail
     vastAdManager.currentDepth = OO.playerParams.maxVastWrapperDepth;
-    vastAdManager._onVastResponse(vast_ad_mid, wrapperXML);
-    expect(vastAdManager.errorType).to.be("tooManyWrapper");
-    vastAdManager.errorType = '';
+    var vastAd = {
+      ads:[
+        {
+          id: "wrapperId",
+        }
+      ]
+    };
+    vastAdManager.errorInfo = {
+      "wrapperId": {}
+    };
+    
+    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_LIMIT_REACHED);
+    expect(pixelPingCalled).to.be(true);
   });
 
   it('Vast 3.0, Error Reporting: Should report general wrapper error', function(){
@@ -635,15 +688,13 @@ describe('ad_manager_vast', function() {
       ads: null
     };
     vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
-    expect(vastAdManager.errorType).to.be("wrapperParseError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_WRAPPER);
 
     vastAd = {
       ads: []
     };
     vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
-    expect(vastAdManager.errorType).to.be("wrapperParseError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_WRAPPER);
   });
 
   it('Vast 3.0, Error Reporting: should report XML parsing error', function(){
@@ -665,16 +716,13 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
 
     vastAdManager._onVastResponse(null, linearXML);
-    expect(vastAdManager.errorType).to.be("parseError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.XML_PARSING);
 
     vastAdManager._onVastResponse(null, nonLinearXML);
-    expect(vastAdManager.errorType).to.be("parseError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.XML_PARSING);
 
     vastAdManager._onVastResponse(null, wrapperXML);
-    expect(vastAdManager.errorType).to.be("parseError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.XML_PARSING);
   });
 
   it('Vast 3.0, Error Reporting: Should report unsupported vast version error', function(){
@@ -695,8 +743,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
 
     vastAdManager.isValidVastVersion("");
-    expect(vastAdManager.errorType).to.be("versionUnsupportedError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.VERSION_UNSUPPORTED);
   });
 
   it('Vast 3.0, Error Reporting: Should report schema validation error', function(){
@@ -717,8 +764,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
 
     vastAdManager.isValidRootTagName("");
-    expect(vastAdManager.errorType).to.be("schemaValidationError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.SCHEMA_VALIDATION);
   });
 
   it('Vast 3.0, Error Reporting: Should report wrapper no ads error', function(){
@@ -739,8 +785,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
 
     vastAdManager.getErrorInfo("");
-    expect(vastAdManager.errorType).to.be("wrapperNoAdsError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_NO_ADS);
   });
 
   it('Vast 3.0, Error Reporting: Should report general linear ads error', function(){
@@ -760,10 +805,23 @@ describe('ad_manager_vast', function() {
     };
     vastAdManager.initialize(amc);
 
-    vastAdManager.inlineAd.ads = null;
+    // setup parameters so nonlinear ad fails because there are no mediaFiles in XML
+    // but still pings error url if there is an error tag
+    vastAdManager.inlineAd.ads = [
+      {
+        id: "linearAd1",
+        linear: {
+          mediaFiles: null
+        }
+      }
+    ];
+    vastAdManager.errorInfo = {
+      "linearAd1": {} 
+    };
+
     vastAdManager._handleLinearAd(vast_ad_mid, linearXML);
-    expect(vastAdManager.errorType).to.be("generalLinearAdsError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_LINEAR_ADS);
+    expect(pixelPingCalled).to.be(true);
   });
 
   it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', function(){
@@ -783,10 +841,23 @@ describe('ad_manager_vast', function() {
     };
     vastAdManager.initialize(amc);
 
-    vastAdManager.inlineAd.ads = null;
+    // setup parameters so nonlinear ad fails because there is no ad url
+    // but still pings error url if there is an error tag
+    vastAdManager.inlineAd.ads = [
+      {
+        id: "nonLinearAd1",
+        nonLinear: {
+          url: null
+        }
+      }
+    ];
+    vastAdManager.errorInfo = {
+      "nonLinearAd1": {} 
+    };
+
     vastAdManager._handleNonLinearAd(vast_ad_mid, nonLinearXML);
-    expect(vastAdManager.errorType).to.be("generalNonLinearAdsError");
-    vastAdManager.errorType = '';
+    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_NONLINEAR_ADS);
+    expect(pixelPingCalled).to.be(true);
   });
 
 });

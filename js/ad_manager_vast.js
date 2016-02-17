@@ -33,7 +33,6 @@ OO.Ads.manager(function(_, $) {
    * maximum is reached
    * @property {object} vastAdUnit Contains the ad once it has been loaded
    * @property {boolean} loaded Set to true once the ad has been loaded successfully
-   * @property {string} errorType If an error occurs, this will save the type of error, in order to log it
    * @property {string} embedCode Keeps track of the embed code of the movie that is currently playing
    * @property {string} loaderId Unique id name for the loader, which is required by the API
    * @property {object} movieMd Contains the metadata of the main movie
@@ -61,7 +60,6 @@ OO.Ads.manager(function(_, $) {
     this.currentDepth = 0;
     this.vastAdUnit = null;
     this.loaded = false;
-    this.errorType = '';
     this.embedCode = 'unkown';
     this.loaderId = 'OoVastAdsLoader' + _.uniqueId;
     this.movieMd = null;
@@ -289,10 +287,8 @@ OO.Ads.manager(function(_, $) {
     this.isValidRootTagName = function(vastXML) {
       var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
       if (rootTagName.toUpperCase() != "VAST") {
-        OO.log("Invalid VAST XML for tag name: " + rootTagName);
+        OO.log("VAST: Invalid VAST XML for Tag Name: " + rootTagName);
         this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
-        this.errorType = "schemaValidationError";
-        this.trigger(this.ERROR, this);
         return false;
       }
       return true;
@@ -308,10 +304,8 @@ OO.Ads.manager(function(_, $) {
     this.isValidVastVersion = function(vastXML) {
       var version = getVastVersion(vastXML);
       if (!supportsVersion(version)) {
-        OO.log("Invalid VAST version: " + version);
+        OO.log("VAST: Invalid VAST Version: " + version);
         this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, this.wrapperParentId);
-        this.errorType = "versionUnsupportedError";
-        this.trigger(this.ERROR, this);
         return false;
       }
       return true;
@@ -382,19 +376,22 @@ OO.Ads.manager(function(_, $) {
         // there could be an <Error> element in the vast response
         var noAdsErrorURL = $(vastXML).find("Error").text();
         if (noAdsErrorURL) {
-          pingURL(this.ERROR_CODES.GENERAL_WRAPPER_NO_ADS, noAdsErrorURL);
+          pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
         }
         // if the ad response came from a wrapper, then go up the chain and ping those error urls
-        this.trackError(this.ERROR_CODES.GENERAL_WRAPPER_NO_ADS, this.wrapperParentId);
-        this.errorType = "wrapperNoAdsError";
-        this.trigger(this.ERROR, this);
+        this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
       }
       else {
         _.each(ads, function(ad) {
           var error = {
-            errorUrls: [$(ad).find("Error").text()],
-            wrapperParentId: this.wrapperParentId|| null
+            errorURLs: [],
+            wrapperParentId: this.wrapperParentId || null
           };
+
+          var errorElement = $(ad).find("Error");
+          if (errorElement.length > 0){
+            error.errorURLs = [errorElement.text()];
+          }
           var adId = $(ad).prop("id");
           this.errorInfo[adId] = error;
         }, this);
@@ -882,9 +879,8 @@ OO.Ads.manager(function(_, $) {
      *  @method Vast#_onVastError
      */
     this._onVastError = function() {
-      this.errorType = 'directAjaxFailed';
+      OO.log("VAST: Direct Ajax Failed Error");
       this._ajax(this._getProxyUrl(), this._onFinalError, 'script');
-      this.trigger(this.ERROR, this);
     };
 
     /**
@@ -898,7 +894,7 @@ OO.Ads.manager(function(_, $) {
     */
     this.trackError = function trackErrorHelper(code, currentAdId) {
       if (currentAdId && currentAdId in this.errorInfo) {
-        pingURLs(this.errorInfo[currentAdId].errorUrls);
+        this.pingURLs(this.errorInfo[currentAdId].errorURLs);
         var parentId = this.errorInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
@@ -910,28 +906,28 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to ping error URL. Replaces error macro if it exists.
-     * @private
+     * @public
      * @method Vast#pingURL
      * @param {number} code Error code
      * @param {string} url URL to ping
      */
-    var pingURL = _.bind(function(code, url) {
+    this.pingURL = function(code, url) {
       url = url.replace(/\[ERRORCODE\]/, code);
-      OO.pixelPings(url);
-    }, this);
+      OO.pixelPing(url);
+    };
 
     /**
      * Helper function to ping error URLs.
-     * @private
+     * @public
      * @method Vast#pingURL
      * @param {number} code Error code
      * @param {string[]} urls URLs to ping
      */
-    var pingURLs = _.bind(function(code, urls) {
+    this.pingURLs = function(code, urls) {
       _.each(urls, function() {
         pingURL(code, url);
       }, this);
-    }, this);
+    };
 
     /**
      * If the ad fails to load a second time, this callback is called and triggers an error message, but doesn't try to
@@ -941,8 +937,7 @@ OO.Ads.manager(function(_, $) {
      * @fires this.Error
      */
     this._onFinalError = function() {
-      this.errorType = "proxyAjaxFailed";
-      this.trigger(this.ERROR, this);
+      OO.log("VAST: Proxy Ajax Failed Error");
       failedAd();
     };
 
@@ -975,10 +970,14 @@ OO.Ads.manager(function(_, $) {
         // filter our playable stream:
         var firstLinearAd = _.find(this.inlineAd.ads, function(v){ return !_.isEmpty(v.linear.mediaFiles); }, this);
         if (!firstLinearAd) {
-          OO.log("General Linear Ads Error: no mediafiles", this.inlineAd);
-          this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, this.wrapperParentId);
-          this.errorType = "generalLinearAdsError";
-          this.trigger(this.ERROR, this);
+          OO.log("VAST: General Linear Ads Error; No Mediafiles in XML", this.inlineAd);
+          // Want to ping error URLs at current depth if there are any available
+          if (this.inlineAd && this.inlineAd.ads) {
+            this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, this.inlineAd.ads[0].id);
+          }
+          else {
+            this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, this.wrapperParentId);
+          }
           return false;
         }
         var streams = firstLinearAd.linear.mediaFiles;
@@ -990,7 +989,7 @@ OO.Ads.manager(function(_, $) {
         addToTimeline(this.vastAdUnit, adLoaded);
         if (_.isEmpty(this.vastAdUnit.streams)) {
           // No Playable stream, report error.
-          OO.log("Can not find playable stream in vast result", this.inlineAd);
+          OO.log("VAST: Cannot Find Playable Stream in Vast Result", this.inlineAd);
           return false;
         }
         return true;
@@ -1025,10 +1024,14 @@ OO.Ads.manager(function(_, $) {
         // filter our playable stream:
         var firstNonLinearAd = _.find(this.inlineAd.ads, function(v){ return !_.isEmpty(v.nonLinear.url); }, this);
         if (!firstNonLinearAd) {
-          OO.log("General NonLinear Ads Error: can not find playable stream in vast result", this.inlineAd);
-          this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, this.wrapperParentId);
-          this.errorType = "generalNonLinearAdsError";
-          this.trigger(this.ERROR, this);
+          OO.log("VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Vast Result", this.inlineAd);
+          // Want to ping error URLs at current depth if there are any available
+          if (this.inlineAd && this.inlineAd.ads) {
+            this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, this.inlineAd.ads[0].id);
+          }
+          else {
+            this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, this.wrapperParentId);
+          }
           return false;
         }
         var adURL = firstNonLinearAd.nonLinear.url;
@@ -1284,7 +1287,6 @@ OO.Ads.manager(function(_, $) {
      * @returns {object} The object if an ad was found otherwise it returns null.
      */
     this.parser = function(vastXML) {
-      debugger;
       // need to get error information in case error events need to be reported
       this.getErrorInfo(vastXML);
       if (!this.isValidVastXML(vastXML)) {
@@ -1325,9 +1327,7 @@ OO.Ads.manager(function(_, $) {
       this.wrapperParentId = wrapperParentIdArg;
       var vastAd = this.parser(xml);
       if (!vastAd || !adLoaded) {
-        this.errorType = "parseError";
         this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
-        this.trigger(this.ERROR, this);
         failedAd();
       }
       else if (vastAd.type == "wrapper") {
@@ -1351,7 +1351,7 @@ OO.Ads.manager(function(_, $) {
       this.currentDepth++;
       if (vastAd.ads && !_.isEmpty(vastAd.ads)) {
         var firstWrapperAd = vastAd.ads[0];
-        OO.log("vast tag url is", firstWrapperAd.VASTAdTagURI, this.currentDepth);
+        OO.log("VAST: Vast Tag Url: ", firstWrapperAd.VASTAdTagURI, this.currentDepth);
         if (this.currentDepth < OO.playerParams.maxVastWrapperDepth) {
           var _wrapperAds = this.wrapperAds;
           this.wrapperAds.error = this.wrapperAds.error.concat(firstWrapperAd.error);
@@ -1379,17 +1379,13 @@ OO.Ads.manager(function(_, $) {
           }
         }
         else {
-          OO.log("Max wrapper depth reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
+          OO.log("VAST: Max Wrapper Depth Reached.", this.currentDepth, OO.playerParams.maxVastWrapperDepth);
           this.trackError(this.ERROR_CODES.WRAPPER_LIMIT_REACHED, firstWrapperAd.id);
-          this.errorType = "tooManyWrapper";
-          this.trigger(this.ERROR, this);
           failedAd();
         }
       }
       else {
-        this.trackError(this.ERROR_CODES.WRAPPER, this.wrapperParentId);
-        this.errorType = "wrapperParseError";
-        this.trigger(this.ERROR, this);
+        this.trackError(this.ERROR_CODES.GENERAL_WRAPPER, this.wrapperParentId);
         failedAd();
       }
     };
@@ -1411,8 +1407,6 @@ OO.Ads.manager(function(_, $) {
         this.trigger(this.READY, this);
       }
       else {
-        this.errorType = "noAd";
-        this.trigger(this.ERROR, this);
         failedAd();
       }
     };
