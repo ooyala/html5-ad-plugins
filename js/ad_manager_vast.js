@@ -360,12 +360,12 @@ OO.Ads.manager(function(_, $) {
      * Note: <Error> can only live in three places: directly under <VAST>, <Ad>, or <Wrapper> elements.
      * <Error> tags are also optional so they may not always exist.
      * @public
-     * @method Vast#getErrorInfo
+     * @method Vast#getErrorTrackingInfo
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @param {object} ads A jQuery object which contains the collection of ad elements found
      */
-    this.getErrorInfo = function(vastXML, ads) {
-      _.each(ads, function(ad) {
+    this.getErrorTrackingInfo = function(vastXML, ads) {
+     _.each(ads, function(ad) {
         var error = {
           errorURLs: [],
           wrapperParentId: this.wrapperParentId || null
@@ -1415,7 +1415,7 @@ OO.Ads.manager(function(_, $) {
       if (!this.checkNoAds(vastXML, jqueryAds)){
         // need to get error tracking information early in case error events need to be reported
         // before the ad object is created
-        this.getErrorInfo(vastXML, jqueryAds);
+        this.getErrorTrackingInfo(vastXML, jqueryAds);
       }
 
       if (!this.isValidVastXML(vastXML)) {

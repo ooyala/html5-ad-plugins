@@ -1065,7 +1065,7 @@ describe('ad_manager_vast', function() {
 
   it('Vast 3.0, Error Reporting - errorInfo should parse the correct number of errorURLs and ads', function(){
     var jqueryAds = $(linearXML).find("Ad");
-    vastAdManager.getErrorInfo(linearXML, jqueryAds);
+    vastAdManager.getErrorTrackingInfo(linearXML, jqueryAds);
     // should have one ad
     var adIDs = _.keys(vastAdManager.errorInfo);
     expect(adIDs.length).to.be(1);
@@ -1075,7 +1075,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.errorInfo = {};
 
     jqueryAds = $(nonLinearXML).find("Ad");
-    vastAdManager.getErrorInfo(nonLinearXML, jqueryAds);
+    vastAdManager.getErrorTrackingInfo(nonLinearXML, jqueryAds);
     // should have one ad
     adIDs = _.keys(vastAdManager.errorInfo);
     expect(adIDs.length).to.be(1);
