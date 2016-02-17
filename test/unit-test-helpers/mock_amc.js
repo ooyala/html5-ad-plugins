@@ -20,6 +20,12 @@ fake_amc = function() {
     LINEAR_VIDEO : "linearVideo",
     COMPANION : "companion"
   };
+  this.AD_CANCEL_CODE = {
+    SKIPPED : "skipped",
+    TIMEOUT : "timeout",
+    ERROR : "error",
+    STREAM_ENDED : "streamEnded"
+  };
   this.Ad = function(adObj){
     adObj.isLinear = (adObj.adType == "linearVideo") || (adObj.adType == "linearOverlay");
     return adObj

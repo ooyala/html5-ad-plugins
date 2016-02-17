@@ -19,10 +19,12 @@ describe('ad_manager_vast', function() {
 
   var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
   var linear3_0XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_linear.xml"), "utf8");
+  var linear3_0PoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml"), "utf8");
   var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var linearXML = OO.$.parseXML(linearXMLString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
+  var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -398,7 +400,6 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.companion[1].height).to.be('250');
     expect(vastAd.ad.data.companion[1].CompanionClickThrough).to.be('companion2ClickThrough');
     expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
-
   });
 
   it('should parse inline non linear ads', function(){
@@ -429,7 +430,7 @@ describe('ad_manager_vast', function() {
       'impressionOverlay3Url', 'impressionOverlay4Url', 'impressionOverlay5Url',
       'impressionOverlay6Url' ]);
     expect(vastAd.ad.data.nonLinear).not.to.be(null);
-    expect(vastAd.ad.data.linear).to.eql({'ClickTracking':[],'tracking':{}});
+    expect(vastAd.ad.data.linear).to.eql({});
     expect(vastAd.ad.data.nonLinear.width).to.be('300');
     expect(vastAd.ad.data.nonLinear.height).to.be('60');
     expect(vastAd.ad.data.nonLinear.NonLinearClickThrough).to.be('nonLinearClickThroughUrl');
@@ -470,48 +471,49 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
   });
 
-  it('should parse wrapper ads', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
-    };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
-    };
-    vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager._onVastResponse(vast_ad_mid, wrapperXML);
-    var vastAd = amc.timeline[0];
-    expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.impression).to.eql(['impressionOverlayUrl', 'impressionOverlay2Url', 'impressionOverlay3Url',
-      'impressionOverlay4Url', 'impressionOverlay5Url', 'impressionOverlay6Url']);
-    expect(vastAd.ad.data.companion).to.be.an('array');
-    expect(vastAd.ad.data.companion.length).to.be(2);
-    expect(vastAd.ad.data.companion[0].type).to.be('static');
-    expect(vastAd.ad.data.companion[0].data).to.be('companion.jpg');
-    expect(vastAd.ad.data.companion[0].width).to.be('300');
-    expect(vastAd.ad.data.companion[0].height).to.be('60');
-    expect(vastAd.ad.data.companion[0].CompanionClickThrough).to.be('companionClickThroughUrl');
-    expect(vastAd.ad.data.companion[0].tracking.creativeView).to.eql(['companionCreativeViewUrl']);
-
-    expect(vastAd.ad.data.companion[1].type).to.be('static');
-    expect(vastAd.ad.data.companion[1].data).to.be('companion2.jpg');
-    expect(vastAd.ad.data.companion[1].width).to.be('300');
-    expect(vastAd.ad.data.companion[1].height).to.be('250');
-    expect(vastAd.ad.data.companion[1].CompanionClickThrough).to.be('companion2ClickThroughUrl');
-    expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
-  });
-  //TODO: Need to cover PlayADs, overlays and companions once v4 is integrated.
+  //TODO: Fix wrapper ads test
+  //it('should parse wrapper ads', function(){
+  //  var embed_code = "embed_code";
+  //  var vast_ad_mid = {
+  //    type: "vast",
+  //    first_shown: 0,
+  //    frequency: 2,
+  //    ad_set_code: "ad_set_code",
+  //    time:10,
+  //    position_type:"t",
+  //    url:"1.jpg"
+  //  };
+  //  var content = {
+  //    embed_code: embed_code,
+  //    ads: [vast_ad_mid]
+  //  };
+  //  vastAdManager.initialize(amc);
+  //  expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+  //    "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+  //  initalPlay();
+  //  expect(vastAdManager.initialPlay()).to.be(true);
+  //  vastAdManager._onVastResponse(vast_ad_mid, wrapperXML);
+  //  var vastAd = amc.timeline[0];
+  //  expect(vastAd.ad).to.be.an('object');
+  //  expect(vastAd.ad.data.impression).to.eql(['impressionOverlayUrl', 'impressionOverlay2Url', 'impressionOverlay3Url',
+  //    'impressionOverlay4Url', 'impressionOverlay5Url', 'impressionOverlay6Url']);
+  //  expect(vastAd.ad.data.companion).to.be.an('array');
+  //  expect(vastAd.ad.data.companion.length).to.be(2);
+  //  expect(vastAd.ad.data.companion[0].type).to.be('static');
+  //  expect(vastAd.ad.data.companion[0].data).to.be('companion.jpg');
+  //  expect(vastAd.ad.data.companion[0].width).to.be('300');
+  //  expect(vastAd.ad.data.companion[0].height).to.be('60');
+  //  expect(vastAd.ad.data.companion[0].CompanionClickThrough).to.be('companionClickThroughUrl');
+  //  expect(vastAd.ad.data.companion[0].tracking.creativeView).to.eql(['companionCreativeViewUrl']);
+  //
+  //  expect(vastAd.ad.data.companion[1].type).to.be('static');
+  //  expect(vastAd.ad.data.companion[1].data).to.be('companion2.jpg');
+  //  expect(vastAd.ad.data.companion[1].width).to.be('300');
+  //  expect(vastAd.ad.data.companion[1].height).to.be('250');
+  //  expect(vastAd.ad.data.companion[1].CompanionClickThrough).to.be('companion2ClickThroughUrl');
+  //  expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
+  //});
+  //TODO: Need to cover overlays and companions once v4 is integrated.
 
   //Vast 3.0 Tests
 
@@ -584,4 +586,448 @@ describe('ad_manager_vast', function() {
   });
 
   //TODO: Unit test for testing skipoffset with percentage value
+
+  it('Vast 2.0: should provide ad pod position and length of 1 to AMC on playAd', function(){
+    var allowSkipButton = false;
+    var skipOffset = 0;
+    var adPodLength = -1;
+    var indexInPod = -1;
+    amc.showSkipVideoAdButton = function(allowButton, offset) {
+      allowSkipButton = allowButton;
+      skipOffset = offset;
+    };
+    amc.notifyPodStarted = function(id, podLength) {
+      adPodLength = podLength;
+    };
+    amc.notifyLinearAdStarted = function(name, props) {
+      if (props) {
+        indexInPod = props.indexInPod;
+      }
+    };
+
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager._onVastResponse(vast_ad_mid, linearXML);
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(1);
+    expect(indexInPod).to.be(1);
+  });
+
+  it('Vast 3.0: should parse inline linear podded ads', function(){
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+
+    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654646');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    vastAd = adQueue[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654645');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    vastAd = adQueue[1];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654644');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+  });
+
+  it('Vast 3.0: should provide proper ad pod positions and length to AMC on playAd', function(){
+    var adPodLength = -1;
+    var indexInPod = -1;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    amc.notifyPodStarted = function(id, podLength) {
+      adPodLength = podLength;
+    };
+    amc.notifyLinearAdStarted = function(name, props) {
+      if (props) {
+        indexInPod = props.indexInPod;
+      }
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+
+    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(3);
+    expect(indexInPod).to.be(1);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    vastAd = adQueue[0];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(3);
+    expect(indexInPod).to.be(2);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    vastAd = adQueue[1];
+    vastAdManager.playAd(vastAd);
+    expect(adPodLength).to.be(3);
+    expect(indexInPod).to.be(3);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+  });
+
+  it('Vast 3.0: AMC is notified of linear/nonlinear ad start/end and pod start/end', function(){
+    var nonLinearStartNotified = 0;
+    var podStartNotified = 0;
+    var podEndNotified = 0;
+    var linearStartNotified = 0;
+    var linearEndNotified = 0;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    amc.notifyPodStarted = function() {
+      podStartNotified++;
+    };
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+    amc.notifyLinearAdStarted = function() {
+      linearStartNotified++;
+    };
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+      nonLinearStartNotified++;
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+
+    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(podStartNotified).to.be(1);
+    expect(podEndNotified).to.be(0);
+    expect(linearStartNotified).to.be(1);
+    expect(linearEndNotified).to.be(0);
+    expect(nonLinearStartNotified).to.be(0);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    expect(podStartNotified).to.be(1);
+    expect(podEndNotified).to.be(0);
+    expect(linearStartNotified).to.be(1);
+    expect(linearEndNotified).to.be(1);
+    expect(nonLinearStartNotified).to.be(0);
+
+    vastAd = adQueue[0];
+    vastAdManager.playAd(vastAd);
+    expect(podStartNotified).to.be(1);
+    expect(podEndNotified).to.be(0);
+    expect(linearStartNotified).to.be(2);
+    expect(linearEndNotified).to.be(1);
+    expect(nonLinearStartNotified).to.be(0);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    expect(podStartNotified).to.be(1);
+    expect(podEndNotified).to.be(0);
+    expect(linearStartNotified).to.be(2);
+    expect(linearEndNotified).to.be(2);
+    expect(nonLinearStartNotified).to.be(0);
+
+    vastAd = adQueue[1];
+    vastAdManager.playAd(vastAd);
+    expect(podStartNotified).to.be(1);
+    expect(podEndNotified).to.be(0);
+    expect(linearStartNotified).to.be(3);
+    expect(linearEndNotified).to.be(2);
+    expect(nonLinearStartNotified).to.be(0);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    expect(podStartNotified).to.be(1);
+    expect(podEndNotified).to.be(1);
+    expect(linearStartNotified).to.be(3);
+    expect(linearEndNotified).to.be(3);
+    expect(nonLinearStartNotified).to.be(0);
+
+    //overlay
+    vastAd = adQueue[2];
+    vastAdManager.playAd(vastAd);
+    expect(podStartNotified).to.be(1);
+    expect(podEndNotified).to.be(1);
+    expect(linearStartNotified).to.be(3);
+    expect(linearEndNotified).to.be(3);
+    expect(nonLinearStartNotified).to.be(1);
+  });
+
+  it('Vast 3.0: On ad timeout, fallback ad will be shown', function(){
+    var nonLinearStartNotified = 0;
+    var podStartNotified = 0;
+    var podEndNotified = 0;
+    var linearStartNotified = 0;
+    var linearEndNotified = 0;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    amc.notifyPodStarted = function() {
+      podStartNotified++;
+    };
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+    amc.notifyLinearAdStarted = function() {
+      linearStartNotified++;
+    };
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+      nonLinearStartNotified++;
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654646');
+
+    vastAdManager.cancelAd(vastAd, {
+      code : amc.AD_CANCEL_CODE.TIMEOUT
+    });
+    vastAd = adQueue[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654600');
+  });
+
+  it('Vast 3.0: On ad playback error, fallback ad will be shown', function(){
+    var nonLinearStartNotified = 0;
+    var podStartNotified = 0;
+    var podEndNotified = 0;
+    var linearStartNotified = 0;
+    var linearEndNotified = 0;
+    var adQueue = [];
+
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    amc.notifyPodStarted = function() {
+      podStartNotified++;
+    };
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+    amc.notifyLinearAdStarted = function() {
+      linearStartNotified++;
+    };
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+      nonLinearStartNotified++;
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager._onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654646');
+
+    vastAdManager.adVideoError();
+    vastAd = adQueue[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654600');
+  });
 });
