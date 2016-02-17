@@ -129,8 +129,11 @@ OO.Ads.manager(function(_, $) {
      * @method AdManager#cancelAd
      * @public
      * @param {object} ad The ad object to cancel
+     * @param {object} params An object containing information about the cancellation. It will include the
+     *                        following fields:
+     *                 code : The amc.AD_CANCEL_CODE for the cancellation
      */
-    this.cancelAd = function(ad) {
+    this.cancelAd = function(ad, params) {
     };
 
     /**
@@ -198,6 +201,15 @@ OO.Ads.manager(function(_, $) {
     this.playerClicked = function(amcAd, showPage) {
     };
 
+    /**
+     * <i>Optional.</i><br/>
+     * Called when the player detects start of ad video playback.
+     * @method AdManager#adVideoPlaying
+     * @public
+     */
+    this.adVideoPlaying = function() {
+
+    };
 
     /**
      * <i>Optional.</i><br/>
@@ -205,8 +217,10 @@ OO.Ads.manager(function(_, $) {
      * this error itself, it can use this time to end the ad playback.
      * @method AdManager#adVideoError
      * @public
+     * @param {object} adWrapper The current Ad's metadata
+     * @param {number} errorCode The error code associated with the video playback error
      */
-    this.adVideoError = function() {
+    this.adVideoError = function(adWrapper, errorCode) {
     };
 
     /**
@@ -222,7 +236,7 @@ OO.Ads.manager(function(_, $) {
     var _onContentChanged = function() {
       // Callback for example listener registered in this.initialize
     }
-  }
+  };
 
   return new AdManager();
 });

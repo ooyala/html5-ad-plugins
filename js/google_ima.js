@@ -305,11 +305,13 @@ require("../html5-common/js/utils/utils.js");
               //double check it's not an ad rules ad before trying to add it to the timeline
               if (ad.position_type != AD_RULES_POSITION_TYPE)
               {
+                var streams = {};
+                streams[OO.VIDEO.ENCODING.IMA] = "";
                 var adData = {
                   "position": ad.position / 1000,
                   "adManager": this.name,
                   "ad": ad,
-                  "streams": {"ima":""},
+                  "streams": streams,
                   "adType": _amc.ADTYPE.LINEAR_VIDEO
                 };
 
@@ -328,12 +330,14 @@ require("../html5-common/js/utils/utils.js");
         else
         {
           //return a placeholder preroll while we wait for IMA
+          var streams = {};
+          streams[OO.VIDEO.ENCODING.IMA] = "";
           var placeholder = [ new _amc.Ad({
             position: 0,
             duration: 0,
             adManager: this.name,
             ad: { type: AD_REQUEST_TYPE },
-            streams: {"ima":""},
+            streams: streams,
             //use linear video so VTC can prepare the video element (does not disturb overlays)
             adType: _amc.ADTYPE.LINEAR_VIDEO
           })];
@@ -1168,7 +1172,9 @@ require("../html5-common/js/utils/utils.js");
           //we do not want to force an ad play with preroll ads
           if(_playheadTracker.currentTime > 0)
           {
-            _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.LINEAR_VIDEO, {"ima":""});
+            var streams = {};
+            streams[OO.VIDEO.ENCODING.IMA] = "";
+            _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.LINEAR_VIDEO, streams);
           }
         }
       });
@@ -1690,7 +1696,7 @@ require("../html5-common/js/utils/utils.js");
   var GoogleIMAVideoFactory = function()
   {
     this.name = "GoogleIMAVideoTech";
-    this.encodings = ["ima"];
+    this.encodings = [OO.VIDEO.ENCODING.IMA];
     this.features = [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_TAKE];
     this.technology = OO.VIDEO.TECHNOLOGY.HTML5;
 
