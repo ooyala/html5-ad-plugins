@@ -614,7 +614,8 @@ describe('ad_manager_vast', function() {
   //TODO: Unit test for testing skipoffset with percentage value
 
   it('Vast 3.0, Error Reporting - errorInfo should parse the correct number of errorURLs and ads', function(){
-    vastAdManager.getErrorInfo(linearXML);
+    var jqueryAds = $(linearXML).find("Ad");
+    vastAdManager.getErrorInfo(linearXML, jqueryAds);
     // should have one ad
     var adIDs = _.keys(vastAdManager.errorInfo);
     expect(adIDs.length).to.be(1);
@@ -623,7 +624,8 @@ describe('ad_manager_vast', function() {
     expect(adErrorInfo.errorURLs.length).to.be(1);
     vastAdManager.errorInfo = {};
 
-    vastAdManager.getErrorInfo(nonLinearXML);
+    jqueryAds = $(nonLinearXML).find("Ad");
+    vastAdManager.getErrorInfo(nonLinearXML, jqueryAds);
     // should have one ad
     adIDs = _.keys(vastAdManager.errorInfo);
     expect(adIDs.length).to.be(1);
@@ -784,7 +786,7 @@ describe('ad_manager_vast', function() {
     };
     vastAdManager.initialize(amc);
 
-    vastAdManager.getErrorInfo("");
+    vastAdManager.checkNoAds("", []);
     expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_NO_ADS);
   });
 
