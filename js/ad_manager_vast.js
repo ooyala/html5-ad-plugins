@@ -1067,6 +1067,28 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Helper function to determine if the ad is a linear ad.
+     * @private
+     * @param {object} ad The ad object
+     * @returns {boolean} true if the ad is a linear ad, false otherwise.
+     */
+    var _hasLinearAd = _.bind(function(ad) {
+      var linearObjectKeys = _.keys(ad.linear);
+      return (linearObjectKeys.length > 2);
+    }, this);
+
+    /**
+     * Helper function to determine if the ad is a nonlinear ad.
+     * @private
+     * @param {object} ad The ad object
+     * @returns {boolean} true if the ad is a nonlinear ad, false otherwise.
+     */
+    var _hasNonLinearAd = _.bind(function(ad) {
+      var nonLinearObjectKeys = _.keys(ad.nonLinear);
+      return (nonLinearObjectKeys.length > 1);
+    }, this);
+
+    /**
      *  If a linear ad is found, then it is parsed and sent to be added to the time via addToTimeLine.
      * @private
      * @method Vast#_handleLinearAd
@@ -1497,21 +1519,25 @@ OO.Ads.manager(function(_, $) {
             adPodLength : linearAdCount
           };
           this.mergeVastAdResult(ad, wrapperAds);
-          var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
-          if (linearAdUnit) {
-            //The ad can have both a linear and non linear creative. We'll
-            //split these up into separate objects for ad playback
-            linearAdUnit = _.clone(linearAdUnit);
-            linearAdUnit.data.nonLinear = {};
-            adUnits.push(linearAdUnit);
+          if (_hasLinearAd(ad)) {
+            var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
+            if (linearAdUnit) {
+              //The ad can have both a linear and non linear creative. We'll
+              //split these up into separate objects for ad playback
+              linearAdUnit = _.clone(linearAdUnit);
+              linearAdUnit.data.nonLinear = {};
+              adUnits.push(linearAdUnit);
+            }
           }
-          var nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
-          if (nonLinearAdUnit) {
-            //The ad can have both a linear and non linear creative. We'll
-            //split these up into separate objects for ad playback
-            nonLinearAdUnit = _.clone(nonLinearAdUnit);
-            nonLinearAdUnit.data.linear = {};
-            adUnits.push(nonLinearAdUnit);
+          if (_hasNonLinearAd(ad)) {
+            var nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
+            if (nonLinearAdUnit) {
+              //The ad can have both a linear and non linear creative. We'll
+              //split these up into separate objects for ad playback
+              nonLinearAdUnit = _.clone(nonLinearAdUnit);
+              nonLinearAdUnit.data.linear = {};
+              adUnits.push(nonLinearAdUnit);
+            }
           }
         } else if (ad.type === AD_TYPE.WRAPPER) {
           //TODO: Wrapper ads
