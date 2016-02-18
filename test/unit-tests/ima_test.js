@@ -323,31 +323,49 @@ describe('ad_manager_ima', function()
   it('AMC Integration, Non-Ad Rules: amc is notified of a non-linear ad playback', function()
   {
     var notified = false;
+    var nonLinearAdState = -1;
     google.ima.linearAds = false;
     initAndPlay(false, vci);
     var id = "blah";
-    var adPod =
-    {
-      id : id,
-      ad :
-      {
-        forced_ad_type : amc.ADTYPE.NONLINEAR_OVERLAY
-      }
+    var adPod = null;
+    amc.forceAdToPlay = function(name, metadata, type) {
+      var adData = {
+        "adManager": name,
+        "adType": type,
+        "ad": metadata,
+        "streams":{},
+        "position": -1 //we want it to play immediately
+      };
+      adPod = new amc.Ad(adData);
+      adPod.id = id;
+      amc.timeline.push(adPod);
+      //shifting timeline simulates it having been marked as played
+      //play the nonlinear ad, which we now know for sure is nonlinear
+      amc.playAd(amc.timeline.shift());
+    };
+    amc.playAd = function (ad) {
+      //play the original ad definition (we assume IMA ads to be linear first)
+      ima.playAd(ad);
+    };
+    amc.notifyNonlinearAdEnded = function () {
+      nonLinearAdState = 0;
     };
     amc.sendURLToLoadAndPlayNonLinearAd = function(currentAdPod, adPodId, url)
     {
       if (adPod === currentAdPod && id === adPodId)
       {
+        nonLinearAdState = 1;
         notified = true;
       }
     };
-    //original ad definition
-    ima.playAd(amc.timeline[0]);
+    //shifting timeline simulates it having been marked as played
+    amc.playAd(amc.timeline.shift());
     var am = google.ima.adManagerInstance;
+    //STARTED event from Google leads to forceAdToPlay
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
-    //forced ad playback
-    ima.playAd(adPod);
     expect(notified).to.be(true);
+    //we want to ensure that we do not notify nonlinear ad ended after we start the nonlinear ad
+    expect(nonLinearAdState).to.be(1);
   });
 
   it('AMC Integration, Non-Ad Rules: non-linear ad provides amc with its width, height, and padding requirement', function()
@@ -356,7 +374,6 @@ describe('ad_manager_ima', function()
     var nonLinearHeight = -1;
     var paddingRequired = false;
     google.ima.linearAds = false;
-    debugger;
     initAndPlay(false, vci);
     var id = "blah";
     var adPod =
