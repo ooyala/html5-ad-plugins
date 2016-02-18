@@ -285,9 +285,10 @@ OO.Ads.manager(function(_, $) {
     var _adRequestTimeout = _.bind(function(){
       _clearAdRequestTimeout();
       if (!fwContext._adResponse) {
-        var error = "ad request timeout";
-        fw_onError(error);
+        fwContext.removeEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE);
         OO.log("FW: freewheel ad request timeout");
+        var error = "ad request timeout";
+        fw_onError(null, error);
         slotEndedCallbacks[adRequestType]();
         delete slotEndedCallbacks[adRequestType];
       }
@@ -304,7 +305,7 @@ OO.Ads.manager(function(_, $) {
     var _setAdRequestTimeout = _.bind(function(callback, duration){
       if (adRequestTimeout) {
         var error = "Ad Request Timeout already exists - bad state";
-        fw_onError(error);
+        fw_onError(null, error);
       } 
       // only set timeout if not in test mode otherwise it will break unit tests
       else if (!this.testMode) {
