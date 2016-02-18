@@ -186,7 +186,6 @@ describe('ad_manager_freewheel', function() {
     play();
     //play ad request ad
     fw.playAd(amc.timeline[0]);
-    debugger;
     fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
     expect(amc.timeline.length).to.be(2);
     //play overlay
@@ -224,7 +223,6 @@ describe('ad_manager_freewheel', function() {
     play();
     //play ad request ad
     fw.playAd(amc.timeline[0]);
-    debugger;
     fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
     expect(amc.timeline.length).to.be(2);
     //play overlay
