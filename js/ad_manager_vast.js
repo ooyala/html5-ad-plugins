@@ -258,8 +258,8 @@ OO.Ads.manager(function(_, $) {
      * Used to keep track of what events that are tracked for vast.
      */
     var TrackingEvents = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
-      'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'expand', 'collapse', 'acceptInvitation',
-      'close' ];
+    'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'expand', 'collapse', 'acceptInvitation',
+    'close' ];
 
     /**
      * Helper function to verify that XML is valid
@@ -365,7 +365,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} ads A jQuery object which contains the collection of ad elements found
      */
     this.getErrorTrackingInfo = function(vastXML, ads) {
-     _.each(ads, function(ad) {
+      _.each(ads, function(ad) {
         var error = {
           errorURLs: [],
           wrapperParentId: this.wrapperParentId || null
@@ -470,7 +470,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} movieMetadata Contains the movie metadata that is currently loaded
      */
     this.loadMetadata = function(pbMetadata, baseBacklotMetadata, movieMetadata) {
-    // Interpret the data from the page and backlot - possibly combine this function with initialize
+      // Interpret the data from the page and backlot - possibly combine this function with initialize
       this.embedCode = this.amc.currentEmbedCode;
       this.movieMd = movieMetadata;
       if (pbMetadata && pbMetadata.tagUrl) {
@@ -552,7 +552,7 @@ OO.Ads.manager(function(_, $) {
             ad.url = this.adURLOverride;
           }
           if (position && ((position == "pre" && ad.time == 0) || (position == 'midPost' && ad.time > 0)
-            || (position == "all"))) {
+                || (position == "all"))) {
             this.currentAdBeingLoaded = ad;
             if (!this.testMode) {
               this.loadUrl(ad.url);
@@ -575,13 +575,13 @@ OO.Ads.manager(function(_, $) {
       return this.loadAllVastAds();
     };
 
-     /**
-      *
-      * This is required by the Ad Manager Controller but for Vast ads nothing is done here.
-      * @returns The array of the new timeline to merge into the controller timeline but Vast Manager doesn't use this
-      * function since we add the Ads one by one, so we just return null so it is ignored by the AMC.
-      * @public
-      * @method Vast#buildTimeline
+    /**
+     *
+     * This is required by the Ad Manager Controller but for Vast ads nothing is done here.
+     * @returns The array of the new timeline to merge into the controller timeline but Vast Manager doesn't use this
+     * function since we add the Ads one by one, so we just return null so it is ignored by the AMC.
+     * @public
+     * @method Vast#buildTimeline
      */
     this.buildTimeline = function() {
       return null;
@@ -660,18 +660,18 @@ OO.Ads.manager(function(_, $) {
         }
         adCompletedCallback = _.bind(function(ad, failed) {
           _endAd(ad, failed);
-            adCompletedCallback = null;
-          }, this);
+          adCompletedCallback = null;
+        }, this);
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
         var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
         this.amc.notifyLinearAdStarted(adWrapper.id, {
-            name: adWrapper.ad.data.title,
-            duration: adWrapper.ad.durationInMilliseconds/1000,
-            hasClickUrl: hasClickUrl,
-            indexInPod: adWrapper.ad.adPodIndex,
-            skippable: false
-          });
+          name: adWrapper.ad.data.title,
+          duration: adWrapper.ad.durationInMilliseconds/1000,
+          hasClickUrl: hasClickUrl,
+          indexInPod: adWrapper.ad.adPodIndex,
+          skippable: false
+        });
       }
       else {
         var streamUrl;
@@ -862,7 +862,7 @@ OO.Ads.manager(function(_, $) {
         cache:false,
         //TODO: should pass wrapperParentId here for wrapper
         success: (dataType == "script") ? function() {} : _.bind(this.onVastResponse, this, loadingAd
-          || this.currentAdBeingLoaded),
+            || this.currentAdBeingLoaded),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
       this.currentAdBeingLoaded = null;
@@ -877,7 +877,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.playerClicked = function(amcAd, showPage) {
       if (!showPage) {
-       return;
+        return;
       }
       var highLevelClickThroughUrl = amcAd.ad.data && amcAd.ad.data.ClickThrough;
       var adSpecificClickThroughUrl = null;
@@ -973,13 +973,13 @@ OO.Ads.manager(function(_, $) {
       OO.publicApi[this.loaderId] = _.bind(this.onVastProxyResult, this);
       if (OO.playerParams.vast_proxy_url) {
         return [OO.playerParams.vast_proxy_url, "?callback=OO.", this.loaderId, "&tag_url=",
-            encodeURI(this.vastUrl), "&embed_code=", this.embedCode].join("");
+          encodeURI(this.vastUrl), "&embed_code=", this.embedCode].join("");
       }
       return OO.URLS.VAST_PROXY({
-          cb: "OO." + this.loaderId,
-          embedCode: this.embedCode,
-          expires: (new Date()).getTime() + 1000,
-          tagUrl: encodeURI(this.vastUrl)
+        cb: "OO." + this.loaderId,
+        embedCode: this.embedCode,
+        expires: (new Date()).getTime() + 1000,
+        tagUrl: encodeURI(this.vastUrl)
       });
     };
 
@@ -994,14 +994,14 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-    * This method pings all the ad's error URLs with a specific error code if the error URL
-    * contains the macro, "[ERRORCODE]". If ad has a parent wrapper, then go up the chain and ping
-    * wrapper's error urls as well.
-    * @public
-    * @method Vast#trackError
-    * @param {number} code Error code
-    * @param {boolean} currentAdId Ad ID of current ad
-    */
+     * This method pings all the ad's error URLs with a specific error code if the error URL
+     * contains the macro, "[ERRORCODE]". If ad has a parent wrapper, then go up the chain and ping
+     * wrapper's error urls as well.
+     * @public
+     * @method Vast#trackError
+     * @param {number} code Error code
+     * @param {boolean} currentAdId Ad ID of current ad
+     */
     this.trackError = function(code, currentAdId) {
       if (currentAdId && currentAdId in this.errorInfo) {
         this.pingURLs(this.errorInfo[currentAdId].errorURLs);
@@ -1101,11 +1101,11 @@ OO.Ads.manager(function(_, $) {
      */
     var _handleLinearAd = _.bind(function(ad, adLoaded, params) {
       if (!ad || _.isEmpty(ad.linear.mediaFiles)) {
-		  OO.log("VAST: General Linear Ads Error; No Mediafiles in Ad", ad);
-          // Want to ping error URLs at current depth if there are any available
-          this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, ad.id);
-          return null;
-	  }
+        OO.log("VAST: General Linear Ads Error; No Mediafiles in Ad", ad);
+        // Want to ping error URLs at current depth if there are any available
+        this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, ad.id);
+        return null;
+      }
 
       params = params ? params : {};
       var mediaFiles = ad.linear.mediaFiles;
@@ -1222,9 +1222,9 @@ OO.Ads.manager(function(_, $) {
     this.checkCompanionAds = function(adInfo) {
       if (_.isNull(adInfo.data) || _.isEmpty(adInfo.data.companion)) {
         return;
-       }
-       this.amc.showCompanion(adInfo.data.companion);
-     };
+      }
+      this.amc.showCompanion(adInfo.data.companion);
+    };
 
     /**
      * If using the proxy url doesn't fail, then we parse the data into xml and call the vastResponse callback.
