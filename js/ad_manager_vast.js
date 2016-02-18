@@ -1055,7 +1055,7 @@ OO.Ads.manager(function(_, $) {
      * Extracts the creative based on the format type that is expected.
      * @public
      * @method Vast#extractStreamForType
-     * @param {Object[]} streams The stream choices from the metadata
+     * @param {object[]} streams The stream choices from the metadata
      * @param {string} type The type of video we want to use for the creative
      * @returns {string} The creative url if it finds one, otherwise null.
      */
@@ -1430,7 +1430,7 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#parser
      * @param {XMLDocument} vastXML The xml that contains the ad data
-     * @returns {Array} An array containing the ad(s) if ads are found, otherwise it returns null.
+     * @returns {object[]} An array containing the ad(s) if ads are found, otherwise it returns null.
      */
     this.parser = function(vastXML) {
       var jqueryAds =  $(vastXML).find("Ad");
