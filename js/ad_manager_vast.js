@@ -1069,22 +1069,34 @@ OO.Ads.manager(function(_, $) {
     /**
      * Helper function to determine if the ad is a linear ad.
      * @private
+     * @method Vast#_hasLinearAd
      * @param {object} ad The ad object
      * @returns {boolean} true if the ad is a linear ad, false otherwise.
      */
     var _hasLinearAd = _.bind(function(ad) {
       var linearObjectKeys = _.keys(ad.linear);
+      // Magic number 2 because after mergeVastAdResult() is called, the ad object
+      // has will have an object associated to the key, "linear". This object always
+      // has at least 2 keys (tracking, ClickTracking) even if a linear creative does not
+      // exist. If one does exist, there must be more than 2 keys; there must be a "mediaFiles"
+      // key as specified by the Vast 3.0 specifications.
       return (linearObjectKeys.length > 2);
     }, this);
 
     /**
      * Helper function to determine if the ad is a nonlinear ad.
      * @private
+     * @method Vast#_hasNonLinearAd
      * @param {object} ad The ad object
      * @returns {boolean} true if the ad is a nonlinear ad, false otherwise.
      */
     var _hasNonLinearAd = _.bind(function(ad) {
       var nonLinearObjectKeys = _.keys(ad.nonLinear);
+      // Magic number 1 because after mergeVastAdResult() is called, the ad object
+      // has will have an object associated to the key, "nonLinear". This object always
+      // has at least 1 key (tracking) even if a nonlinear creative does not exist. If one
+      // does exist, there must be more than 1 key; there must be a "url" key as specified
+      // by the Vast 3.0 specifications.
       return (nonLinearObjectKeys.length > 1);
     }, this);
 
