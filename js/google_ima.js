@@ -1568,9 +1568,8 @@ require("../html5-common/js/utils/utils.js");
           forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY
         };
         _checkCompanionAds(this.currentIMAAd);
-        _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
-        //call to _amc.notifyNonlinearAdStarted() will be in playAd() after forcing amc in non linear mode.
         _IMA_SDK_resumeMainContent();
+        _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
       });
 
       /**
