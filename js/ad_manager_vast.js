@@ -1076,8 +1076,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} true if the ad is a linear ad, false otherwise.
      */
     var _hasLinearAd = _.bind(function(ad) {
-      var linearObjectKeys = _.keys(ad.linear);
-      return (linearObjectKeys.length > 0);
+      return (!_.isEmpty(ad.linear));
     }, this);
 
     /**
@@ -1088,8 +1087,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} true if the ad is a nonlinear ad, false otherwise.
      */
     var _hasNonLinearAd = _.bind(function(ad) {
-      var nonLinearObjectKeys = _.keys(ad.nonLinear);
-      return (nonLinearObjectKeys.length > 0);
+      return (!_.isEmpty(ad.nonLinear));
     }, this);
 
     /**
