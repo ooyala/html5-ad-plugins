@@ -1072,22 +1072,26 @@ OO.Ads.manager(function(_, $) {
      * Helper function to determine if the ad is a linear ad.
      * @private
      * @method Vast#_hasLinearAd
-     * @param {object} ad The ad object
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} true if the ad is a linear ad, false otherwise.
      */
-    var _hasLinearAd = _.bind(function(ad) {
-      return (!_.isEmpty(ad.linear));
+    var _hasLinearAd = _.bind(function(vastXML) {
+      var inlineElement = $(vastXML).find(AD_TYPE.INLINE);
+      var linearElement = $(inlineElement).find("Linear");
+      return (linearElement.length > 0);
     }, this);
 
     /**
      * Helper function to determine if the ad is a nonlinear ad.
      * @private
      * @method Vast#_hasNonLinearAd
-     * @param {object} ad The ad object
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} true if the ad is a nonlinear ad, false otherwise.
      */
-    var _hasNonLinearAd = _.bind(function(ad) {
-      return (!_.isEmpty(ad.nonLinear));
+    var _hasNonLinearAd = _.bind(function(vastXML) {
+      var inlineElement = $(vastXML).find(AD_TYPE.INLINE);
+      var nonLinearElement = $(inlineElement).find("NonLinear");
+      return (nonLinearElement.length > 0);
     }, this);
 
     /**
@@ -1457,7 +1461,7 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#parseAds
      * @param {xml} vastXML The xml that contains the ad data
-     * @return {Array} An array of ad objects
+     * @return {object[]} An array of ad objects
      */
     this.parseAds = function(vastXML) {
       var result = [];
@@ -1475,11 +1479,12 @@ OO.Ads.manager(function(_, $) {
      * Prepares an array of ads to be added to the timeline, ready for playback.
      * @private
      * @method Vast#handleAds
-     * @param {Array} ads An array of ad objects
+     * @param {XMLDocument} vastXML The xml returned from loading the ad
+     * @param {object[]} ads An array of ad objects
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {object} fallbackAd The ad to fallback to if playback for an ad in this pod fails
      */
-    var handleAds = _.bind(function(ads, adLoaded, fallbackAd) {
+    var handleAds = _.bind(function(vastXML, ads, adLoaded, fallbackAd) {
       //find out how many non linear ads we have so as to not count them
       //when determining ad pod length
       var linearAdCount = 0;
@@ -1509,7 +1514,7 @@ OO.Ads.manager(function(_, $) {
             adPodLength : linearAdCount
           };
           this.mergeVastAdResult(ad, wrapperAds);
-          if (_hasLinearAd(ad)) {
+          if (_hasLinearAd(vastXML)) {
             var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
             if (linearAdUnit) {
               //The ad can have both a linear and non linear creative. We'll
@@ -1519,7 +1524,7 @@ OO.Ads.manager(function(_, $) {
               adUnits.push(linearAdUnit);
             }
           }
-          if (_hasNonLinearAd(ad)) {
+          if (_hasNonLinearAd(vastXML)) {
             var nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
             if (nonLinearAdUnit) {
               //The ad can have both a linear and non linear creative. We'll
@@ -1605,12 +1610,12 @@ OO.Ads.manager(function(_, $) {
           //show the first standalone ad
           ad = vastAds.standalone[0];
           if (ad) {
-            handleAds([ad], adLoaded);
+            handleAds(xml, [ad], adLoaded);
           }
         }
         //else show the podded ads
         else {
-          handleAds(vastAds.podded, adLoaded, fallbackAd);
+          handleAds(xml, vastAds.podded, adLoaded, fallbackAd);
         }
       }
     };
