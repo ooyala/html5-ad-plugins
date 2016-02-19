@@ -1572,7 +1572,6 @@ OO.Ads.manager(function(_, $) {
       if (handled) {
         this.loaded = true;
       } else {
-        this.errorType = "noAd";
         failedAd();
       }
     }, this);
