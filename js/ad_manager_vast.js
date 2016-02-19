@@ -109,6 +109,7 @@ OO.Ads.manager(function(_, $) {
       VIDEO_EXPECT_DIFFERENT_SIZE:        203,
 
       /**
+       * TODO: Add support
        * General Wrapper Error.
        */
       GENERAL_WRAPPER:                    300,
@@ -123,6 +124,7 @@ OO.Ads.manager(function(_, $) {
       WRAPPER_URI_TIMEOUT:                301,
 
       /**
+       * TODO: Add support
        * Wrapper limit reached, as defined by the video player. Too many
        * Wrapper responses have been received with no inLine response.
        */
