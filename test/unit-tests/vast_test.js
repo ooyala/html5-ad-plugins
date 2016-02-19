@@ -465,7 +465,7 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.linear).to.eql({});
     expect(vastAd.ad.data.nonLinear.width).to.be('300');
     expect(vastAd.ad.data.nonLinear.height).to.be('60');
-    expect(vastAd.ad.data.nonLinear.NonLinearClickThrough).to.be('nonLinearClickThroughUrl');
+    expect(vastAd.ad.data.nonLinear.nonLinearClickThrough).to.be('nonLinearClickThroughUrl');
     expect(vastAd.ad.data.nonLinear.type).to.be('static');
     expect(vastAd.ad.data.nonLinear.data).to.be('1.jpg');
     expect(vastAd.ad.data.nonLinear.url).to.be('1.jpg');
