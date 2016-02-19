@@ -1174,19 +1174,6 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Helper function to determine whether a nonlinear ad exists
-     * @public
-     * @method Vast#hasNonLinear
-     * @param {XMLDocument} vastXML The current vast xml that contains the ad data
-     * @returns {boolean} true if vastXML has an Inline NonLinear ad, false otherwise.
-     */
-    this.hasNonLinear = function(vastXML) {
-      var inlineElement = $(vastXML).find("InLine");
-      var nonLinearElement = $(inlineElement).find("NonLinear");
-      return (nonLinearElement.length > 0);
-    };
-
-    /**
      * Takes all the ad data that is in the inline xml and merges them all together into the ad object.
      * @public
      * @method Vast#mergeVastAdResult
