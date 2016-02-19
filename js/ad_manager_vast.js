@@ -1075,12 +1075,7 @@ OO.Ads.manager(function(_, $) {
      */
     var _hasLinearAd = _.bind(function(ad) {
       var linearObjectKeys = _.keys(ad.linear);
-      // Magic number 2 because after mergeVastAdResult() is called, the ad object
-      // has will have an object associated to the key, "linear". This object always
-      // has at least 2 keys (tracking, ClickTracking) even if a linear creative does not
-      // exist. If one does exist, there must be more than 2 keys; there must be a "mediaFiles"
-      // key as specified by the Vast 3.0 specifications.
-      return (linearObjectKeys.length > 2);
+      return (linearObjectKeys.length > 0);
     }, this);
 
     /**
@@ -1092,12 +1087,7 @@ OO.Ads.manager(function(_, $) {
      */
     var _hasNonLinearAd = _.bind(function(ad) {
       var nonLinearObjectKeys = _.keys(ad.nonLinear);
-      // Magic number 1 because after mergeVastAdResult() is called, the ad object
-      // has will have an object associated to the key, "nonLinear". This object always
-      // has at least 1 key (tracking) even if a nonlinear creative does not exist. If one
-      // does exist, there must be more than 1 key; there must be a "url" key as specified
-      // by the Vast 3.0 specifications.
-      return (nonLinearObjectKeys.length > 1);
+      return (nonLinearObjectKeys.length > 0);
     }, this);
 
     /**
@@ -1524,8 +1514,9 @@ OO.Ads.manager(function(_, $) {
           wrapperAds = { error: [],
             impression: [],
             companion: [],
-            linear: { tracking: {}, ClickTracking: [] },
-            nonLinear: { tracking: {} } };
+            linear: {},
+            nonLinear: {}
+          };
           var params = {
             adPodIndex : index + 1,
             adPodLength : linearAdCount
@@ -1564,8 +1555,8 @@ OO.Ads.manager(function(_, $) {
             error: [],
             impression: [],
             companion: [],
-            linear: {tracking: {}, ClickTracking: []},
-            nonLinear: {tracking: {}}
+            linear: {},
+            nonLinear: {}
           };
           this.mergeVastAdResult(fallbackAd, wrapperAds);
           //Prefer to show linear fallback ad
