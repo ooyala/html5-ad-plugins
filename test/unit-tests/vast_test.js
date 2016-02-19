@@ -423,14 +423,14 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.companion[0].data).to.be('1.jpg');
     expect(vastAd.ad.data.companion[0].width).to.be('728');
     expect(vastAd.ad.data.companion[0].height).to.be('90');
-    expect(vastAd.ad.data.companion[0].CompanionClickThrough).to.be('companionClickThrough');
+    expect(vastAd.ad.data.companion[0].companionClickThrough).to.be('companionClickThrough');
     expect(vastAd.ad.data.companion[0].tracking.creativeView).to.eql(['companionCreativeViewUrl']);
 
     expect(vastAd.ad.data.companion[1].type).to.be('static');
     expect(vastAd.ad.data.companion[1].data).to.be('2.jpg');
     expect(vastAd.ad.data.companion[1].width).to.be('300');
     expect(vastAd.ad.data.companion[1].height).to.be('250');
-    expect(vastAd.ad.data.companion[1].CompanionClickThrough).to.be('companion2ClickThrough');
+    expect(vastAd.ad.data.companion[1].companionClickThrough).to.be('companion2ClickThrough');
     expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
   });
 
@@ -492,14 +492,14 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.companion[0].data).to.be('companion.jpg');
     expect(vastAd.ad.data.companion[0].width).to.be('300');
     expect(vastAd.ad.data.companion[0].height).to.be('60');
-    expect(vastAd.ad.data.companion[0].CompanionClickThrough).to.be('companionClickThroughUrl');
+    expect(vastAd.ad.data.companion[0].companionClickThrough).to.be('companionClickThroughUrl');
     expect(vastAd.ad.data.companion[0].tracking.creativeView).to.eql(['companionCreativeViewUrl']);
 
     expect(vastAd.ad.data.companion[1].type).to.be('static');
     expect(vastAd.ad.data.companion[1].data).to.be('companion2.jpg');
     expect(vastAd.ad.data.companion[1].width).to.be('300');
     expect(vastAd.ad.data.companion[1].height).to.be('250');
-    expect(vastAd.ad.data.companion[1].CompanionClickThrough).to.be('companion2ClickThroughUrl');
+    expect(vastAd.ad.data.companion[1].companionClickThrough).to.be('companion2ClickThroughUrl');
     expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
   });
 
@@ -535,14 +535,14 @@ describe('ad_manager_vast', function() {
   //  expect(vastAd.ad.data.companion[0].data).to.be('companion.jpg');
   //  expect(vastAd.ad.data.companion[0].width).to.be('300');
   //  expect(vastAd.ad.data.companion[0].height).to.be('60');
-  //  expect(vastAd.ad.data.companion[0].CompanionClickThrough).to.be('companionClickThroughUrl');
+  //  expect(vastAd.ad.data.companion[0].companionClickThrough).to.be('companionClickThroughUrl');
   //  expect(vastAd.ad.data.companion[0].tracking.creativeView).to.eql(['companionCreativeViewUrl']);
   //
   //  expect(vastAd.ad.data.companion[1].type).to.be('static');
   //  expect(vastAd.ad.data.companion[1].data).to.be('companion2.jpg');
   //  expect(vastAd.ad.data.companion[1].width).to.be('300');
   //  expect(vastAd.ad.data.companion[1].height).to.be('250');
-  //  expect(vastAd.ad.data.companion[1].CompanionClickThrough).to.be('companion2ClickThroughUrl');
+  //  expect(vastAd.ad.data.companion[1].companionClickThrough).to.be('companion2ClickThroughUrl');
   //  expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
   //});
   //TODO: Need to cover overlays and companions once v4 is integrated.

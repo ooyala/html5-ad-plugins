@@ -664,7 +664,7 @@ OO.Ads.manager(function(_, $) {
         }, this);
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
-        var hasClickUrl = adWrapper.ad.data.linear.ClickThrough.length > 0;
+        var hasClickUrl = adWrapper.ad.data.linear.clickThrough.length > 0;
         this.amc.notifyLinearAdStarted(adWrapper.id, {
           name: adWrapper.ad.data.title,
           duration: adWrapper.ad.durationInMilliseconds/1000,
@@ -803,12 +803,12 @@ OO.Ads.manager(function(_, $) {
 
       if (!_.isEmpty(metadata.data.linear.mediaFiles)) {
         type = this.amc.ADTYPE.LINEAR_VIDEO;
-        duration = OO.timeStringToSeconds(metadata.data.linear.Duration);
+        duration = OO.timeStringToSeconds(metadata.data.linear.duration);
       }
       else
       {
         type = this.amc.ADTYPE.NONLINEAR_OVERLAY;
-        duration = metadata.data.nonLinear.Duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.Duration) : 0;
+        duration = metadata.data.nonLinear.duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
       }
 
       return new this.amc.Ad({
@@ -879,11 +879,11 @@ OO.Ads.manager(function(_, $) {
       if (!showPage) {
         return;
       }
-      var highLevelClickThroughUrl = amcAd.ad.data && amcAd.ad.data.ClickThrough;
+      var highLevelClickThroughUrl = amcAd.ad.data && amcAd.ad.data.clickThrough;
       var adSpecificClickThroughUrl = null;
       var ooyalaClickUrl = amcAd.click_url;
       if (amcAd.isLinear) {
-        adSpecificClickThroughUrl = amcAd.ad.data.linear.ClickThrough;
+        adSpecificClickThroughUrl = amcAd.ad.data.linear.clickThrough;
       } else if (amcAd.ad.data) {
         adSpecificClickThroughUrl = amcAd.ad.data.nonLinear.NonLinearClickThrough;
       }
@@ -1114,7 +1114,7 @@ OO.Ads.manager(function(_, $) {
       var maxMedia = _.max(mediaFiles, function(v) { return parseInt(v.bitrate, 10); });
       var vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.maxBitrateStream = maxMedia && maxMedia.url;
-      vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(ad.linear.Duration) * 1000;
+      vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(ad.linear.duration) * 1000;
       _.extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.linear.tracking;
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
@@ -1184,8 +1184,8 @@ OO.Ads.manager(function(_, $) {
       ad.error = wrapperAds.error.concat(ad.error);
       ad.impression = wrapperAds.impression.concat(ad.impression);
       ad.companion = wrapperAds.companion.concat(ad.companion);
-      if (wrapperAds.linear.ClickTracking) {
-        ad.linear.ClickTracking = wrapperAds.linear.ClickTracking.concat(ad.linear.ClickTracking || []);
+      if (wrapperAds.linear.clickTracking) {
+        ad.linear.clickTracking = wrapperAds.linear.clickTracking.concat(ad.linear.clickTracking || []);
       }
       if (wrapperAds.linear.tracking) {
         if (!ad.linear.tracking) { ad.linear.tracking  = {}; }
@@ -1273,7 +1273,7 @@ OO.Ads.manager(function(_, $) {
       result.height = companionAdXml.attr("height");
       result.expandedWidth = companionAdXml.attr("expandedWidth");
       result.expandedHeight = companionAdXml.attr("expandedHeight");
-      result.CompanionClickThrough = companionAdXml.find("CompanionClickThrough").text();
+      result.companionClickThrough = companionAdXml.find("CompanionClickThrough").text();
 
       if (staticResource.size() > 0) {
         _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
@@ -1296,10 +1296,10 @@ OO.Ads.manager(function(_, $) {
     var parseLinearAd = _.bind(function(linearXml) {
       var result = {
         tracking: {},
-        // ClickTracking needs to be remembered because it can exist in wrapper ads
-        ClickTracking: filterEmpty($(linearXml).find("ClickTracking").map(function() { return $(this).text(); })),
-        ClickThrough: filterEmpty($(linearXml).find("ClickThrough").map(function() { return $(this).text(); })),
-        CustomClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
+        // clickTracking needs to be remembered because it can exist in wrapper ads
+        clickTracking: filterEmpty($(linearXml).find("ClickTracking").map(function() { return $(this).text(); })),
+        clickThrough: filterEmpty($(linearXml).find("ClickThrough").map(function() { return $(this).text(); })),
+        customClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
       };
 
       result.skipOffset = $(linearXml).attr("skipoffset");
@@ -1317,7 +1317,7 @@ OO.Ads.manager(function(_, $) {
             height: $(v).attr("height")
           };
         }));
-        result.Duration = linearXml.find("Duration").text();
+        result.duration = linearXml.find("Duration").text();
       }
 
       return result;
