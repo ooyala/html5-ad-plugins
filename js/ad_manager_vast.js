@@ -355,7 +355,7 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Helper function to grab error information. VastAdSingleParser already grabs error data while
+     * Helper function to grab error information. vastAdSingleParser already grabs error data while
      * creating ad object, but some errors may occur before the object is created.
      * Note: <Error> can only live in three places: directly under <VAST>, <Ad>, or <Wrapper> elements.
      * <Error> tags are also optional so they may not always exist.
@@ -885,7 +885,7 @@ OO.Ads.manager(function(_, $) {
       if (amcAd.isLinear) {
         adSpecificClickThroughUrl = amcAd.ad.data.linear.clickThrough;
       } else if (amcAd.ad.data) {
-        adSpecificClickThroughUrl = amcAd.ad.data.nonLinear.NonLinearClickThrough;
+        adSpecificClickThroughUrl = amcAd.ad.data.nonLinear.nonLinearClickThrough;
       }
       if (highLevelClickThroughUrl || ooyalaClickUrl || adSpecificClickThroughUrl) {
         this.openUrl(highLevelClickThroughUrl);
@@ -1347,7 +1347,7 @@ OO.Ads.manager(function(_, $) {
         result.scalable = nonLinear.attr("scalable");
         result.maintainAspectRatio = nonLinear.attr("maintainAspectRatio");
         result.minSuggestedDuration = nonLinear.attr("minSuggestedDuration");
-        result.NonLinearClickThrough = nonLinear.find("NonLinearClickThrough").text();
+        result.nonLinearClickThrough = nonLinear.find("nonLinearClickThrough").text();
 
         if (staticResource.size() > 0) {
           _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
@@ -1364,12 +1364,12 @@ OO.Ads.manager(function(_, $) {
     /**
      * Takes the xml and ad type and find the ad within the xml and returns it.
      * @private
-     * @method Vast#VastAdSingleParser
+     * @method Vast#vastAdSingleParser
      * @param {XMLDocument} xml The xml that contains the ad data
      * @param {number} version The Vast version
      * @returns {object} The ad object otherwise it returns 1.
      */
-    var VastAdSingleParser = _.bind(function(xml, version) {
+    var vastAdSingleParser = _.bind(function(xml, version) {
       var result = getVastTemplate();
       var jqueryXML = $(xml);
       var inline = jqueryXML.find(AD_TYPE.INLINE);
@@ -1463,7 +1463,7 @@ OO.Ads.manager(function(_, $) {
       var result = [];
       var version = getVastVersion(vastXML);
       $(vastXML).find("Ad").each(function() {
-        var singleAd = VastAdSingleParser(this, version);
+        var singleAd = vastAdSingleParser(this, version);
         if (singleAd) {
           result.push(singleAd);
         }
