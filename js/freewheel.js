@@ -248,16 +248,16 @@ OO.Ads.manager(function(_, $) {
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_DISPLAY_CONTROLS_WHEN_PAUSE, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
 
-      if (_supportsSecondaryVideoForOverlay()) {
-        //if we can integrate the overlay with Alice, we do not want to add margin height as it will
-        //fit properly within the player skin plugins div without being covered by the control bar
-        fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, 0, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-      } else {
+      if (OO.requiresSingleVideoElement) {
         // NOTE: If we set renderer.html.coadScriptName we can probably render overlays on our own
         //       (coad stands for customer owned ad renderer)
         var controlHeight = amc.ui.rootElement.find(".controlBar");
         controlHeight = (controlHeight.length == 0) ? 60 : controlHeight.height() + OO.CONSTANTS.CONTROLS_BOTTOM_PADDING;
         fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, controlHeight, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+      } else {
+        //if we can integrate the overlay with Alice, we do not want to add margin height as it will
+        //fit properly within the player skin plugins div without being covered by the control bar
+        fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, 0, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
       }
 
 
@@ -432,7 +432,12 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#_registerDisplayForNonlinearAd
      */
     var _registerDisplayForNonlinearAd = _.bind(function() {
-      if (_supportsSecondaryVideoForOverlay()) {
+      if (OO.requiresSingleVideoElement) {
+        //on iOS and Android, FW expects the following to be our legit video element when
+        //playing back video ads. If we attempt to use the fake video and then switch to
+        //the real video later, FW places the overlays in unexpected locations.
+        fwContext.setContentVideoElement(amc.ui.ooyalaVideoElement[0]);
+      } else {
         if (!overlayContainer) {
           overlayContainer = amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0];
         }
@@ -444,11 +449,6 @@ OO.Ads.manager(function(_, $) {
           overlayContainer.appendChild(fakeVideo);
         }
         fwContext.setContentVideoElement(fakeVideo);
-      } else {
-        //on iOS and Android, FW expects the following to be our legit video element when
-        //playing back video ads. If we attempt to use the fake video and then switch to
-        //the real video later, FW places the overlays in unexpected locations.
-        fwContext.setContentVideoElement(amc.ui.ooyalaVideoElement[0]);
       }
     }, this);
 
@@ -974,16 +974,6 @@ OO.Ads.manager(function(_, $) {
         clearTimeout(adRequestTimeout);
         adRequestTimeout = null;
       }
-    }, this);
-
-    /**
-     * Checks to see if we can use a fake video to trick Freewheel into showing overlays
-     * in a div that is intregrated with Alice.
-     * @private
-     * @method Freewheel#_supportsSecondaryVideoForOverlay
-     */
-    var _supportsSecondaryVideoForOverlay = _.bind(function() {
-      return !OO.isIos;
     }, this);
 
     /**
