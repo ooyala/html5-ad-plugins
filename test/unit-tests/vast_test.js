@@ -92,12 +92,6 @@ describe('ad_manager_vast', function() {
 
           //directly ping url
           OO.pixelPing(code);
-          var parentId = this.errorInfo[currentAdId].wrapperParentId;
-
-          // ping parent wrapper's error urls too if ad had parent
-          if (parentId) {
-            this.trackError(code, parentId);
-          }
         }
       }
     };
@@ -194,6 +188,7 @@ describe('ad_manager_vast', function() {
       embed_code: embed_code,
       ads: [vast_ad]
     };
+
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
@@ -213,10 +208,12 @@ describe('ad_manager_vast', function() {
       embed_code: embed_code,
       ads: [vast_ad]
     };
+
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
   });
+
   it('Init: no preroll but midroll was found or loaded after initial play', function(){
     var embed_code = "embed_code";
     var vast_ad = {
@@ -239,8 +236,10 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad, linearXML);
+    expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(1);
   });
+
   it('Init: preroll loaded before play and midroll after initial play', function(){
     var embed_code = "embed_code";
     var vast_ad_pre = {
@@ -268,11 +267,15 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
+
     vastAdManager.onVastResponse(vast_ad_pre, linearXML);
+    expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(1);
+
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(2);
   });
 
@@ -296,11 +299,14 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     expect(amc.timeline.length).to.be(0);
+
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_post, linearXML);
+    expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(1);
   });
+
   it('Init: preroll loaded before play, then midroll and postroll after initial play', function(){
     var embed_code = "embed_code";
     var vast_ad_pre = {
@@ -338,12 +344,17 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
     vastAdManager.onVastResponse(vast_ad_pre, linearXML);
+    expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(1);
+
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(2);
+
     vastAdManager.onVastResponse(vast_ad_post, linearXML);
+    expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(3);
   });
 
@@ -367,13 +378,23 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager.onVastResponse(vast_ad,'<VAST></VAST>')
-      expect(amc.timeline.length).to.be(0);
+    vastAdManager.onVastResponse(vast_ad,'<VAST></VAST>');
+    expect(errorType.length > 0).to.be(true);
+    expect(amc.timeline.length).to.be(0);
+    errorType = [];
+
     vastAdManager.onVastResponse(null,linearXML);
+    expect(errorType.length > 0).to.be(true);
     expect(amc.timeline.length).to.be(0);
+    errorType = [];
+
     vastAdManager.onVastResponse(vast_ad, '<VAST version="2.1"></VAST>');
+    expect(errorType.length > 0).to.be(true);
     expect(amc.timeline.length).to.be(0);
+    errorType = [];
+
     vastAdManager.onVastResponse(null, '<VAST version="2.0"></VAST>');
+    expect(errorType.length > 0).to.be(true);
     expect(amc.timeline.length).to.be(0);
   });
 
@@ -398,6 +419,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -455,6 +477,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXML);
+    expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([]);
@@ -577,6 +600,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XML);
+    expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
@@ -611,6 +635,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
@@ -657,6 +682,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(1);
@@ -698,6 +724,7 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.initialPlay()).to.be(true);
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -776,6 +803,7 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.initialPlay()).to.be(true);
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    expect(errorType.length).to.be(0);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -856,6 +884,7 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.initialPlay()).to.be(true);
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    expect(errorType.length).to.be(0);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -970,6 +999,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    expect(errorType.length).to.be(0);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -1045,6 +1075,7 @@ describe('ad_manager_vast', function() {
     initalPlay();
     expect(vastAdManager.initialPlay()).to.be(true);
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
+    expect(errorType.length).to.be(0);
 
     var vastAd = amc.timeline[0];
     vastAdManager.playAd(vastAd);
@@ -1063,7 +1094,7 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.id).to.be('6654600');
   });
 
-  it('Vast 3.0, Error Reporting - errorInfo should parse the correct number of errorURLs and ads', function(){
+  it('Vast 3.0, Error Reporting: errorInfo should parse the correct number of errorURLs and ads', function(){
     var jqueryAds = $(linearXML).find("Ad");
     vastAdManager.getErrorTrackingInfo(linearXML, jqueryAds);
     // should have one ad
