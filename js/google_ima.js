@@ -1843,11 +1843,11 @@ require("../html5-common/js/utils/utils.js");
      * Sets the url of the video.
      * @public
      * @method GoogleIMAVideoWrapper#setVideoUrl
-     * @param {string} encoding The encoding of video stream 
      * @param {string} url The new url to insert into the video element's src attribute
+     * @param {string} encoding The encoding of video stream 
      * @returns {boolean} True or false indicating success
      */
-    this.setVideoUrl = function(encoding, url)
+    this.setVideoUrl = function(url, encoding)
     {
       return true;
     };
