@@ -1347,7 +1347,7 @@ OO.Ads.manager(function(_, $) {
         result.scalable = nonLinear.attr("scalable");
         result.maintainAspectRatio = nonLinear.attr("maintainAspectRatio");
         result.minSuggestedDuration = nonLinear.attr("minSuggestedDuration");
-        result.nonLinearClickThrough = nonLinear.find("nonLinearClickThrough").text();
+        result.nonLinearClickThrough = nonLinear.find("NonLinearClickThrough").text();
 
         if (staticResource.size() > 0) {
           _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
