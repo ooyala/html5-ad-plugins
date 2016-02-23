@@ -1637,35 +1637,59 @@ OO.Ads.manager(function(_, $) {
 
     var convertToAdObject = _.bind(function(adBreak) {
       var adObject = {
-        ad_set_code: "",
-        click_url: "",
-        expires: 0,
-        first_shown: 0,
-        frequency: 1,
+        /*
+         *ad_set_code: "",
+         *click_url: "",
+         *expires: 0,
+         *first_shown: 0,
+         *frequency: 2,
+         *public_id: "",
+         *signature: "",
+         */
         position_type: "t",
-        public_id: "",
-        signature: "",
-        time: 0,
         tracking_url: [],
         type: "",
         url: ""
       };
       if (adBreak || adBreak.timeOffset) {
-        switch(adBreak.timeOffset) {
-          case "start":
+        switch(true) {
+          case /start/.test(adBreak.timeOffset):
+            adObject.position_type = "t";
             adObject.time = 0;
             break;
-          case "end":
-            adObject.time = 100000;
+          case /end/.test(adBreak.timeOffset):
+            adObject.position_type = "t";
+            adObject.time = this.amc.movieDuration * 1000;
+            break;
+          case /\d{2}:\d{2}:\d{2}\.000/.test(adBreak.timeOffset):
+            adObject.position_type = "t";
+            adObject.time = convertTimeStampToSeconds(adBreak.timeOffset);
+            break;
+          case /\d{,3}%/.test(adBreak.timeOffset):
+            adObject.time = convertPercentToSeconds(adBreak.timeOffset);
+            console.log("percent");
             break;
           default:
-            adObject.time = 10;
+            OO.log("VAST: VMAP: Malformed 'timeOffset' Attribute");
         }
       }
       if (adBreak || adBreak.url) {
         //
       }
       return adObject;
+    }, this);
+
+    var convertTimeStampToSeconds = _.bind(function(timeString) {
+      var hms = timeString.split(":");
+      // + unary operator converts string to number
+      // Use parseInt to truncate decimal
+      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (parseInt(hms[2])) * 1000;
+      return seconds;
+    }, this);
+
+    var convertPercentToSeconds = _.bind(function(timeString) {
+      // TODO
+      return 15;
     }, this);
 
     var parseAdBreak = _.bind(function(adBreakElement) {
