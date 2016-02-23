@@ -861,7 +861,7 @@ OO.Ads.manager(function(_, $) {
         crossDomain: true,
         cache:false,
         //TODO: should pass wrapperParentId here for wrapper
-        success: (dataType == "script") ? function() {} : _.bind(this.onVastResponse, this, loadingAd
+        success: (dataType == "script") ? function() {} : _.bind(this.onResponse, this, loadingAd
           || this.currentAdBeingLoaded),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
@@ -1597,6 +1597,111 @@ OO.Ads.manager(function(_, $) {
         else {
           handleAds(vastAds.podded, adLoaded, fallbackAd);
         }
+      }
+    };
+
+    /**
+     *
+     * @public
+     * @method Vast#onVMAPResponse
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     */
+    this.onVMAPResponse = function(xml) {
+      var jqueryXML = $(xml);
+      var adBreakElements = jqueryXML.find("AdBreak");
+      var adBreaks = [];
+      _.each(adBreakElements, function(adBreakElement) {
+        debugger;
+        var adBreak = parseAdBreak(adBreakElement);
+        var adSourceElement = $(adBreakElement).find("AdSource");
+        var trackingEventsElement = $(adBreakElement).find("TrackingEvents");
+        var extensionsElement = $(adBreakElement).find("Extensions");
+        if (adSourceElement.length > 0) {
+          var adSource = parseAdSource(adSourceElement);
+          adBreak.adSources.push(adSource);
+          var vastAdDataElement = $(adSourceElement).find("VASTAdData");
+          var adTagURIElement = $(adSourceElement).find("AdTagURI");
+          if (vastAdDataElement.length > 0) {
+            // pass xml to onVastResponse
+          }
+          else if (adTagURIElement.length > 0) {
+            // ajax call
+            var adTagURI = adTagURIElement.text();
+            adSource.adTagURI = adTagURI;
+            var adObject = convertToAdObject(adBreak);
+            this.ajax(adTagURI, this.onVastError, 'xml', adObject);
+          }
+        }
+      }, this);
+    };
+
+    var convertToAdObject = _.bind(function(adBreak) {
+      var adObject = {
+        ad_set_code: "",
+        click_url: "",
+        expires: 0,
+        first_shown: 0,
+        frequency: 1,
+        position_type: "t",
+        public_id: "",
+        signature: "",
+        time: 0,
+        tracking_url: [],
+        type: "",
+        url: ""
+      };
+      if (adBreak || adBreak.timeOffset) {
+        switch(adBreak.timeOffset) {
+          case "start":
+            adObject.time = 0;
+            break;
+          case "end":
+            adObject.time = 100000;
+            break;
+          default:
+            adObject.time = 10;
+        }
+      }
+      if (adBreak || adBreak.url) {
+        //
+      }
+      return adObject;
+    }, this);
+
+    var parseAdBreak = _.bind(function(adBreakElement) {
+      var adBreak = {};
+      adBreak.timeOffset = $(adBreakElement).attr("timeOffset");
+      adBreak.breakType = $(adBreakElement).attr("breakType");
+      adBreak.breakId = $(adBreakElement).attr("breakId");
+      adBreak.adSources = [];
+      return adBreak;
+    }, this);
+
+    var parseAdSource = _.bind(function(adSourceElement) {
+      var adSource = {};
+      adSource.id = $(adSourceElement).attr("id");
+      adSource.allowMultipleAds = $(adSourceElement).attr("allowMultipleAds");
+      adSource.followRedirects = $(adSourceElement).attr("followRedirects");
+      return adSource;
+    }, this);
+
+    /**
+     * When the ad tag url comes back with a response.
+     * @public
+     * @method Vast#onResponse
+     * @param {object} adLoaded The ad loaded object and metadata
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
+     * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
+     */
+    this.onResponse = function(adLoaded, xml, wrapperParentIdArg) {
+      var jqueryXML = $(xml);
+      var vmap = jqueryXML.find("VMAP");
+      if (vmap.length > 0) {
+        this.onVMAPResponse(xml);
+      }
+      else {
+        this.onVastResponse(adLoaded, xml, wrapperParentIdArg);
       }
     };
   };
