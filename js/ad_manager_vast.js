@@ -1624,10 +1624,8 @@ OO.Ads.manager(function(_, $) {
           if (vastAdDataElement.length > 0) {
             var vastXML = $(vastAdDataElement[0]).find("VAST")[0];
             this.onVastResponse(adObject, vastAdDataElement[0]);
-            // pass xml to onVastResponse
           }
           else if (adTagURIElement.length > 0) {
-            // ajax call
             adSource.adTagURI = adTagURIElement.text();
             this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
           }
@@ -1654,18 +1652,22 @@ OO.Ads.manager(function(_, $) {
       };
       if (adBreak || adBreak.timeOffset) {
         switch(true) {
+          // case: "start"
           case /start/.test(adBreak.timeOffset):
             adObject.position_type = "t";
             adObject.time = 0;
             break;
+          // case: "end"
           case /end/.test(adBreak.timeOffset):
             adObject.position_type = "t";
             adObject.time = (this.amc.movieDuration + 1) * 1000;
             break;
+          // case: hh:mm:ss.mmm
           case /\d{2}:\d{2}:\d{2}\.000/.test(adBreak.timeOffset):
             adObject.position_type = "t";
             adObject.time = convertTimeStampToSeconds(adBreak.timeOffset);
             break;
+          // case: {0, 100}%
           case /\d{,3}%/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
             adObject.position_type = "t";
@@ -1676,7 +1678,7 @@ OO.Ads.manager(function(_, $) {
         }
       }
       if (adBreak || adBreak.url) {
-        //
+        // TODO
       }
       return adObject;
     }, this);
