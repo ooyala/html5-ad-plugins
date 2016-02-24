@@ -280,9 +280,8 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
     this.isValidRootTagName = function(vastXML) {
-      var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
-      if (rootTagName.toUpperCase() != "VAST") {
-        OO.log("VAST: Invalid VAST XML for Tag Name: " + rootTagName);
+      if ($(vastXML).find("VAST").length === 0) {
+        OO.log("VAST: Invalid VAST XML");
         this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
         return false;
       }
@@ -314,7 +313,8 @@ OO.Ads.manager(function(_, $) {
      * @returns {string} The Vast version.
      */
     var getVastVersion = _.bind(function(vastXML) {
-      return $(vastXML.firstChild).attr('version');
+      var vastTag = $(vastXML).find("VAST")[0];
+      return $(vastTag).attr('version');
     }, this);
 
     /**
@@ -1611,7 +1611,6 @@ OO.Ads.manager(function(_, $) {
       var adBreakElements = jqueryXML.find("AdBreak");
       var adBreaks = [];
       _.each(adBreakElements, function(adBreakElement) {
-        debugger;
         var adBreak = parseAdBreak(adBreakElement);
         var adSourceElement = $(adBreakElement).find("AdSource");
         var trackingEventsElement = $(adBreakElement).find("TrackingEvents");
@@ -1621,15 +1620,16 @@ OO.Ads.manager(function(_, $) {
           adBreak.adSources.push(adSource);
           var vastAdDataElement = $(adSourceElement).find("VASTAdData");
           var adTagURIElement = $(adSourceElement).find("AdTagURI");
+          var adObject = convertToAdObject(adBreak);
           if (vastAdDataElement.length > 0) {
+            var vastXML = $(vastAdDataElement[0]).find("VAST")[0];
+            this.onVastResponse(adObject, vastAdDataElement[0]);
             // pass xml to onVastResponse
           }
           else if (adTagURIElement.length > 0) {
             // ajax call
-            var adTagURI = adTagURIElement.text();
-            adSource.adTagURI = adTagURI;
-            var adObject = convertToAdObject(adBreak);
-            this.ajax(adTagURI, this.onVastError, 'xml', adObject);
+            adSource.adTagURI = adTagURIElement.text();
+            this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
           }
         }
       }, this);
@@ -1646,6 +1646,7 @@ OO.Ads.manager(function(_, $) {
          *public_id: "",
          *signature: "",
          */
+        time: 0,
         position_type: "t",
         tracking_url: [],
         type: "",
@@ -1659,15 +1660,16 @@ OO.Ads.manager(function(_, $) {
             break;
           case /end/.test(adBreak.timeOffset):
             adObject.position_type = "t";
-            adObject.time = this.amc.movieDuration * 1000;
+            adObject.time = (this.amc.movieDuration + 1) * 1000;
             break;
           case /\d{2}:\d{2}:\d{2}\.000/.test(adBreak.timeOffset):
             adObject.position_type = "t";
             adObject.time = convertTimeStampToSeconds(adBreak.timeOffset);
             break;
           case /\d{,3}%/.test(adBreak.timeOffset):
+            // TODO: test percentage > 100
+            adObject.position_type = "t";
             adObject.time = convertPercentToSeconds(adBreak.timeOffset);
-            console.log("percent");
             break;
           default:
             OO.log("VAST: VMAP: Malformed 'timeOffset' Attribute");
@@ -1688,8 +1690,10 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     var convertPercentToSeconds = _.bind(function(timeString) {
-      // TODO
-      return 15;
+      var percent = timeString.replace("%", "");
+      // simplification of: (this.amc.movieDuration * percent / 100) * 1000
+      var result = +(this.amc.movieDuration) * percent * 10;
+      return result;
     }, this);
 
     var parseAdBreak = _.bind(function(adBreakElement) {
