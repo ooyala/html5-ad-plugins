@@ -1618,9 +1618,17 @@ OO.Ads.manager(function(_, $) {
         if (adSourceElement.length > 0) {
           var adSource = parseAdSource(adSourceElement);
           adBreak.adSources.push(adSource);
-          var vastAdDataElement = $(adSourceElement).find("VASTAdData");
-          var adTagURIElement = $(adSourceElement).find("AdTagURI");
           var adObject = convertToAdObject(adBreak);
+          var adTagURIElement = $(adSourceElement).find("AdTagURI");
+          var vastAdDataElement = $(adSourceElement).find("VASTAdData");
+
+          // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
+          // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
+          // find the VASTAdData tag, try to search for the VASTData tag.
+          if (vastAdDataElement.length === 0) {
+            vastAdDataElement = $(adSourceElement).find("VASTData");
+          }
+
           if (vastAdDataElement.length > 0) {
             var vastXML = $(vastAdDataElement[0]).find("VAST")[0];
             this.onVastResponse(adObject, vastAdDataElement[0]);
