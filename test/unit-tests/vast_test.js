@@ -24,12 +24,16 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
   var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
+  var vmapPreWithTrackingXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_pre_with_tracking.xml"), "utf8");
+  
   var linearXML = OO.$.parseXML(linearXMLString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
   var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
   var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
   var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
+  var vmapPreWithTracking = OO.$.parseXML(vmapPreWithTrackingXMLString);
+
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
   var errorType = [];
@@ -1303,5 +1307,29 @@ describe('ad_manager_vast', function() {
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXMLMissingURL);
     expect(_.contains(errorType, vastAdManager.ERROR_CODES.GENERAL_NONLINEAR_ADS)).to.be(true);
     expect(pixelPingCalled).to.be(true);
+  });
+
+  it('Vast 3.0, VMAP: Should call onVMAPResponse if there is a VMAP XML response', function() {
+    var onVMAPResponseCalled = false;
+    var onVastResponseCalled = false;
+
+    vastAdManager.onResponse = function(adLoaded, xml) {
+      var jqueryXML = $(xml);
+      var vmap = jqueryXML.find("vmap\\:VMAP, VMAP");
+      if (vmap.length > 0) {
+        onVMAPResponseCalled = true;
+      }
+      else {
+        onVastResponseCalled = true;
+      }
+    };
+
+    vastAdManager.onResponse(null, vmapPreWithTracking);
+    expect(onVMAPResponseCalled).to.be(true);
+    expect(onVastResponseCalled).to.be(false);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreaks properly', function() {
+    vastAdManager.onVMAPResponse(vmapPreWithTracking);
   });
 });
