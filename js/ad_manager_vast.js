@@ -1664,7 +1664,7 @@ OO.Ads.manager(function(_, $) {
           var tracking = {};
           trackingEvents.push(tracking);
           tracking.url = $(trackingElement).text();
-          tracking.trackingEvent = $(trackingElement).attr("event");
+          tracking.eventName = $(trackingElement).attr("event");
         }, this);
       }
       return trackingEvents;
