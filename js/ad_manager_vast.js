@@ -1610,7 +1610,7 @@ OO.Ads.manager(function(_, $) {
       var adBreakElements = jqueryXML.find("AdBreak");
       var adBreaks = [];
       _.each(adBreakElements, function(adBreakElement) {
-        var adBreak = parseAdBreak(adBreakElement);
+        var adBreak = _parseAdBreak(adBreakElement);
         var adSourceElement = $(adBreakElement).find("AdSource");
         var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
         var extensionsElement = $(adBreakElement).find("Extensions");
@@ -1623,10 +1623,10 @@ OO.Ads.manager(function(_, $) {
         }
 
         if (adSourceElement.length > 0) {
-          var adSource = parseAdSource(adSourceElement);
+          var adSource = _parseAdSource(adSourceElement);
           if (!_.isEmpty(adSource)) {
             adBreak.adSources.push(adSource);
-            var adObject = convertToAdObject(adBreak);
+            var adObject = _convertToAdObject(adBreak);
             var adTagURIElement = $(adSourceElement).find("AdTagURI");
             var vastAdDataElement = $(adSourceElement).find("VASTAdData");
 
@@ -1669,7 +1669,7 @@ OO.Ads.manager(function(_, $) {
       return trackingEvents;
     }, this);
 
-    var convertToAdObject = _.bind(function(adBreak) {
+    var _convertToAdObject = _.bind(function(adBreak) {
       var adObject = {
         /*
          *ad_set_code: "",
@@ -1701,13 +1701,13 @@ OO.Ads.manager(function(_, $) {
           // case: hh:mm:ss.mmm
           case /\d{2}:\d{2}:\d{2}\.000/.test(adBreak.timeOffset):
             adObject.position_type = "t";
-            adObject.time = convertTimeStampToSeconds(adBreak.timeOffset);
+            adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
             break;
           // case: {0, 100}%
           case /\d{,3}%/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
             adObject.position_type = "t";
-            adObject.time = convertPercentToSeconds(adBreak.timeOffset);
+            adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
             break;
           default:
             OO.log("VAST: VMAP: Malformed 'timeOffset' Attribute");
@@ -1719,7 +1719,7 @@ OO.Ads.manager(function(_, $) {
       return adObject;
     }, this);
 
-    var convertTimeStampToSeconds = _.bind(function(timeString) {
+    var _convertTimeStampToSeconds = _.bind(function(timeString) {
       var hms = timeString.split(":");
       // + unary operator converts string to number
       // Use parseInt to truncate decimal
@@ -1727,14 +1727,14 @@ OO.Ads.manager(function(_, $) {
       return seconds;
     }, this);
 
-    var convertPercentToSeconds = _.bind(function(timeString) {
+    var _convertPercentToSeconds = _.bind(function(timeString) {
       var percent = timeString.replace("%", "");
       // simplification of: (this.amc.movieDuration * percent / 100) * 1000
       var result = +(this.amc.movieDuration) * percent * 10;
       return result;
     }, this);
 
-    var parseAdBreak = _.bind(function(adBreakElement) {
+    var _parseAdBreak = _.bind(function(adBreakElement) {
       var adBreak = {};
       adBreak.timeOffset = $(adBreakElement).attr("timeOffset");
       adBreak.breakType = $(adBreakElement).attr("breakType");
@@ -1743,7 +1743,7 @@ OO.Ads.manager(function(_, $) {
       return adBreak;
     }, this);
 
-    var parseAdSource = _.bind(function(adSourceElement) {
+    var _parseAdSource = _.bind(function(adSourceElement) {
       var adSource = {};
       adSource.id = $(adSourceElement).attr("id");
       adSource.allowMultipleAds = $(adSourceElement).attr("allowMultipleAds");
