@@ -1611,39 +1611,40 @@ OO.Ads.manager(function(_, $) {
       var adBreaks = [];
       _.each(adBreakElements, function(adBreakElement) {
         var adBreak = _parseAdBreak(adBreakElement);
-        var adSourceElement = $(adBreakElement).find("AdSource");
-        var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
-        var extensionsElement = $(adBreakElement).find("Extensions");
-
-        if (trackingEventsElement.length > 0) {
-          var trackingEvents = _parseVMAPTrackingEvents(trackingEventsElement);
-          if (!_.isEmpty(trackingEvents)) {
-            adBreak.trackingEvents = trackingEvents;
+        if (!_.isEmpty(adBreak)) {
+          adBreaks.push(adBreak);
+          var adSourceElement = $(adBreakElement).find("AdSource");
+          var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
+          var extensionsElement = $(adBreakElement).find("Extensions");
+          if (trackingEventsElement.length > 0) {
+            var trackingEvents = _parseVMAPTrackingEvents(trackingEventsElement);
+            if (!_.isEmpty(trackingEvents)) {
+              adBreak.trackingEvents = trackingEvents;
+            }
           }
-        }
+          if (adSourceElement.length > 0) {
+            var adSource = _parseAdSource(adSourceElement);
+            if (!_.isEmpty(adSource)) {
+              adBreak.adSources.push(adSource);
+              var adObject = _convertToAdObject(adBreak);
+              var adTagURIElement = $(adSourceElement).find("AdTagURI");
+              var vastAdDataElement = $(adSourceElement).find("VASTAdData");
 
-        if (adSourceElement.length > 0) {
-          var adSource = _parseAdSource(adSourceElement);
-          if (!_.isEmpty(adSource)) {
-            adBreak.adSources.push(adSource);
-            var adObject = _convertToAdObject(adBreak);
-            var adTagURIElement = $(adSourceElement).find("AdTagURI");
-            var vastAdDataElement = $(adSourceElement).find("VASTAdData");
+              // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
+              // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
+              // find the VASTAdData tag, try to search for the VASTData tag.
+              if (vastAdDataElement.length === 0) {
+                vastAdDataElement = $(adSourceElement).find("VASTData");
+              }
 
-            // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
-            // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
-            // find the VASTAdData tag, try to search for the VASTData tag.
-            if (vastAdDataElement.length === 0) {
-              vastAdDataElement = $(adSourceElement).find("VASTData");
-            }
-
-            if (vastAdDataElement.length > 0) {
-              var vastXML = $(vastAdDataElement[0]).find("VAST")[0];
-              this.onVastResponse(adObject, vastAdDataElement[0]);
-            }
-            else if (adTagURIElement.length > 0) {
-              adSource.adTagURI = adTagURIElement.text();
-              this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
+              if (vastAdDataElement.length > 0) {
+                adSource.vastAdData = vastAdDataElement[0];
+                this.onVastResponse(adObject, vastAdDataElement[0]);
+              }
+              else if (adTagURIElement.length > 0) {
+                adSource.adTagURI = adTagURIElement.text();
+                this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
+              }
             }
           }
         }
