@@ -1607,15 +1607,16 @@ OO.Ads.manager(function(_, $) {
      */
     this.onVMAPResponse = function(xml) {
       var jqueryXML = $(xml);
-      var adBreakElements = jqueryXML.find("AdBreak");
+      var adBreakElements = jqueryXML.find("vmap\\:AdBreak, AdBreak");
       var adBreaks = [];
       _.each(adBreakElements, function(adBreakElement) {
         var adBreak = _parseAdBreak(adBreakElement);
         if (!_.isEmpty(adBreak)) {
           adBreaks.push(adBreak);
-          var adSourceElement = $(adBreakElement).find("AdSource");
-          var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
-          var extensionsElement = $(adBreakElement).find("Extensions");
+          var adSourceElement = $(adBreakElement).find("vmap\\:AdSource, AdSource");
+          //var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
+          var trackingEventsElement = $(adBreakElement).find("vmap\\:TrackingEvents, TrackingEvents");
+          var extensionsElement = $(adBreakElement).find("vmap\\:Extensions, Extensions");
           if (trackingEventsElement.length > 0) {
             var trackingEvents = _parseVMAPTrackingEvents(trackingEventsElement);
             if (!_.isEmpty(trackingEvents)) {
@@ -1627,14 +1628,14 @@ OO.Ads.manager(function(_, $) {
             if (!_.isEmpty(adSource)) {
               adBreak.adSources.push(adSource);
               var adObject = _convertToAdObject(adBreak);
-              var adTagURIElement = $(adSourceElement).find("AdTagURI");
-              var vastAdDataElement = $(adSourceElement).find("VASTAdData");
+              var adTagURIElement = $(adSourceElement).find("vmap\\:AdTagURI, AdTagURI");
+              var vastAdDataElement = $(adSourceElement).find("vmap\\:VASTAdData, VASTAdData");
 
               // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
               // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
               // find the VASTAdData tag, try to search for the VASTData tag.
               if (vastAdDataElement.length === 0) {
-                vastAdDataElement = $(adSourceElement).find("VASTData");
+                vastAdDataElement = $(adSourceElement).find("vmap\\:VASTData, VASTData");
               }
 
               if (vastAdDataElement.length > 0) {
@@ -1643,7 +1644,9 @@ OO.Ads.manager(function(_, $) {
               }
               else if (adTagURIElement.length > 0) {
                 adSource.adTagURI = adTagURIElement.text();
-                this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
+                if (!this.testMode){
+                  this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
+                }
               }
             }
           }
@@ -1658,7 +1661,7 @@ OO.Ads.manager(function(_, $) {
 
     var _parseVMAPTrackingEvents = _.bind(function(trackingEventsElement) {
       var trackingEvents = [];
-      var trackingElements = $(trackingEventsElement).find("Tracking");
+      var trackingElements = $(trackingEventsElement).find("vmap\\:Tracking, Tracking");
       if (trackingElements.length > 0) {
         _.each(trackingElements, function(trackingElement) {
           var tracking = {};
@@ -1758,17 +1761,15 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#onResponse
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {XMLDocument} xml The xml returned from loading the ad
-     * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
-     * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
-    this.onResponse = function(adLoaded, xml, wrapperParentIdArg) {
+    this.onResponse = function(adLoaded, xml) {
       var jqueryXML = $(xml);
-      var vmap = jqueryXML.find("VMAP");
+      var vmap = jqueryXML.find("vmap\\:VMAP, VMAP");
       if (vmap.length > 0) {
         this.onVMAPResponse(xml);
       }
       else {
-        this.onVastResponse(adLoaded, xml, wrapperParentIdArg);
+        this.onVastResponse(adLoaded, xml);
       }
     };
   };
