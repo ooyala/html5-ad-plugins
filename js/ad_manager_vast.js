@@ -392,6 +392,7 @@ OO.Ads.manager(function(_, $) {
     this.checkNoAds = function(vastXML, ads) {
       // if there are no ads in ad response then track error
       if (ads.length === 0) {
+        OO.log("VAST: No ads in XML");
         // there could be an <Error> element in the vast response
         var noAdsErrorURL = $(vastXML).find("Error").text();
         if (noAdsErrorURL) {
@@ -1576,6 +1577,7 @@ OO.Ads.manager(function(_, $) {
       this.wrapperParentId = wrapperParentIdArg;
       var vastAds = this.parser(xml);
       if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
+        OO.log("VAST: XML Parsing Error");
         this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
         failedAd();
       } else {
