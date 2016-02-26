@@ -319,6 +319,18 @@ describe('ad_manager_ima', function()
     expect(ima.adsRequested).to.be(true);
   });
 
+  it('Play ad: Requests the AMC to hide the player UI', function()
+  {
+    var notified = false;
+    amc.hidePlayerUi = function() {
+      notified = true;
+    };
+    initialize(false);
+    play();
+    ima.playAd(amc.timeline[0]);
+    expect(notified).to.be(true);
+  });
+
   // AMC integration/IMA Event tests
   it('AMC Integration, Non-Ad Rules: amc is notified of a non-linear ad playback', function()
   {
