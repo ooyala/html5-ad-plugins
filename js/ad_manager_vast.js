@@ -62,6 +62,7 @@ OO.Ads.manager(function(_, $) {
     this.currentAdBeingLoaded = null;
     // when wrapper ajax callback returns, wrapperParentId will be properly set
     this.wrapperParentId = null;
+    this.adBreaks = [];
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -1608,11 +1609,10 @@ OO.Ads.manager(function(_, $) {
     this.onVMAPResponse = function(xml) {
       var jqueryXML = $(xml);
       var adBreakElements = jqueryXML.find("vmap\\:AdBreak, AdBreak");
-      var adBreaks = [];
       _.each(adBreakElements, function(adBreakElement) {
         var adBreak = _parseAdBreak(adBreakElement);
         if (!_.isEmpty(adBreak)) {
-          adBreaks.push(adBreak);
+          this.adBreaks.push(adBreak);
           var adSourceElement = $(adBreakElement).find("vmap\\:AdSource, AdSource");
           //var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
           var trackingEventsElement = $(adBreakElement).find("vmap\\:TrackingEvents, TrackingEvents");
@@ -1643,6 +1643,7 @@ OO.Ads.manager(function(_, $) {
                 this.onVastResponse(adObject, vastAdDataElement[0]);
               }
               else if (adTagURIElement.length > 0) {
+                debugger;
                 adSource.adTagURI = adTagURIElement.text();
                 if (!this.testMode){
                   this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);

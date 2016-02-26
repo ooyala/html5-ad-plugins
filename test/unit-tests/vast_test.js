@@ -24,7 +24,7 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
   var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
-  var vmapPreWithTrackingXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_pre_with_tracking.xml"), "utf8");
+  var vmapPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_pre.xml"), "utf8");
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
@@ -32,7 +32,7 @@ describe('ad_manager_vast', function() {
   var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
   var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
-  var vmapPreWithTracking = OO.$.parseXML(vmapPreWithTrackingXMLString);
+  var vmapPre = OO.$.parseXML(vmapPreXMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -1324,12 +1324,33 @@ describe('ad_manager_vast', function() {
       }
     };
 
-    vastAdManager.onResponse(null, vmapPreWithTracking);
+    vastAdManager.onResponse(null, vmapPre);
     expect(onVMAPResponseCalled).to.be(true);
     expect(onVastResponseCalled).to.be(false);
   });
 
-  it('Vast 3.0, VMAP: Should parse AdBreaks properly', function() {
-    vastAdManager.onVMAPResponse(vmapPreWithTracking);
+  it('Vast 3.0, VMAP, Pre-roll: Should parse AdTagURI and TrackingEvents properly', function() {
+    vastAdManager.onVMAPResponse(vmapPre);
+    var adBreaks = vastAdManager.adBreaks;
+    expect(adBreaks.length).to.be(1);
+
+    var adBreak = adBreaks[0];
+    expect(adBreak.timeOffset).to.be("start");
+    expect(adBreak.breakType).to.be("linear");
+    expect(adBreak.breakId).to.be("preroll");
+
+    expect(adBreak.adSources.length).to.be(1);
+
+    var adSource = adBreak.adSources[0];
+    expect(adSource.id).to.be("preroll-ad-1");
+    expect(adSource.allowMultipleAds).to.be("false");
+    expect(adSource.followRedirects).to.be("true");
+    expect(adSource.adTagURI).to.be("adTagURI");
+
+    var trackingEvents = adBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingURL");
+    expect(trackingEvents[1].url).to.be("errorURL");
   });
 });
