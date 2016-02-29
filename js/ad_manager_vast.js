@@ -1614,8 +1614,7 @@ OO.Ads.manager(function(_, $) {
         if (!_.isEmpty(adBreak)) {
           this.adBreaks.push(adBreak);
           var adSourceElement = $(adBreakElement).find("vmap\\:AdSource, AdSource");
-          //var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
-          var trackingEventsElement = $(adBreakElement).find("vmap\\:TrackingEvents, TrackingEvents");
+          var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
           var extensionsElement = $(adBreakElement).find("vmap\\:Extensions, Extensions");
           if (trackingEventsElement.length > 0) {
             var trackingEvents = _parseVMAPTrackingEvents(trackingEventsElement);
@@ -1643,7 +1642,6 @@ OO.Ads.manager(function(_, $) {
                 this.onVastResponse(adObject, vastAdDataElement[0]);
               }
               else if (adTagURIElement.length > 0) {
-                debugger;
                 adSource.adTagURI = adTagURIElement.text();
                 if (!this.testMode){
                   this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
@@ -1656,8 +1654,11 @@ OO.Ads.manager(function(_, $) {
     };
 
     var _findVMAPTrackingEvents = _.bind(function(adBreakElement) {
-      var namespaceURI = adBreakElement.namespaceURI;
-      return adBreakElement.getElementsByTagNameNS(namespaceURI, "TrackingEvents");
+      var trackingEventsElement = $(adBreakElement).find("vmap\\:TrackingEvents, TrackingEvents");
+      var VMAPTrackingEventsElement = _.filter(trackingEventsElement.toArray(), function(trackingEventElement) {
+        return (trackingEventElement.tagName.toLowerCase().indexOf("vmap:") > -1);
+      }, this);
+      return VMAPTrackingEventsElement;
     }, this);
 
     var _parseVMAPTrackingEvents = _.bind(function(trackingEventsElement) {
