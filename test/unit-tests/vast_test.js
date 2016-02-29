@@ -25,6 +25,7 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var vmapPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_pre.xml"), "utf8");
+  var vmapPrePostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_pre_post.xml"), "utf8");
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
@@ -33,6 +34,7 @@ describe('ad_manager_vast', function() {
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
   var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
   var vmapPre = OO.$.parseXML(vmapPreXMLString);
+  var vmapPrePost = OO.$.parseXML(vmapPrePostXMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -118,6 +120,7 @@ describe('ad_manager_vast', function() {
     errorType = [];
     pixelPingCalled= false;
     vastAdManager.errorInfo = {};
+    vastAdManager.adBreaks = [];
   });
 
   afterEach(_.bind(function() {
@@ -1329,7 +1332,7 @@ describe('ad_manager_vast', function() {
     expect(onVastResponseCalled).to.be(false);
   });
 
-  it('Vast 3.0, VMAP, Pre-roll: Should parse AdTagURI and TrackingEvents properly', function() {
+  it('Vast 3.0, VMAP, AdTag Pre-roll: Should parse AdTagURI and TrackingEvents properly', function() {
     vastAdManager.onVMAPResponse(vmapPre);
     var adBreaks = vastAdManager.adBreaks;
     expect(adBreaks.length).to.be(1);
@@ -1353,4 +1356,64 @@ describe('ad_manager_vast', function() {
     expect(trackingEvents[0].url).to.be("trackingURL");
     expect(trackingEvents[1].url).to.be("errorURL");
   });
+
+  it('Vast 3.0, VMAP, Inline Pre-roll Overlay, Post-roll: Should parse overlay and post-roll properly', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapPrePost);
+    var adBreaks = vastAdManager.adBreaks;
+    expect(adBreaks.length).to.be(2);
+
+    var prerollAdBreak = adBreaks[0];
+    expect(prerollAdBreak.timeOffset).to.be("start");
+    expect(prerollAdBreak.breakType).to.be("linear");
+    expect(prerollAdBreak.breakId).to.be("preroll");
+
+    expect(prerollAdBreak.adSources.length).to.be(1);
+
+    var prerollAdSource = prerollAdBreak.adSources[0];
+    expect(prerollAdSource.id).to.be("preroll-ad-1");
+    expect(prerollAdSource.allowMultipleAds).to.be("true");
+    expect(prerollAdSource.followRedirects).to.be("true");
+    expect(prerollAdSource.adTagURI).to.be(undefined);
+    expect(prerollAdSource.VASTAdData).not.to.be(null);
+
+    var trackingEvents = prerollAdBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingURL");
+    expect(trackingEvents[1].url).to.be("errorURL");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql(["Error URL"]);
+    expect(vastAd.ad.data.impression).to.eql(["Impression"]);
+    expect(vastAd.ad.data.nonLinear).not.to.be(null);
+    expect(vastAd.ad.data.linear).to.eql({});
+    expect(vastAd.ad.data.nonLinear.width).to.be("480");
+    expect(vastAd.ad.data.nonLinear.height).to.be("70");
+    expect(vastAd.ad.data.nonLinear.minSuggestedDuration).to.be("00:00:05");
+    expect(vastAd.ad.data.nonLinear.scalable).to.be("true");
+    expect(vastAd.ad.data.nonLinear.maintainAspectRatio).to.be("true");
+    expect(vastAd.ad.data.nonLinear.NonLinearClickThrough).to.be('nonLinearClickThroughURL');
+    expect(vastAd.ad.data.nonLinear.type).to.be("static");
+    expect(vastAd.ad.data.nonLinear.data).to.be("staticResourceURL");
+    expect(vastAd.ad.data.nonLinear.url).to.be("staticResourceURL");
+    expect(vastAd.ad.data.nonLinear.tracking.start).to.eql(["startEventURL"]);
+    expect(vastAd.ad.data.nonLinear.tracking.firstQuartile).to.eql(["firstQuartileEventURL"]);
+    expect(vastAd.ad.data.nonLinear.tracking.midpoint).to.eql(["midpointEventURL"]);
+
+    var postrollAdBreak = adBreaks[1];
+    expect(postrollAdBreak.timeOffset).to.be("end");
+    expect(postrollAdBreak.breakType).to.be("linear");
+    expect(postrollAdBreak.breakId).to.be("postroll");
+
+    expect(postrollAdBreak.adSources.length).to.be(1);
+
+    var postrollAdSource = postrollAdBreak.adSources[0];
+    expect(postrollAdSource.id).to.be("postroll-ad-1");
+    expect(postrollAdSource.allowMultipleAds).to.be("false");
+    expect(postrollAdSource.followRedirects).to.be("true");
+    expect(postrollAdSource.adTagURI).to.be("adTagURI");
+  });
+
 });
