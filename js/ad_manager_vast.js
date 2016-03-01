@@ -1744,12 +1744,12 @@ OO.Ads.manager(function(_, $) {
          *frequency: 2,
          *public_id: "",
          *signature: "",
+         *tracking_url: [],
+         *type: "",
+         *url: ""
          */
         time: 0,
         position_type: "t",
-        tracking_url: [],
-        type: "",
-        url: ""
       };
       if (adBreak || adBreak.timeOffset) {
         switch(true) {
