@@ -1625,27 +1625,32 @@ OO.Ads.manager(function(_, $) {
           if (adSourceElement.length > 0) {
             var adSource = _parseAdSource(adSourceElement);
             if (!_.isEmpty(adSource)) {
-              adBreak.adSources.push(adSource);
+              adBreak.adSource = adSource;
               var adObject = _convertToAdObject(adBreak);
-              var adTagURIElement = $(adSourceElement).find("vmap\\:AdTagURI, AdTagURI");
-              var vastAdDataElement = $(adSourceElement).find("vmap\\:VASTAdData, VASTAdData");
+              if (adObject) {
+                var adTagURIElement = $(adSourceElement).find("vmap\\:AdTagURI, AdTagURI");
+                var vastAdDataElement = $(adSourceElement).find("vmap\\:VASTAdData, VASTAdData");
 
-              // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
-              // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
-              // find the VASTAdData tag, try to search for the VASTData tag.
-              if (vastAdDataElement.length === 0) {
-                vastAdDataElement = $(adSourceElement).find("vmap\\:VASTData, VASTData");
-              }
-
-              if (vastAdDataElement.length > 0) {
-                adSource.vastAdData = vastAdDataElement[0];
-                this.onVastResponse(adObject, vastAdDataElement[0]);
-              }
-              else if (adTagURIElement.length > 0) {
-                adSource.adTagURI = adTagURIElement.text();
-                if (!this.testMode){
-                  this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
+                // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
+                // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
+                // find the VASTAdData tag, try to search for the VASTData tag.
+                if (vastAdDataElement.length === 0) {
+                  vastAdDataElement = $(adSourceElement).find("vmap\\:VASTData, VASTData");
                 }
+
+                if (vastAdDataElement.length > 0) {
+                  adSource.vastAdData = vastAdDataElement[0];
+                  this.onVastResponse(adObject, vastAdDataElement[0]);
+                }
+                else if (adTagURIElement.length > 0) {
+                  adSource.adTagURI = adTagURIElement.text();
+                  if (!this.testMode){
+                    this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
+                  }
+                }
+              }
+              else {
+                OO.log("VAST, VMAP: Error creating Ad Object");
               }
             }
           }
@@ -1716,11 +1721,9 @@ OO.Ads.manager(function(_, $) {
             adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
             break;
           default:
-            OO.log("VAST: VMAP: Malformed 'timeOffset' Attribute");
+            OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
+            adObject = null;
         }
-      }
-      if (adBreak || adBreak.url) {
-        // TODO
       }
       return adObject;
     }, this);
@@ -1745,7 +1748,6 @@ OO.Ads.manager(function(_, $) {
       adBreak.timeOffset = $(adBreakElement).attr("timeOffset");
       adBreak.breakType = $(adBreakElement).attr("breakType");
       adBreak.breakId = $(adBreakElement).attr("breakId");
-      adBreak.adSources = [];
       return adBreak;
     }, this);
 
