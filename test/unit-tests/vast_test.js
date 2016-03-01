@@ -1342,9 +1342,9 @@ describe('ad_manager_vast', function() {
     expect(adBreak.breakType).to.be("linear");
     expect(adBreak.breakId).to.be("preroll");
 
-    expect(adBreak.adSources.length).to.be(1);
+    expect(adBreak.adSource).not.to.be(null);
 
-    var adSource = adBreak.adSources[0];
+    var adSource = adBreak.adSource;
     expect(adSource.id).to.be("preroll-ad-1");
     expect(adSource.allowMultipleAds).to.be("false");
     expect(adSource.followRedirects).to.be("true");
@@ -1368,9 +1368,9 @@ describe('ad_manager_vast', function() {
     expect(prerollAdBreak.breakType).to.be("linear");
     expect(prerollAdBreak.breakId).to.be("preroll");
 
-    expect(prerollAdBreak.adSources.length).to.be(1);
+    expect(prerollAdBreak.adSource).not.to.be(null);
 
-    var prerollAdSource = prerollAdBreak.adSources[0];
+    var prerollAdSource = prerollAdBreak.adSource;
     expect(prerollAdSource.id).to.be("preroll-ad-1");
     expect(prerollAdSource.allowMultipleAds).to.be("true");
     expect(prerollAdSource.followRedirects).to.be("true");
@@ -1407,9 +1407,9 @@ describe('ad_manager_vast', function() {
     expect(postrollAdBreak.breakType).to.be("linear");
     expect(postrollAdBreak.breakId).to.be("postroll");
 
-    expect(postrollAdBreak.adSources.length).to.be(1);
+    expect(postrollAdBreak.adSource).not.to.be(null);
 
-    var postrollAdSource = postrollAdBreak.adSources[0];
+    var postrollAdSource = postrollAdBreak.adSource;
     expect(postrollAdSource.id).to.be("postroll-ad-1");
     expect(postrollAdSource.allowMultipleAds).to.be("false");
     expect(postrollAdSource.followRedirects).to.be("true");
