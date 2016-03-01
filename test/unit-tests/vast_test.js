@@ -24,8 +24,8 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
   var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
-  var vmapPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_pre.xml"), "utf8");
-  var vmapPrePostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_pre_post.xml"), "utf8");
+  var vmapAdTagPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_adtag_pre.xml"), "utf8");
+  var vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml"), "utf8");
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
@@ -33,8 +33,8 @@ describe('ad_manager_vast', function() {
   var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
   var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
   var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
-  var vmapPre = OO.$.parseXML(vmapPreXMLString);
-  var vmapPrePost = OO.$.parseXML(vmapPrePostXMLString);
+  var vmapAdTagPre = OO.$.parseXML(vmapAdTagPreXMLString);
+  var vmapInlinePreAdTagPost = OO.$.parseXML(vmapInlinePreAdTagPostXMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -1327,13 +1327,13 @@ describe('ad_manager_vast', function() {
       }
     };
 
-    vastAdManager.onResponse(null, vmapPre);
+    vastAdManager.onResponse(null, vmapAdTagPre);
     expect(onVMAPResponseCalled).to.be(true);
     expect(onVastResponseCalled).to.be(false);
   });
 
   it('Vast 3.0, VMAP, AdTag Pre-roll: Should parse AdTagURI and TrackingEvents properly', function() {
-    vastAdManager.onVMAPResponse(vmapPre);
+    vastAdManager.onVMAPResponse(vmapAdTagPre);
     var adBreaks = vastAdManager.adBreaks;
     expect(adBreaks.length).to.be(1);
 
@@ -1359,7 +1359,7 @@ describe('ad_manager_vast', function() {
 
   it('Vast 3.0, VMAP, Inline Pre-roll Overlay, Post-roll: Should parse overlay and post-roll properly', function() {
     vastAdManager.initialize(amc);
-    vastAdManager.onVMAPResponse(vmapPrePost);
+    vastAdManager.onVMAPResponse(vmapInlinePreAdTagPost);
     var adBreaks = vastAdManager.adBreaks;
     expect(adBreaks.length).to.be(2);
 

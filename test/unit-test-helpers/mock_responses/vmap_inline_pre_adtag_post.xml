@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vmap:VMAP xmlns:vmap="http://www.iab.net/videosuite/vmap" version="1.0">
+  <vmap:AdBreak timeOffset="start" breakType="linear" breakId="preroll">
+    <vmap:AdSource id="preroll-ad-1" allowMultipleAds="true" followRedirects="true">
+      <vmap:VASTAdData>
+        <VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">
+          <Ad id="ad-1">
+            <InLine>
+              <AdSystem>Ooyala</AdSystem>
+              <AdTitle>NonLinear Overlay</AdTitle>
+              <Error>Error URL</Error>
+              <Impression>Impression</Impression>
+              <Creatives>
+                <Creative id="creative-1" sequence="1">
+                  <NonLinearAds>
+                    <TrackingEvents>
+                      <Tracking event="start">startEventURL</Tracking>
+                      <Tracking event="firstQuartile">firstQuartileEventURL</Tracking>
+                      <Tracking event="midpoint">midpointEventURL</Tracking>
+                    </TrackingEvents>
+                    <NonLinear id="GDFP" width="480" height="70" minSuggestedDuration="00:00:05" scalable="true" maintainAspectRatio="true">
+                      <StaticResource creativeType="image/png">staticResourceURL</StaticResource>
+                      <NonLinearClickThrough>nonLinearClickThroughURL</NonLinearClickThrough>
+                    </NonLinear>
+                  </NonLinearAds>
+                </Creative>
+              </Creatives>
+            </InLine>
+          </Ad>
+        </VAST>
+      </vmap:VASTAdData>
+    </vmap:AdSource>
+    <vmap:TrackingEvents>
+      <vmap:Tracking event="breakStart">trackingURL</vmap:Tracking>
+      <vmap:Tracking event="error">errorURL</vmap:Tracking>
+    </vmap:TrackingEvents>
+  </vmap:AdBreak>
+  <vmap:AdBreak timeOffset="end" breakType="linear" breakId="postroll">
+    <vmap:AdSource id="postroll-ad-1" allowMultipleAds="false" followRedirects="true">
+      <vmap:AdTagURI templateType="vast3">adTagURI</vmap:AdTagURI>
+    </vmap:AdSource>
+  </vmap:AdBreak>
+</vmap:VMAP>
