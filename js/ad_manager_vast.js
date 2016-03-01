@@ -1056,7 +1056,7 @@ OO.Ads.manager(function(_, $) {
      * Extracts the creative based on the format type that is expected.
      * @public
      * @method Vast#extractStreamForType
-     * @param {Object[]} streams The stream choices from the metadata
+     * @param {object[]} streams The stream choices from the metadata
      * @param {string} type The type of video we want to use for the creative
      * @returns {string} The creative url if it finds one, otherwise null.
      */
@@ -1602,6 +1602,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Handler for VMAP XML responses.
      * @public
      * @method Vast#onVMAPResponse
      * @param {XMLDocument} xml The xml returned from loading the ad
@@ -1658,6 +1659,16 @@ OO.Ads.manager(function(_, $) {
       }, this);
     };
 
+    /**
+     * Helper function to find all node names with "vmap:TrackingEvents" / "TrackingEvents", and pick only
+     * the elements with "vmap:TrackingEvents".
+     * Note: must search for both "vmap:TrackingEvents" and "TrackingEvents" because of weird issue where
+     * Chrome cannot find "vmap:TrackingEvents" unless another selector is specified.
+     * @private
+     * @method Vast#_findVMAPTrackingEvents
+     * @param {object} adBreakElement The adBreak element to search
+     * @returns {object[]} The filtered array with only vmap tracking events.
+     */
     var _findVMAPTrackingEvents = _.bind(function(adBreakElement) {
       var trackingEventsElement = $(adBreakElement).find("vmap\\:TrackingEvents, TrackingEvents");
       var VMAPTrackingEventsElement = _.filter(trackingEventsElement.toArray(), function(trackingEventElement) {
@@ -1666,6 +1677,13 @@ OO.Ads.manager(function(_, $) {
       return VMAPTrackingEventsElement;
     }, this);
 
+    /**
+     * Helper function to convert VMAP tracking events into objects with attributes as properties.
+     * @private
+     * @method Vast#_parseVMAPTrackingEvents
+     * @param {object} trackingEventsElement The tracking events element
+     * @returns {object[]} The array of tracking event objects.
+     */
     var _parseVMAPTrackingEvents = _.bind(function(trackingEventsElement) {
       var trackingEvents = [];
       var trackingElements = $(trackingEventsElement).find("vmap\\:Tracking, Tracking");
@@ -1680,6 +1698,14 @@ OO.Ads.manager(function(_, $) {
       return trackingEvents;
     }, this);
 
+    /**
+     * Convert the adBreak attributes into an ad object that will be passed into _onVastResponse().
+     * @private
+     * @method Vast#_convertToAdObject
+     * @param {object} adBreak The adBreak object
+     * @returns {object} null if the timeOffset attribute does not match any format. Otherwise, the
+     * ad object is returned.
+     */
     var _convertToAdObject = _.bind(function(adBreak) {
       var adObject = {
         /*
@@ -1714,7 +1740,7 @@ OO.Ads.manager(function(_, $) {
             adObject.position_type = "t";
             adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
             break;
-          // case: {0, 100}%
+          // case: [0, 100]%
           case /\d{,3}%/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
             adObject.position_type = "t";
@@ -1728,6 +1754,13 @@ OO.Ads.manager(function(_, $) {
       return adObject;
     }, this);
 
+    /**
+     * Helper function to convert the HMS timestamp into milliseconds.
+     * @private
+     * @method Vast#_convertTimeStampToSeconds
+     * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
+     * @returns {number} The number of milliseconds the timestamp represents.
+     */
     var _convertTimeStampToSeconds = _.bind(function(timeString) {
       var hms = timeString.split(":");
       // + unary operator converts string to number
@@ -1736,6 +1769,13 @@ OO.Ads.manager(function(_, $) {
       return seconds;
     }, this);
 
+    /**
+     * Helper function to convert a percentage representing time into milliseconds.
+     * @private
+     * @method Vast#_convertPercentToSeconds
+     * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
+     * @returns {number} The number of milliseconds the percentage represents.
+     */
     var _convertPercentToSeconds = _.bind(function(timeString) {
       var percent = timeString.replace("%", "");
       // simplification of: (this.amc.movieDuration * percent / 100) * 1000
@@ -1743,6 +1783,13 @@ OO.Ads.manager(function(_, $) {
       return result;
     }, this);
 
+    /**
+     * Create the adBreak object with its attributes as properties.
+     * @private
+     * @method Vast#_parseAdBreak
+     * @param {object} adBreakElement The adBreak element to parse
+     * @returns {object} The formatted adBreak object.
+     */
     var _parseAdBreak = _.bind(function(adBreakElement) {
       var adBreak = {};
       adBreak.timeOffset = $(adBreakElement).attr("timeOffset");
@@ -1751,6 +1798,13 @@ OO.Ads.manager(function(_, $) {
       return adBreak;
     }, this);
 
+    /**
+     * Create the adSource object with its attributes as properties.
+     * @private
+     * @method Vast#_parseAdSource
+     * @param {object} adSourceElement The adSource element to parse
+     * @returns {object} The formatted adSource object.
+     */
     var _parseAdSource = _.bind(function(adSourceElement) {
       var adSource = {};
       adSource.id = $(adSourceElement).attr("id");
