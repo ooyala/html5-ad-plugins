@@ -1563,6 +1563,34 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
+     * Helper function to determine if the response XML is a VMAP XML.
+     * @private
+     * @method Vast#_isVMAPResponse
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     * @returns {boolean} true, if an element with the VMAP tag name is found. Otherwise,
+     * returns false.
+     */
+    var _isVMAPResponse = _.bind(function(xml) {
+      return $(xml).find("vmap\\:VMAP, VMAP").length > 0;
+    }, this);
+
+    /**
+     * When the ad tag url comes back with a response.
+     * @public
+     * @method Vast#onResponse
+     * @param {object} adLoaded The ad loaded object and metadata
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     */
+    this.onResponse = function(adLoaded, xml) {
+      if (_isVMAPResponse(xml)) {
+        this.onVMAPResponse(xml);
+      }
+      else {
+        this.onVastResponse(adLoaded, xml);
+      }
+    };
+
+    /**
      * When the vast Ad is loaded correctly it will call this callback. Here the data is parsed to see if it is a linear
      * or nonLinear Ad. It will pull the tracking, impression, companion and clicking information. Then merge the results
      * and send it to the correct handler based on if it is Linear or not.
@@ -1812,24 +1840,6 @@ OO.Ads.manager(function(_, $) {
       adSource.followRedirects = $(adSourceElement).attr("followRedirects");
       return adSource;
     }, this);
-
-    /**
-     * When the ad tag url comes back with a response.
-     * @public
-     * @method Vast#onResponse
-     * @param {object} adLoaded The ad loaded object and metadata
-     * @param {XMLDocument} xml The xml returned from loading the ad
-     */
-    this.onResponse = function(adLoaded, xml) {
-      var jqueryXML = $(xml);
-      var vmap = jqueryXML.find("vmap\\:VMAP, VMAP");
-      if (vmap.length > 0) {
-        this.onVMAPResponse(xml);
-      }
-      else {
-        this.onVastResponse(adLoaded, xml);
-      }
-    };
   };
   return new Vast();
 });
