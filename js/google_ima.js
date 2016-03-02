@@ -410,6 +410,8 @@ require("../html5-common/js/utils/utils.js");
           _throwError("playAd() called but amcAdPod.ad is null.");
         }
 
+        //Since IMA handles its own UI, we want the video player to hide its UI elements
+        _amc.hidePlayerUi();
 
         if(_usingAdRules && this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
         {
