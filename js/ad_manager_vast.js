@@ -1786,7 +1786,7 @@ OO.Ads.manager(function(_, $) {
             adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
             break;
           // case: [0, 100]%
-          case /\d{,3}%/.test(adBreak.timeOffset):
+          case /\d{1,3}%/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
             adObject.position_type = "t";
             adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
