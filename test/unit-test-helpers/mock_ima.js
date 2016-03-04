@@ -62,7 +62,8 @@ google =
     settings :
     {
       setPlayerVersion : function() {},
-      setPlayerType : function() {}
+      setPlayerType : function() {},
+      setVpaidMode : function() {}
     },
     AdsManagerLoadedEvent :
     {
@@ -184,6 +185,13 @@ google =
         CONTENT_RESUME_REQUESTED : "contentResumeRequested"
       }
     },
-    ViewMode : {}
+    ViewMode : {},
+    ImaSdkSettings :
+    {
+      VpaidMode :
+      {
+        ENABLED : "enabled"
+      }
+    }
   }
 };

@@ -46,6 +46,7 @@ require("../html5-common/js/utils/utils.js");
       var _IMAAdDisplayContainer;
       var _linearAdIsPlaying;
       var _timeUpdater = null;
+      var _uiContainer = null;
 
       //Constants
       var DEFAULT_ADS_REQUEST_TIME_OUT = 3000;
@@ -234,7 +235,7 @@ require("../html5-common/js/utils/utils.js");
         this.maxAdsRequestTimeout = DEFAULT_ADS_REQUEST_TIME_OUT;
         if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.AD_LOAD_TIMEOUT))
         {
-          this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
+          this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] * 1000;
         }
 
         this.additionalAdTagParameters = null;
@@ -699,7 +700,7 @@ require("../html5-common/js/utils/utils.js");
         //block this code from running till we want to play the video
         //if you run it before then ima will take over and immediately try to play
         //ads (if there is a preroll)
-        if (_IMAAdsManager && this.initialPlayRequested && !_IMAAdsManagerInitialized)
+        if (_IMAAdsManager && this.initialPlayRequested && !_IMAAdsManagerInitialized && _uiContainer)
         {
           try
           {
@@ -712,8 +713,7 @@ require("../html5-common/js/utils/utils.js");
             {
                 _endCurrentAd(true);
             }
-
-            _IMAAdsManager.init(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.ViewMode.NORMAL);
+            _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
             if(this.vcPlayRequested)
             {
@@ -789,10 +789,10 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onSizeChanged = privateMember(function()
       {
-        if (_IMAAdsManager)
+        if (_IMAAdsManager && _uiContainer)
         {
           var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
-          _IMAAdsManager.resize(google.ima.AdsRenderingSettings.AUTO_SCALE, google.ima.AdsRenderingSettings.AUTO_SCALE, viewMode);
+          _IMAAdsManager.resize(_uiContainer.clientWidth, _uiContainer.clientHeight, viewMode);
         }
       });
 
@@ -907,6 +907,7 @@ require("../html5-common/js/utils/utils.js");
         //These are required by Google for tracking purposes.
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
+        google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
 
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
@@ -940,13 +941,13 @@ require("../html5-common/js/utils/utils.js");
           }
 
           //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
-          var uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
+          _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
           //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
           //also doesn't not seem to work nicely with podded ads if you don't use it.
 
           //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
           //properly with the Alice skin.
-          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(uiContainer,
+          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
                                                                      this.sharedVideoElement);
 
           _IMA_SDK_createAdsLoader();
@@ -1021,6 +1022,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.destroy = function()
       {
+        _uiContainer = null;
         _tryUndoSetupForAdRules();
         _IMA_SDK_destroyAdsManager();
         _IMA_SDK_destroyAdsLoader();
