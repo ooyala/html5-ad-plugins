@@ -283,7 +283,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
     this.isValidRootTagName = function(vastXML) {
-      if ($(vastXML).find("VAST").length === 0) {
+      if (!getVastRoot(vastXML)) {
         OO.log("VAST: Invalid VAST XML");
         this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
         return false;
@@ -316,8 +316,29 @@ OO.Ads.manager(function(_, $) {
      * @returns {string} The Vast version.
      */
     var getVastVersion = _.bind(function(vastXML) {
-      var vastTag = $(vastXML).find("VAST")[0];
+      var vastTag = getVastRoot(vastXML);
       return $(vastTag).attr('version');
+    }, this);
+
+    /**
+     * Helper function to get the VAST root element.
+     * @private
+     * @method Vast#getVastRoot
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
+     * @returns {object} null if a VAST tag is absent, or if there are multiple VAST tags. Otherwise,
+     * returns the VAST root element.
+     */
+    var getVastRoot = _.bind(function(vastXML) {
+      var vastRootElement = $(vastXML).find("VAST");
+      if (vastRootElement.length === 0) {
+        OO.log("VAST: No VAST tags in XML");
+        return null;
+      }
+      else if (vastRootElement.length > 1) {
+        OO.log("VAST: Multiple VAST tags in XML");
+        return null;
+      }
+      return $(vastXML).find("VAST")[0];
     }, this);
 
     /**
