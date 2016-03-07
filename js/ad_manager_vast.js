@@ -1299,7 +1299,8 @@ OO.Ads.manager(function(_, $) {
         tracking: {},
         // clickTracking needs to be remembered because it can exist in wrapper ads
         clickTracking: filterEmpty($(linearXml).find("ClickTracking").map(function() { return $(this).text(); })),
-        clickThrough: filterEmpty($(linearXml).find("ClickThrough").map(function() { return $(this).text(); })),
+        //There can only be one clickthrough as per Vast 2.0/3.0 specs and XSDs
+        clickThrough: $(linearXml).find("ClickThrough").text(),
         customClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
       };
 

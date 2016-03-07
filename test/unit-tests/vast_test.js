@@ -18,6 +18,7 @@ describe('ad_manager_vast', function() {
   require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
 
   var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
+  var linearXMLNoClickthroughString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml"), "utf8");
   var linear3_0XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_linear.xml"), "utf8");
   var linear3_0PoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml"), "utf8");
   var linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml"), "utf8");
@@ -25,6 +26,7 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var linearXML = OO.$.parseXML(linearXMLString);
+  var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
   var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
   var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
@@ -687,6 +689,79 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(1);
     expect(indexInPod).to.be(1);
+  });
+
+  it('Vast 2.0: should open clickthrough url if player is clicked', function(){
+    //Vast Ad Manager regularly calls window.open here.
+    //Will instead track what we are trying to open
+    var openedUrls = [];
+    vastAdManager.openUrl = function(url) {
+      if (url) {
+        openedUrls.push(url);
+      }
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    expect(errorType.length).to.be(0);
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    vastAdManager.playerClicked(vastAd, true);
+    //1 clickthrough url is defined in vast_linear.xml
+    expect(openedUrls.length).to.be(1);
+  });
+
+  it('Vast 2.0: should not open a clickthrough url if one is not defined', function(){
+    //Vast Ad Manager regularly calls window.open here.
+    //Will instead track what we are trying to open
+    var openedUrls = [];
+    vastAdManager.openUrl = function(url) {
+      if (url) {
+        openedUrls.push(url);
+      }
+    };
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.onVastResponse(vast_ad_mid, linearNoClickthroughXML);
+    expect(errorType.length).to.be(0);
+    var vastAd = amc.timeline[0];
+    vastAdManager.playAd(vastAd);
+    vastAdManager.playerClicked(vastAd, true);
+    expect(openedUrls.length).to.be(0);
   });
 
   it('Vast 3.0: should parse inline linear podded ads', function(){
