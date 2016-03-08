@@ -338,7 +338,7 @@ OO.Ads.manager(function(_, $) {
         OO.log("VAST: Multiple VAST tags in XML");
         return null;
       }
-      return $(vastXML).find("VAST")[0];
+      return vastRootElement[0];
     }, this);
 
     /**
