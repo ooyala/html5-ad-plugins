@@ -1642,28 +1642,33 @@ OO.Ads.manager(function(_, $) {
     this.onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
       this.wrapperParentId = wrapperParentIdArg;
       var vastAds = this.parser(xml);
+      var vastVersion = getVastVersion(xml);
       if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
         OO.log("VAST: XML Parsing Error");
         this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
         failedAd();
       } else {
         var fallbackAd;
-        if(supportsAdFallback(getVastVersion(xml)) && vastAds.standalone.length > 0) {
+        if(supportsAdFallback(vastVersion) && vastAds.standalone.length > 0) {
           fallbackAd = vastAds.standalone[0];
         }
         var ad;
-        //TODO: Determine when we show standalone ads if podded ads are available
-        //If there are no podded ads
-        if(_.isEmpty(vastAds.podded)) {
-          //show the first standalone ad
-          ad = vastAds.standalone[0];
-          if (ad) {
-            handleAds([ad], adLoaded);
+        if (supportsPoddedAds(vastVersion)) {
+          //If there are no podded ads
+          if(_.isEmpty(vastAds.podded)) {
+            //show the first standalone ad
+            ad = vastAds.standalone[0];
+            if (ad) {
+              handleAds([ad], adLoaded);
+            }
           }
-        }
-        //else show the podded ads
-        else {
-          handleAds(vastAds.podded, adLoaded, fallbackAd);
+          //else show the podded ads
+          else {
+            handleAds(vastAds.podded, adLoaded, fallbackAd);
+          }
+        } else {
+          //show all standalone ads if podded ads are not supported
+          handleAds(vastAds.standalone, adLoaded);
         }
       }
     };

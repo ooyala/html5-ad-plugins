@@ -19,6 +19,7 @@ describe('ad_manager_vast', function() {
 
   var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
   var linearXMLNoClickthroughString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml"), "utf8");
+  var linearXML2AdsString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_2_ads.xml"), "utf8");
   var linear3_0XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_linear.xml"), "utf8");
   var linear3_0PoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml"), "utf8");
   var linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml"), "utf8");
@@ -30,6 +31,7 @@ describe('ad_manager_vast', function() {
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
+  var linearXML2Ads = OO.$.parseXML(linearXML2AdsString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
   var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
   var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
@@ -769,6 +771,65 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     expect(openedUrls.length).to.be(0);
+  });
+
+  it('Vast 2.0: should play multiple ads if multiple ads are defined', function(){
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    debugger;
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML2Ads);
+    expect(errorType.length).to.be(0);
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654644');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    vastAd = adQueue[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654645');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
   });
 
   it('Vast 3.0: should parse inline linear podded ads', function(){
