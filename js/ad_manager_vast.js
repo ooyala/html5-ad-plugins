@@ -62,6 +62,7 @@ OO.Ads.manager(function(_, $) {
     this.currentAdBeingLoaded = null;
     // when wrapper ajax callback returns, wrapperParentId will be properly set
     this.wrapperParentId = null;
+    this.adBreaks = [];
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -282,9 +283,8 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
     this.isValidRootTagName = function(vastXML) {
-      var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
-      if (rootTagName.toUpperCase() != "VAST") {
-        OO.log("VAST: Invalid VAST XML for Tag Name: " + rootTagName);
+      if (!getVastRoot(vastXML)) {
+        OO.log("VAST: Invalid VAST XML");
         this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
         return false;
       }
@@ -316,7 +316,29 @@ OO.Ads.manager(function(_, $) {
      * @returns {string} The Vast version.
      */
     var getVastVersion = _.bind(function(vastXML) {
-      return $(vastXML.firstChild).attr('version');
+      var vastTag = getVastRoot(vastXML);
+      return $(vastTag).attr('version');
+    }, this);
+
+    /**
+     * Helper function to get the VAST root element.
+     * @private
+     * @method Vast#getVastRoot
+     * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
+     * @returns {object} null if a VAST tag is absent, or if there are multiple VAST tags. Otherwise,
+     * returns the VAST root element.
+     */
+    var getVastRoot = _.bind(function(vastXML) {
+      var vastRootElement = $(vastXML).find("VAST");
+      if (vastRootElement.length === 0) {
+        OO.log("VAST: No VAST tags in XML");
+        return null;
+      }
+      else if (vastRootElement.length > 1) {
+        OO.log("VAST: Multiple VAST tags in XML");
+        return null;
+      }
+      return vastRootElement[0];
     }, this);
 
     /**
@@ -864,8 +886,8 @@ OO.Ads.manager(function(_, $) {
         crossDomain: true,
         cache:false,
         //TODO: should pass wrapperParentId here for wrapper
-        success: (dataType == "script") ? function() {} : _.bind(this.onVastResponse, this, loadingAd
-            || this.currentAdBeingLoaded),
+        success: (dataType == "script") ? function() {} : _.bind(this.onResponse, this, loadingAd
+          || this.currentAdBeingLoaded),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
       this.currentAdBeingLoaded = null;
@@ -1579,6 +1601,34 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
+     * Helper function to determine if the response XML is a VMAP XML.
+     * @private
+     * @method Vast#_isVMAPResponse
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     * @returns {boolean} true, if an element with the VMAP tag name is found. Otherwise,
+     * returns false.
+     */
+    var _isVMAPResponse = _.bind(function(xml) {
+      return $(xml).find("vmap\\:VMAP, VMAP").length > 0;
+    }, this);
+
+    /**
+     * When the ad tag url comes back with a response.
+     * @public
+     * @method Vast#onResponse
+     * @param {object} adLoaded The ad loaded object and metadata
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     */
+    this.onResponse = function(adLoaded, xml) {
+      if (_isVMAPResponse(xml)) {
+        this.onVMAPResponse(xml);
+      }
+      else {
+        this.onVastResponse(adLoaded, xml);
+      }
+    };
+
+    /**
      * When the vast Ad is loaded correctly it will call this callback. Here the data is parsed to see if it is a linear
      * or nonLinear Ad. It will pull the tracking, impression, companion and clicking information. Then merge the results
      * and send it to the correct handler based on if it is Linear or not.
@@ -1617,6 +1667,214 @@ OO.Ads.manager(function(_, $) {
         }
       }
     };
+
+    /**
+     * Handler for VMAP XML responses.
+     * @public
+     * @method Vast#onVMAPResponse
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     */
+    this.onVMAPResponse = function(xml) {
+      var jqueryXML = $(xml);
+      var adBreakElements = jqueryXML.find("vmap\\:AdBreak, AdBreak");
+      _.each(adBreakElements, function(adBreakElement) {
+        var adBreak = _parseAdBreak(adBreakElement);
+        if (!_.isEmpty(adBreak)) {
+          this.adBreaks.push(adBreak);
+          var adSourceElement = $(adBreakElement).find("vmap\\:AdSource, AdSource");
+          var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
+          var extensionsElement = $(adBreakElement).find("vmap\\:Extensions, Extensions");
+          if (trackingEventsElement.length > 0) {
+            var trackingEvents = _parseVMAPTrackingEvents(trackingEventsElement);
+            if (!_.isEmpty(trackingEvents)) {
+              adBreak.trackingEvents = trackingEvents;
+            }
+          }
+          if (adSourceElement.length > 0) {
+            var adSource = _parseAdSource(adSourceElement);
+            if (!_.isEmpty(adSource)) {
+              adBreak.adSource = adSource;
+              var adObject = _convertToAdObject(adBreak);
+              if (adObject) {
+                var adTagURIElement = $(adSourceElement).find("vmap\\:AdTagURI, AdTagURI");
+                var vastAdDataElement = $(adSourceElement).find("vmap\\:VASTAdData, VASTAdData");
+
+                // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
+                // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
+                // find the VASTAdData tag, try to search for the VASTData tag.
+                if (vastAdDataElement.length === 0) {
+                  vastAdDataElement = $(adSourceElement).find("vmap\\:VASTData, VASTData");
+                }
+
+                if (vastAdDataElement.length > 0) {
+                  adSource.vastAdData = vastAdDataElement[0];
+                  this.onVastResponse(adObject, vastAdDataElement[0]);
+                }
+                else if (adTagURIElement.length > 0) {
+                  adSource.adTagURI = adTagURIElement.text();
+                  if (!this.testMode){
+                    this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
+                  }
+                }
+              }
+              else {
+                OO.log("VAST, VMAP: Error creating Ad Object");
+              }
+            }
+          }
+        }
+      }, this);
+    };
+
+    /**
+     * Helper function to find all node names with "vmap:TrackingEvents" / "TrackingEvents", and pick only
+     * the elements with "vmap:TrackingEvents".
+     * Note: must search for both "vmap:TrackingEvents" and "TrackingEvents" because of weird issue where
+     * Chrome cannot find "vmap:TrackingEvents" unless another selector is specified.
+     * @private
+     * @method Vast#_findVMAPTrackingEvents
+     * @param {object} adBreakElement The adBreak element to search
+     * @returns {object[]} The filtered array with only vmap tracking events.
+     */
+    var _findVMAPTrackingEvents = _.bind(function(adBreakElement) {
+      var trackingEventsElement = $(adBreakElement).find("vmap\\:TrackingEvents, TrackingEvents");
+      var VMAPTrackingEventsElement = _.filter(trackingEventsElement.toArray(), function(trackingEventElement) {
+        return (trackingEventElement.tagName.toLowerCase().indexOf("vmap:") > -1);
+      }, this);
+      return VMAPTrackingEventsElement;
+    }, this);
+
+    /**
+     * Helper function to convert VMAP tracking events into objects with attributes as properties.
+     * @private
+     * @method Vast#_parseVMAPTrackingEvents
+     * @param {object} trackingEventsElement The tracking events element
+     * @returns {object[]} The array of tracking event objects.
+     */
+    var _parseVMAPTrackingEvents = _.bind(function(trackingEventsElement) {
+      var trackingEvents = [];
+      var trackingElements = $(trackingEventsElement).find("vmap\\:Tracking, Tracking");
+      if (trackingElements.length > 0) {
+        _.each(trackingElements, function(trackingElement) {
+          var tracking = {};
+          trackingEvents.push(tracking);
+          tracking.url = $(trackingElement).text();
+          tracking.eventName = $(trackingElement).attr("event");
+        }, this);
+      }
+      return trackingEvents;
+    }, this);
+
+    /**
+     * Convert the adBreak attributes into an ad object that will be passed into _onVastResponse().
+     * @private
+     * @method Vast#_convertToAdObject
+     * @param {object} adBreak The adBreak object
+     * @returns {object} null if the timeOffset attribute does not match any format. Otherwise, the
+     * ad object is returned.
+     */
+    var _convertToAdObject = _.bind(function(adBreak) {
+      var adObject = {
+        /*
+         *ad_set_code: "",
+         *click_url: "",
+         *expires: 0,
+         *first_shown: 0,
+         *frequency: 2,
+         *public_id: "",
+         *signature: "",
+         *tracking_url: [],
+         *type: "",
+         *url: ""
+         */
+        time: 0,
+        position_type: "t",
+      };
+      if (adBreak || adBreak.timeOffset) {
+        switch(true) {
+          // case: "start"
+          case /^start$/.test(adBreak.timeOffset):
+            adObject.time = 0;
+            break;
+          // case: "end"
+          case /^end$/.test(adBreak.timeOffset):
+            adObject.time = (this.amc.movieDuration + 1) * 1000;
+            break;
+          // case: hh:mm:ss.mmm | hh:mm:ss
+          case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
+            adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
+            break;
+          // case: [0, 100]%
+          case /^\d{1,3}%$/.test(adBreak.timeOffset):
+            // TODO: test percentage > 100
+            adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
+            break;
+          default:
+            OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
+            adObject = null;
+        }
+      }
+      return adObject;
+    }, this);
+
+    /**
+     * Helper function to convert the HMS timestamp into milliseconds.
+     * @private
+     * @method Vast#_convertTimeStampToSeconds
+     * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
+     * @returns {number} The number of milliseconds the timestamp represents.
+     */
+    var _convertTimeStampToSeconds = _.bind(function(timeString) {
+      var hms = timeString.split(":");
+      // + unary operator converts string to number
+      // Use parseInt to truncate decimal
+      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (parseInt(hms[2])) * 1000;
+      return seconds;
+    }, this);
+
+    /**
+     * Helper function to convert a percentage representing time into milliseconds.
+     * @private
+     * @method Vast#_convertPercentToSeconds
+     * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
+     * @returns {number} The number of milliseconds the percentage represents.
+     */
+    var _convertPercentToSeconds = _.bind(function(timeString) {
+      var percent = timeString.replace("%", "");
+      // simplification of: (this.amc.movieDuration * percent / 100) * 1000
+      var result = +(this.amc.movieDuration) * percent * 10;
+      return result;
+    }, this);
+
+    /**
+     * Create the adBreak object with its attributes as properties.
+     * @private
+     * @method Vast#_parseAdBreak
+     * @param {object} adBreakElement The adBreak element to parse
+     * @returns {object} The formatted adBreak object.
+     */
+    var _parseAdBreak = _.bind(function(adBreakElement) {
+      var adBreak = {};
+      adBreak.timeOffset = $(adBreakElement).attr("timeOffset");
+      adBreak.breakType = $(adBreakElement).attr("breakType");
+      adBreak.breakId = $(adBreakElement).attr("breakId");
+      return adBreak;
+    }, this);
+
+    /**
+     * Create the adSource object with its attributes as properties.
+     * @private
+     * @method Vast#_parseAdSource
+     * @param {object} adSourceElement The adSource element to parse
+     * @returns {object} The formatted adSource object.
+     */
+    var _parseAdSource = _.bind(function(adSourceElement) {
+      var adSource = {};
+      adSource.id = $(adSourceElement).attr("id");
+      adSource.allowMultipleAds = $(adSourceElement).attr("allowMultipleAds");
+      adSource.followRedirects = $(adSourceElement).attr("followRedirects");
+      return adSource;
+    }, this);
   };
   return new Vast();
 });
