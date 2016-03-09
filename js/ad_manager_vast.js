@@ -63,6 +63,7 @@ OO.Ads.manager(function(_, $) {
     // when wrapper ajax callback returns, wrapperParentId will be properly set
     this.wrapperParentId = null;
     this.adBreaks = [];
+    var repeatAds = [];
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -483,6 +484,17 @@ OO.Ads.manager(function(_, $) {
     this.initialize = function(amc) {
       this.amc = amc;
       this.amc.addPlayerListener(this.amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(this.initialPlay, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.PLAYHEAD_TIME_CHANGED, _.bind(this.onPlayheadTimeChanged, this));
+    };
+
+    this.onPlayheadTimeChanged = function(eventname, playhead, duration) {
+      _.each(repeatAds, function(repeatAd) {
+        var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatAd.ad.repeatAfter;
+        if (playhead >= nextTimeToPlay) {
+          repeatAd.ad.lastPlayed = nextTimeToPlay;
+          this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
+        }
+      }, this);
     };
 
     /**
@@ -708,6 +720,12 @@ OO.Ads.manager(function(_, $) {
         }
         this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
         this.checkCompanionAds(adWrapper.ad);
+      }
+
+      if (!adWrapper.ad.firstRepeatAdPlayed && adWrapper.ad.repeatAfter) {
+        adWrapper.ad.lastPlayed = adWrapper.ad.positionSeconds;
+        adWrapper.ad.firstRepeatAdPlayed = true;
+        repeatAds.push(adWrapper);
       }
     };
 
@@ -1143,6 +1161,8 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
+      vastAdUnit.repeatAfter = adLoaded.repeatAfter;
+      vastAdUnit.firstRepeatAdPlayed = false;
 
       // Save the stream data for use by VideoController
       var streams = {};
@@ -1192,6 +1212,8 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
+      vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
+      vastAdUnit.firstRepeatAdPlayed = false;
 
       return vastAdUnit;
     }, this);
@@ -1726,6 +1748,28 @@ OO.Ads.manager(function(_, $) {
       }, this);
     };
 
+    /*
+     *var _handleRepeatAfter = function(adBreak) {
+     *  return;
+     *  console.log("BLAH");
+     *  console.log(this.timeline);
+     *  console.log(adBreak);
+     *  if (adBreak.repeatAfter) {
+     *    var repeatTimeline = [];
+     *    console.log("acutally doing repeat");
+     *    var startOffset = this.timeline[0].position;
+     *    var endOfMainVideo = (this.amc.movieDuration + 1);
+     *    var step = _convertTimeStampToSeconds(adBreak.repeatAfter) / 1000;
+     *    for (var time = startOffset + step; time < endOfMainVideo; time += step) {
+     *      var newRepeatedAd = _.clone(this.timeline[0]);
+     *      newRepeatedAd.position = time;
+     *      repeatTimeline.push(newRepeatedAd);
+     *    }
+     *    this.amc.appendToTimeline(repeatTimeline);
+     *  }
+     *};
+     */
+
     /**
      * Helper function to find all node names with "vmap:TrackingEvents" / "TrackingEvents", and pick only
      * the elements with "vmap:TrackingEvents".
@@ -1790,7 +1834,13 @@ OO.Ads.manager(function(_, $) {
         time: 0,
         position_type: "t",
       };
-      if (adBreak || adBreak.timeOffset) {
+      if (!adBreak) {
+        return null;
+      }
+      if (adBreak.repeatAfter) {
+        adObject.repeatAfter = _convertTimeStampToSeconds(adBreak.repeatAfter) / 1000;
+      }
+      if (adBreak.timeOffset) {
         switch(true) {
           // case: "start"
           case /^start$/.test(adBreak.timeOffset):
@@ -1858,6 +1908,7 @@ OO.Ads.manager(function(_, $) {
       adBreak.timeOffset = $(adBreakElement).attr("timeOffset");
       adBreak.breakType = $(adBreakElement).attr("breakType");
       adBreak.breakId = $(adBreakElement).attr("breakId");
+      adBreak.repeatAfter = $(adBreakElement).attr("repeatAfter");
       return adBreak;
     }, this);
 
