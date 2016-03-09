@@ -1495,9 +1495,6 @@ OO.Ads.manager(function(_, $) {
       }
     };
 
-    this.skipAd = function(ad) {
-
-    };
     /**
      * Opens a new page pointing to the URL provided.
      * @public
