@@ -142,6 +142,10 @@ OO.Ads.manager(function(_, $) {
         customData: this.currentPreloadedAd.ad.customData
       }, this.currentPreloadedAd);
 
+      if (typeof iframe.contentWindow.getVPAIDAd !== 'function') {
+        OO.log('VPaid: Required function getVPAIDAd() is not defined.');
+        return;
+      }
       this.currentAd.ad = iframe.contentWindow.getVPAIDAd();
 
       // Subscribe to ad unit events
