@@ -63,6 +63,7 @@ OO.Ads.manager(function(_, $) {
     // when wrapper ajax callback returns, wrapperParentId will be properly set
     this.wrapperParentId = null;
     this.adBreaks = [];
+    var repeatAds = [];
 
     // VPAID Variables
     var vpaidVideoRestrictions          = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
@@ -2003,6 +2004,28 @@ OO.Ads.manager(function(_, $) {
         }
       }, this);
     };
+
+    /*
+     *var _handleRepeatAfter = function(adBreak) {
+     *  return;
+     *  console.log("BLAH");
+     *  console.log(this.timeline);
+     *  console.log(adBreak);
+     *  if (adBreak.repeatAfter) {
+     *    var repeatTimeline = [];
+     *    console.log("acutally doing repeat");
+     *    var startOffset = this.timeline[0].position;
+     *    var endOfMainVideo = (this.amc.movieDuration + 1);
+     *    var step = _convertTimeStampToSeconds(adBreak.repeatAfter) / 1000;
+     *    for (var time = startOffset + step; time < endOfMainVideo; time += step) {
+     *      var newRepeatedAd = _.clone(this.timeline[0]);
+     *      newRepeatedAd.position = time;
+     *      repeatTimeline.push(newRepeatedAd);
+     *    }
+     *    this.amc.appendToTimeline(repeatTimeline);
+     *  }
+     *};
+     */
 
     /**
      * Helper function to find all node names with "vmap:TrackingEvents" / "TrackingEvents", and pick only
