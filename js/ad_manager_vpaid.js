@@ -37,6 +37,7 @@ OO.Ads.manager(function(_, $) {
     this.videoRestrictions              = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
                                             features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] };
     this.embedCode                      = 'unkown';
+    this.testMode                       = false;
 
     this.adURLOverride                  = '';
     this.allAdInfo                      = null;
@@ -186,7 +187,7 @@ OO.Ads.manager(function(_, $) {
      * @method VPaid#initialPlay
      */
     this.initialPlay = function() {
-      this.loadAllAds();
+      return this.loadAllAds();
     };
 
     /**
@@ -237,8 +238,9 @@ OO.Ads.manager(function(_, $) {
       }
       _setAdManagerToReady();
       if (this.preload) {
-        this.loadPreRolls();
+        return this.loadPreRolls();
       }
+      return false;
     };
 
     /**
@@ -1104,7 +1106,7 @@ OO.Ads.manager(function(_, $) {
      * @method VPaid#loadPreRolls
      */
     this.loadPreRolls = function() {
-      findAndLoadAd('pre');
+      return findAndLoadAd('pre');
     };
 
     /**
@@ -1114,7 +1116,7 @@ OO.Ads.manager(function(_, $) {
      * @method VPaid#loadAllVastAds
      */
     this.loadAllAds = function() {
-      findAndLoadAd(this.preload ? 'midPost' : 'all');
+      return findAndLoadAd(this.preload ? 'midPost' : 'all');
     };
 
    /**
@@ -1138,7 +1140,9 @@ OO.Ads.manager(function(_, $) {
           if (position && ((position == 'pre' && ad.position == 0) || (position == 'midPost' && ad.position > 0)
             || (position == 'all'))) {
             this.currentAdBeingLoaded = ad;
-            this.loadUrl(ad.tag_url);
+            if (!this.testMode) {
+              this.loadUrl(ad.tag_url);
+            }
             loadedAds = true;
           }
         }
