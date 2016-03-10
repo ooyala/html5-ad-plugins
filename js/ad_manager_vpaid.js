@@ -847,8 +847,6 @@ OO.Ads.manager(function(_, $) {
 
       if (!_.isEmpty(timelineAd)) {
         addToTimeline(timelineAd);
-      } else {
-        failedAd();
       }
     }, this);
 
