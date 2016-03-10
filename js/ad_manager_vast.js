@@ -490,7 +490,7 @@ OO.Ads.manager(function(_, $) {
     this.onPlayheadTimeChanged = function(eventname, playhead, duration) {
       var numberOfRepeatAdsToPlay = 0;
       _.each(repeatAds, function(repeatAd) {
-        var adsInQueue = this.amc.getAdQueueLength();
+        var adsInQueue = this.amc.getAdQueue().length;
         var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatAd.ad.repeatAfter;
         if (playhead >= nextTimeToPlay) {
           repeatAd.ad.lastPlayed = nextTimeToPlay;
