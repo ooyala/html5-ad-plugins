@@ -745,7 +745,6 @@ OO.Ads.manager(function(_, $) {
     };
 
     var setupAdsWrapper = function() {
-      shouldRequestAds = true;
       if (freeWheelCompanionAdsWrapper) {
         freeWheelCompanionAdsWrapper.show();
       }
@@ -758,6 +757,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#onPlayRequested
      */
     var onPlayRequested = function() {
+      shouldRequestAds = true;
       setupAdsWrapper();
     };
 
@@ -770,6 +770,7 @@ OO.Ads.manager(function(_, $) {
      */
     var onReplayRequested = function() {
       _resetAdState();
+      shouldRequestAds = true;
       setupAdsWrapper();
     };
 
