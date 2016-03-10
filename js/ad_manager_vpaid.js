@@ -527,7 +527,7 @@ OO.Ads.manager(function(_, $) {
         return;
       }
       name = node.nodeName;
-      format = name === 'Linear' ? 'Linear' : 'NonLinear';
+      format = name.toLowerCase() === 'linear' ? 'Linear' : 'NonLinear';
       return format;
     }, this);
 
