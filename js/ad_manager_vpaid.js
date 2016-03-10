@@ -1192,7 +1192,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {string} The Vast version.
      */
     var getVastVersion = _.bind(function(vastXML) {
-      return $(vastXML.firstChild).attr('version');
+      return $(vastXML).first().attr('version');
     }, this);
 
     /**
@@ -1328,8 +1328,10 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
     var isValidRootTagName = function(vastXML) {
-      var rootTagName = (vastXML && vastXML.firstChild) ? vastXML.firstChild.tagName || '' : '';
-      if (rootTagName.toUpperCase() != 'VAST') {
+      var $xml = $(vastXML),
+          rootTagName = (vastXML && $xml.first().length) ? $xml.first().prop('tagName') : '';
+
+      if (rootTagName.toUpperCase() !== 'VAST') {
         OO.log('VPaid: Invalid VAST XML for Tag Name: ' + rootTagName);
         return false;
       }
