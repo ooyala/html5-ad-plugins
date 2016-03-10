@@ -488,11 +488,22 @@ OO.Ads.manager(function(_, $) {
     };
 
     this.onPlayheadTimeChanged = function(eventname, playhead, duration) {
+      var numberOfRepeatAdsToPlay = 0;
       _.each(repeatAds, function(repeatAd) {
+        var adsInQueue = this.amc.getAdQueueLength();
         var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatAd.ad.repeatAfter;
         if (playhead >= nextTimeToPlay) {
           repeatAd.ad.lastPlayed = nextTimeToPlay;
-          this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
+
+          // According to VMAP spec: original AdBreak in the timeline should override any repeat ads with coinciding time.
+          // For example: a repeated ad has the same position as a mid-roll; the mid-roll takes precedence over the repeat.
+          // Note: the number of ads in the queue should always equal the number of repeat ads to play. The only time
+          // this conditional resolves to false is when adsInQueue already has an ad that is supposed to play - the original
+          // adBreak.
+          if (numberOfRepeatAdsToPlay === adsInQueue) {
+            numberOfRepeatAdsToPlay++;
+            this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
+          }
         }
       }, this);
     };
