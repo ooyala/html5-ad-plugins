@@ -820,8 +820,9 @@ OO.Ads.manager(function(_, $) {
           }
         }
       } else {
-        if (this.currentVPaidAd && this.currentVPaidAd.vpaidAd && this.currentVPaidAd.customData.nextAdInPod) {
-          var metadata = this.currentVPaidAd.customData.nextAdInPod;
+        //TODO: VPAID: Figure out why this is called when resuming video from clicking to non video
+        if (this.currentVPaidAd && this.currentVPaidAd.vpaidAd && this.currentVPaidAd.ad.nextAdInPod) {
+          var metadata = this.currentVPaidAd.ad.nextAdInPod;
           if (metadata) {
             nextAd = generateAd(metadata);
           }
@@ -857,6 +858,10 @@ OO.Ads.manager(function(_, $) {
             nextAd = null;
             _resetAdState();
             this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
+          } else {
+            if (this.adPodPrimary) {
+              this.amc.notifyPodEnded(this.adPodPrimary.id);
+            }
           }
         }, this);
       }
@@ -954,11 +959,18 @@ OO.Ads.manager(function(_, $) {
      */
     var initSkipAdOffset = _.bind(function(adWrapper) {
       var isVPaid = adWrapper.ad.data.adType === 'vpaid';
+      var adSkippableState = false;
+      var skipOffset = '';
       if (isVPaid) {
-        var adSkippableState = adWrapper.vpaidAd.getAdSkippableState();
+        adSkippableState = adWrapper.vpaidAd.getAdSkippableState();
       }
       if (supportsSkipAd(adWrapper.ad.data.version)) {
-        var skipOffset = adWrapper.ad.data.linear.skipOffset;
+        if (isVPaid) {
+          skipOffset = adWrapper.customData.skipOffset;
+        } else {
+          skipOffset = adWrapper.ad.data.linear.skipOffset;
+        }
+
         if (skipOffset) {
           if (skipOffset.indexOf('%') === skipOffset.length - 1) {
             this.amc.showSkipVideoAdButton(true, skipOffset, true);
@@ -1811,9 +1823,11 @@ OO.Ads.manager(function(_, $) {
       var ads = this.parseAds(vastXML, adLoaded);
       //check to see if any ads are sequenced (are podded)
       _.each(ads, _.bind(function(ad) {
-        if (supportsPoddedAds(ad.version) && typeof ad.sequence !== 'undefined' && _.isNumber(parseInt(ad.sequence))) {
+        var sequence = typeof ad.sequence !== 'undefined' && _.isNumber(parseInt(ad.sequence)) ? ad.sequence : ad.data ? ad.data.sequence : null;
+        var version = typeof ad.version !== 'undefined' ? ad.version : ad.data ? ad.data.version : null;
+        if (supportsPoddedAds(version) && sequence) {
           //Assume sequences will start from 1
-          result.podded[+ad.sequence - 1] = ad;
+          result.podded[+sequence - 1] = ad;
         } else {
           //store ad as a standalone ad
           result.standalone.push(ad);
@@ -1938,10 +1952,14 @@ OO.Ads.manager(function(_, $) {
             nonLinear: {}
           };
           this.mergeVastAdResult(fallbackAd, wrapperAds);
-          //Prefer to show linear fallback ad
-          processedFallbackAd = _handleLinearAd(fallbackAd, adLoaded);
-          if (!processedFallbackAd) {
-            processedFallbackAd = _handleNonLinearAd(fallbackAd, adLoaded);
+          if (!fallbackAd.data || fallbackAd.data.adType !== 'vpaid') {
+            //Prefer to show linear fallback ad
+            processedFallbackAd = _handleLinearAd(fallbackAd, adLoaded);
+            if (!processedFallbackAd) {
+              processedFallbackAd = _handleNonLinearAd(fallbackAd, adLoaded);
+            }
+          } else {
+            processedFallbackAd = fallbackAd;
           }
         }
       }
@@ -2035,44 +2053,6 @@ OO.Ads.manager(function(_, $) {
         }
       }
     };
-
-    /**
-     * Generates a list of parsed creatives
-     * @private
-     * @method VPaid#_processToTimeline
-     * @param {array} ads Split list of podded (sorted by sequence) and standalone ads
-     * @param {string} Current vast version
-     */
-    var _processToTimeline = _.bind(function(ads, version) {
-      var fallbackAd = null;
-      var previousAdUnit = null;
-      var timelineAd;
-      if (ads.podded && ads.podded.length > 0) {
-        if(supportsAdFallback(version) && ads.standalone && ads.standalone.length > 0) {
-          fallbackAd = ads.standalone[0];
-        }
-
-        _.each(ads.podded, function(ad) {
-          if (fallbackAd) {
-            ad.data.fallbackAd = fallbackAd;
-          }
-
-          if (previousAdUnit) {
-            previousAdUnit.data.nextAdInPod = ad;
-          }
-          previousAdUnit = ad;
-        });
-        timelineAd = ads.podded[0];
-      } else {
-        if (ads.standalone) {
-          timelineAd = ads.standalone[0];
-        }
-      }
-
-      if (!_.isEmpty(timelineAd)) {
-        addToTimeline(timelineAd);
-      }
-    }, this);
 
     /**
      * Handler for VMAP XML responses.
