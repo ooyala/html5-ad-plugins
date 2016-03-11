@@ -642,6 +642,16 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Getter for repeatAds.
+     * @private
+     * @method Vast#getRepeatAds
+     * @returns {object[]} The array of repeat ads.
+     */
+    this.getRepeatAds = function() {
+      return repeatAds;
+    };
+
+    /**
      * The ad manger controller will call loadMetadata when the metadata has been loaded and ready to be parsed.
      * Currently the vast ad manager will use the metadata to load any pre-rolls that are specified by the user.
      * @public
