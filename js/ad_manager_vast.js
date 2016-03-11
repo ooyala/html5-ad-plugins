@@ -599,7 +599,7 @@ OO.Ads.manager(function(_, $) {
 
       viewMode = _getFsState() ? 'fullscreen' : 'normal';
       creativeData = {
-        AdParameters: this.currentVPaidAd.vpaidAdParams
+        AdParameters: this.currentVPaidAd.adParams
       };
 
       this.initAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
@@ -654,12 +654,13 @@ OO.Ads.manager(function(_, $) {
       }
 
       this.ready = true;
+      var success = false;
       this.amc.onAdManagerReady();
 
       if (this.preload) {
-        return this.loadPreRolls();
+        success = this.loadPreRolls();
       }
-      return false;
+      return success;
     };
 
     /**
@@ -731,7 +732,7 @@ OO.Ads.manager(function(_, $) {
             this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
           } else {
             this.adPodPrimary = null;
-            if (badAd.vpaidAd.getAdLinear()) {
+            if (!badAd.vpaidAd || badAd.vpaidAd.getAdLinear()) {
               this.amc.notifyLinearAdEnded(badAd.id);
             } else {
               this.amc.notifyNonlinearAdEnded(badAd.id);
@@ -952,7 +953,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata
      */
     var initSkipAdOffset = _.bind(function(adWrapper) {
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
+      var isVPaid = adWrapper.ad.data.adType === 'vpaid';
       if (isVPaid) {
         var adSkippableState = adWrapper.vpaidAd.getAdSkippableState();
       }
@@ -1115,7 +1116,7 @@ OO.Ads.manager(function(_, $) {
      * @return {object} The AMC Ad object
      */
     var generateAd = _.bind(function(metadata) {
-      var isVPaid = metadata.data.adType === 'vpaid';
+      var isVPaid = metadata.data && metadata.data.adType === 'vpaid';
       if (!isVPaid) {
         if (!metadata) return false;
         var type, duration;
@@ -1161,21 +1162,23 @@ OO.Ads.manager(function(_, $) {
     var addToTimeline = _.bind(function(metadata) {
       var timeline = [];
       var ad = generateAd(metadata);
-      var isVPaid = metadata.data.adType === 'vpaid';
+      var isVPaid = metadata.data && metadata.data.adType === 'vpaid';
+      var success = false;
       if (!isVPaid) {
         if (metadata.streamUrl != null || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
           timeline.push(ad);
           this.amc.appendToTimeline(timeline);
-          return true;
+          success = true;
         }
-        return false;
       } else {
         if (!metadata) return;
         var timeline = [];
         timeline.push(ad);
 
         this.amc.appendToTimeline(timeline);
+        success = true;
       }
+      return success;
     }, this);
 
     /**
@@ -1786,9 +1789,10 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#parser
      * @param {XMLDocument} vastXML The xml that contains the ad data
+     * @param {object} adLoaded The ad loaded object and metadata
      * @returns {object[]} An array containing the ad(s) if ads are found, otherwise it returns null.
      */
-    this.parser = function(vastXML) {
+    this.parser = function(vastXML, adLoaded) {
       var jqueryAds =  $(vastXML).find("Ad");
       if (!this.checkNoAds(vastXML, jqueryAds)){
         // need to get error tracking information early in case error events need to be reported
@@ -1804,7 +1808,7 @@ OO.Ads.manager(function(_, $) {
         standalone : []
       };
       //parse the ad objects from the XML
-      var ads = this.parseAds(vastXML);
+      var ads = this.parseAds(vastXML, adLoaded);
       //check to see if any ads are sequenced (are podded)
       _.each(ads, _.bind(function(ad) {
         if (supportsPoddedAds(ad.version) && typeof ad.sequence !== 'undefined' && _.isNumber(parseInt(ad.sequence))) {
@@ -1825,12 +1829,13 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#parseAds
      * @param {xml} vastXML The xml that contains the ad data
      * @return {object[]} An array of ad objects
+     * @param {object} adLoaded The ad loaded object and metadata
      */
-    this.parseAds = function(vastXML) {
+    this.parseAds = function(vastXML, adLoaded) {
       var result = [];
       var version = getVastVersion(vastXML);
       $(vastXML).find("Ad").each(function() {
-        var singleAd = _getVpaidCreative(this, version);
+        var singleAd = _getVpaidCreative(this, version, adLoaded);
         //if there is no vpaid creative, parse as regular vast
         if (!singleAd) {
           singleAd = vastAdSingleParser(this, version);
@@ -1892,7 +1897,7 @@ OO.Ads.manager(function(_, $) {
             adPodLength : linearAdCount
           };
           this.mergeVastAdResult(ad, wrapperAds);
-          if (ad.data.adType !== 'vpaid') {
+          if (!ad.data || ad.data.adType !== 'vpaid') {
             if (_hasLinearAd(ad)) {
               var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
               if (linearAdUnit) {
@@ -2004,7 +2009,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
       this.wrapperParentId = wrapperParentIdArg;
-      var vastAds = this.parser(xml);
+      var vastAds = this.parser(xml, adLoaded);
       if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
         OO.log("VAST: XML Parsing Error");
         this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
@@ -2283,9 +2288,10 @@ OO.Ads.manager(function(_, $) {
      * @method VPaid#_getVPaidCreative
      * @param {XMLDocument} adXml Current ad xml
      * @param {string} Current vast version
+     * @param {object} adLoaded The ad loaded object and metadata
      * @return {object} Parsed vpaid's metadata ad
      */
-    var _getVpaidCreative = _.bind(function(adXml, version) {
+    var _getVpaidCreative = _.bind(function(adXml, version, adLoaded) {
       var adParams = '{}';
 
       this.$_node = $(adXml);
@@ -2362,6 +2368,7 @@ OO.Ads.manager(function(_, $) {
         error: errorTracking,
         videoClickTracking: videoClickTracking,
         version: version,
+        position: adLoaded.time / 1000,
         duration: isLinear ? OO.timeStringToSeconds(this.$_node.find('Duration').text()) : 0,
         type: isLinear ? this.amc.ADTYPE.LINEAR_VIDEO : this.amc.ADTYPE.NONLINEAR_OVERLAY,
         sequence: sequence || null,
@@ -2390,6 +2397,9 @@ OO.Ads.manager(function(_, $) {
           adLinear = ad.getAdLinear();
 
       _onPlayStarted();
+
+      //Since IMA handles its own UI, we want the video player to hide its UI elements
+      this.amc.hidePlayerUi();
 
       if (adLinear) {
         if (this.adPodPrimary === null) {
