@@ -510,7 +510,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Getter for repeatAds.
-     * @private
+     * @public
      * @method Vast#getRepeatAds
      * @returns {object[]} The array of repeat ads.
      */
