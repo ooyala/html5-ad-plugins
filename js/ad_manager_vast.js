@@ -647,7 +647,7 @@ OO.Ads.manager(function(_, $) {
     this.loadMetadata = function(pbMetadata, baseBacklotMetadata, movieMetadata) {
       // Interpret the data from the page and backlot - possibly combine this function with initialize
       this.embedCode = this.amc.currentEmbedCode;
-      this.allAdInfo = this.movieMd.ads || adManagerMetadata.all_ads;
+      this.allAdInfo = movieMetadata.ads || pbMetadata.all_ads;
       this.movieMd = movieMetadata;
       if (pbMetadata && pbMetadata.tagUrl) {
         this.adURLOverride = pbMetadata.tagUrl;
@@ -690,8 +690,8 @@ OO.Ads.manager(function(_, $) {
     var failedAd = _.bind(function() {
       var metadata = null;
       var badAd = currentAd;
+      var isVPaid = currentAd ? currentAd.ad.data.adType === 'vpaid' : false;
       currentAd = null;
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
 
       if (!isVPaid) {
         if (badAd) {
@@ -768,7 +768,8 @@ OO.Ads.manager(function(_, $) {
             this.currentAdBeingLoaded = ad;
 
             if (!this.testMode) {
-              this.loadUrl(ad.tag_url);
+              var url = typeof ad.url !== 'undefined' ? ad.url : ad.tag_url;
+              this.loadUrl(url);
             }
             loadedAds = true;
           }
@@ -806,7 +807,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.adVideoPlaying = function() {
       var isVPaid = currentAd.ad.data.adType === 'vpaid';
-      if (!isVaid) {
+      if (!isVPaid) {
         if (currentAd && currentAd.ad && currentAd.ad.nextAdInPod) {
           var metadata = currentAd.ad.nextAdInPod;
           if (metadata) {
@@ -1042,7 +1043,7 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} failed If true, the ending of this ad was caused by a failure
      */
     var _endAd = _.bind(function(ad, failed) {
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
+      var isVPaid = ad.ad.data.adType === 'vpaid';
       if (!isVPaid) {
         if (ad) {
           if (ad.isLinear) {
@@ -1114,7 +1115,7 @@ OO.Ads.manager(function(_, $) {
      * @return {object} The AMC Ad object
      */
     var generateAd = _.bind(function(metadata) {
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
+      var isVPaid = metadata.data.adType === 'vpaid';
       if (!isVPaid) {
         if (!metadata) return false;
         var type, duration;
@@ -1134,14 +1135,14 @@ OO.Ads.manager(function(_, $) {
           ad: metadata, adType: type, streams: metadata.streams
         })
       } else {
-        ad.customData = ad.data;
+        ad.customData = metadata.data;
 
         var newAd = new this.amc.Ad({
-          position: ad.data.position,
-          duration: ad.data.duration,
+          position: metadata.data.position,
+          duration: metadata.data.duration,
           adManager: this.name,
-          ad: ad,
-          adType: ad.data.type,
+          ad: metadata,
+          adType: metadata.data.type,
           streams: {'mp4' : ''}
         });
 
@@ -1160,7 +1161,7 @@ OO.Ads.manager(function(_, $) {
     var addToTimeline = _.bind(function(metadata) {
       var timeline = [];
       var ad = generateAd(metadata);
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
+      var isVPaid = metadata.data.adType === 'vpaid';
       if (!isVPaid) {
         if (metadata.streamUrl != null || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
           timeline.push(ad);
@@ -1169,10 +1170,10 @@ OO.Ads.manager(function(_, $) {
         }
         return false;
       } else {
-        if (!ad) return;
+        if (!metadata) return;
         var timeline = [], type, duration, newAd;
 
-        var newAd = generateAd(ad);
+        var newAd = generateAd(metadata);
         timeline.push(newAd);
 
         this.amc.appendToTimeline(timeline);
@@ -1557,7 +1558,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = function(adInfo) {
-      var isVPaid = adInfo.ad.data.adType === 'vpaid';
+      var isVPaid = adInfo.data.adType === 'vpaid';
 
       if (!isVPaid) {
         if (_.isNull(adInfo.data) || _.isEmpty(adInfo.data.companion)) {
@@ -1565,8 +1566,8 @@ OO.Ads.manager(function(_, $) {
         }
         this.amc.showCompanion(adInfo.data.companion);
       } else {
-        var customData = ad.customData,
-            adUnitCompanions = ad.ad.getAdCompanions(),
+        var customData = adInfo.customData,
+            adUnitCompanions = this.currentVPaidAd.ad.getAdCompanions(),
             companions;
 
         // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
@@ -1626,24 +1627,20 @@ OO.Ads.manager(function(_, $) {
      * @returns {object} The ad object with companion ad.
      */
     var parseCompanionAd = _.bind(function(companionAdXml) {
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
       var result = { tracking: {} };
       var staticResource = _cleanString(companionAdXml.find('StaticResource').text());
       var iframeResource = _cleanString(companionAdXml.find('IFrameResource').text());
       var htmlResource = _cleanString(companionAdXml.find('HTMLResource').text());
 
-      if (!isVPaid) {
-        parseTrackingEvents(result.tracking, companionAdXml, ["creativeView"]);
-      } else {
-        result.tracking = this._getTracking(companionAdXml[0]);
-      }
+      parseTrackingEvents(result.tracking, companionAdXml, ["creativeView"]);
 
       result = {
+        tracking: result.tracking,
         width: companionAdXml.attr('width'),
         height: companionAdXml.attr('height'),
         expandedWidth: companionAdXml.attr('expandedWidth'),
         expandedHeight: companionAdXml.attr('expandedHeight'),
-        CompanionClickThrough: companionAdXml.find('CompanionClickThrough').text()
+        companionClickThrough: companionAdXml.find('CompanionClickThrough').text()
       };
 
       if (staticResource.length) {
@@ -1833,26 +1830,17 @@ OO.Ads.manager(function(_, $) {
      */
     this.parseAds = function(vastXML) {
       var result = [];
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
-
-      if (!isVPaid) {
-        var version = getVastVersion(vastXML);
-        $(vastXML).find("Ad").each(function() {
-          var singleAd = vastAdSingleParser(this, version);
-          if (singleAd) {
-            result.push(singleAd);
-          }
-        });
-      } else {
-        $(vastXML).find('Ad').each(function(index, value) {
-          var singleAd = _getVpaidCreative(adLoaded, this, version);
-          if (singleAd) {
-            result.push(singleAd);
-          }
-        });
-
-        result =  _.sortBy(result, function(pod) { return pod.data.sequence });
-      }
+      var version = getVastVersion(vastXML);
+      $(vastXML).find("Ad").each(function() {
+        var singleAd = _getVpaidCreative(this, version);
+        //if there is no vpaid creative, parse as regular vast
+        if (!singleAd) {
+          singleAd = vastAdSingleParser(this, version);
+        }
+        if (singleAd) {
+          result.push(singleAd);
+        }
+      });
       return result;
     };
 
@@ -2015,42 +2003,29 @@ OO.Ads.manager(function(_, $) {
     this.onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
       this.wrapperParentId = wrapperParentIdArg;
       var vastAds = this.parser(xml);
-      var isVPaid = currentAd.ad.data.adType === 'vpaid';
-
-      if (!isVPaid) {
-        if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
-          OO.log("VAST: XML Parsing Error");
-          this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
-          failedAd();
-        } else {
-          var fallbackAd;
-          if(supportsAdFallback(getVastVersion(xml)) && vastAds.standalone.length > 0) {
-            fallbackAd = vastAds.standalone[0];
-          }
-          var ad;
-          //TODO: Determine when we show standalone ads if podded ads are available
-          //If there are no podded ads
-          if(_.isEmpty(vastAds.podded)) {
-            //show the first standalone ad
-            ad = vastAds.standalone[0];
-            if (ad) {
-              handleAds([ad], adLoaded);
-            }
-          }
-          //else show the podded ads
-          else {
-            handleAds(vastAds.podded, adLoaded, fallbackAd);
-          }
-        }
+      if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
+        OO.log("VAST: XML Parsing Error");
+        this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
+        failedAd();
       } else {
-        if (!this.isValidVastXML(xml)) {
-          return;
+        var fallbackAd;
+        if(supportsAdFallback(getVastVersion(xml)) && vastAds.standalone.length > 0) {
+          fallbackAd = vastAds.standalone[0];
         }
-        var version = getVastVersion(xml);
-        var parsedAds = _parseAds(adLoaded, xml, version);
-        // Will group ads by `podded` or `standalone` type
-        var ads = _.groupBy(parsedAds, 'adSequenceType');
-        _processToTimeline(ads, version);
+        var ad;
+        //TODO: Determine when we show standalone ads if podded ads are available
+        //If there are no podded ads
+        if(_.isEmpty(vastAds.podded)) {
+          //show the first standalone ad
+          ad = vastAds.standalone[0];
+          if (ad) {
+            handleAds([ad], adLoaded);
+          }
+        }
+        //else show the podded ads
+        else {
+          handleAds(vastAds.podded, adLoaded, fallbackAd);
+        }
       }
     };
 
@@ -2304,12 +2279,11 @@ OO.Ads.manager(function(_, $) {
      * Generates a parsed VPaid ad to load.
      * @private
      * @method VPaid#_getVPaidCreative
-     * @param {object} adLoaded Current ad loaded metadata.
      * @param {XMLDocument} adXml Current ad xml
      * @param {string} Current vast version
      * @return {object} Parsed vpaid's metadata ad
      */
-    var _getVpaidCreative = _.bind(function(adLoaded, adXml, version) {
+    var _getVpaidCreative = _.bind(function(adXml, version) {
       var adParams = '{}';
 
       this.$_node = $(adXml);
@@ -2386,7 +2360,6 @@ OO.Ads.manager(function(_, $) {
         error: errorTracking,
         videoClickTracking: videoClickTracking,
         version: version,
-        position: parseInt(adLoaded.position / 1000),
         duration: isLinear ? OO.timeStringToSeconds(this.$_node.find('Duration').text()) : 0,
         type: isLinear ? this.amc.ADTYPE.LINEAR_VIDEO : this.amc.ADTYPE.NONLINEAR_OVERLAY,
         sequence: sequence || null,
