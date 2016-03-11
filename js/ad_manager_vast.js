@@ -574,11 +574,11 @@ OO.Ads.manager(function(_, $) {
         OO.log('VPaid: Required function getVPAIDAd() is not defined.');
         return;
       }
-      this.currentVPaidAd.ad = iframe.contentWindow.getVPAIDAd();
+      this.currentVPaidAd.vpaidAd = iframe.contentWindow.getVPAIDAd();
 
       // Subscribe to ad unit events
       for (eventName in VPAID_EVENTS) {
-        this.currentVPaidAd.ad.subscribe(_.bind(_onAdEvent, this, VPAID_EVENTS[eventName]),
+        this.currentVPaidAd.vpaidAd.subscribe(_.bind(_onAdEvent, this, VPAID_EVENTS[eventName]),
             VPAID_EVENTS[eventName], this);
       }
 
@@ -599,7 +599,7 @@ OO.Ads.manager(function(_, $) {
 
       viewMode = _getFsState() ? 'fullscreen' : 'normal';
       creativeData = {
-        AdParameters: this.currentVPaidAd.adParams
+        AdParameters: this.currentVPaidAd.vpaidAdParams
       };
 
       this.initAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
@@ -622,7 +622,7 @@ OO.Ads.manager(function(_, $) {
         OO.log('VPaid Ad Unit is not valid.')
         return;
       }
-      this.currentVPaidAd.ad.initAd(width, height, viewMode, desiredBitrate, environmentVars, creativeData);
+      this.currentVPaidAd.vpaidAd.initAd(width, height, viewMode, desiredBitrate, environmentVars, creativeData);
     };
 
     /**
@@ -731,7 +731,7 @@ OO.Ads.manager(function(_, $) {
             this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
           } else {
             this.adPodPrimary = null;
-            if (badAd.ad.getAdLinear()) {
+            if (badAd.vpaidAd.getAdLinear()) {
               this.amc.notifyLinearAdEnded(badAd.id);
             } else {
               this.amc.notifyNonlinearAdEnded(badAd.id);
@@ -819,7 +819,7 @@ OO.Ads.manager(function(_, $) {
           }
         }
       } else {
-        if (this.currentVPaidAd && this.currentVPaidAd.ad && this.currentVPaidAd.customData.nextAdInPod) {
+        if (this.currentVPaidAd && this.currentVPaidAd.vpaidAd && this.currentVPaidAd.customData.nextAdInPod) {
           var metadata = this.currentVPaidAd.customData.nextAdInPod;
           if (metadata) {
             nextAd = generateAd(metadata);
@@ -929,7 +929,7 @@ OO.Ads.manager(function(_, $) {
           this.checkCompanionAds(adWrapper.ad);
         }
       } else {
-        this.currentPreloadedAd = ad;
+        this.currentPreloadedAd = adWrapper;
         _getFrame();
       }
     };
@@ -952,9 +952,9 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata
      */
     var initSkipAdOffset = _.bind(function(adWrapper) {
-        var isVPaid = currentAd.ad.data.adType === 'vpaid';
+      var isVPaid = currentAd.ad.data.adType === 'vpaid';
       if (isVPaid) {
-        var adSkippableState = adWrapper.ad.getAdSkippableState();
+        var adSkippableState = adWrapper.vpaidAd.getAdSkippableState();
       }
       if (supportsSkipAd(adWrapper.ad.data.version)) {
         var skipOffset = adWrapper.ad.data.linear.skipOffset;
@@ -1016,9 +1016,9 @@ OO.Ads.manager(function(_, $) {
       } else {
 
         if (params && params.code === this.amc.AD_CANCEL_CODE.SKIPPED && this.currentVPaidAd) {
-          if (this.currentVPaidAd.ad && typeof this.currentVPaidAd.ad.skipAd === 'function') {
+          if (this.currentVPaidAd.vpaidAd && typeof this.currentVPaidAd.vpaidAd.skipAd === 'function') {
             // Notify Ad Unit that we are skipping the ad
-            this.currentVPaidAd.ad.skipAd();
+            this.currentVPaidAd.vpaidAd.skipAd();
           }
         }
         if (ad.isLinear) {
@@ -1043,7 +1043,7 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} failed If true, the ending of this ad was caused by a failure
      */
     var _endAd = _.bind(function(ad, failed) {
-      var isVPaid = ad.ad.data.adType === 'vpaid';
+      var isVPaid = ad && ad.ad ? ad.ad.data.adType === 'vpaid' : false;
       if (!isVPaid) {
         if (ad) {
           if (ad.isLinear) {
@@ -1060,7 +1060,7 @@ OO.Ads.manager(function(_, $) {
         }
         currentAd = null;
       } else {
-        var isLinear = ad.ad.getAdLinear();
+        var isLinear = ad.vpaidAd.getAdLinear();
         if (this.currentVPaidAd && ad) {
           if (isLinear) {
             this.amc.notifyLinearAdEnded(ad.id);
@@ -1135,7 +1135,7 @@ OO.Ads.manager(function(_, $) {
           ad: metadata, adType: type, streams: metadata.streams
         })
       } else {
-        ad.customData = metadata.data;
+        metadata.customData = metadata.data;
 
         var newAd = new this.amc.Ad({
           position: metadata.data.position,
@@ -1171,10 +1171,8 @@ OO.Ads.manager(function(_, $) {
         return false;
       } else {
         if (!metadata) return;
-        var timeline = [], type, duration, newAd;
-
-        var newAd = generateAd(metadata);
-        timeline.push(newAd);
+        var timeline = [];
+        timeline.push(ad);
 
         this.amc.appendToTimeline(timeline);
       }
@@ -1245,8 +1243,8 @@ OO.Ads.manager(function(_, $) {
      */
     this.pauseAd = function(amcAd) {
       // Need to notify the ad unit that the player was paused
-      if (this.currentVPaidAd && this.currentVPaidAd.ad) {
-        this.currentVPaidAd.ad.pauseAd();
+      if (this.currentVPaidAd && this.currentVPaidAd.vpaidAd) {
+        this.currentVPaidAd.vpaidAd.pauseAd();
       }
     };
 
@@ -1258,8 +1256,8 @@ OO.Ads.manager(function(_, $) {
      */
     this.resumeAd = function(amcAd) {
       // Need to notify the ad unit that the player was resumed
-      if (this.currentVPaidAd && this.currentVPaidAd.ad) {
-        this.currentVPaidAd.ad.resumeAd();
+      if (this.currentVPaidAd && this.currentVPaidAd.vpaidAd) {
+        this.currentVPaidAd.vpaidAd.resumeAd();
       }
     };
 
@@ -1558,7 +1556,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = function(adInfo) {
-      var isVPaid = adInfo.data.adType === 'vpaid';
+      var isVPaid = adInfo.customData ? adInfo.customData.adType === 'vpaid' : false;
 
       if (!isVPaid) {
         if (_.isNull(adInfo.data) || _.isEmpty(adInfo.data.companion)) {
@@ -1567,7 +1565,7 @@ OO.Ads.manager(function(_, $) {
         this.amc.showCompanion(adInfo.data.companion);
       } else {
         var customData = adInfo.customData,
-            adUnitCompanions = this.currentVPaidAd.ad.getAdCompanions(),
+            adUnitCompanions = this.currentVPaidAd.vpaidAd.getAdCompanions(),
             companions;
 
         // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
@@ -1894,25 +1892,29 @@ OO.Ads.manager(function(_, $) {
             adPodLength : linearAdCount
           };
           this.mergeVastAdResult(ad, wrapperAds);
-          if (_hasLinearAd(ad)) {
-            var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
-            if (linearAdUnit) {
-              //The ad can have both a linear and non linear creative. We'll
-              //split these up into separate objects for ad playback
-              linearAdUnit = _.clone(linearAdUnit);
-              linearAdUnit.data.nonLinear = {};
-              adUnits.push(linearAdUnit);
+          if (ad.data.adType !== 'vpaid') {
+            if (_hasLinearAd(ad)) {
+              var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
+              if (linearAdUnit) {
+                //The ad can have both a linear and non linear creative. We'll
+                //split these up into separate objects for ad playback
+                linearAdUnit = _.clone(linearAdUnit);
+                linearAdUnit.data.nonLinear = {};
+                adUnits.push(linearAdUnit);
+              }
             }
-          }
-          if (_hasNonLinearAd(ad)) {
-            var nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
-            if (nonLinearAdUnit) {
-              //The ad can have both a linear and non linear creative. We'll
-              //split these up into separate objects for ad playback
-              nonLinearAdUnit = _.clone(nonLinearAdUnit);
-              nonLinearAdUnit.data.linear = {};
-              adUnits.push(nonLinearAdUnit);
+            if (_hasNonLinearAd(ad)) {
+              var nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
+              if (nonLinearAdUnit) {
+                //The ad can have both a linear and non linear creative. We'll
+                //split these up into separate objects for ad playback
+                nonLinearAdUnit = _.clone(nonLinearAdUnit);
+                nonLinearAdUnit.data.linear = {};
+                adUnits.push(nonLinearAdUnit);
+              }
             }
+          } else {
+            adUnits.push(ad);
           }
         } else if (ad.type === AD_TYPE.WRAPPER) {
           //TODO: Wrapper ads
@@ -2367,12 +2369,15 @@ OO.Ads.manager(function(_, $) {
         skipOffset: $node.attr('skipoffset') || null
       };
 
-      return {
+      var ret = {
         mediaFile: mediaFile,
         adParams: adParams,
         data: data,
-        adSequenceType: !!sequence ? 'podded' : 'standalone'
+        adSequenceType: !!sequence ? 'podded' : 'standalone',
+        type: AD_TYPE.INLINE
       };
+
+      return ret;
     }, this);
 
     /**
@@ -2381,7 +2386,7 @@ OO.Ads.manager(function(_, $) {
      * @method VPaid#_beginAd
      */
     var _beginAd = _.bind(function() {
-      var ad = this.currentVPaidAd.ad,
+      var ad = this.currentVPaidAd.vpaidAd,
           adLinear = ad.getAdLinear();
 
       _onPlayStarted();
@@ -2415,7 +2420,7 @@ OO.Ads.manager(function(_, $) {
     var _stopAd = _.bind(function() {
       var currentAd = this.currentVPaidAd;
       if (currentAd && currentAd.ad) {
-        currentAd.ad.stopAd();
+        currentAd.vpaidAd.stopAd();
       }
     }, this);
 
@@ -2559,7 +2564,7 @@ OO.Ads.manager(function(_, $) {
       switch(eventName) {
         case VPAID_EVENTS.AD_LOADED:
           adLoaded = true;
-          this.currentVPaidAd.ad.startAd();
+          this.currentVPaidAd.vpaidAd.startAd();
           // Added to make sure we display videoSlot correctly
           this._videoSlot.style.zIndex = 10001;
         break;
@@ -2628,7 +2633,7 @@ OO.Ads.manager(function(_, $) {
         break;
 
         case VPAID_EVENTS.AD_DURATION_CHANGE:
-          var remainingTime = this.currentVPaidAd.ad.getAdRemainingTime();
+          var remainingTime = this.currentVPaidAd.vpaidAd.getAdRemainingTime();
           if (!duration) {
             _stopAd();
           }
@@ -2641,12 +2646,12 @@ OO.Ads.manager(function(_, $) {
         break;
 
         case VPAID_EVENTS.AD_SKIPPABLE_STATE_CHANGE:
-          var skipState = this.currentVPaidAd.ad.getAdSkippableState();
+          var skipState = this.currentVPaidAd.vpaidAd.getAdSkippableState();
           this.amc.showSkipVideoAdButton(skipState, '0');
         break;
 
         case VPAID_EVENTS.AD_LINEAR_CHANGE:
-          var adLinear = this.currentVPaidAd.ad.getAdLinear();
+          var adLinear = this.currentVPaidAd.vpaidAd.getAdLinear();
           transitionFromNonLinearVideo = true;
           if (adLinear) {
             _beginAd();
@@ -2655,7 +2660,7 @@ OO.Ads.manager(function(_, $) {
         break;
 
         case VPAID_EVENTS.AD_VOLUME_CHANGE:
-          var volume = this.currentVPaidAd.ad.getAdVolume();
+          var volume = this.currentVPaidAd.vpaidAd.getAdVolume();
           if (volume) {
             this._sendTracking('unmute');
           } else {
@@ -2691,7 +2696,7 @@ OO.Ads.manager(function(_, $) {
      * @method VPaid#_resetAdState
      */
     var _resetAdState = _.bind(function() {
-      _removeListeners(this.currentVPaidAd.ad);
+      _removeListeners(this.currentVPaidAd.vpaidAd);
       this.currentVPaidAd            = null;
       this.currentAdBeingLoaded = null;
       this.format               = null;
@@ -2733,7 +2738,7 @@ OO.Ads.manager(function(_, $) {
      * @return {boolean} VPaid validated value
      */
     var _isValidVPaid = _.bind(function() {
-      var creative = this.currentVPaidAd.ad,
+      var creative = this.currentVPaidAd.vpaidAd,
           vpaidVersion = parseInt(creative.handshakeVersion('2.0')),
           isValid = true;
 
@@ -2863,8 +2868,8 @@ OO.Ads.manager(function(_, $) {
      * @param {string} viewMode Can take values: fullscreen or normal
      */
     this.resize = function(width, height, viewMode) {
-      if (this.currentVPaidAd && this.currentVPaidAd.ad) {
-        this.currentVPaidAd.ad.resizeAd(width, height, viewMode);
+      if (this.currentVPaidAd && this.currentVPaidAd.vpaidAd) {
+        this.currentVPaidAd.vpaidAd.resizeAd(width, height, viewMode);
       }
     };
   };
