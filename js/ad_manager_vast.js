@@ -1950,7 +1950,12 @@ OO.Ads.manager(function(_, $) {
             handleAds([ad], adLoaded);
           }
         }
-        //else show the podded ads
+        // A VAST response wrapped in VMAP could have allowMultipleAds specified by the VMAP AdBreak
+        else if (adLoaded.vmap) {
+          if (adLoaded.allowMultipleAds) {
+            handleAds(vastAds.podded, adLoaded, fallbackAd);
+          }
+        }
         else {
           handleAds(vastAds.podded, adLoaded, fallbackAd);
         }
@@ -2098,6 +2103,8 @@ OO.Ads.manager(function(_, $) {
          *type: "",
          *url: ""
          */
+        vmap: true,
+        allowMultipleAds: true,
         time: 0,
         position_type: "t",
       };
@@ -2130,29 +2137,29 @@ OO.Ads.manager(function(_, $) {
             OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
             adObject = null;
         }
-        if (adBreak.timeOffset) {
-          switch(true) {
-            // case: "start"
-            case /^start$/.test(adBreak.timeOffset):
-              adObject.time = 0;
-              break;
-            // case: "end"
-            case /^end$/.test(adBreak.timeOffset):
-              adObject.time = (this.amc.movieDuration + 1) * 1000;
-              break;
-            // case: hh:mm:ss.mmm | hh:mm:ss
-            case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
-              adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
-              break;
-            // case: [0, 100]%
-            case /^\d{1,3}%$/.test(adBreak.timeOffset):
-              // TODO: test percentage > 100
-              adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
-              break;
-            default:
-              OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
-              adObject = null;
-          }
+      }
+      if (adBreak.timeOffset) {
+        switch(true) {
+          // case: "start"
+          case /^start$/.test(adBreak.timeOffset):
+            adObject.time = 0;
+            break;
+          // case: "end"
+          case /^end$/.test(adBreak.timeOffset):
+            adObject.time = (this.amc.movieDuration + 1) * 1000;
+            break;
+          // case: hh:mm:ss.mmm | hh:mm:ss
+          case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
+            adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
+            break;
+          // case: [0, 100]%
+          case /^\d{1,3}%$/.test(adBreak.timeOffset):
+            // TODO: test percentage > 100
+            adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
+            break;
+          default:
+            OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
+            adObject = null;
         }
       }
       return adObject;
