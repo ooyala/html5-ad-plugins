@@ -488,9 +488,8 @@ OO.Ads.manager(function(_, $) {
     };
 
     this.onPlayheadTimeChanged = function(eventname, playhead, duration) {
-      var numberOfRepeatAdsToPlay = 0;
+      var areAdsPlaying = this.amc.areAdsPlaying();
       _.each(repeatAds, function(repeatAd) {
-        var adsInQueue = this.amc.getAdQueue().length;
         var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatAd.ad.repeatAfter;
         if (playhead >= nextTimeToPlay) {
           repeatAd.ad.lastPlayed = nextTimeToPlay;
@@ -500,8 +499,7 @@ OO.Ads.manager(function(_, $) {
           // Note: the number of ads in the queue should always equal the number of repeat ads to play. The only time
           // this conditional resolves to false is when adsInQueue already has an ad that is supposed to play - the original
           // adBreak.
-          if (numberOfRepeatAdsToPlay === adsInQueue) {
-            numberOfRepeatAdsToPlay++;
+          if (!areAdsPlaying) {
             this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
           }
         }
