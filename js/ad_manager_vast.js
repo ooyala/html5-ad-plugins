@@ -487,6 +487,14 @@ OO.Ads.manager(function(_, $) {
       this.amc.addPlayerListener(this.amc.EVENTS.PLAYHEAD_TIME_CHANGED, _.bind(this.onPlayheadTimeChanged, this));
     };
 
+    /**
+     * Called when a video time changes. Used to check if VMAP repeat ads should play.
+     * @public
+     * @method Vast#onPlayheadTimeChanged
+     * @param {string} eventname The name of the event for which this callback is called.
+     * @param {number} playhead Current video time (seconds).
+     * @param {number} duration Duration of the current video (seconds)
+     */
     this.onPlayheadTimeChanged = function(eventname, playhead, duration) {
       var areAdsPlaying = this.amc.areAdsPlaying();
       _.each(repeatAds, function(repeatAd) {
