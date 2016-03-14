@@ -1683,8 +1683,8 @@ describe('ad_manager_vast', function() {
       adQueue.push(newAd);
     };
 
-    amc.getAdQueue = function() {
-      return adQueue;
+    amc.areAdsPlaying = function() {
+      return adQueue.length > 0;
     };
 
     vastAdManager.initialize(amc);
