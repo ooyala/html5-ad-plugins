@@ -529,6 +529,7 @@ OO.Ads.manager(function(_, $) {
           var repeatInterval = repeatAd.ad.repeatAfter;
           var positionOfCurrentAd = this.amc.getPositionOfCurrentAd();
           var positionOfLastAd = repeatInterval * Math.floor(playhead / repeatInterval);
+
           // if there isn't an ad to play after seek then assume lastPlayed is the supposed
           // last played position
           if (!positionOfCurrentAd) {
@@ -538,12 +539,14 @@ OO.Ads.manager(function(_, $) {
             }
             repeatAd.ad.lastPlayed = positionOfLastAd;
           }
+
           // if there is a current ad but the playhead would be past the point
           // of a supposed last ad, then pretend the lastPlayed for repeat ad is at the
           // supposed last ad position
           else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
             repeatAd.ad.lastPlayed = positionOfLastAd;
           }
+
           // TODO if there is a current ad (i.e. midroll) then set the...
           else {
             repeatAd.ad.lastPlayed = positionOfCurrentAd;
@@ -553,15 +556,16 @@ OO.Ads.manager(function(_, $) {
     };
 
     this.onReplay = function() {
-      // reset repeatAds attributes (specifically the ad's lastPlayed attribute) for replay
-      maxPlayhead = 0;
-      var zipped = _.zip(repeatAds, repeatAdsInitialStates);
-      _.each(zipped, function(zip) {
-        var repeatAd = zip[0];
-        var initialState = zip[1];
-        repeatAd.ad.lastPlayed = initialState;
-      });
+      _resetRepeatAds();
     };
+
+    var _resetRepeatAds = _.bind(function() {
+      maxPlayhead = 0;
+      _.each(repeatAds, function(repeatAd) {
+        repeatAd.ad.firstRepeatAdPlayed = false;
+      });
+      repeatAds = [];
+    }, this);
 
     /**
      * Getter for repeatAds.
