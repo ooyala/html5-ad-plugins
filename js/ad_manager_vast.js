@@ -64,6 +64,7 @@ OO.Ads.manager(function(_, $) {
     this.wrapperParentId = null;
     this.adBreaks = [];
     var repeatAds = [];
+    var repeatAdsInitialStates = [];
     var currentPlayhead;
 
     // VPAID Variables
@@ -656,6 +657,7 @@ OO.Ads.manager(function(_, $) {
           else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
             repeatAd.ad.lastPlayed = positionOfLastAd;
           }
+          // TODO if there is a current ad (i.e. midroll) then set the...
           else {
             repeatAd.ad.lastPlayed = positionOfCurrentAd;
           }
@@ -664,7 +666,13 @@ OO.Ads.manager(function(_, $) {
     };
 
     this.onReplay = function() {
-      // TODO
+      // reset repeatAds attributes (specifically the ad's lastPlayed attribute) for replay
+      var zipped = _.zip(repeatAds, repeatAdsInitialStates);
+      _.each(zipped, function(zip) {
+        var repeatAd = zip[0];
+        var initialState = zip[1];
+        repeatAd.ad.lastPlayed = initialState;
+      });
     };
 
     /**
