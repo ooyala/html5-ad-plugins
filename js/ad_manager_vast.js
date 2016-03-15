@@ -485,6 +485,8 @@ OO.Ads.manager(function(_, $) {
       this.amc = amc;
       this.amc.addPlayerListener(this.amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(this.initialPlay, this));
       this.amc.addPlayerListener(this.amc.EVENTS.PLAYHEAD_TIME_CHANGED, _.bind(this.onPlayheadTimeChanged, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.SEEKED, _.bind(this.onSeeked, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
     };
 
     /**
@@ -512,6 +514,33 @@ OO.Ads.manager(function(_, $) {
           }
         }
       }, this);
+    };
+
+    this.onSeeked = function(eventname, playhead) {
+      var areAdsPlaying = this.amc.areAdsPlaying();
+      _.each(repeatAds, function(repeatAd) {
+        var repeatInterval = repeatAd.ad.repeatAfter;
+        var positionOfCurrentAd = this.amc.getPositionOfCurrentAd();
+        var positionOfLastAd = repeatInterval * Math.floor(playhead / repeatInterval);
+        // if there isn't an ad to play after seek then assume lastPlayed is the supposed
+        // last played position
+        if (!positionOfCurrentAd) {
+          repeatAd.ad.lastPlayed = positionOfLastAd;
+        }
+        // if there is a current ad but the playhead would be past the point
+        // of a supposed last ad, then pretend the lastPlayed for repeat ad is at the
+        // supposed last ad position
+        else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
+          repeatAd.ad.lastPlayed = positionOfLastAd;
+        }
+        else {
+          repeatAd.ad.lastPlayed = positionOfCurrentAd;
+        }
+      }, this);
+    };
+
+    this.onReplay = function() {
+      // TODO
     };
 
     /**
