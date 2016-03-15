@@ -64,6 +64,7 @@ OO.Ads.manager(function(_, $) {
     this.wrapperParentId = null;
     this.adBreaks = [];
     var repeatAds = [];
+    var currentPlayhead;
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -513,30 +514,38 @@ OO.Ads.manager(function(_, $) {
             this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
           }
         }
+        currentPlayhead = playhead;
       }, this);
     };
 
     this.onSeeked = function(eventname, playhead) {
-      var areAdsPlaying = this.amc.areAdsPlaying();
-      _.each(repeatAds, function(repeatAd) {
-        var repeatInterval = repeatAd.ad.repeatAfter;
-        var positionOfCurrentAd = this.amc.getPositionOfCurrentAd();
-        var positionOfLastAd = repeatInterval * Math.floor(playhead / repeatInterval);
-        // if there isn't an ad to play after seek then assume lastPlayed is the supposed
-        // last played position
-        if (!positionOfCurrentAd) {
-          repeatAd.ad.lastPlayed = positionOfLastAd;
-        }
-        // if there is a current ad but the playhead would be past the point
-        // of a supposed last ad, then pretend the lastPlayed for repeat ad is at the
-        // supposed last ad position
-        else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
-          repeatAd.ad.lastPlayed = positionOfLastAd;
-        }
-        else {
-          repeatAd.ad.lastPlayed = positionOfCurrentAd;
-        }
-      }, this);
+      // only do logic for repeat ads if seeking to the future
+      if (currentPlayhead < playhead) {
+        var areAdsPlaying = this.amc.areAdsPlaying();
+        _.each(repeatAds, function(repeatAd) {
+          var repeatInterval = repeatAd.ad.repeatAfter;
+          var positionOfCurrentAd = this.amc.getPositionOfCurrentAd();
+          var positionOfLastAd = repeatInterval * Math.floor(playhead / repeatInterval);
+          // if there isn't an ad to play after seek then assume lastPlayed is the supposed
+          // last played position
+          if (!positionOfCurrentAd) {
+            var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatInterval;
+            if (playhead >= nextTimeToPlay) {
+              this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
+            }
+            repeatAd.ad.lastPlayed = positionOfLastAd;
+          }
+          // if there is a current ad but the playhead would be past the point
+          // of a supposed last ad, then pretend the lastPlayed for repeat ad is at the
+          // supposed last ad position
+          else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
+            repeatAd.ad.lastPlayed = positionOfLastAd;
+          }
+          else {
+            repeatAd.ad.lastPlayed = positionOfCurrentAd;
+          }
+        }, this);
+      }
     };
 
     this.onReplay = function() {
