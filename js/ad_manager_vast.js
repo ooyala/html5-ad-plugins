@@ -65,7 +65,7 @@ OO.Ads.manager(function(_, $) {
     this.adBreaks = [];
     var repeatAds = [];
     var repeatAdsInitialStates = [];
-    var currentPlayhead;
+    var maxPlayhead = 0;
 
     // VPAID Variables
     var vpaidVideoRestrictions          = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
@@ -636,7 +636,7 @@ OO.Ads.manager(function(_, $) {
 
     this.onSeeked = function(eventname, playhead) {
       // only do logic for repeat ads if seeking to the future
-      if (currentPlayhead < playhead) {
+      if (maxPlayhead < playhead) {
         var areAdsPlaying = this.amc.areAdsPlaying();
         _.each(repeatAds, function(repeatAd) {
           var repeatInterval = repeatAd.ad.repeatAfter;
@@ -667,6 +667,7 @@ OO.Ads.manager(function(_, $) {
 
     this.onReplay = function() {
       // reset repeatAds attributes (specifically the ad's lastPlayed attribute) for replay
+      maxPlayhead = 0;
       var zipped = _.zip(repeatAds, repeatAdsInitialStates);
       _.each(zipped, function(zip) {
         var repeatAd = zip[0];
