@@ -632,6 +632,33 @@ OO.Ads.manager(function(_, $) {
       _safeFunctionCall(currentAd.vpaidAd, "initAd", [width, height, viewMode, desiredBitrate, environmentVars, creativeData]);
     };
 
+    this.onSeeked = function(eventname, playhead) {
+      var areAdsPlaying = this.amc.areAdsPlaying();
+      _.each(repeatAds, function(repeatAd) {
+        var repeatInterval = repeatAd.ad.repeatAfter;
+        var positionOfCurrentAd = this.amc.getPositionOfCurrentAd();
+        var positionOfLastAd = repeatInterval * Math.floor(playhead / repeatInterval);
+        // if there isn't an ad to play after seek then assume lastPlayed is the supposed
+        // last played position
+        if (!positionOfCurrentAd) {
+          repeatAd.ad.lastPlayed = positionOfLastAd;
+        }
+        // if there is a current ad but the playhead would be past the point
+        // of a supposed last ad, then pretend the lastPlayed for repeat ad is at the
+        // supposed last ad position
+        else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
+          repeatAd.ad.lastPlayed = positionOfLastAd;
+        }
+        else {
+          repeatAd.ad.lastPlayed = positionOfCurrentAd;
+        }
+      }, this);
+    };
+
+    this.onReplay = function() {
+      // TODO
+    };
+
     /**
      * Called by Ad Manager Controller.  When this function is called, the ui has been setup and the values
      * in amc.ui are ready to be used.
