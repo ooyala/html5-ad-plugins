@@ -634,6 +634,13 @@ OO.Ads.manager(function(_, $) {
       _safeFunctionCall(currentAd.vpaidAd, "initAd", [width, height, viewMode, desiredBitrate, environmentVars, creativeData]);
     };
 
+    /**
+     * Called when video is seeked.
+     * @public
+     * @method Vast#onSeeked
+     * @param {string} eventname The name of the event for which this callback is called.
+     * @param {number} playhead Current video time (seconds).
+     */
     this.onSeeked = function(eventname, playhead) {
       // only do logic for repeat ads if seeking to the future
       if (maxPlayhead < playhead) {
@@ -668,10 +675,20 @@ OO.Ads.manager(function(_, $) {
       }
     };
 
+    /**
+     * Called when video replays.
+     * @public
+     * @method Vast#onReplay
+     */
     this.onReplay = function() {
       _resetRepeatAds();
     };
 
+    /**
+     * Reset repeat ads states.
+     * @private
+     * @method Vast#_resetRepeatAds
+     */
     var _resetRepeatAds = _.bind(function() {
       maxPlayhead = 0;
       _.each(repeatAds, function(repeatAd) {
