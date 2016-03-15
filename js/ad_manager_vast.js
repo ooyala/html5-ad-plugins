@@ -65,7 +65,7 @@ OO.Ads.manager(function(_, $) {
     this.adBreaks = [];
     var repeatAds = [];
     var repeatAdsInitialStates = [];
-    var currentPlayhead;
+    var maxPlayhead = 0;
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -515,13 +515,15 @@ OO.Ads.manager(function(_, $) {
             this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
           }
         }
-        currentPlayhead = playhead;
+        if (playhead > maxPlayhead) {
+          maxPlayhead = playhead;
+        }
       }, this);
     };
 
     this.onSeeked = function(eventname, playhead) {
       // only do logic for repeat ads if seeking to the future
-      if (currentPlayhead < playhead) {
+      if (maxPlayhead < playhead) {
         var areAdsPlaying = this.amc.areAdsPlaying();
         _.each(repeatAds, function(repeatAd) {
           var repeatInterval = repeatAd.ad.repeatAfter;
@@ -552,6 +554,7 @@ OO.Ads.manager(function(_, $) {
 
     this.onReplay = function() {
       // reset repeatAds attributes (specifically the ad's lastPlayed attribute) for replay
+      maxPlayhead = 0;
       var zipped = _.zip(repeatAds, repeatAdsInitialStates);
       _.each(zipped, function(zip) {
         var repeatAd = zip[0];
