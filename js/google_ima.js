@@ -61,6 +61,9 @@ require("../html5-common/js/utils/utils.js");
       var VISIBLE_CSS = {left: OO.CSS.VISIBLE_POSITION, visibility: "visible"};
       var INVISIBLE_CSS = {left: OO.CSS.INVISIBLE_POSITION, visibility: "hidden"};
 
+      var OVERLAY_WIDTH_PADDING = 50;
+      var OVERLAY_HEIGHT_PADDING = 50;
+
       var TIME_UPDATER_INTERVAL = 500;
 
       /**
@@ -454,13 +457,13 @@ require("../html5-common/js/utils/utils.js");
             //the skin plugins div when a non linear overlay is on screen
             if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
             {
-              this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
-              this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
               //IMA requires some padding in order to have the overlay render or else
               //IMA thinks the available real estate is too small.
-              //There is no requirement for this to be customizable but we could include
-              //the ability to specify the padding in the future.
-              this.currentAMCAdPod.paddingRequired = true;
+              this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
+              this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
+              this.currentAMCAdPod.paddingWidth = OVERLAY_WIDTH_PADDING;
+              this.currentAMCAdPod.paddingHeight = OVERLAY_HEIGHT_PADDING;
+              _onSizeChanged();
             }
             // raise WILL_PLAY_NONLINEAR_AD event and alert AMC and player that a nonlinear ad is started.
             // Nonlinear ad is rendered by IMA.
@@ -792,7 +795,17 @@ require("../html5-common/js/utils/utils.js");
         if (_IMAAdsManager && _uiContainer)
         {
           var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
-          _IMAAdsManager.resize(_uiContainer.clientWidth, _uiContainer.clientHeight, viewMode);
+          var width = _uiContainer.clientWidth;
+          var height = _uiContainer.clientHeight;
+          //For nonlinear overlays, we want to provide the size that we sent to the AMC
+          //to publish to the skin. We do this because the size of the plugins div will
+          //not be equal to the size of the video container
+          if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
+          {
+            width = this.currentAMCAdPod.width + this.currentAMCAdPod.paddingWidth;
+            height = this.currentAMCAdPod.height + this.currentAMCAdPod.paddingHeight;
+          }
+          _IMAAdsManager.resize(width, height, viewMode);
         }
       });
 
