@@ -414,9 +414,6 @@ require("../html5-common/js/utils/utils.js");
           _throwError("playAd() called but amcAdPod.ad is null.");
         }
 
-        //Since IMA handles its own UI, we want the video player to hide its UI elements
-        _amc.hidePlayerUi();
-
         if(_usingAdRules && this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
         {
           //we started our placeholder ad
@@ -1299,6 +1296,8 @@ require("../html5-common/js/utils/utils.js");
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }
+              //Since IMA handles its own UI, we want the video player to hide its UI elements
+              _amc.hidePlayerUi();
             }
             else
             {
@@ -1309,7 +1308,10 @@ require("../html5-common/js/utils/utils.js");
             _tryStartAd();
             if (this.videoControllerWrapper)
             {
-              this.videoControllerWrapper.raisePlayEvent();
+              if (ad.isLinear())
+              {
+                this.videoControllerWrapper.raisePlayEvent();
+              }
               this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
               _startTimeUpdater();
             }
@@ -1317,7 +1319,10 @@ require("../html5-common/js/utils/utils.js");
           case eventType.RESUMED:
             if (this.videoControllerWrapper)
             {
-              this.videoControllerWrapper.raisePlayEvent();
+              if (ad.isLinear())
+              {
+                this.videoControllerWrapper.raisePlayEvent();
+              }
             }
             break;
           case eventType.USER_CLOSE:
