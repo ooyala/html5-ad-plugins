@@ -801,8 +801,23 @@ require("../html5-common/js/utils/utils.js");
           //We do this because the player skin plugins div (_uiContainer) may not have been redrawn yet
           if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
           {
-            width = this.currentAMCAdPod.width + this.currentAMCAdPod.paddingWidth;
-            height = this.currentAMCAdPod.height + this.currentAMCAdPod.paddingHeight;
+            if (this.currentAMCAdPod.width)
+            {
+              width = this.currentAMCAdPod.width;
+              if (this.currentAMCAdPod.paddingWidth)
+              {
+                width += this.currentAMCAdPod.paddingWidth;
+              }
+            }
+
+            if (this.currentAMCAdPod.height)
+            {
+              height = this.currentAMCAdPod.height;
+              if (this.currentAMCAdPod.paddingHeight)
+              {
+                height += this.currentAMCAdPod.paddingHeight;
+              }
+            }
           }
           _IMAAdsManager.resize(width, height, viewMode);
         }

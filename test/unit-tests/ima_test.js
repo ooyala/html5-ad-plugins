@@ -386,6 +386,8 @@ describe('ad_manager_ima', function()
     var nonLinearHeight = -1;
     var paddingWidth = -1;
     var paddingHeight = -1;
+    var imaWidth = -1;
+    var imaHeight = -1;
     google.ima.linearAds = false;
     initAndPlay(false, vci);
     var id = "blah";
@@ -410,6 +412,11 @@ describe('ad_manager_ima', function()
     //original ad definition
     ima.playAd(amc.timeline[0]);
     var am = google.ima.adManagerInstance;
+    am.resize = function(width, height, viewMode)
+    {
+      imaWidth = width;
+      imaHeight = height;
+    };
     var currentAd = am.getCurrentAd();
     currentAd.getWidth = function()
     {
@@ -428,6 +435,9 @@ describe('ad_manager_ima', function()
     //as OVERLAY_WIDTH_PADDING and OVERLAY_HEIGHT_PADDING
     expect(paddingWidth).to.be(50);
     expect(paddingHeight).to.be(50);
+    //base + padding = ima width/height
+    expect(imaWidth).to.be(350);
+    expect(imaHeight).to.be(100);
   });
 
   it('AMC Integration, IMA Event: IMA CLICK event notifies amc of an ad click', function()
