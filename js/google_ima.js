@@ -797,9 +797,8 @@ require("../html5-common/js/utils/utils.js");
           var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
           var width = _uiContainer.clientWidth;
           var height = _uiContainer.clientHeight;
-          //For nonlinear overlays, we want to provide the size that we sent to the AMC
-          //to publish to the skin. We do this because the size of the plugins div will
-          //not be equal to the size of the video container
+          //For nonlinear overlays, we want to provide the size that we sent to the AMC in playAd.
+          //We do this because the player skin plugins div (_uiContainer) may not have been redrawn yet
           if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
           {
             width = this.currentAMCAdPod.width + this.currentAMCAdPod.paddingWidth;
