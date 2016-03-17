@@ -63,9 +63,6 @@ OO.Ads.manager(function(_, $) {
     // when wrapper ajax callback returns, wrapperParentId will be properly set
     this.wrapperParentId = null;
     this.adBreaks = [];
-    var repeatAds = [];
-    var repeatAdsInitialStates = [];
-    var maxPlayhead = 0;
 
     // VPAID Variables
     var vpaidVideoRestrictions          = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
