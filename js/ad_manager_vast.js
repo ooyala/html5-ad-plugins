@@ -63,9 +63,6 @@ OO.Ads.manager(function(_, $) {
     // when wrapper ajax callback returns, wrapperParentId will be properly set
     this.wrapperParentId = null;
     this.adBreaks = [];
-    var repeatAds = [];
-    var repeatAdsInitialStates = [];
-    var maxPlayhead = 0;
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -486,112 +483,6 @@ OO.Ads.manager(function(_, $) {
     this.initialize = function(amc) {
       this.amc = amc;
       this.amc.addPlayerListener(this.amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(this.initialPlay, this));
-      this.amc.addPlayerListener(this.amc.EVENTS.PLAYHEAD_TIME_CHANGED, _.bind(this.onPlayheadTimeChanged, this));
-      this.amc.addPlayerListener(this.amc.EVENTS.SEEKED, _.bind(this.onSeeked, this));
-      this.amc.addPlayerListener(this.amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
-    };
-
-    /**
-     * Called when a video time changes. Used to check if VMAP repeat ads should play.
-     * @public
-     * @method Vast#onPlayheadTimeChanged
-     * @param {string} eventname The name of the event for which this callback is called.
-     * @param {number} playhead Current video time (seconds).
-     * @param {number} duration Duration of the current video (seconds)
-     */
-    this.onPlayheadTimeChanged = function(eventname, playhead, duration) {
-      var areAdsPlaying = this.amc.areAdsPlaying();
-      _.each(repeatAds, function(repeatAd) {
-        var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatAd.ad.repeatAfter;
-        if (playhead >= nextTimeToPlay) {
-          repeatAd.ad.lastPlayed = nextTimeToPlay;
-
-          // According to VMAP spec: original AdBreak in the timeline should override any repeat ads with coinciding time.
-          // For example: a repeated ad has the same position as a mid-roll; the mid-roll takes precedence over the repeat.
-          // Note: the number of ads in the queue should always equal the number of repeat ads to play. The only time
-          // this conditional resolves to false is when adsInQueue already has an ad that is supposed to play - the original
-          // adBreak.
-          if (!areAdsPlaying) {
-            this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
-          }
-        }
-        if (playhead > maxPlayhead) {
-          maxPlayhead = playhead;
-        }
-      }, this);
-    };
-
-    /**
-     * Called when video is seeked.
-     * @public
-     * @method Vast#onSeeked
-     * @param {string} eventname The name of the event for which this callback is called.
-     * @param {number} playhead Current video time (seconds).
-     */
-    this.onSeeked = function(eventname, playhead) {
-      // only do logic for repeat ads if seeking to the future
-      if (maxPlayhead < playhead) {
-        var areAdsPlaying = this.amc.areAdsPlaying();
-        _.each(repeatAds, function(repeatAd) {
-          var repeatInterval = repeatAd.ad.repeatAfter;
-          var positionOfCurrentAd = this.amc.getPositionOfCurrentAd();
-          var positionOfLastAd = repeatInterval * Math.floor(playhead / repeatInterval);
-
-          // if there isn't an ad to play after seek then assume lastPlayed is the supposed
-          // last played position
-          if (!positionOfCurrentAd) {
-            var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatInterval;
-            if (playhead >= nextTimeToPlay) {
-              this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
-            }
-            repeatAd.ad.lastPlayed = positionOfLastAd;
-          }
-
-          // if there is a current ad but the playhead would be past the point
-          // of a supposed last ad, then pretend the lastPlayed for repeat ad is at the
-          // supposed last ad position
-          else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
-            repeatAd.ad.lastPlayed = positionOfLastAd;
-          }
-
-          // TODO if there is a current ad (i.e. midroll) then set the...
-          else {
-            repeatAd.ad.lastPlayed = positionOfCurrentAd;
-          }
-        }, this);
-      }
-    };
-
-    /**
-     * Called when video replays.
-     * @public
-     * @method Vast#onReplay
-     */
-    this.onReplay = function() {
-      _resetRepeatAds();
-    };
-
-    /**
-     * Reset repeat ads states.
-     * @private
-     * @method Vast#_resetRepeatAds
-     */
-    var _resetRepeatAds = _.bind(function() {
-      maxPlayhead = 0;
-      _.each(repeatAds, function(repeatAd) {
-        repeatAd.ad.firstRepeatAdPlayed = false;
-      });
-      repeatAds = [];
-    }, this);
-
-    /**
-     * Getter for repeatAds.
-     * @public
-     * @method Vast#getRepeatAds
-     * @returns {object[]} The array of repeat ads.
-     */
-    this.getRepeatAds = function() {
-      return repeatAds;
     };
 
     /**
@@ -817,13 +708,6 @@ OO.Ads.manager(function(_, $) {
         }
         this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
         this.checkCompanionAds(adWrapper.ad);
-      }
-
-      if (!adWrapper.ad.firstRepeatAdPlayed && adWrapper.ad.repeatAfter) {
-        adWrapper.ad.lastPlayed = adWrapper.ad.positionSeconds;
-        adWrapper.ad.firstRepeatAdPlayed = true;
-        repeatAds.push(adWrapper);
-        repeatAdsInitialStates.push(adWrapper.ad.lastPlayed);
       }
     };
 
@@ -1259,7 +1143,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
-      vastAdUnit.repeatAfter = adLoaded.repeatAfter;
+      vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
       vastAdUnit.firstRepeatAdPlayed = false;
 
       // Save the stream data for use by VideoController
