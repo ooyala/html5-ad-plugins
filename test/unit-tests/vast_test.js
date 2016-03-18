@@ -27,6 +27,7 @@ describe('ad_manager_vast', function() {
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var vmapAdTagPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_adtag_pre.xml"), "utf8");
   var vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml"), "utf8");
+  var vmapInlinePoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_podded.xml"), "utf8");
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
@@ -37,6 +38,7 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
   var vmapAdTagPre = OO.$.parseXML(vmapAdTagPreXMLString);
   var vmapInlinePreAdTagPost = OO.$.parseXML(vmapInlinePreAdTagPostXMLString);
+  var vmapInlinePodded = OO.$.parseXML(vmapInlinePoddedXMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -1522,4 +1524,9 @@ describe('ad_manager_vast', function() {
     expect(postrollAdSource.adTagURI).to.be("adTagURI");
   });
 
+  it('Vast 3.0, VMAP: Should not play podded ad if allowMultipleAds is set to false', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlinePodded);
+    expect(amc.timeline.length).to.be(0);
+  });
 });
