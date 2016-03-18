@@ -1665,12 +1665,6 @@ OO.Ads.manager(function(_, $) {
             handleAds([ad], adLoaded);
           }
         }
-        // A VAST response wrapped in VMAP could have allowMultipleAds specified by the VMAP AdBreak
-        else if (adLoaded.vmap) {
-          if (adLoaded.allowMultipleAds) {
-            handleAds(vastAds.podded, adLoaded, fallbackAd);
-          }
-        }
         else {
           handleAds(vastAds.podded, adLoaded, fallbackAd);
         }
@@ -1796,8 +1790,6 @@ OO.Ads.manager(function(_, $) {
          *type: "",
          *url: ""
          */
-        vmap: true,
-        allowMultipleAds: true,
         time: 0,
         position_type: "t",
       };
@@ -1806,13 +1798,6 @@ OO.Ads.manager(function(_, $) {
       }
       if (adBreak.repeatAfter) {
         adObject.repeatAfter = _convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
-      }
-      if (adBreak.adSource && adBreak.adSource.allowMultipleAds) {
-        // parse the attribute, and convert string to boolean if it is "true"/"false"
-        var allowMultipleAds = adBreak.adSource.allowMultipleAds;
-        if (allowMultipleAds == "true" || allowMultipleAds == "false") {
-          adObject.allowMultipleAds = (allowMultipleAds == "true");
-        }
       }
       if (adBreak.timeOffset) {
         switch(true) {

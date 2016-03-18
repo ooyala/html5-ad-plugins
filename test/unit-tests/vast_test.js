@@ -1667,10 +1667,4 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.repeatAfter).to.be(null);
     expect(vastAd.ad.firstRepeatAdPlayed).to.be(false);
   });
-
-  it('Vast 3.0, VMAP: Should not play podded ad if allowMultipleAds is set to false', function() {
-    vastAdManager.initialize(amc);
-    vastAdManager.onVMAPResponse(vmapInlinePodded);
-    expect(amc.timeline.length).to.be(0);
-  });
 });
