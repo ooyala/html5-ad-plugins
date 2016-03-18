@@ -2012,6 +2012,7 @@ OO.Ads.manager(function(_, $) {
             handleAds([ad], adLoaded);
           }
         }
+        //else show the podded ads
         else {
           handleAds(vastAds.podded, adLoaded, fallbackAd);
         }
