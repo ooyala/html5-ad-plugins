@@ -2190,12 +2190,12 @@ OO.Ads.manager(function(_, $) {
             break;
           // case: hh:mm:ss.mmm | hh:mm:ss
           case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
-            adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
+            adObject.time = _convertTimeStampToMilliseconds(adBreak.timeOffset);
             break;
           // case: [0, 100]%
           case /^\d{1,3}%$/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
-            adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
+            adObject.time = _convertPercentToMilliseconds(adBreak.timeOffset);
             break;
           default:
             OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
