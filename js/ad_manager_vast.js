@@ -77,7 +77,6 @@ OO.Ads.manager(function(_, $) {
     var timeline                        = [];
 
     // ad settings
-    var adPlaying                       = false;
     var transitionFromNonLinearVideo    = false;
     var adLoaded                        = false;
     var adRequestType                   = 'adRequest';
@@ -562,10 +561,6 @@ OO.Ads.manager(function(_, $) {
           creativeData = {};
 
       currentAd.data = currentAd.ad.data;
-      if (currentAd.data) {
-        currentAd.ad.adPodIndex = currentAd.data.sequence ? parseInt(currentAd.data.sequence) : 1;
-        currentAd.ad.adPodLength = currentAd.data.adPodLength ? currentAd.data.adPodLength : 1;
-      }
 
       if (typeof iframe.contentWindow.getVPAIDAd !== 'function') {
         OO.log('VPaid: Required function getVPAIDAd() is not defined.');
@@ -835,54 +830,48 @@ OO.Ads.manager(function(_, $) {
 
       var isVPaid = currentAd.ad.data.adType === 'vpaid';
 
-      if (!isVPaid) {
-        // When the ad is done, trigger callback
-        if (adWrapper.isLinear) {
-          if (adWrapper.ad.adPodIndex === 1) {
-            //Only handle primary if it is null, to prevent fallback ad from staring
-            //another ad pod
-            if (adPodPrimary === null) {
-              adPodPrimary = adWrapper;
-              this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
-            }
+      // When the ad is done, trigger callback
+      if (adWrapper.isLinear) {
+        if (adWrapper.ad.adPodIndex === 1) {
+          //Only handle primary if it is null, to prevent fallback ad from staring
+          //another ad pod
+          if (adPodPrimary === null) {
+            adPodPrimary = adWrapper;
+            this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
           }
-          this.checkCompanionAds(adWrapper.ad);
-          initSkipAdOffset(adWrapper);
-          var hasClickUrl = adWrapper.ad.data.linear.clickThrough.length > 0;
-          this.amc.notifyLinearAdStarted(adWrapper.id, {
-            name: adWrapper.ad.data.title,
-            duration: adWrapper.ad.durationInMilliseconds/1000,
-            hasClickUrl: hasClickUrl,
-            indexInPod: adWrapper.ad.adPodIndex,
-            skippable: false
-          });
         }
-        else {
-          var streamUrl;
-          if (adWrapper.ad && adWrapper.ad.streamUrl) {
-            streamUrl = adWrapper.ad.streamUrl;
-          }
-          else if (adWrapper.streamUrl) {
-            streamUrl = adWrapper.streamUrl;
-          }
-          this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
-          this.checkCompanionAds(adWrapper.ad);
-        }
+
+        var hasClickUrl = adWrapper.ad.data.linear.clickThrough.length > 0;
+        this.amc.notifyLinearAdStarted(adWrapper.id, {
+          name: adWrapper.ad.data.title,
+          duration: adWrapper.ad.durationInMilliseconds/1000,
+          hasClickUrl: hasClickUrl,
+          indexInPod: adWrapper.ad.adPodIndex,
+          skippable: false
+        });
       } else {
-        _getFrame();
+        var streamUrl;
+        if (adWrapper.ad && adWrapper.ad.streamUrl) {
+          streamUrl = adWrapper.ad.streamUrl;
+        }
+        else if (adWrapper.streamUrl) {
+          streamUrl = adWrapper.streamUrl;
+        } else {
+          streamUrl = '';
+        }
+
+        this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
+      }
+      this.checkCompanionAds(adWrapper.ad);
+      if (isVPaid) {
+        //Since IMA handles its own UI, we want the video player to hide its UI elements
+        this.amc.hidePlayerUi();
+         _getFrame();
+      } else {
+        // For VPAID we can only set the skip offset when ad already started
+        initSkipAdOffset(adWrapper);
       }
     };
-
-    /**
-     * Once Ad Playback started
-     * @private
-     * @method VPaid#_onPlayStarted
-     */
-    var _onPlayStarted = _.bind(function() {
-      initSkipAdOffset(currentAd);
-      adPlaying = true;
-      prevAd = currentAd ? currentAd : null;
-    }, this);
 
     /**
      * Determine if a Vast ad is skippable, and if so, when the skip ad button should be displayed.
@@ -899,11 +888,7 @@ OO.Ads.manager(function(_, $) {
         adSkippableState = adWrapper.vpaidAd.getAdSkippableState();
       }
       if (supportsSkipAd(adWrapper.ad.data.version)) {
-        if (isVPaid) {
-          skipOffset = adWrapper.data.skipOffset;
-        } else {
-          skipOffset = adWrapper.ad.data.linear.skipOffset;
-        }
+        skipOffset = adWrapper.ad.data.linear.skipOffset;
 
         if (skipOffset) {
           if (skipOffset.indexOf('%') === skipOffset.length - 1) {
@@ -989,13 +974,13 @@ OO.Ads.manager(function(_, $) {
         var isLinear = ad.vpaidAd ? ad.vpaidAd.getAdLinear() : false;
         if (ad.isLinear || isLinear) {
           this.amc.notifyLinearAdEnded(ad.id);
+          if (transitionFromNonLinearVideo) {
+            this.amc.ui.transitionToMainContent(true, false);
+            transitionFromNonLinearVideo = false;
+            this.amc.notifyNonlinearAdEnded(ad.id);
+          }
           if(ad.ad.adPodIndex === ad.ad.adPodLength && !failed) {
-            if (transitionFromNonLinearVideo) {
-              this.amc.ui.transitionToMainContent(true, false);
-              transitionFromNonLinearVideo = false;
-              this.amc.notifyNonlinearAdEnded(ad.id);
-            }
-            var adPod = adPodPrimary;
+            var adPod = adPodPrimary || ad.id;
             adPodPrimary = null;
             this.amc.notifyPodEnded(adPod.id);
           }
@@ -1034,39 +1019,21 @@ OO.Ads.manager(function(_, $) {
      * @return {object} The AMC Ad object
      */
     var generateAd = _.bind(function(metadata) {
-      var isVPaid = metadata.data && metadata.data.adType === 'vpaid';
-      if (!isVPaid) {
         if (!metadata) return false;
         var type, duration;
 
-        if (!_.isEmpty(metadata.data.linear.mediaFiles) || metadata.data) {
-          type = this.amc.ADTYPE.LINEAR_VIDEO;
+        if (!_.isEmpty(metadata.data.linear.mediaFiles)) {
           duration = OO.timeStringToSeconds(metadata.data.linear.duration);
         }
         else
         {
-          type = this.amc.ADTYPE.NONLINEAR_OVERLAY;
           duration = metadata.data.nonLinear.duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
         }
 
         return new this.amc.Ad({
           position: metadata.positionSeconds, duration: duration, adManager: this.name,
-          ad: metadata, adType: type, streams: metadata.streams
-        })
-      } else {
-        metadata.data = metadata.data;
-
-        var newAd = new this.amc.Ad({
-          position: metadata.data.position,
-          duration: metadata.data.duration,
-          adManager: this.name,
-          ad: metadata,
-          adType: metadata.data.type,
-          streams: {'mp4' : ''}
+          ad: metadata, adType: metadata.data.type, streams: metadata.streams
         });
-
-        return newAd;
-      }
     }, this);
 
     /**
@@ -1078,25 +1045,20 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} True if the ad was added to the timeline successfully, false otherwise.
      */
     var addToTimeline = _.bind(function(metadata) {
+      if (!metadata) return;
       var timeline = [];
       var ad = generateAd(metadata);
       var isVPaid = metadata.data && metadata.data.adType === 'vpaid';
-      var success = false;
-      if (!isVPaid) {
-        if (metadata.streamUrl != null || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams))) {
-          timeline.push(ad);
-          this.amc.appendToTimeline(timeline);
-          success = true;
-        }
-      } else {
-        if (!metadata) return;
-        var timeline = [];
-        timeline.push(ad);
 
+      if (metadata.streamUrl != null ||
+          (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams)) ||
+          (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY && !_.isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
+        timeline.push(ad);
         this.amc.appendToTimeline(timeline);
-        success = true;
+        return true;
       }
-      return success;
+
+      return false;
     }, this);
 
     /**
@@ -1146,7 +1108,7 @@ OO.Ads.manager(function(_, $) {
       var ooyalaClickUrl = amcAd.click_url;
       if (amcAd.isLinear) {
         adSpecificClickThroughUrl = amcAd.ad.data.linear.clickThrough;
-      } else if (amcAd.ad.data) {
+      } else {
         adSpecificClickThroughUrl = amcAd.ad.data.nonLinear.nonLinearClickThrough;
       }
       if (highLevelClickThroughUrl || ooyalaClickUrl || adSpecificClickThroughUrl) {
@@ -1385,6 +1347,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(ad.linear.duration) * 1000;
       _.extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.linear.tracking;
+      vastAdUnit.data.type = this.amc.ADTYPE.LINEAR_VIDEO;
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
@@ -1434,6 +1397,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.streamUrl = adURL;
       _.extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.nonLinear.tracking;
+      vastAdUnit.data.type = this.amc.ADTYPE.NONLINEAR_OVERLAY;
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
@@ -1477,26 +1441,19 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = function(adInfo) {
-      var isVPaid = adInfo.data ? adInfo.data.adType === 'vpaid' : false;
+      var data = adInfo.data,
+          adUnitCompanions = currentAd.vpaidAd ? currentAd.vpaidAd.getAdCompanions() : null,
+          companions;
 
-      if (!isVPaid) {
-        if (_.isNull(adInfo.data) || _.isEmpty(adInfo.data.companion)) {
-          return;
-        }
-        this.amc.showCompanion(adInfo.data.companion);
-      } else {
-        var data = adInfo.data,
-            adUnitCompanions = currentAd.vpaidAd.getAdCompanions(),
-            companions;
-
-        // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
-        companions = !_.isNull(data) && !_.isEmpty(data.companion) ? data.companion : adUnitCompanions;
-        if (_.isEmpty(companions)) {
-          return;
-        }
-
-        this.amc.showCompanion(companions);
+      // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit      
+      // This rules is only for VPaid, it will take data.companion otherwise anyway
+      companions = !_.isNull(data) && !_.isEmpty(data.companion) ? data.companion : adUnitCompanions;
+   
+      if (_.isEmpty(companions)) {
+        return;
       }
+
+      this.amc.showCompanion(companions);
     };
 
     /**
@@ -1729,8 +1686,8 @@ OO.Ads.manager(function(_, $) {
       var ads = this.parseAds(vastXML, adLoaded);
       //check to see if any ads are sequenced (are podded)
       _.each(ads, _.bind(function(ad) {
-        var sequence = typeof ad.sequence !== 'undefined' && _.isNumber(parseInt(ad.sequence)) ? ad.sequence : ad.data ? ad.data.sequence : null;
-        var version = typeof ad.version !== 'undefined' ? ad.version : ad.data ? ad.data.version : null;
+        var sequence = typeof ad.sequence !== 'undefined' && _.isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
+        var version = typeof ad.version !== 'undefined' ? ad.version : null;
         if (supportsPoddedAds(version) && sequence) {
           //Assume sequences will start from 1
           result.podded[+sequence - 1] = ad;
@@ -2244,37 +2201,49 @@ OO.Ads.manager(function(_, $) {
           companionAds.push(parseCompanionAd($(v)));
         });
       }
+      // this is for linear/nonlinear
+      var ad = {
+        mediaFiles: mediaFile,
+        tracking: tracking,
+        duration: isLinear ? this.$_node.find('Duration').text() : 0,
+        skipOffset: $node.attr('skipoffset') || null
+      };
+      _.extend(ad, videoClickTracking);
 
       var data = {
         adType: 'vpaid',
         companion: companionAds,
-        adTitle: _cleanString(this.$_node.find('AdTitle').text()),
-        tracking: tracking,
-        impressions: impressions,
         error: errorTracking,
-        videoClickTracking: videoClickTracking,
-        version: version,
-        position: adLoaded.time / 1000,
-        duration: isLinear ? OO.timeStringToSeconds(this.$_node.find('Duration').text()) : 0,
+        impression: impressions,
+        linear: ad,
+        nonLinear: ad,
+        title: _cleanString(this.$_node.find('AdTitle').text()),
+        tracking: tracking,
         type: isLinear ? this.amc.ADTYPE.LINEAR_VIDEO : this.amc.ADTYPE.NONLINEAR_OVERLAY,
+        version: version,
+        videoClickTracking: videoClickTracking
+      };
+
+      var result = {
+        adPodIndex: parseInt(sequence) || 1,
         sequence: sequence || null,
         adPodLength: adPodLength ? adPodLength : 1,
-        skipOffset: $node.attr('skipoffset') || null
-      };
-
-      var ret = {
-        mediaFile: mediaFile,
-        adParams: adParams,
         data: data,
-        adSequenceType: !!sequence ? 'podded' : 'standalone',
-        type: AD_TYPE.INLINE
+        fallbackAd: null,
+        positionSeconds: adLoaded.time / 1000,
+        adParams: adParams,
+        streams: {'mp4': ''},
+        type: AD_TYPE.INLINE,
+        mediaFile: mediaFile,
+        version: version,
+        durationInMilliseconds: OO.timeStringToSeconds(ad.duration) * 1000
       };
 
-      return ret;
+      return result;
     }, this);
 
     /**
-     * Start current ad
+     * Starts the click-to-linear ad
      * @private
      * @method VPaid#_beginAd
      */
@@ -2282,30 +2251,18 @@ OO.Ads.manager(function(_, $) {
       var ad = currentAd.vpaidAd,
           adLinear = ad.getAdLinear();
 
-      _onPlayStarted();
-
+      initSkipAdOffset(currentAd);
       //Since IMA handles its own UI, we want the video player to hide its UI elements
       this.amc.hidePlayerUi();
+      this.amc.notifyPodStarted(currentAd.id, currentAd.ad.adPodLength);
 
-      if (adLinear) {
-        if (adPodPrimary === null) {
-          adPodPrimary = currentAd;
-          this.amc.notifyPodStarted(currentAd.id, currentAd.data.adPodLength);
-        }
-
-        this.amc.notifyLinearAdStarted(currentAd.id, {
-          name: currentAd.data.adTitle,
-          duration : ad.getAdDuration(),
-          clickUrl: _hasClickUrl(currentAd),
-          indexInPod: currentAd.data.sequence,
-          skippable : ad.getAdSkippableState()
-        });
-      } else {
-        this.amc.sendURLToLoadAndPlayNonLinearAd(currentAd, currentAd.id, null);
-      }
-
-      // Should check for companionAds on the VAST template
-      this.checkCompanionAds(currentAd);
+      this.amc.notifyLinearAdStarted(currentAd.id, {
+        name: currentAd.data.title,
+        duration : ad.getAdDuration(),
+        clickUrl: _hasClickUrl(currentAd),
+        indexInPod: currentAd.ad.sequence,
+        skippable : ad.getAdSkippableState()
+      });
     }, this);
 
     /**
@@ -2461,13 +2418,14 @@ OO.Ads.manager(function(_, $) {
         case VPAID_EVENTS.AD_LOADED:
           adLoaded = true;
           currentAd.vpaidAd.startAd();
+          initSkipAdOffset(currentAd);
           // Added to make sure we display videoSlot correctly
           this._videoSlot.style.zIndex = 10001;
         break;
 
         case VPAID_EVENTS.AD_STARTED:
           _onSizeChanged();
-          _beginAd();
+          prevAd = currentAd ? currentAd : null;
           this._sendTracking('creativeView');
         break;
 
@@ -2597,7 +2555,6 @@ OO.Ads.manager(function(_, $) {
       this.format               = null;
       this.node                 = null;
       adLoaded                  = false;
-      adPlaying                 = false;
     }, this);
 
     /**
