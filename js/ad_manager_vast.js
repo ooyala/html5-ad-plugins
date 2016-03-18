@@ -1837,8 +1837,7 @@ OO.Ads.manager(function(_, $) {
     var _convertTimeStampToMilliseconds = _.bind(function(timeString) {
       var hms = timeString.split(":");
       // + unary operator converts string to number
-      // Use parseInt to truncate decimal
-      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (parseInt(hms[2])) * 1000;
+      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (+hms[2]) * 1000;
       return seconds;
     }, this);
 
