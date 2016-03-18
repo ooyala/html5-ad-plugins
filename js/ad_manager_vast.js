@@ -1019,21 +1019,21 @@ OO.Ads.manager(function(_, $) {
      * @return {object} The AMC Ad object
      */
     var generateAd = _.bind(function(metadata) {
-        if (!metadata) return false;
-        var type, duration;
+      if (!metadata) return false;
+      var type, duration;
 
-        if (!_.isEmpty(metadata.data.linear.mediaFiles)) {
-          duration = OO.timeStringToSeconds(metadata.data.linear.duration);
-        }
-        else
-        {
-          duration = metadata.data.nonLinear.duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
-        }
+      if (!_.isEmpty(metadata.data.linear.mediaFiles)) {
+        duration = OO.timeStringToSeconds(metadata.data.linear.duration);
+      }
+      else
+      {
+        duration = metadata.data.nonLinear.duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
+      }
 
-        return new this.amc.Ad({
-          position: metadata.positionSeconds, duration: duration, adManager: this.name,
-          ad: metadata, adType: metadata.data.type, streams: metadata.streams
-        });
+      return new this.amc.Ad({
+        position: metadata.positionSeconds, duration: duration, adManager: this.name,
+        ad: metadata, adType: metadata.data.type, streams: metadata.streams
+      });
     }, this);
 
     /**
