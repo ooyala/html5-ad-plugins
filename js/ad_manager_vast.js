@@ -2481,7 +2481,7 @@ OO.Ads.manager(function(_, $) {
           OO.log('VPaid: Ad unit error: ' + arguments[1]);
           this._sendTracking('error');
           this._sendError();
-          _stopAd();
+          failedAd();
         break;
 
         case VPAID_EVENTS.AD_DURATION_CHANGE:
@@ -2493,8 +2493,7 @@ OO.Ads.manager(function(_, $) {
 
         case VPAID_EVENTS.AD_SKIPPED:
           this._sendTracking('skip');
-          // Only required if VPaid version < 2.0
-          // _stopAd();
+          _stopAd();
         break;
 
         case VPAID_EVENTS.AD_SKIPPABLE_STATE_CHANGE:
