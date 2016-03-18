@@ -2012,12 +2012,6 @@ OO.Ads.manager(function(_, $) {
             handleAds([ad], adLoaded);
           }
         }
-        // A VAST response wrapped in VMAP could have allowMultipleAds specified by the VMAP AdBreak
-        else if (adLoaded.vmap) {
-          if (adLoaded.allowMultipleAds) {
-            handleAds(vastAds.podded, adLoaded, fallbackAd);
-          }
-        }
         else {
           handleAds(vastAds.podded, adLoaded, fallbackAd);
         }
@@ -2143,8 +2137,6 @@ OO.Ads.manager(function(_, $) {
          *type: "",
          *url: ""
          */
-        vmap: true,
-        allowMultipleAds: true,
         time: 0,
         position_type: "t",
       };
