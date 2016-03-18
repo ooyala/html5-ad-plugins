@@ -1805,7 +1805,7 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
       if (adBreak.repeatAfter) {
-        adObject.repeatAfter = _convertTimeStampToSeconds(adBreak.repeatAfter) / 1000;
+        adObject.repeatAfter = _convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
       }
       if (adBreak.adSource && adBreak.adSource.allowMultipleAds) {
         // parse the attribute, and convert string to boolean if it is "true"/"false"
@@ -1826,12 +1826,12 @@ OO.Ads.manager(function(_, $) {
             break;
           // case: hh:mm:ss.mmm | hh:mm:ss
           case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
-            adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
+            adObject.time = _convertTimeStampToMilliseconds(adBreak.timeOffset);
             break;
           // case: [0, 100]%
           case /^\d{1,3}%$/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
-            adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
+            adObject.time = _convertPercentToMilliseconds(adBreak.timeOffset);
             break;
           default:
             OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
@@ -1844,11 +1844,11 @@ OO.Ads.manager(function(_, $) {
     /**
      * Helper function to convert the HMS timestamp into milliseconds.
      * @private
-     * @method Vast#_convertTimeStampToSeconds
+     * @method Vast#_convertTimeStampToMilliseconds
      * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
      * @returns {number} The number of milliseconds the timestamp represents.
      */
-    var _convertTimeStampToSeconds = _.bind(function(timeString) {
+    var _convertTimeStampToMilliseconds = _.bind(function(timeString) {
       var hms = timeString.split(":");
       // + unary operator converts string to number
       // Use parseInt to truncate decimal
@@ -1859,11 +1859,11 @@ OO.Ads.manager(function(_, $) {
     /**
      * Helper function to convert a percentage representing time into milliseconds.
      * @private
-     * @method Vast#_convertPercentToSeconds
+     * @method Vast#_convertPercentToMilliseconds
      * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
      * @returns {number} The number of milliseconds the percentage represents.
      */
-    var _convertPercentToSeconds = _.bind(function(timeString) {
+    var _convertPercentToMilliseconds = _.bind(function(timeString) {
       var percent = timeString.replace("%", "");
       // simplification of: (this.amc.movieDuration * percent / 100) * 1000
       var result = +(this.amc.movieDuration) * percent * 10;
