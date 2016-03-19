@@ -552,6 +552,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Callback when the media file is loaded. Once is loaded we can initialize the ad
+     * This is only required for VPAID ads
      * @private
      */
     var _initializeAd = _.bind(function() {
@@ -601,6 +602,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Initializes the ad by sending the data to the ad unit.
      * @public
+     * This is only required for VPAID ads
      * @method Vast#initAd
      * @param {int} width Width of the slot where the ad will be placed
      * @param {int} height Height of the slot where the ad will be placed
@@ -1448,7 +1450,7 @@ OO.Ads.manager(function(_, $) {
       // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit      
       // This rules is only for VPaid, it will take data.companion otherwise anyway
       companions = !_.isNull(data) && !_.isEmpty(data.companion) ? data.companion : adUnitCompanions;
-   
+
       if (_.isEmpty(companions)) {
         return;
       }
@@ -1726,6 +1728,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Check wether or not a vpaid ad is valid by checking the ad type and make sure is VPaid
+     * This is only required for VPAID ads
      * @method Vast#_isValidVPaid
      * @private
      * @return {boolean} VPaid validated value
@@ -2127,6 +2130,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Generates a parsed VPaid ad to load.
+     * This is only required for VPAID ads
      * @private
      * @method Vast#_getVPaidCreative
      * @param {XMLDocument} adXml Current ad xml
@@ -2244,6 +2248,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Starts the click-to-linear ad
+     * This is only required for VPAID ads
      * @private
      * @method Vast#_beginAd
      */
@@ -2267,6 +2272,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Once Ad Playback stopped
+     * This is only required for VPAID ads
      * @private
      * @method Vast#_stopAd
      */
@@ -2278,6 +2284,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Gets current ad format, which is either Linear or NonLinear
+     * This is only required for VPAID ads
      * @private
      * @method Vast#_getFormat
      * @return {object} Ad format
@@ -2298,6 +2305,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Get tracking events.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#_getImpressions
      * @return {array} Array with impressions urls
@@ -2317,6 +2325,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Get tracking events.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#_getTracking
      * @param {object} parent DOM Element to look for tracking events
@@ -2341,6 +2350,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Send error.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#_sendError
      */
@@ -2355,6 +2365,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Send impressions.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#_sendImpressions
      */
@@ -2371,6 +2382,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Send tracking events.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#_sendTracking
      * @param {string} type Event name to be send
@@ -2394,6 +2406,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Send click tracking event.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#_sendClickTracking
      * @param {object} ad Ad to look for the tracking url
@@ -2409,6 +2422,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Listen and executes events sent by the ad unit
+     * This is only required for VPAID ads
      * @private
      * @method Vast#_onAdEvent
      * @param {string} eventName Name of the event to process
@@ -2584,6 +2598,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Check wether or not a vpaid ad is valid by checking the version and the minimum required functions
+     * This is only required for VPAID ads
      * @method Vast#_isValidVPaid
      * @private
      * @return {boolean} VPaid validated value
@@ -2612,6 +2627,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Creates a new slot for each ad unit with unique id to avoid conflicts between ads.
+     * This is only required for VPAID ads
      * @private
      * @return {object} A DOM element with unique id.
      */
@@ -2630,6 +2646,7 @@ OO.Ads.manager(function(_, $) {
 
    /**
      * Used to generate a frame to load ad media files.
+     * This is only required for VPAID ads
      * @private
      */
     var _getFrame = function() {
@@ -2641,6 +2658,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Callback when the frame is loaded.
+     * This is only required for VPAID ads
      * @private
      */
     var _onIframeLoaded = _.bind(function() {
@@ -2653,6 +2671,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Gets Current Fullscreen state
+     * This is only required for VPAID ads
      * @private
      * @method Vast#_getFsState
      */
@@ -2678,6 +2697,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#onFullScreenChanged
      * @param {boolean} shouldEnterFullscreen True if going into fullscreen
@@ -2691,6 +2711,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
+     * This is only required for VPAID ads
      * @private
      * @method Vast#onFullScreenChanged
      */
@@ -2700,6 +2721,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Remove ad listeners
+     * This is only required for VPAID ads
      * @private
      * @method Vast#_removeListeners
      */
@@ -2712,6 +2734,7 @@ OO.Ads.manager(function(_, $) {
 
    /**
      * Resizes the ad slot.
+     * This is only required for VPAID ads
      * @public
      * @method Vast#resize
      * @param {integer} width New width to resize to
