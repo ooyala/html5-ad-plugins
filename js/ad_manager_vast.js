@@ -601,7 +601,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Initializes the ad by sending the data to the ad unit.
      * @public
-     * @method VPaid#initAd
+     * @method Vast#initAd
      * @param {int} width Width of the slot where the ad will be placed
      * @param {int} height Height of the slot where the ad will be placed
      * @param {string} viewMode Can be either `normal` or `fullscreen`
@@ -620,7 +620,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Called by Ad Manager Controller.  When this function is called, the ui has been setup and the values
      * in amc.ui are ready to be used.
-     * @method VPaid#registerUi
+     * @method Vast#registerUi
      * @public
      */
     this.registerUi = function() {
@@ -707,7 +707,7 @@ OO.Ads.manager(function(_, $) {
    /**
      * Finds ads based on the position provided to the function.
      * @private
-     * @method VPaid#findAndLoadAd
+     * @method Vast#findAndLoadAd
      * @param {string} position The position of the ad to be loaded. 'pre' (preroll), 'midPost' (midroll and post rolls)
      * 'all' (all positions).
      * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
@@ -1726,7 +1726,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Check wether or not a vpaid ad is valid by checking the ad type and make sure is VPaid
-     * @method VPaid#_isValidVPaid
+     * @method Vast#_isValidVPaid
      * @private
      * @return {boolean} VPaid validated value
      */
@@ -2128,7 +2128,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Generates a parsed VPaid ad to load.
      * @private
-     * @method VPaid#_getVPaidCreative
+     * @method Vast#_getVPaidCreative
      * @param {XMLDocument} adXml Current ad xml
      * @param {string} Current vast version
      * @param {object} adLoaded The ad loaded object and metadata
@@ -2245,7 +2245,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Starts the click-to-linear ad
      * @private
-     * @method VPaid#_beginAd
+     * @method Vast#_beginAd
      */
     var _beginAd = _.bind(function() {
       var ad = currentAd.vpaidAd,
@@ -2268,7 +2268,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Once Ad Playback stopped
      * @private
-     * @method VPaid#_stopAd
+     * @method Vast#_stopAd
      */
     var _stopAd = _.bind(function() {
       if (currentAd && currentAd.vpaidAd) {
@@ -2279,7 +2279,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Gets current ad format, which is either Linear or NonLinear
      * @private
-     * @method VPaid#_getFormat
+     * @method Vast#_getFormat
      * @return {object} Ad format
      */
     var _getFormat = _.bind(function() {
@@ -2299,7 +2299,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Get tracking events.
      * @public
-     * @method VPaid#_getImpressions
+     * @method Vast#_getImpressions
      * @return {array} Array with impressions urls
      */
     this._getImpressions = function() {
@@ -2318,7 +2318,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Get tracking events.
      * @public
-     * @method VPaid#_getTracking
+     * @method Vast#_getTracking
      * @param {object} parent DOM Element to look for tracking events
      * @return {array} Array with tracking events and urls
      */
@@ -2342,7 +2342,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Send error.
      * @public
-     * @method VPaid#_sendError
+     * @method Vast#_sendError
      */
     this._sendError = function() {
       if (currentAd && currentAd.data) {
@@ -2356,7 +2356,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Send impressions.
      * @public
-     * @method VPaid#_sendImpressions
+     * @method Vast#_sendImpressions
      */
     this._sendImpressions = function() {
       if (currentAd && currentAd.data) {
@@ -2372,7 +2372,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Send tracking events.
      * @public
-     * @method VPaid#_sendTracking
+     * @method Vast#_sendTracking
      * @param {string} type Event name to be send
      */
     this._sendTracking = function(type) {
@@ -2395,7 +2395,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Send click tracking event.
      * @public
-     * @method VPaid#_sendClickTracking
+     * @method Vast#_sendClickTracking
      * @param {object} ad Ad to look for the tracking url
      */
     this._sendClickTracking = function(ad) {
@@ -2410,7 +2410,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Listen and executes events sent by the ad unit
      * @private
-     * @method VPaid#_onAdEvent
+     * @method Vast#_onAdEvent
      * @param {string} eventName Name of the event to process
      */
     var _onAdEvent = _.bind(function(eventName) {
@@ -2545,7 +2545,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Set variables to its default state
      * @private
-     * @method VPaid#_resetAdState
+     * @method Vast#_resetAdState
      */
     var _resetAdState = _.bind(function() {
       _removeListeners(currentAd.vpaidAd);
@@ -2559,7 +2559,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Remove any new lines, line breaks and spaces from string.
      * @private
-     * @method VPaid#_cleanString
+     * @method Vast#_cleanString
      * @return {string} String with no spaces
      */
     var _cleanString = function(string) {
@@ -2569,7 +2569,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Check for clickthrough url
      * @private
-     * @method VPaid#_hasClickUrl
+     * @method Vast#_hasClickUrl
      * @return {object} Ad to look for the clickthrough
      */
     var _hasClickUrl = function(ad) {
@@ -2584,7 +2584,7 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Check wether or not a vpaid ad is valid by checking the version and the minimum required functions
-     * @method VPaid#_isValidVPaid
+     * @method Vast#_isValidVPaid
      * @private
      * @return {boolean} VPaid validated value
      */
@@ -2654,7 +2654,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Gets Current Fullscreen state
      * @private
-     * @method VPaid#_getFsState
+     * @method Vast#_getFsState
      */
    var _getFsState = _.bind(function() {
       var fs;
@@ -2679,7 +2679,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
      * @public
-     * @method VPaid#onFullScreenChanged
+     * @method Vast#onFullScreenChanged
      * @param {boolean} shouldEnterFullscreen True if going into fullscreen
      */
     var _onSizeChanged = _.bind(function() {
@@ -2692,7 +2692,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
      * @private
-     * @method VPaid#onFullScreenChanged
+     * @method Vast#onFullScreenChanged
      */
     var _onFullscreenChanged = function() {
       _onSizeChanged();
@@ -2701,7 +2701,7 @@ OO.Ads.manager(function(_, $) {
     /**
      * Remove ad listeners
      * @private
-     * @method VPaid#_removeListeners
+     * @method Vast#_removeListeners
      */
     var _removeListeners = function(currentAd) {
       var eventName;
@@ -2713,7 +2713,7 @@ OO.Ads.manager(function(_, $) {
    /**
      * Resizes the ad slot.
      * @public
-     * @method VPaid#resize
+     * @method Vast#resize
      * @param {integer} width New width to resize to
      * @param {integer} height New height to resize to
      * @param {string} viewMode Can take values: fullscreen or normal
