@@ -2625,6 +2625,7 @@ OO.Ads.manager(function(_, $) {
     var _isValidVPaid = _.bind(function() {
       var vpaidVersion = null;
       try{
+        //TODO: Do we want int here? If so, consider var name vpaidMajorVersion
         vpaidVersion = parseInt(currentAd.vpaidAd.handshakeVersion('2.0'));
       } catch (e) {
         OO.log("VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - " + e)
@@ -2786,6 +2787,7 @@ OO.Ads.manager(function(_, $) {
 
     // Helpers
     // Safely trigger an ad manager function
+    //TODO: consider error message override
     var _safeFunctionCall = function(vpaidAd, funcName, params) {
       try {
         if (_.isFunction(vpaidAd[funcName])) {
