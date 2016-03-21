@@ -869,6 +869,7 @@ OO.Ads.manager(function(_, $) {
         else if (adWrapper.streamUrl) {
           streamUrl = adWrapper.streamUrl;
         } else {
+          //TODO: What happens when streamUrl is the empty string? Will AMC get notified of an error?
           streamUrl = '';
         }
 
@@ -986,6 +987,7 @@ OO.Ads.manager(function(_, $) {
         var isLinear = (ad.vpaidAd ? _safeFunctionCall(ad.vpaidAd, "getAdLinear") : false) || ad.isLinear;
         if (isLinear) {
           this.amc.notifyLinearAdEnded(ad.id);
+          //TODO: What does this block do?
           if (transitionFromNonLinearVideo) {
             this.amc.ui.transitionToMainContent(true, false);
             transitionFromNonLinearVideo = false;
@@ -1062,6 +1064,8 @@ OO.Ads.manager(function(_, $) {
       var ad = generateAd(metadata);
       var isVPaid = metadata.data && metadata.data.adType === 'vpaid';
 
+      //TODO: This might need to get integrated with Doug's error handling changes.
+      //I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
       if (metadata.streamUrl != null ||
           (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !_.isEmpty(metadata.streams)) ||
           (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY && !_.isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
@@ -1118,6 +1122,7 @@ OO.Ads.manager(function(_, $) {
       var highLevelClickThroughUrl = amcAd.ad.data && amcAd.ad.data.clickThrough;
       var adSpecificClickThroughUrl = null;
       var ooyalaClickUrl = amcAd.click_url;
+      //TODO: Why was this amcAd.ad.data in the else removed? Was it causing an issue?
       if (amcAd.isLinear) {
         adSpecificClickThroughUrl = amcAd.ad.data.linear.clickThrough;
       } else {
@@ -2149,6 +2154,7 @@ OO.Ads.manager(function(_, $) {
      * @return {object} Parsed vpaid's metadata ad
      */
     var _getVpaidCreative = _.bind(function(adXml, version, adLoaded) {
+      //TODO: Add more comments in the function
       var adParams = '{}';
 
       this.$_node = $(adXml);
@@ -2174,6 +2180,7 @@ OO.Ads.manager(function(_, $) {
         adParams = _cleanString($paramsNode.text());
       }
 
+      //TODO: Should we use _cleanString on this?
       var mediaFile = {
         url: $mediaNode.text(),
         type: $mediaNode.attr('type') || $mediaNode.attr('creativeType')
@@ -2347,6 +2354,7 @@ OO.Ads.manager(function(_, $) {
       tracking = [];
       nodes = parent.getElementsByTagName('Tracking');
       if (!nodes) {
+        //TODO: Would returning an empty array here be better?
         return;
       }
       for (_i = 0, _len = nodes.length; _i < _len; _i++) {
@@ -2405,7 +2413,7 @@ OO.Ads.manager(function(_, $) {
             currentEvent;
         if (tracking) {
           currentEvent = _.find(tracking, function(item, index) {
-            return item.event == type
+            return item.event == type;
           });
 
           if (currentEvent && currentEvent.url) {
@@ -2652,6 +2660,7 @@ OO.Ads.manager(function(_, $) {
           parent = this.amc.ui.playerSkinPluginsElement ?
                               this.amc.ui.playerSkinPluginsElement[0] : this.amc.ui.pluginsElement[0];
 
+      //TODO: Does this element get disposed of properly when the ad is finished?
       element = document.createElement('div');
       element.id = _.uniqueId('pluginElement_');
       element.style.width = '100%';
@@ -2666,6 +2675,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      */
     var _getFrame = function() {
+      //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
       iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       iframe.onload = _onIframeLoaded;
