@@ -783,11 +783,31 @@ require("../html5-common/js/utils/utils.js");
       });
 
       /**
-       * Update the IMA SDK to inform it the size of the video container has changed.
+       * Callback for size change notifications.
        * @private
        * @method GoogleIMA#_onSizeChanged
        */
       var _onSizeChanged = privateMember(function()
+      {
+        if (!this.runningUnitTests)
+        {
+          setTimeout(_.bind(function()
+          {
+            _updateIMASize();
+          }, this), 500);
+        }
+        else
+        {
+          _updateIMASize();
+        }
+      });
+
+      /**
+       * Update the IMA SDK to inform it the size of the video container has changed.
+       * @private
+       * @method GoogleIMA#_updateIMASize
+       */
+      var _updateIMASize = privateMember(function()
       {
         if (_IMAAdsManager && _uiContainer)
         {

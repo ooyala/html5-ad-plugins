@@ -2723,13 +2723,26 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
-     * This is only required for VPAID ads
-     * @public
-     * @method Vast#onFullScreenChanged
-     * @param {boolean} shouldEnterFullscreen True if going into fullscreen
+     * Callback for Ad Manager Controller size change notification.
+     * @private
+     * @method Vast#_onSizeChanged
      */
     var _onSizeChanged = _.bind(function() {
+      if (!this.testMode) {
+        setTimeout(_.bind(function() {
+          _updateCreativeSize();
+        }, this), 500);
+      } else {
+        _updateCreativeSize();
+      }
+    }, this);
+
+    /**
+     * Updates creatives with size changes.
+     * @private
+     * @method Vast#_updateCreativeSize
+     */
+    var _updateCreativeSize = _.bind(function() {
       var viewMode = _getFsState() ? 'fullscreen' : 'normal';
       var width = viewMode === 'fullscreen' ? window.screen.width : this._slot.offsetWidth;
       var height = viewMode === 'fullscreen' ? window.screen.height : this._slot.offsetHeight;
