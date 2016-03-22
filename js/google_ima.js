@@ -61,6 +61,9 @@ require("../html5-common/js/utils/utils.js");
       var VISIBLE_CSS = {left: OO.CSS.VISIBLE_POSITION, visibility: "visible"};
       var INVISIBLE_CSS = {left: OO.CSS.INVISIBLE_POSITION, visibility: "hidden"};
 
+      var OVERLAY_WIDTH_PADDING = 50;
+      var OVERLAY_HEIGHT_PADDING = 50;
+
       var TIME_UPDATER_INTERVAL = 500;
 
       /**
@@ -411,9 +414,6 @@ require("../html5-common/js/utils/utils.js");
           _throwError("playAd() called but amcAdPod.ad is null.");
         }
 
-        //Since IMA handles its own UI, we want the video player to hide its UI elements
-        _amc.hidePlayerUi();
-
         if(_usingAdRules && this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
         {
           //we started our placeholder ad
@@ -454,13 +454,13 @@ require("../html5-common/js/utils/utils.js");
             //the skin plugins div when a non linear overlay is on screen
             if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
             {
-              this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
-              this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
               //IMA requires some padding in order to have the overlay render or else
               //IMA thinks the available real estate is too small.
-              //There is no requirement for this to be customizable but we could include
-              //the ability to specify the padding in the future.
-              this.currentAMCAdPod.paddingRequired = true;
+              this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
+              this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
+              this.currentAMCAdPod.paddingWidth = OVERLAY_WIDTH_PADDING;
+              this.currentAMCAdPod.paddingHeight = OVERLAY_HEIGHT_PADDING;
+              _onSizeChanged();
             }
             // raise WILL_PLAY_NONLINEAR_AD event and alert AMC and player that a nonlinear ad is started.
             // Nonlinear ad is rendered by IMA.
@@ -783,16 +783,60 @@ require("../html5-common/js/utils/utils.js");
       });
 
       /**
-       * Update the IMA SDK to inform it the size of the video container has changed.
+       * Callback for size change notifications.
        * @private
        * @method GoogleIMA#_onSizeChanged
        */
       var _onSizeChanged = privateMember(function()
       {
+        if (!this.runningUnitTests)
+        {
+          setTimeout(_.bind(function()
+          {
+            _updateIMASize();
+          }, this), 500);
+        }
+        else
+        {
+          _updateIMASize();
+        }
+      });
+
+      /**
+       * Update the IMA SDK to inform it the size of the video container has changed.
+       * @private
+       * @method GoogleIMA#_updateIMASize
+       */
+      var _updateIMASize = privateMember(function()
+      {
         if (_IMAAdsManager && _uiContainer)
         {
           var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
-          _IMAAdsManager.resize(_uiContainer.clientWidth, _uiContainer.clientHeight, viewMode);
+          var width = _uiContainer.clientWidth;
+          var height = _uiContainer.clientHeight;
+          //For nonlinear overlays, we want to provide the size that we sent to the AMC in playAd.
+          //We do this because the player skin plugins div (_uiContainer) may not have been redrawn yet
+          if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
+          {
+            if (this.currentAMCAdPod.width)
+            {
+              width = this.currentAMCAdPod.width;
+              if (this.currentAMCAdPod.paddingWidth)
+              {
+                width += this.currentAMCAdPod.paddingWidth;
+              }
+            }
+
+            if (this.currentAMCAdPod.height)
+            {
+              height = this.currentAMCAdPod.height;
+              if (this.currentAMCAdPod.paddingHeight)
+              {
+                height += this.currentAMCAdPod.paddingHeight;
+              }
+            }
+          }
+          _IMAAdsManager.resize(width, height, viewMode);
         }
       });
 
@@ -1272,6 +1316,8 @@ require("../html5-common/js/utils/utils.js");
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }
+              //Since IMA handles its own UI, we want the video player to hide its UI elements
+              _amc.hidePlayerUi();
             }
             else
             {
@@ -1282,7 +1328,10 @@ require("../html5-common/js/utils/utils.js");
             _tryStartAd();
             if (this.videoControllerWrapper)
             {
-              this.videoControllerWrapper.raisePlayEvent();
+              if (ad.isLinear())
+              {
+                this.videoControllerWrapper.raisePlayEvent();
+              }
               this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
               _startTimeUpdater();
             }
@@ -1290,7 +1339,10 @@ require("../html5-common/js/utils/utils.js");
           case eventType.RESUMED:
             if (this.videoControllerWrapper)
             {
-              this.videoControllerWrapper.raisePlayEvent();
+              if (ad.isLinear())
+              {
+                this.videoControllerWrapper.raisePlayEvent();
+              }
             }
             break;
           case eventType.USER_CLOSE:
