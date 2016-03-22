@@ -65,7 +65,7 @@ OO.Ads.manager(function(_, $) {
     this.adBreaks = [];
 
     // VPAID Variables
-    this.videoRestrictions              = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
+    var vpaidVideoRestrictions          = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
                                             features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] };
     this.embedCode                      = 'unkown';
     this.testMode                       = false;
@@ -563,6 +563,7 @@ OO.Ads.manager(function(_, $) {
 
       currentAd.data = currentAd.ad.data;
 
+      this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
       if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function') {
         OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
         return;
@@ -636,7 +637,6 @@ OO.Ads.manager(function(_, $) {
      * @public
      */
     this.registerUi = function() {
-      this.amc.ui.createAdVideoElement({'mp4' : ''}, this.videoRestrictions);
     };
 
     /**
@@ -2740,10 +2740,12 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} shouldEnterFullscreen True if going into fullscreen
      */
     var _onSizeChanged = _.bind(function() {
-      var viewMode = _getFsState() ? 'fullscreen' : 'normal';
-      var width = viewMode === 'fullscreen' ? window.screen.width : this._slot.offsetWidth;
-      var height = viewMode === 'fullscreen' ? window.screen.height : this._slot.offsetHeight;
-      this.resize(width, height, viewMode);
+      if (this._slot) {
+        var viewMode = _getFsState() ? 'fullscreen' : 'normal';
+        var width = viewMode === 'fullscreen' ? window.screen.width : this._slot.offsetWidth;
+        var height = viewMode === 'fullscreen' ? window.screen.height : this._slot.offsetHeight;
+        this.resize(width, height, viewMode);
+      }
     }, this);
 
     /**
