@@ -562,8 +562,9 @@ OO.Ads.manager(function(_, $) {
           creativeData = {};
 
       currentAd.data = currentAd.ad.data;
-
-      this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
+      if (!this.amc.ui.adVideoElement[0]) {
+        this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
+      }
       if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function') {
         OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
         return;
