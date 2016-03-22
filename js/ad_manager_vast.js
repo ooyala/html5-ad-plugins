@@ -73,7 +73,7 @@ OO.Ads.manager(function(_, $) {
     this.adURLOverride                  = '';
     this.allAdInfo                      = null;
     this.showLinearAdSkipButton         = false;
-    var iframe                          = null;
+    var vpaidIframe                          = null;
     var timeline                        = [];
 
     // ad settings
@@ -563,13 +563,13 @@ OO.Ads.manager(function(_, $) {
 
       currentAd.data = currentAd.ad.data;
 
-      if (typeof iframe.contentWindow.getVPAIDAd !== 'function') {
+      if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function') {
         OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
         return;
       }
 
       try{
-        currentAd.vpaidAd = iframe.contentWindow.getVPAIDAd();
+        currentAd.vpaidAd = vpaidIframe.contentWindow.getVPAIDAd();
       } catch (e) {
         OO.log("VPAID 2.0: error while getting vpaid creative - " + e)
       }
@@ -597,7 +597,7 @@ OO.Ads.manager(function(_, $) {
       this._properties = {
         adWidth: this._slot.offsetWidth,
         adHeight: this._slot.offsetHeight,
-        adDesiredBitrate: 600,
+        adDesiredBitrate: 600
       };
 
       viewMode = _getFsState() ? 'fullscreen' : 'normal';
@@ -803,12 +803,10 @@ OO.Ads.manager(function(_, $) {
      */
     this.adVideoEnded = function() {
       prevAd = currentAd;
-      _endAd(currentAd, false);
 
-      if (nextAd) {
-        var ad = nextAd;
-        nextAd = null;
-        this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
+      //VPAID 2.0 ads will end after notifying the ad of stopAd
+      if (!_isVpaidAd(currentAd)) {
+        _endAd(currentAd, false);
       }
     };
 
@@ -983,7 +981,16 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} failed If true, the ending of this ad was caused by a failure
      */
     var _endAd = _.bind(function(ad, failed) {
+      if (typeof this._slot !== 'undefined') {
+        $(this._slot).remove();
+      }
+
+      if (typeof vpaidIframe !== 'undefined') {
+        $(vpaidIframe).remove();
+      }
+
       if (currentAd && ad) {
+        currentAd = null;
         var isLinear = (ad.vpaidAd ? _safeFunctionCall(ad.vpaidAd, "getAdLinear") : false) || ad.isLinear;
         if (isLinear) {
           this.amc.notifyLinearAdEnded(ad.id);
@@ -1002,11 +1009,12 @@ OO.Ads.manager(function(_, $) {
           this.lastOverlayAd = null;
           this.amc.notifyNonlinearAdEnded(ad.id);
         }
-        currentAd = null;
       }
 
-      if (typeof this._slot !== 'undefined') {
-        $(this._slot).remove();
+      if (nextAd) {
+        var next = nextAd;
+        nextAd = null;
+        this.amc.forceAdToPlay(this.name, next.ad, next.adType, next.streams);
       }
     }, this);
 
@@ -2498,10 +2506,11 @@ OO.Ads.manager(function(_, $) {
 
         case VPAID_EVENTS.AD_VIDEO_COMPLETE:
           this.sendVpaidTracking('complete');
+          _stopVpaidAd();
         break;
 
         case VPAID_EVENTS.AD_STOPPED:
-          if (currentAd && transitionFromNonLinearVideo) {
+          if (currentAd) {
             _endAd(currentAd, false);
           }
         break;
@@ -2526,7 +2535,9 @@ OO.Ads.manager(function(_, $) {
 
         case VPAID_EVENTS.AD_SKIPPED:
           this.sendVpaidTracking('skip');
-          _stopVpaidAd();
+          if (currentAd) {
+            _endAd(currentAd, false);
+          }
         break;
 
         case VPAID_EVENTS.AD_SKIPPABLE_STATE_CHANGE:
@@ -2657,12 +2668,11 @@ OO.Ads.manager(function(_, $) {
      * @return {object} A DOM element with unique id.
      */
     var _createUniqueElement = _.bind(function() {
-      var element = null,
-          parent = this.amc.ui.playerSkinPluginsElement ?
+      var parent = this.amc.ui.playerSkinPluginsElement ?
                               this.amc.ui.playerSkinPluginsElement[0] : this.amc.ui.pluginsElement[0];
 
       //TODO: Does this element get disposed of properly when the ad is finished?
-      element = document.createElement('div');
+      var element = document.createElement('div');
       element.id = _.uniqueId('pluginElement_');
       element.style.width = '100%';
       element.style.height = '100%';
@@ -2677,10 +2687,10 @@ OO.Ads.manager(function(_, $) {
      */
     var _getFrame = function() {
       //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
-      iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.onload = _onIframeLoaded;
-      document.body.appendChild(iframe);
+     vpaidIframe = document.createElement('iframe');
+     vpaidIframe.style.display = 'none';
+     vpaidIframe.onload = _onIframeLoaded;
+      document.body.appendChild(vpaidIframe);
     };
 
     /**
@@ -2689,11 +2699,11 @@ OO.Ads.manager(function(_, $) {
      * @private
      */
     var _onIframeLoaded = _.bind(function() {
-      var loader = iframe.contentWindow.document.createElement('script');
+      var loader = vpaidIframe.contentWindow.document.createElement('script');
       loader.src = _cleanString(currentAd.ad.mediaFile.url);
       loader.onload = _initializeAd;
       loader.onerror = this.destroy;
-      iframe.contentWindow.document.body.appendChild(loader);
+      vpaidIframe.contentWindow.document.body.appendChild(loader);
     }, this);
 
     /**
