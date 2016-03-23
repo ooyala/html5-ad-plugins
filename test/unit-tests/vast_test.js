@@ -28,6 +28,8 @@ describe('ad_manager_vast', function() {
   var vmapAdTagPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_adtag_pre.xml"), "utf8");
   var vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml"), "utf8");
   var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
+  var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
+  var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
@@ -39,6 +41,8 @@ describe('ad_manager_vast', function() {
   var vmapAdTagPre = OO.$.parseXML(vmapAdTagPreXMLString);
   var vmapInlinePreAdTagPost = OO.$.parseXML(vmapInlinePreAdTagPostXMLString);
   var vmapInlineRepeatAd = OO.$.parseXML(vmapInlineRepeatAdXMLString);
+  var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
+  var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -1573,7 +1577,6 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
     expect(vastAd.ad.repeatAfter).to.be(5);
-    expect(vastAd.ad.firstRepeatAdPlayed).to.be(false);
 
     var secondRepeatAdBreak = adBreaks[1];
     expect(secondRepeatAdBreak.timeOffset).to.be("start");
@@ -1664,5 +1667,41 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
     expect(vastAd.ad.repeatAfter).to.be(null);
     expect(vastAd.ad.firstRepeatAdPlayed).to.be(false);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 1', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput1);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("1337");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 2', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput2);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("apple");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
   });
 });
