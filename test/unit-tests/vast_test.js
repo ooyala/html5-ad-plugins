@@ -1819,4 +1819,40 @@ describe('ad_manager_vast', function() {
 
     vastAdManager.onReplay();
   });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 1', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput1);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("1337");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 2', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput2);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("apple");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
 });
