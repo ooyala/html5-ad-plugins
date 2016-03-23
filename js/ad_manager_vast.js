@@ -632,85 +632,12 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Called when video is seeked.
-     * @public
-     * @method Vast#onSeeked
-     * @param {string} eventname The name of the event for which this callback is called.
-     * @param {number} playhead Current video time (seconds).
-     */
-    this.onSeeked = function(eventname, playhead) {
-      // only do logic for repeat ads if seeking to the future
-      if (maxPlayhead < playhead) {
-        var areAdsPlaying = this.amc.areAdsPlaying();
-        _.each(repeatAds, function(repeatAd) {
-          var repeatInterval = repeatAd.ad.repeatAfter;
-          var positionOfCurrentAd = this.amc.getPositionOfCurrentAd();
-          var positionOfLastAd = repeatInterval * Math.floor(playhead / repeatInterval);
-
-          // if there isn't an ad to play after seek then assume lastPlayed is the supposed
-          // last played position
-          if (!positionOfCurrentAd) {
-            var nextTimeToPlay = repeatAd.ad.lastPlayed + repeatInterval;
-            if (playhead >= nextTimeToPlay) {
-              this.amc.forceAdToPlay(this.name, repeatAd.ad, repeatAd.adType, repeatAd.streams);
-            }
-            repeatAd.ad.lastPlayed = positionOfLastAd;
-          }
-
-          // if there is a current ad but the playhead would be past the point
-          // of a supposed last ad, then pretend the lastPlayed for repeat ad is at the
-          // supposed last ad position
-          else if (positionOfCurrentAd && playhead >= positionOfLastAd) {
-            repeatAd.ad.lastPlayed = positionOfLastAd;
-          }
-
-          // TODO if there is a current ad (i.e. midroll) then set the...
-          else {
-            repeatAd.ad.lastPlayed = positionOfCurrentAd;
-          }
-        }, this);
-      }
-    };
-
-    /**
-     * Called when video replays.
-     * @public
-     * @method Vast#onReplay
-     */
-    this.onReplay = function() {
-      _resetRepeatAds();
-    };
-
-    /**
-     * Reset repeat ads states.
-     * @private
-     * @method Vast#_resetRepeatAds
-     */
-    var _resetRepeatAds = _.bind(function() {
-      maxPlayhead = 0;
-      _.each(repeatAds, function(repeatAd) {
-        repeatAd.ad.firstRepeatAdPlayed = false;
-      });
-      repeatAds = [];
-    }, this);
-
-    /**
      * Called by Ad Manager Controller.  When this function is called, the ui has been setup and the values
      * in amc.ui are ready to be used.
      * @method Vast#registerUi
      * @public
      */
     this.registerUi = function() {
-    };
-
-    /**
-     * Getter for repeatAds.
-     * @public
-     * @method Vast#getRepeatAds
-     * @returns {object[]} The array of repeat ads.
-     */
-    this.getRepeatAds = function() {
-      return repeatAds;
     };
 
     /**
