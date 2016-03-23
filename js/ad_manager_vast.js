@@ -1144,7 +1144,6 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
-      vastAdUnit.firstRepeatAdPlayed = false;
 
       // Save the stream data for use by VideoController
       var streams = {};
@@ -1195,7 +1194,6 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
-      vastAdUnit.firstRepeatAdPlayed = false;
 
       return vastAdUnit;
     }, this);
