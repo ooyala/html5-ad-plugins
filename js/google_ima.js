@@ -280,11 +280,33 @@ require("../html5-common/js/utils/utils.js");
         this.uiRegistered = true;
         if (_amc.ui.useSingleVideoElement && !this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0] &&
             (_amc.ui.ooyalaVideoElement[0].className === "video")) {
-          this.sharedVideoElement = _amc.ui.ooyalaVideoElement[0];
+          this.setupSharedVideoElement(_amc.ui.ooyalaVideoElement[0]);
         }
 
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
+      };
+
+      /**
+       * Sets up the shared video element.
+       * @public
+       * @method GoogleIMA#setupSharedVideoElement
+       * @param element Element to be setup as the shared video element
+       */
+      this.setupSharedVideoElement = function(element)
+      {
+        //Remove any listeners we added on the previous shared video element
+        if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.removeEventListener === "function")
+        {
+          this.sharedVideoElement.removeEventListener('webkitendfullscreen', _raisePauseEvent);
+        }
+        this.sharedVideoElement = element;
+        //On iPhone, there is a limitation in the IMA SDK where we do not receive a pause event when
+        //we leave the native player
+        //This is a workaround to listen for the webkitendfullscreen event ourselves
+        if(this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.addEventListener === "function"){
+          this.sharedVideoElement.addEventListener('webkitendfullscreen', _raisePauseEvent);
+        }
       };
 
       /**
@@ -529,6 +551,15 @@ require("../html5-common/js/utils/utils.js");
         {
           if(this.adPlaybackStarted)
           {
+            //On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
+            //We want to force the video to reenter fullscreen and play
+            if (OO.isIphone && this.sharedVideoElement)
+            {
+              //resumeAd will only be called if we have exited fullscreen
+              //so this is safe to call
+              this.sharedVideoElement.webkitEnterFullscreen();
+              this.sharedVideoElement.play();
+            }
             _IMAAdsManager.resume();
           }
           else
@@ -1158,7 +1189,7 @@ require("../html5-common/js/utils/utils.js");
         // If the sharedVideoElement is not used, mark it as null before applying css
         this.videoControllerWrapper.readyForCss = true;
         if (!_IMAAdsManager.isCustomPlaybackUsed()) {
-          this.sharedVideoElement = null;
+          this.setupSharedVideoElement(null);
         }
         this.videoControllerWrapper.applyStoredCss();
 
@@ -1253,6 +1284,19 @@ require("../html5-common/js/utils/utils.js");
         _endCurrentAd(true);
 
         OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
+      });
+
+      /**
+       * Notifies the video controller wrapper of the pause event.
+       * @private
+       * @method GoogleIMA#_raisePauseEvent
+       */
+      var _raisePauseEvent = privateMember(function()
+      {
+        if (this.videoControllerWrapper)
+        {
+          this.videoControllerWrapper.raisePauseEvent();
+        }
       });
 
       /**
@@ -1380,10 +1424,7 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.PAUSED:
-            if (this.videoControllerWrapper)
-            {
-              this.videoControllerWrapper.raisePauseEvent();
-            }
+            _raisePauseEvent();
             break;
           case eventType.ALL_ADS_COMPLETED:
             _linearAdIsPlaying = false;
@@ -1810,7 +1851,7 @@ require("../html5-common/js/utils/utils.js");
     this.createFromExisting = function(domId, ooyalaVideoController, playerId)
     {
       var googleIMA = registeredGoogleIMAManagers[playerId];
-      googleIMA.sharedVideoElement = $("#" + domId)[0];
+      googleIMA.setupSharedVideoElement($("#" + domId)[0]);
       var wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
