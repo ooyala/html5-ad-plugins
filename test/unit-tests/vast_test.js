@@ -1621,7 +1621,6 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
     expect(vastAd.ad.repeatAfter).to.be(10);
-    expect(vastAd.ad.firstRepeatAdPlayed).to.be(false);
 
     var thirdAdBreak = adBreaks[2];
     expect(thirdAdBreak.timeOffset).to.be("00:00:15");
@@ -1666,7 +1665,6 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
     expect(vastAd.ad.repeatAfter).to.be(null);
-    expect(vastAd.ad.firstRepeatAdPlayed).to.be(false);
   });
 
   it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 1', function() {
