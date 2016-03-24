@@ -590,6 +590,16 @@ OO.Ads.manager(function(_, $) {
       this._slot = _createUniqueElement();
       this._videoSlot = this.amc.ui.adVideoElement[0];
 
+      //PBI-1609: Midroll VPAID 2.0 ads get stuck buffering on Mac Safari if
+      //the VPAID creative does not call load() on the video. This is not
+      //observed when using the Video Suite Inspector
+
+      //Setting preload to auto seems to address this issue with our player
+      //TODO: Find the root cause behind this issue and address it
+      if (!OO.requiresSingleVideoElement && OO.isSafari) {
+        this._videoSlot.preload = "auto";
+      }
+
       environmentVariables = _.extend({
         slot: this._slot,
         videoSlot: this._videoSlot,
@@ -878,7 +888,7 @@ OO.Ads.manager(function(_, $) {
       if (isVPaid) {
         //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
         this.amc.hidePlayerUi();
-         _getFrame();
+        _getFrame();
       } else {
         // For VPAID we can only set the skip offset when ad already started
         initSkipAdOffset(adWrapper);
