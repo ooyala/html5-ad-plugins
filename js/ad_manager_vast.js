@@ -728,11 +728,13 @@ OO.Ads.manager(function(_, $) {
      */
     var findAndLoadAd = _.bind(function(position) {
       var loadedAds = false;
+      var override = false;
 
       if (!this.allAdInfo || this.allAdInfo.length < 1) return loadedAds;
       for (var i = 0; i < this.allAdInfo.length; i++) {
         var ad = this.allAdInfo[i];
           if (this.adURLOverride) {
+            override = true;
             ad.tag_url = this.adURLOverride;
           }
           var time = typeof ad.time !== 'undefined' ? ad.time : ad.position;
@@ -741,10 +743,8 @@ OO.Ads.manager(function(_, $) {
             || (position == 'all'))) {
             this.currentAdBeingLoaded = ad;
 
-            if (!this.testMode) {
-              var url = typeof ad.url !== 'undefined' ? ad.url : ad.tag_url;
-              this.loadUrl(url);
-            }
+            var url = typeof ad.url !== 'undefined' && !override ? ad.url : ad.tag_url;
+            this.loadUrl(url);
             loadedAds = true;
           }
         }
@@ -1216,7 +1216,9 @@ OO.Ads.manager(function(_, $) {
      */
     this.loadUrl = function(url) {
       this.vastUrl = url;
-      this.ajax(url, this.onVastError, 'xml');
+      if (!this.testMode) {
+        this.ajax(url, this.onVastError, 'xml');
+      }
     };
 
     /**
