@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vmap:VMAP xmlns:vmap="http://www.iab.net/videosuite/vmap" version="1.0">
+  <vmap:AdBreak timeOffset="start" breakType="linear" breakId="repeat" repeatAfter="apple">
+    <vmap:AdSource id="repeat-ad-1" allowMultipleAds="true" followRedirects="true">
+      <vmap:VASTAdData>
+        <VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">
+          <Ad id="1">
+            <InLine>
+              <AdSystem>GDFP1</AdSystem>
+              <AdTitle>video1</AdTitle>
+              <Description>video ad1</Description>
+              <Error>errorurl1</Error>
+              <Impression>impressionurl1</Impression>
+              <Creatives>
+                <Creative sequence="1">
+                  <Linear skipoffset="00:00:05">
+                    <Duration>00:00:52</Duration>
+                    <TrackingEvents>
+                      <Tracking event="start">starturl1</Tracking>
+                      <Tracking event="firstQuartile">firstquartileurl1</Tracking>
+                      <Tracking event="midpoint">midpointurl1</Tracking>
+                    </TrackingEvents>
+                    <VideoClicks>
+                      <ClickThrough id="GDFP">clickthroughurl1</ClickThrough>
+                    </VideoClicks>
+                    <MediaFiles>
+                      <MediaFile id="GDFP" delivery="progressive" bitrate="330" width="640" height="360" type="video/mp4" scalable="false" maintainAspectRatio="false">1.mp4</MediaFile>
+                    </MediaFiles>
+                  </Linear>
+                </Creative>
+              </Creatives>
+            </InLine>
+          </Ad>
+        </VAST>
+      </vmap:VASTAdData>
+    </vmap:AdSource>
+  </vmap:AdBreak>
+  <vmap:AdBreak timeOffset="start" breakType="linear" breakId="repeat" repeatAfter="">
+    <vmap:AdSource id="repeat-ad-2" allowMultipleAds="true" followRedirects="true">
+      <vmap:VASTAdData>
+        <VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">
+          <Ad id="2">
+            <InLine>
+              <AdSystem>GDFP2</AdSystem>
+              <AdTitle>video2</AdTitle>
+              <Description>video ad2</Description>
+              <Error>errorurl2</Error>
+              <Impression>impressionurl2</Impression>
+              <Creatives>
+                <Creative sequence="1">
+                  <Linear skipoffset="00:00:05">
+                    <Duration>00:00:52</Duration>
+                    <TrackingEvents>
+                      <Tracking event="start">starturl2</Tracking>
+                      <Tracking event="firstQuartile">firstquartileurl2</Tracking>
+                      <Tracking event="midpoint">midpointurl2</Tracking>
+                    </TrackingEvents>
+                    <VideoClicks>
+                      <ClickThrough id="GDFP">clickthroughurl2</ClickThrough>
+                    </VideoClicks>
+                    <MediaFiles>
+                      <MediaFile id="GDFP" delivery="progressive" bitrate="330" width="640" height="360" type="video/mp4" scalable="false" maintainAspectRatio="false">1.mp4</MediaFile>
+                    </MediaFiles>
+                  </Linear>
+                </Creative>
+              </Creatives>
+            </InLine>
+          </Ad>
+        </VAST>
+      </vmap:VASTAdData>
+    </vmap:AdSource>
+  </vmap:AdBreak>
+</vmap:VMAP>

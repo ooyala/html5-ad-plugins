@@ -1377,6 +1377,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
+      vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
       // Save the stream data for use by VideoController
       var streams = {};
@@ -1427,6 +1428,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.time/1000;
+      vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
       return vastAdUnit;
     }, this);
@@ -2066,7 +2068,13 @@ OO.Ads.manager(function(_, $) {
         time: 0,
         position_type: "t",
       };
-      if (adBreak || adBreak.timeOffset) {
+      if (!adBreak) {
+        return null;
+      }
+      if (adBreak.repeatAfter) {
+        adObject.repeatAfter = _convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
+      }
+      if (adBreak.timeOffset) {
         switch(true) {
           // case: "start"
           case /^start$/.test(adBreak.timeOffset):
@@ -2078,12 +2086,12 @@ OO.Ads.manager(function(_, $) {
             break;
           // case: hh:mm:ss.mmm | hh:mm:ss
           case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
-            adObject.time = _convertTimeStampToSeconds(adBreak.timeOffset);
+            adObject.time = _convertTimeStampToMilliseconds(adBreak.timeOffset);
             break;
           // case: [0, 100]%
           case /^\d{1,3}%$/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
-            adObject.time = _convertPercentToSeconds(adBreak.timeOffset);
+            adObject.time = _convertPercentToMilliseconds(adBreak.timeOffset);
             break;
           default:
             OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
@@ -2096,26 +2104,25 @@ OO.Ads.manager(function(_, $) {
     /**
      * Helper function to convert the HMS timestamp into milliseconds.
      * @private
-     * @method Vast#_convertTimeStampToSeconds
+     * @method Vast#_convertTimeStampToMilliseconds
      * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
      * @returns {number} The number of milliseconds the timestamp represents.
      */
-    var _convertTimeStampToSeconds = _.bind(function(timeString) {
+    var _convertTimeStampToMilliseconds = _.bind(function(timeString) {
       var hms = timeString.split(":");
       // + unary operator converts string to number
-      // Use parseInt to truncate decimal
-      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (parseInt(hms[2])) * 1000;
+      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (+hms[2]) * 1000;
       return seconds;
     }, this);
 
     /**
      * Helper function to convert a percentage representing time into milliseconds.
      * @private
-     * @method Vast#_convertPercentToSeconds
+     * @method Vast#_convertPercentToMilliseconds
      * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
      * @returns {number} The number of milliseconds the percentage represents.
      */
-    var _convertPercentToSeconds = _.bind(function(timeString) {
+    var _convertPercentToMilliseconds = _.bind(function(timeString) {
       var percent = timeString.replace("%", "");
       // simplification of: (this.amc.movieDuration * percent / 100) * 1000
       var result = +(this.amc.movieDuration) * percent * 10;
@@ -2134,6 +2141,7 @@ OO.Ads.manager(function(_, $) {
       adBreak.timeOffset = $(adBreakElement).attr("timeOffset");
       adBreak.breakType = $(adBreakElement).attr("breakType");
       adBreak.breakId = $(adBreakElement).attr("breakId");
+      adBreak.repeatAfter = $(adBreakElement).attr("repeatAfter");
       return adBreak;
     }, this);
 

@@ -1819,9 +1819,6 @@ require("../html5-common/js/utils/utils.js");
     this.features = [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_TAKE];
     this.technology = OO.VIDEO.TECHNOLOGY.HTML5;
 
-    // This module defaults to ready because no setup or external loading is required
-    this.ready = true;
-
     /**
      * Creates a video player instance using GoogleIMAVideoWrapper.
      * @public
@@ -1868,7 +1865,6 @@ require("../html5-common/js/utils/utils.js");
      */
     this.destroy = function()
     {
-      this.ready = false;
       this.encodings = [];
       this.create = function() {};
       this.createFromExisting = function() {};
