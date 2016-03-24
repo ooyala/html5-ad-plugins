@@ -1718,7 +1718,6 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad]
     };
     vastAdManager.initialize(amc);
-    debugger;
     vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });
