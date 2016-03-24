@@ -608,7 +608,7 @@ OO.Ads.manager(function(_, $) {
       };
 
       this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
-                  this._properties['adDesiredBitrate'], environmentVariables, creativeData);
+                  this._properties['adDesiredBitrate'], creativeData, environmentVariables);
     }, this);
 
     /**
@@ -628,7 +628,7 @@ OO.Ads.manager(function(_, $) {
         OO.log('VPaid Ad Unit is not valid.');
         return;
       }
-      _safeFunctionCall(currentAd.vpaidAd, "initAd", [width, height, viewMode, desiredBitrate, environmentVars, creativeData]);
+      _safeFunctionCall(currentAd.vpaidAd, "initAd", [width, height, viewMode, desiredBitrate, creativeData, environmentVars]);
     };
 
     /**
@@ -2831,7 +2831,7 @@ OO.Ads.manager(function(_, $) {
         }
       } catch (err) {
         OO.log("VPAID 2.0: ",
-          "function '" + func + "' threw exception -",
+          "function '" + funcName + "' threw exception -",
           err);
       }
       return null;
