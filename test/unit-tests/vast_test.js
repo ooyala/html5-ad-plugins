@@ -1702,4 +1702,23 @@ describe('ad_manager_vast', function() {
     vastAd = amc.timeline[1];
     expect(vastAd.ad.repeatAfter).to.be(null);
   });
+
+  it('Vast 3.0: Should use ad tag url override', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
 });
