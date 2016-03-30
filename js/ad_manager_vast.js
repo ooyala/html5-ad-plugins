@@ -553,25 +553,25 @@ OO.Ads.manager(function(_, $) {
     /**
      * Callback when the media file is loaded. Once is loaded we can initialize the ad
      * This is only required for VPAID ads
-     * @private
+     * @public
      */
-    var _initializeAd = _.bind(function() {
+    this.initializeAd = _.bind(function() {
       var eventName,
           environmentVariables,
           viewMode,
           creativeData = {};
 
       currentAd.data = currentAd.ad.data;
-      if (!this.amc.ui.adVideoElement[0]) {
+      if (!this.amc.ui.adVideoElement) {
         this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
       }
-      if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function') {
+      if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
         OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
         return;
       }
 
       try{
-        currentAd.vpaidAd = vpaidIframe.contentWindow.getVPAIDAd();
+        currentAd.vpaidAd = this.testMode ? global.vpaid.getVPAIDAd() : vpaidIframe.contentWindow.getVPAIDAd();
       } catch (e) {
         OO.log("VPAID 2.0: error while getting vpaid creative - " + e)
       }
@@ -1772,7 +1772,7 @@ OO.Ads.manager(function(_, $) {
      * @return {boolean} VPaid validated value
      */
     var _isValidVpaidCreative = function(node, isLinear) {
-      var apiFramework = node.attr('apiFramework') === 'VPAID';
+      var apiFramework = (node.attr('apiFramework') || node.attr('apiframework')) === 'VPAID';
       var creativeType = isLinear ? node.attr('type') : node.find('StaticResource').attr('creativeType');
       return apiFramework && creativeType === 'application/javascript';
     };
@@ -2311,7 +2311,7 @@ OO.Ads.manager(function(_, $) {
       this.amc.notifyLinearAdStarted(currentAd.id, {
         name: currentAd.data.title,
         duration : _safeFunctionCall(ad, "getAdDuration"),
-        clickUrl: _hasClickUrl(currentAd),
+        clickUrl: currentAd.ad.data.nonLinear.nonLinearClickThrough.length > 0,
         indexInPod: currentAd.ad.sequence,
         skippable : _safeFunctionCall(ad, "getAdSkippableState")
       });
@@ -2670,10 +2670,10 @@ OO.Ads.manager(function(_, $) {
         isValid = false;
       }
 
-      var requiredFunctions = ['handshakeVersion', 'initVpaidAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd',
+      var requiredFunctions = ['handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd',
                                'pauseAd', 'resumeAd', 'expandAd', 'collapseAd', 'subscribe', 'unsubscribe'];
       _.each(requiredFunctions, function(fn) {
-        if (!fn && typeof fn !== 'function') {
+        if (typeof currentAd.vpaidAd[fn] !== 'function') {
           isValid = false;
           OO.log('VPaid Ad Unit is missing function: ' + fn);
         }
@@ -2722,7 +2722,7 @@ OO.Ads.manager(function(_, $) {
     var _onIframeLoaded = _.bind(function() {
       var loader = vpaidIframe.contentWindow.document.createElement('script');
       loader.src = _cleanString(currentAd.ad.mediaFile.url);
-      loader.onload = _initializeAd;
+      loader.onload = this.initializeAd;
       loader.onerror = this.destroy;
       vpaidIframe.contentWindow.document.body.appendChild(loader);
     }, this);

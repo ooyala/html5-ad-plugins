@@ -1,0 +1,27 @@
+<VAST xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="vast.xsd" version="3.0">
+  <Ad id="1234567">
+    <InLine>
+      <AdSystem/>
+      <AdTitle>NonLinear VPAID JS</AdTitle>
+      <Description>Vpaid Linear Video Ad</Description>
+      <Error>error</Error>
+      <Impression>impression</Impression>
+      <Creatives>
+        <Creative sequence="1">
+          <NonLinearAds>
+            <TrackingEvents>
+              <Tracking event="start">start</Tracking>
+              <Tracking event="firstQuartile">first</Tracking>
+              <Tracking event="complete">complete</Tracking>
+              <Tracking event="mute">mute</Tracking>
+            </TrackingEvents>
+            <NonLinear apiFramework="VPAID" width="300" height="60" id="overlay-1">
+              <StaticResource creativeType="application/javascript">http://file.js</StaticResource>
+              <NonLinearClickThrough id="GDFP">http://link</NonLinearClickThrough>
+            </NonLinear>
+          </NonLinearAds>
+        </Creative>
+      </Creatives>
+    </InLine>
+  </Ad>
+</VAST>

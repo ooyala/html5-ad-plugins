@@ -16,6 +16,7 @@ describe('ad_manager_vast', function() {
   var name = "vast";
   var originalOoAds = _.clone(OO.Ads);
   require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
+  require(TEST_ROOT + 'unit-test-helpers/mock_vpaid.js');
 
   var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
   var linearXMLNoClickthroughString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml"), "utf8");
@@ -30,7 +31,9 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
   var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
   var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
-  
+  var vpaidLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear.xml'), 'utf8');
+  var vpaidNonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_nonlinear.xml'), 'utf8');
+
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
@@ -43,6 +46,8 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAd = OO.$.parseXML(vmapInlineRepeatAdXMLString);
   var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
   var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
+  var vpaidLinearXML = OO.$.parseXML(vpaidLinearXMLString);
+  var vpaidNonLinearXML = OO.$.parseXML(vpaidNonLinearXMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -77,6 +82,32 @@ describe('ad_manager_vast', function() {
     vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content);
     amc.timeline = vastAdManager.buildTimeline();
+  };
+
+  var vpaidInitialize = function(nonLinear) {
+    var embed_code = "embed_code",
+        preroll = {
+          type: "vast",
+          first_shown: 0,
+          frequency: 2,
+          ad_set_code: "ad_set_code",
+          time:0,
+          position_type:"t"
+        },
+        content = {
+          embed_code: embed_code,
+          ads: [preroll]
+        },
+        server = {
+          html5_ssl_ad_server: "https://blah",
+          html5_ad_server: "http://blah"
+        };
+
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata(server, {}, content)).to.be(true);
+    initalPlay();
+    nonLinear = nonLinear || false;
+    vastAdManager.onVastResponse(preroll, nonLinear ? vpaidNonLinearXML : vpaidLinearXML);
   };
 
   var initalPlay = function() {
@@ -123,6 +154,13 @@ describe('ad_manager_vast', function() {
     pixelPingCalled= false;
     vastAdManager.errorInfo = {};
     vastAdManager.adBreaks = [];
+
+    //VPAID specifics
+    global.vpaid.adInit = false;
+    global.vpaid.adStarted = false;
+    global.vpaid.adStopped = false;
+    global.vpaid.adSkipped = false;
+    global.vpaid.getVPAIDAd = function() { return new global.vpaid.VpaidAd(); };
   });
 
   afterEach(_.bind(function() {
@@ -1720,5 +1758,228 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('VPAID 2.0: Should parse VPAID linear creative', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    expect(ad).to.be.an('object');
+    expect(ad.duration).to.eql(16);
+    expect(ad.position).to.eql(0);
+    var parsedAd = global.vpaidAd.ad.data;
+    expect(ad.ad).to.be.an('object');
+    expect(ad.ad.adPodIndex).to.eql(1);
+    expect(ad.ad.adPodLength).to.eql(1);
+    expect(ad.ad.sequence).to.be(null);
+    expect(ad.streams).to.eql({ mp4: '' });
+    expect(ad.ad.fallbackAd).to.be(null);
+    expect(ad.isLinear).to.be(true);
+    expect(ad.ad.data).to.be.an('object');
+    expect(ad.ad.data.adType).to.eql('vpaid');
+    expect(ad.ad.data.companion[0]).to.be.an('object');
+    expect(ad.ad.data.companion).to.eql(parsedAd.companion);
+    expect(ad.ad.data.error).to.eql('error');
+    expect(ad.ad.data.impression).to.eql(parsedAd.impression);
+    expect(ad.ad.data.linear.mediaFiles).to.eql(parsedAd.linear.mediaFiles);
+    expect(ad.ad.data.title).to.eql(parsedAd.title);
+    expect(ad.ad.data.tracking).to.eql(parsedAd.tracking);
+    expect(ad.ad.data.type).to.eql(parsedAd.type);
+    expect(ad.ad.data.version).to.eql(parsedAd.version);
+    expect(ad.ad.data.videoClickTracking).to.eql(parsedAd.videoClickTracking);
+    expect(ad.ad.data.adParams).to.eql(parsedAd.adParams);
+  });
+
+  it('VPAID 2.0: Should create slot and video slot', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(_.isElement(vastAdManager._slot)).to.be(true);
+    expect(_.isElement(vastAdManager._videoSlot)).to.be(true);
+  });
+
+  it('VPAID 2.0: initAd should be called after validations', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adInit).to.be(true)
+  });
+
+  it('VPAID 2.0: initAd should not be called when any required ad unit function is missing', function() {
+    vpaidInitialize();
+    global.vpaid.getVPAIDAd = function() { return new global.vpaid.missingFnVPAIDAd(); };
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adInit).to.be(false)
+  });
+
+  it('VPAID 2.0: initAd should not be called when using incorrect version <2.0', function() {
+    vpaidInitialize();
+    global.vpaid.getVPAIDAd = function() { return new global.vpaid.incorrectVersionVPAIDAd(); };
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adInit).to.be(false)
+  });
+
+  it('VPAID 2.0: Ad should be started', function() {
+    var podStartedNotified = 0, linearStartedNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodStarted = function() {
+      podStartedNotified++;
+    };
+
+    amc.notifyLinearAdStarted = function() {
+      linearStartedNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adStarted).to.be(true);
+    expect(podStartedNotified).to.eql(1);
+    expect(linearStartedNotified).to.eql(1);
+  });
+
+  it('VPAID 2.0: Ad should be stopped when ad video is completed', function() {
+    var podEndNotified = 0, linearEndNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    ad.vpaidAd.adVideoCompleted();
+    expect(global.vpaid.adStopped).to.be(true);
+    expect(podEndNotified).to.eql(1);
+    expect(linearEndNotified).to.eql(1);
+  });
+
+  it('VPAID 2.0: Ad should be skipped when calling skipAd', function() {
+    var podEndNotified = 0, linearEndNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    vastAdManager.cancelAd(ad, {
+      code : amc.AD_CANCEL_CODE.SKIPPED
+    });
+    expect(global.vpaid.adSkipped).to.be(true);
+    expect(podEndNotified).to.eql(1);
+    expect(linearEndNotified).to.eql(1);
+
+  });
+
+  it('VPAID 2.0: Ad skip button should display when skippableState changes to true, or hide when false', function() {
+    var allowSkipButton = false, skipOffset = 0;
+    amc.showSkipVideoAdButton = function(allowButton, offset) {
+      allowSkipButton = allowButton;
+      skipOffset = offset;
+    };
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+
+    ad.vpaidAd.setSkippableState(true);
+    expect(allowSkipButton).to.be(true);
+    ad.vpaidAd.setSkippableState(false);
+    expect(allowSkipButton).to.be(false);
+    expect(skipOffset).to.be('0');
+  });
+
+  it('VPAID 2.0: Should check and send companion ads', function() {
+    var companion;
+    var parsedAd = global.vpaidAd.ad.data;
+    amc.showCompanion = function(companionAds) {
+      companion = companionAds;
+    };
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(companion).to.eql(parsedAd.companion);
+  });
+
+  it('VPAID 2.0: Ad should not end on adVideoEnded', function() {
+    var podEndNotified = 0, linearEndNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    vastAdManager.adVideoEnded();
+    expect(podEndNotified).to.eql(0);
+    expect(linearEndNotified).to.eql(0);
+  });
+
+  it('VPAID 2.0: Ad Unit should handle clickthru if playerHandles is false, otherwise players handle the click', function() {
+    var adUnitHandling = true;
+    vpaidInitialize();
+
+    vastAdManager.openUrl = function(url) {
+      adUnitHandling = false;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    ad.vpaidAd.sendClick(false);
+    expect(adUnitHandling).to.be(true);
+
+    ad.vpaidAd.sendClick(true);
+    expect(adUnitHandling).to.be(false);
+  });
+
+  it('VPAID 2.0: Should notify linear ad started when adLinearChange is sent', function() {
+    var linearStartedNotified = 0;
+    vpaidInitialize(true);
+
+    amc.notifyLinearAdStarted = function() {
+      linearStartedNotified++;
+    };
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    amc.adManagerSettings['linearAdSkipButtonStartTime'] = 5;
+    ad.vpaidAd.sendAdLinearChange(false);
+    expect(linearStartedNotified).to.eql(0);
+    ad.vpaidAd.sendAdLinearChange(true);
+   expect(linearStartedNotified).to.eql(1);
+  });
+
+  it('VPAID 2.0: Should parse and send ad parameters', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(JSON.parse(ad.ad.adParams)).to.eql(ad.vpaidAd.properties.adParameters);
   });
 });
