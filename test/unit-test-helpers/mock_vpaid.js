@@ -12,7 +12,9 @@ global.vpaid.VpaidAd = function() {
   this.properties = {
     adLinear: true,
     skippableState: false,
-    adParameters: '{}'
+    adParameters: '{}',
+    width: 100,
+    height: 100
   };
   this.initAd = function(width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
     global.vpaid.adInit = true;
@@ -27,7 +29,10 @@ global.vpaid.VpaidAd = function() {
     this.callEvent('AdStopped');
     global.vpaid.adStopped = true;
    };
-  this.resizeAd = function(width, height, viewMode) {};
+  this.resizeAd = function(width, height, viewMode) {
+    this.properties.width = width;
+    this.properties.height = height;
+  };
   this.adVideoCompleted = function() {
     this.callEvent('AdVideoComplete');
   };

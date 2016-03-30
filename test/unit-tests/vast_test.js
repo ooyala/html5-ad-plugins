@@ -1982,4 +1982,46 @@ describe('ad_manager_vast', function() {
     vastAdManager.initializeAd();
     expect(JSON.parse(ad.ad.adParams)).to.eql(ad.vpaidAd.properties.adParameters);
   });
+
+  it('VPAID 2.0: Should hide player ui', function() {
+    var hidePlayerUi = false;
+    amc.hidePlayerUi = function() {
+      hidePlayerUi = true;
+    };
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(hidePlayerUi).to.be(true);
+  });
+
+  it('VPAID 2.0: Should resize ad unit on size changed', function() {
+    var hidePlayerUi = false;
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(ad.vpaidAd.properties.width).to.be(100);
+    expect(ad.vpaidAd.properties.height).to.be(100);
+    vastAdManager._slot.offsetWidth = 200;
+    vastAdManager._slot.offsetHeight = 200;
+    amc.publishPlayerEvent(amc.EVENTS.SIZE_CHANGED);
+    expect(ad.vpaidAd.properties.width).to.be(200);
+    expect(ad.vpaidAd.properties.height).to.be(200);
+  });
+
+  it('VPAID 2.0: Should resize ad unit on fullscreen change', function() {
+    var hidePlayerUi = false;
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(ad.vpaidAd.properties.width).to.be(100);
+    expect(ad.vpaidAd.properties.height).to.be(100);
+    vastAdManager._slot.offsetWidth = 200;
+    vastAdManager._slot.offsetHeight = 200;
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED);
+    expect(ad.vpaidAd.properties.width).to.be(200);
+    expect(ad.vpaidAd.properties.height).to.be(200);
+  });
 });
