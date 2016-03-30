@@ -14,7 +14,8 @@ global.vpaid.VpaidAd = function() {
     skippableState: false,
     adParameters: '{}',
     width: 100,
-    height: 100
+    height: 100,
+    adCompanions: {companion: {}}
   };
   this.initAd = function(width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
     global.vpaid.adInit = true;
@@ -63,6 +64,9 @@ global.vpaid.VpaidAd = function() {
   this.getAdSkippableState = function() {
     return this.properties.skippableState;
   };
+  this.getAdCompanions = function() {
+    return this.properties.adCompanions;
+  }
   this.getAdLinear = function() {
     return this.properties['adLinear'];
   };

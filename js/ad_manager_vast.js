@@ -884,13 +884,13 @@ OO.Ads.manager(function(_, $) {
 
         this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
       }
-      this.checkCompanionAds(adWrapper.ad);
       if (isVPaid) {
         //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
         this.amc.hidePlayerUi();
         _getFrame();
       } else {
-        // For VPAID we can only set the skip offset when ad already started
+        // For VPAID we can only set the skip offset and check for companions when ad already started
+        this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
       }
     };
@@ -2479,6 +2479,8 @@ OO.Ads.manager(function(_, $) {
       switch(eventName) {
         case VPAID_EVENTS.AD_LOADED:
           adLoaded = true;
+          //For VPAID we need to check for companions after ad is created
+          this.checkCompanionAds(currentAd.ad);
           _safeFunctionCall(currentAd.vpaidAd, "startAd");
           initSkipAdOffset(currentAd);
           // Added to make sure we display videoSlot correctly

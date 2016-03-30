@@ -33,6 +33,7 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
   var vpaidLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear.xml'), 'utf8');
   var vpaidNonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_nonlinear.xml'), 'utf8');
+  var vpaidNoCompanionXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_nocompanions.xml'), 'utf8');
 
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
@@ -48,6 +49,7 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
   var vpaidLinearXML = OO.$.parseXML(vpaidLinearXMLString);
   var vpaidNonLinearXML = OO.$.parseXML(vpaidNonLinearXMLString);
+  var vpaidNoCompanionXML = OO.$.parseXML(vpaidNoCompanionXMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -84,7 +86,7 @@ describe('ad_manager_vast', function() {
     amc.timeline = vastAdManager.buildTimeline();
   };
 
-  var vpaidInitialize = function(nonLinear) {
+  var vpaidInitialize = function(xml) {
     var embed_code = "embed_code",
         preroll = {
           type: "vast",
@@ -106,8 +108,8 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata(server, {}, content)).to.be(true);
     initalPlay();
-    nonLinear = nonLinear || false;
-    vastAdManager.onVastResponse(preroll, nonLinear ? vpaidNonLinearXML : vpaidLinearXML);
+    xml = xml || vpaidLinearXML;
+    vastAdManager.onVastResponse(preroll, xml);
   };
 
   var initalPlay = function() {
@@ -1960,7 +1962,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: Should notify linear ad started when adLinearChange is sent', function() {
     var linearStartedNotified = 0;
-    vpaidInitialize(true);
+    vpaidInitialize(vpaidNonLinearXML);
 
     amc.notifyLinearAdStarted = function() {
       linearStartedNotified++;
@@ -2023,5 +2025,17 @@ describe('ad_manager_vast', function() {
     amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED);
     expect(ad.vpaidAd.properties.width).to.be(200);
     expect(ad.vpaidAd.properties.height).to.be(200);
+  });
+
+  it('VPAID 2.0: Should check/show ad unit companions when no XML companions available', function() {
+    var companion;
+    amc.showCompanion = function(companionAds) {
+      companion = companionAds;
+    };
+    vpaidInitialize(vpaidNoCompanionXML);
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(companion).to.eql({companion:{}});
   });
 });
