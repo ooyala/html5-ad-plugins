@@ -247,7 +247,16 @@ require("../html5-common/js/utils/utils.js");
           this.additionalAdTagParameters = metadata.additionalAdTagParameters;
         }
 
-        _setAdManagerToReady();
+        //On second video playthroughs, we will not be initializing the ad manager again.
+        //Attempt to create the ad display container here instead of after the sdk has loaded
+        if (!_IMAAdDisplayContainer)
+        {
+          _IMA_SDK_tryInitAdContainer();
+        }
+
+        this.metadataReady = true;
+
+        _trySetAdManagerToReady();
 
         //double check that we have ads to play, and that after building the timeline there are ads (it filters out
         //ill formed ads).
@@ -1025,6 +1034,8 @@ require("../html5-common/js/utils/utils.js");
           _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
                                                                      this.sharedVideoElement);
 
+          _trySetAdManagerToReady();
+
           _IMA_SDK_createAdsLoader();
         }
       });
@@ -1107,14 +1118,18 @@ require("../html5-common/js/utils/utils.js");
       };
 
       /**
-       * Sets this ad manager to ready and notifies the Ad Manager Controller that it's ready.
+       * Sets this ad manager to ready and notifies the Ad Manager Controller that it's ready if
+       * the ad display container has been created and the metadata has been received.
        * @private
-       * @method GoogleIMA#_setAdManagerToReady
+       * @method GoogleIMA#_trySetAdManagerToReady
        */
-      var _setAdManagerToReady = privateMember(function()
+      var _trySetAdManagerToReady = privateMember(function()
       {
-        this.ready = true;
-        _amc.onAdManagerReady();
+        if (_IMAAdDisplayContainer && this.metadataReady)
+        {
+          this.ready = true;
+          _amc.onAdManagerReady();
+        }
       });
 
       /**
@@ -1228,7 +1243,7 @@ require("../html5-common/js/utils/utils.js");
           };
 
         OO._.each(imaAdEvents, addIMAEventListener, this);
-        _setAdManagerToReady();
+        _trySetAdManagerToReady();
         this.adsReady = true;
         clearTimeout(this.adsRequestTimeoutRef);
         _IMA_SDK_tryInitAdsManager();
@@ -2064,7 +2079,6 @@ require("../html5-common/js/utils/utils.js");
      */
     this.destroy = function()
     {
-      _ima.destroy();
     };
 
     /**
