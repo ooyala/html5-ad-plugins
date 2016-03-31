@@ -222,6 +222,7 @@ describe('ad_manager_ima', function()
   it('Init: ad manager is ready', function()
   {
     ima.initialize(amc, playerId);
+    ima.registerUi();
     expect(ima.ready).to.be(false);
     var ad =
     {
