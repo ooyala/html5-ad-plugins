@@ -644,7 +644,7 @@ OO.Ads.manager(function(_, $) {
       // if (fwContext && _.isFunction(fwContext.dispose)) fwContext.dispose();
     };
 
-    var updateOverlayPosition = function() {
+    var updateOverlayPosition = _.bind(function() {
       //Overlay placement issue - PBI-1227 as of 12/9/2015
       //The main issue with Freewheel is when notifying their SDK of video size changes,
       //Freewheel only attempts to resize ads and not re-position ads.
@@ -652,7 +652,7 @@ OO.Ads.manager(function(_, $) {
 
       //We want to force the renderer to reposition the overlay ads. The Freewheel SDK has functions
       //that accomplish this, but are undocumented.
-      if(currentPlayingSlot && currentAd && !currentAd.isLinear){
+      if(currentPlayingSlot && currentAd && !currentAd.isLinear && !this.testMode){
         //Update Freewheel of size changes. At this point Freewheel will attempt to resize any ads
         notifySizeChange();
         //Documentation (https://hub.freewheel.tv/api_docs/html5/) includes all function calls
@@ -668,7 +668,7 @@ OO.Ads.manager(function(_, $) {
           OO.log("FW overlay resize error!");
         }
       }
-    };
+    }, this);
 
     var onResize = function() {
       updateOverlayPosition();
