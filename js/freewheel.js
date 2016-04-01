@@ -35,6 +35,7 @@ OO.Ads.manager(function(_, $) {
     this.ready             = false;
     var adModuleJsReady    = false;
     var fwAdDataRequested  = false;
+    var currentAd          = null;
     var currentPlayingSlot = null;
     var handlingClick      = false;
     var shouldRequestAds   = false;
@@ -440,7 +441,13 @@ OO.Ads.manager(function(_, $) {
         fwContext.setContentVideoElement(amc.ui.ooyalaVideoElement[0]);
       } else {
         if (!overlayContainer) {
-          overlayContainer = amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0];
+          //Freewheel uses the width and height of the parent of the video element we provide
+          //Create one with 100% width and 100% height here for FW to use
+          overlayContainer = document.createElement('div');
+          overlayContainer.style.width = "100%";
+          overlayContainer.style.height = "100%";
+          var parent = amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0];
+          parent.appendChild(overlayContainer);
         }
 
         //We need to create a fake video because the setContentVideoElement API requires a video element. The overlay
@@ -476,6 +483,7 @@ OO.Ads.manager(function(_, $) {
         }
         else {
           // Trigger the ad
+          currentAd = ad;
           currentPlayingSlot = ad.ad;
           indexInPod = 0;
           if (ad.isLinear) {
@@ -523,6 +531,8 @@ OO.Ads.manager(function(_, $) {
                   fakeVideo.style.width = details.width + 'px';
                   fakeVideo.style.height = details.height + 'px';
                 }
+
+                updateOverlayPosition();
               }
               amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
             }, this);
@@ -551,6 +561,7 @@ OO.Ads.manager(function(_, $) {
     var _resetAdState = _.bind(function() {
       handlingClick = false;
       currentPlayingSlot = null;
+      currentAd = null;
     }, this);
 
     /**
@@ -641,7 +652,7 @@ OO.Ads.manager(function(_, $) {
 
       //We want to force the renderer to reposition the overlay ads. The Freewheel SDK has functions
       //that accomplish this, but are undocumented.
-      if(currentPlayingSlot){
+      if(currentPlayingSlot && currentAd && !currentAd.isLinear){
         //Update Freewheel of size changes. At this point Freewheel will attempt to resize any ads
         notifySizeChange();
         //Documentation (https://hub.freewheel.tv/api_docs/html5/) includes all function calls
