@@ -19,6 +19,7 @@ describe('ad_manager_vast', function() {
 
   var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
   var linearXMLNoClickthroughString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml"), "utf8");
+  var linearXML2AdsString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_2_ads.xml"), "utf8");
   var linear3_0XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_linear.xml"), "utf8");
   var linear3_0PoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml"), "utf8");
   var linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml"), "utf8");
@@ -27,9 +28,13 @@ describe('ad_manager_vast', function() {
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var vmapAdTagPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_adtag_pre.xml"), "utf8");
   var vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml"), "utf8");
+  var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
+  var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
+  var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
+  var linearXML2Ads = OO.$.parseXML(linearXML2AdsString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
   var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
   var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
@@ -37,6 +42,9 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
   var vmapAdTagPre = OO.$.parseXML(vmapAdTagPreXMLString);
   var vmapInlinePreAdTagPost = OO.$.parseXML(vmapInlinePreAdTagPostXMLString);
+  var vmapInlineRepeatAd = OO.$.parseXML(vmapInlineRepeatAdXMLString);
+  var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
+  var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -769,6 +777,64 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     expect(openedUrls.length).to.be(0);
+  });
+
+  it('Vast 2.0: should play multiple ads if multiple ads are defined', function(){
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML2Ads);
+    expect(errorType.length).to.be(0);
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654644');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    vastAd = adQueue[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654645');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
   });
 
   it('Vast 3.0: should parse inline linear podded ads', function(){
@@ -1522,4 +1588,197 @@ describe('ad_manager_vast', function() {
     expect(postrollAdSource.adTagURI).to.be("adTagURI");
   });
 
+  it('Vast 3.0, VMAP: Should parse AdBreak with repeatAfter attribute properly', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAd);
+    var adBreaks = vastAdManager.adBreaks;
+    expect(adBreaks.length).to.be(3);
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.timeOffset).to.be("start");
+    expect(firstRepeatAdBreak.breakType).to.be("linear");
+    expect(firstRepeatAdBreak.breakId).to.be("repeat");
+    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:05");
+
+    expect(firstRepeatAdBreak.adSource).not.to.be(null);
+
+    var firstRepeatAdSource = firstRepeatAdBreak.adSource;
+    expect(firstRepeatAdSource.id).to.be("repeat-ad-1");
+    expect(firstRepeatAdSource.allowMultipleAds).to.be("true");
+    expect(firstRepeatAdSource.followRedirects).to.be("true");
+    expect(firstRepeatAdSource.adTagURI).to.be(undefined);
+    expect(firstRepeatAdSource.VASTAdData).not.to.be(null);
+
+    var trackingEvents = firstRepeatAdBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingurl1");
+    expect(trackingEvents[1].url).to.be("errorurl1");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.error).to.eql(["errorurl1"]);
+    expect(vastAd.ad.data.impression).to.eql(["impressionurl1"]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
+    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl1"]);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl1"]);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl1"]);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl1");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.repeatAfter).to.be(5);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.timeOffset).to.be("start");
+    expect(secondRepeatAdBreak.breakType).to.be("linear");
+    expect(secondRepeatAdBreak.breakId).to.be("repeat");
+    expect(secondRepeatAdBreak.repeatAfter).to.be("00:00:10");
+
+    expect(secondRepeatAdBreak.adSource).not.to.be(null);
+
+    var secondRepeatAdSource = secondRepeatAdBreak.adSource;
+    expect(secondRepeatAdSource.id).to.be("repeat-ad-2");
+    expect(secondRepeatAdSource.allowMultipleAds).to.be("true");
+    expect(secondRepeatAdSource.followRedirects).to.be("true");
+    expect(secondRepeatAdSource.adTagURI).to.be(undefined);
+    expect(secondRepeatAdSource.VASTAdData).not.to.be(null);
+
+    trackingEvents = secondRepeatAdBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingurl2");
+    expect(trackingEvents[1].url).to.be("errorurl2");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.error).to.eql(["errorurl2"]);
+    expect(vastAd.ad.data.impression).to.eql(["impressionurl2"]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
+    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl2"]);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl2"]);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl2"]);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl2");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.repeatAfter).to.be(10);
+
+    var thirdAdBreak = adBreaks[2];
+    expect(thirdAdBreak.timeOffset).to.be("00:00:15");
+    expect(thirdAdBreak.breakType).to.be("linear");
+    expect(thirdAdBreak.breakId).to.be("midroll");
+    expect(thirdAdBreak.repeatAfter).to.be(undefined);
+
+    expect(thirdAdBreak.adSource).not.to.be(null);
+
+    var thirdAdSource = thirdAdBreak.adSource;
+    expect(thirdAdSource.id).to.be("midroll-ad-1");
+    expect(thirdAdSource.allowMultipleAds).to.be("false");
+    expect(thirdAdSource.followRedirects).to.be("false");
+    expect(thirdAdSource.adTagURI).to.be(undefined);
+    expect(thirdAdSource.VASTAdData).not.to.be(null);
+
+    trackingEvents = thirdAdBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingurl3");
+    expect(trackingEvents[1].url).to.be("errorurl3");
+
+    vastAd = amc.timeline[2];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.error).to.eql(["errorurl3"]);
+    expect(vastAd.ad.data.impression).to.eql(["impressionurl3"]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
+    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl3"]);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl3"]);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl3"]);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl3");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 1', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput1);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("1337");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 2', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput2);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("apple");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0: Should use ad tag url override', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
 });
