@@ -807,7 +807,6 @@ describe('ad_manager_vast', function() {
       embed_code: embed_code,
       ads: [vast_ad_mid]
     };
-    debugger;
     vastAdManager.initialize(amc);
     expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
