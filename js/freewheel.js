@@ -1014,6 +1014,20 @@ OO.Ads.manager(function(_, $) {
       FRMSegment     = null;
       slots          = [];
 
+      if (fakeVideo) {
+        if (fakeVideo.parentElement) {
+          fakeVideo.parentElement.removeChild(fakeVideo);
+        }
+        fakeVideo = null;
+      }
+
+      if (overlayContainer) {
+        if (overlayContainer.parentElement) {
+          overlayContainer.parentElement.removeChild(overlayContainer);
+        }
+        overlayContainer = null;
+      }
+
       if (fwContext && _.isFunction(fwContext.dispose)) fwContext.dispose();
     };
   };
