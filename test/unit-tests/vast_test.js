@@ -1974,7 +1974,7 @@ describe('ad_manager_vast', function() {
     ad.vpaidAd.sendAdLinearChange(false);
     expect(linearStartedNotified).to.eql(0);
     ad.vpaidAd.sendAdLinearChange(true);
-   expect(linearStartedNotified).to.eql(1);
+    expect(linearStartedNotified).to.eql(1);
   });
 
   it('VPAID 2.0: Should parse and send ad parameters', function() {
@@ -1998,7 +1998,6 @@ describe('ad_manager_vast', function() {
   });
 
   it('VPAID 2.0: Should resize ad unit on size changed', function() {
-    var hidePlayerUi = false;
     vpaidInitialize();
     var ad = amc.timeline[0];
     vastAdManager.playAd(ad);
@@ -2006,14 +2005,13 @@ describe('ad_manager_vast', function() {
     expect(ad.vpaidAd.properties.width).to.be(100);
     expect(ad.vpaidAd.properties.height).to.be(100);
     vastAdManager._slot.offsetWidth = 200;
-    vastAdManager._slot.offsetHeight = 200;
+    vastAdManager._slot.offsetHeight = 300;
     amc.publishPlayerEvent(amc.EVENTS.SIZE_CHANGED);
     expect(ad.vpaidAd.properties.width).to.be(200);
-    expect(ad.vpaidAd.properties.height).to.be(200);
+    expect(ad.vpaidAd.properties.height).to.be(300);
   });
 
   it('VPAID 2.0: Should resize ad unit on fullscreen change', function() {
-    var hidePlayerUi = false;
     vpaidInitialize();
     var ad = amc.timeline[0];
     vastAdManager.playAd(ad);
@@ -2021,10 +2019,10 @@ describe('ad_manager_vast', function() {
     expect(ad.vpaidAd.properties.width).to.be(100);
     expect(ad.vpaidAd.properties.height).to.be(100);
     vastAdManager._slot.offsetWidth = 200;
-    vastAdManager._slot.offsetHeight = 200;
+    vastAdManager._slot.offsetHeight = 300;
     amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED);
     expect(ad.vpaidAd.properties.width).to.be(200);
-    expect(ad.vpaidAd.properties.height).to.be(200);
+    expect(ad.vpaidAd.properties.height).to.be(300);
   });
 
   it('VPAID 2.0: Should check/show ad unit companions when no XML companions available', function() {

@@ -2299,22 +2299,25 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_beginVpaidAd
      */
     var _beginVpaidAd = _.bind(function() {
-      var ad = currentAd.vpaidAd;
-      //TODO: Is this used for anything?
-      var adLinear = _safeFunctionCall(ad, "getAdLinear");
+      if (currentAd && currentAd.ad && currentAd.ad.data) {
+        var ad = currentAd.vpaidAd;
+        var clickthru = currentAd.ad.data.nonLinear ? currentAd.ad.data.nonLinear.nonLinearClickThrough : '';
+        //TODO: Is this used for anything?
+        var adLinear = _safeFunctionCall(ad, "getAdLinear");
 
-      initSkipAdOffset(currentAd);
-      //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
-      this.amc.hidePlayerUi();
-      this.amc.notifyPodStarted(currentAd.id, currentAd.ad.adPodLength);
+        initSkipAdOffset(currentAd);
+        //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
+        this.amc.hidePlayerUi();
+        this.amc.notifyPodStarted(currentAd.id, currentAd.ad.adPodLength);
 
-      this.amc.notifyLinearAdStarted(currentAd.id, {
-        name: currentAd.data.title,
-        duration : _safeFunctionCall(ad, "getAdDuration"),
-        clickUrl: currentAd.ad.data.nonLinear.nonLinearClickThrough.length > 0,
-        indexInPod: currentAd.ad.sequence,
-        skippable : _safeFunctionCall(ad, "getAdSkippableState")
-      });
+        this.amc.notifyLinearAdStarted(currentAd.id, {
+          name: currentAd.data.title,
+          duration : _safeFunctionCall(ad, "getAdDuration"),
+          clickUrl: clickthru.length > 0,
+          indexInPod: currentAd.ad.sequence,
+          skippable : _safeFunctionCall(ad, "getAdSkippableState")
+        });
+      }
     }, this);
 
     /**
@@ -2480,7 +2483,9 @@ OO.Ads.manager(function(_, $) {
         case VPAID_EVENTS.AD_LOADED:
           adLoaded = true;
           //For VPAID we need to check for companions after ad is created
-          this.checkCompanionAds(currentAd.ad);
+          if (_isVpaidAd(currentAd)) {
+            this.checkCompanionAds(currentAd.ad);
+          }
           _safeFunctionCall(currentAd.vpaidAd, "startAd");
           initSkipAdOffset(currentAd);
           // Added to make sure we display videoSlot correctly
@@ -2675,7 +2680,7 @@ OO.Ads.manager(function(_, $) {
       var requiredFunctions = ['handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd',
                                'pauseAd', 'resumeAd', 'expandAd', 'collapseAd', 'subscribe', 'unsubscribe'];
       _.each(requiredFunctions, function(fn) {
-        if (typeof currentAd.vpaidAd[fn] !== 'function') {
+        if (currentAd && currentAd.vpaidAd && typeof currentAd.vpaidAd[fn] !== 'function') {
           isValid = false;
           OO.log('VPaid Ad Unit is missing function: ' + fn);
         }
@@ -2710,9 +2715,9 @@ OO.Ads.manager(function(_, $) {
      */
     var _getFrame = function() {
       //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
-     vpaidIframe = document.createElement('iframe');
-     vpaidIframe.style.display = 'none';
-     vpaidIframe.onload = _onIframeLoaded;
+      vpaidIframe = document.createElement('iframe');
+      vpaidIframe.style.display = 'none';
+      vpaidIframe.onload = _onIframeLoaded;
       document.body.appendChild(vpaidIframe);
     };
 
