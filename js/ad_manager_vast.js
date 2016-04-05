@@ -561,7 +561,14 @@ OO.Ads.manager(function(_, $) {
           viewMode,
           creativeData = {};
 
+    if (_isVpaidAd(currentAd)) {
       currentAd.data = currentAd.ad.data;
+
+      var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
+      if (!mediaFileUrl) {
+        return null;
+      }
+
       if (!this.amc.ui.adVideoElement) {
         this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
       }
@@ -619,6 +626,7 @@ OO.Ads.manager(function(_, $) {
 
       this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
                   this._properties['adDesiredBitrate'], creativeData, environmentVariables);
+    }
     }, this);
 
     /**
@@ -975,7 +983,7 @@ OO.Ads.manager(function(_, $) {
             _safeFunctionCall(currentAd.vpaidAd, "skipAd");
           }
         }
-        if (ad.isLinear) {
+        if (ad.isLinear && !_isVpaidAd(currentAd)) {
           this.adVideoEnded();
         } else {
           _endAd(ad, false);
@@ -1037,7 +1045,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.destroy = function() {
       // Stop any running ads
-      this.cancelAd();
+      this.cancelAd(currentAd);
       this.ready = false;
       this.currentDepth = 0;
       this.lastOverlayAd = null;
@@ -1773,7 +1781,8 @@ OO.Ads.manager(function(_, $) {
      */
     var _isValidVpaidCreative = function(node, isLinear) {
       var apiFramework = (node.attr('apiFramework') || node.attr('apiframework')) === 'VPAID';
-      var creativeType = isLinear ? node.attr('type') : node.find('StaticResource').attr('creativeType');
+      var creativeType = isLinear ? node.attr('type') : (node.find('StaticResource').attr('creativeType') || 
+            node.find('StaticResource').attr('creativetype'));
       return apiFramework && creativeType === 'application/javascript';
     };
 
@@ -2299,7 +2308,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_beginVpaidAd
      */
     var _beginVpaidAd = _.bind(function() {
-      if (currentAd && currentAd.ad && currentAd.ad.data) {
+      if (_isVpaidAd(currentAd)) {
         var ad = currentAd.vpaidAd;
         var clickthru = currentAd.ad.data.nonLinear ? currentAd.ad.data.nonLinear.nonLinearClickThrough : '';
         //TODO: Is this used for anything?
@@ -2730,7 +2739,7 @@ OO.Ads.manager(function(_, $) {
       var loader = vpaidIframe.contentWindow.document.createElement('script');
       loader.src = _cleanString(currentAd.ad.mediaFile.url);
       loader.onload = this.initializeAd;
-      loader.onerror = this.destroy;
+      loader.onerror = _.bind(this.destroy, this);
       vpaidIframe.contentWindow.document.body.appendChild(loader);
     }, this);
 

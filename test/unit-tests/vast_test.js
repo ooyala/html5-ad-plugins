@@ -32,6 +32,7 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
   var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
   var vpaidLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear.xml'), 'utf8');
+  var vpaidLinearNoValuesXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_novalues.xml'), 'utf8');
   var vpaidNonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_nonlinear.xml'), 'utf8');
   var vpaidNoCompanionXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_nocompanions.xml'), 'utf8');
 
@@ -48,6 +49,7 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
   var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
   var vpaidLinearXML = OO.$.parseXML(vpaidLinearXMLString);
+  var vpaidLinearNoValuesXML = OO.$.parseXML(vpaidLinearNoValuesXMLString);
   var vpaidNonLinearXML = OO.$.parseXML(vpaidNonLinearXMLString);
   var vpaidNoCompanionXML = OO.$.parseXML(vpaidNoCompanionXMLString);
 
@@ -2035,5 +2037,15 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(companion).to.eql({companion:{}});
+  });
+
+  it('VPAID 2.0: should fail if media file value is empty', function() {
+    vpaidInitialize(vpaidLinearNoValuesXML);
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    expect(vastAdManager.initializeAd()).to.be(null);
+    expect(ad.duration).to.eql(16);
+    expect(global.vpaid.adInit).to.be(false);
+    expect(global.vpaid.adStarted).to.be(false);
   });
 });
