@@ -564,7 +564,7 @@ OO.Ads.manager(function(_, $) {
     if (_isVpaidAd(currentAd)) {
       currentAd.data = currentAd.ad.data;
 
-      var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
+      var mediaFileUrl = currentAd.ad.mediaFile ? _cleanString(currentAd.ad.mediaFile.url) : '';
       if (!mediaFileUrl) {
         return null;
       }
