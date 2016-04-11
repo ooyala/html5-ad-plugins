@@ -222,6 +222,7 @@ describe('ad_manager_ima', function()
   it('Init: ad manager is ready', function()
   {
     ima.initialize(amc, playerId);
+    ima.registerUi();
     expect(ima.ready).to.be(false);
     var ad =
     {
@@ -325,9 +326,10 @@ describe('ad_manager_ima', function()
     amc.hidePlayerUi = function() {
       notified = true;
     };
-    initialize(false);
-    play();
+    initAndPlay(true, vci);
     ima.playAd(amc.timeline[0]);
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     expect(notified).to.be(true);
   });
 
@@ -384,7 +386,10 @@ describe('ad_manager_ima', function()
   {
     var nonLinearWidth = -1;
     var nonLinearHeight = -1;
-    var paddingRequired = false;
+    var paddingWidth = -1;
+    var paddingHeight = -1;
+    var imaWidth = -1;
+    var imaHeight = -1;
     google.ima.linearAds = false;
     initAndPlay(false, vci);
     var id = "blah";
@@ -402,12 +407,18 @@ describe('ad_manager_ima', function()
       {
         nonLinearWidth = currentAdPod.width;
         nonLinearHeight = currentAdPod.height;
-        paddingRequired = currentAdPod.paddingRequired;
+        paddingWidth = currentAdPod.paddingWidth;
+        paddingHeight = currentAdPod.paddingHeight;
       }
     };
     //original ad definition
     ima.playAd(amc.timeline[0]);
     var am = google.ima.adManagerInstance;
+    am.resize = function(width, height, viewMode)
+    {
+      imaWidth = width;
+      imaHeight = height;
+    };
     var currentAd = am.getCurrentAd();
     currentAd.getWidth = function()
     {
@@ -422,7 +433,13 @@ describe('ad_manager_ima', function()
     ima.playAd(adPod);
     expect(nonLinearWidth).to.be(300);
     expect(nonLinearHeight).to.be(50);
-    expect(paddingRequired).to.be(true);
+    //these values are defined as constants in google_ima.js
+    //as OVERLAY_WIDTH_PADDING and OVERLAY_HEIGHT_PADDING
+    expect(paddingWidth).to.be(50);
+    expect(paddingHeight).to.be(50);
+    //base + padding = ima width/height
+    expect(imaWidth).to.be(350);
+    expect(imaHeight).to.be(100);
   });
 
   it('AMC Integration, IMA Event: IMA CLICK event notifies amc of an ad click', function()
@@ -1005,7 +1022,7 @@ describe('ad_manager_ima', function()
   });
 
   // IMA-VTC : IMA event tests
-  it('VTC Integration, IMA Event: Video wrapper notifies of play event when we receive IMA STARTED event', function()
+  it('VTC Integration, IMA Event: Video wrapper notifies of play event when we receive IMA STARTED event from a linear ad', function()
   {
     var playing = false;
     initAndPlay(true, {
@@ -1021,6 +1038,25 @@ describe('ad_manager_ima', function()
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     expect(playing).to.be(true);
+  });
+
+  it('VTC Integration, IMA Event: Video wrapper does not notify of play event when we receive IMA STARTED event from a nonlinear overlay', function()
+  {
+    var playing = false;
+    google.ima.linearAds = false;
+    initAndPlay(true, {
+      notify : function(eventName, params)
+      {
+        if (eventName === vci.EVENTS.PLAYING)
+        {
+          playing = true;
+        }
+      },
+      EVENTS : vci.EVENTS
+    });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(playing).to.be(false);
   });
 
   it('VTC Integration, IMA Event: Video wrapper notifies of play event when we receive IMA RESUMED event', function()

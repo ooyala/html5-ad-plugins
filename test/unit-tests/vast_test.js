@@ -16,9 +16,11 @@ describe('ad_manager_vast', function() {
   var name = "vast";
   var originalOoAds = _.clone(OO.Ads);
   require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
+  require(TEST_ROOT + 'unit-test-helpers/mock_vpaid.js');
 
   var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
   var linearXMLNoClickthroughString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml"), "utf8");
+  var linearXML2AdsString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_2_ads.xml"), "utf8");
   var linear3_0XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_linear.xml"), "utf8");
   var linear3_0PoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml"), "utf8");
   var linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml"), "utf8");
@@ -27,10 +29,18 @@ describe('ad_manager_vast', function() {
   var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
   var vmapAdTagPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_adtag_pre.xml"), "utf8");
   var vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml"), "utf8");
+  var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
+  var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
+  var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
   var vmapInlinePoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_podded.xml"), "utf8");
-  
+  var vpaidLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear.xml'), 'utf8');
+  var vpaidLinearNoValuesXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_novalues.xml'), 'utf8');
+  var vpaidNonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_nonlinear.xml'), 'utf8');
+  var vpaidNoCompanionXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_nocompanions.xml'), 'utf8');
+
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
+  var linearXML2Ads = OO.$.parseXML(linearXML2AdsString);
   var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
   var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
   var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
@@ -39,6 +49,13 @@ describe('ad_manager_vast', function() {
   var vmapAdTagPre = OO.$.parseXML(vmapAdTagPreXMLString);
   var vmapInlinePreAdTagPost = OO.$.parseXML(vmapInlinePreAdTagPostXMLString);
   var vmapInlinePodded = OO.$.parseXML(vmapInlinePoddedXMLString);
+  var vmapInlineRepeatAd = OO.$.parseXML(vmapInlineRepeatAdXMLString);
+  var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
+  var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
+  var vpaidLinearXML = OO.$.parseXML(vpaidLinearXMLString);
+  var vpaidLinearNoValuesXML = OO.$.parseXML(vpaidLinearNoValuesXMLString);
+  var vpaidNonLinearXML = OO.$.parseXML(vpaidNonLinearXMLString);
+  var vpaidNoCompanionXML = OO.$.parseXML(vpaidNoCompanionXMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -73,6 +90,32 @@ describe('ad_manager_vast', function() {
     vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content);
     amc.timeline = vastAdManager.buildTimeline();
+  };
+
+  var vpaidInitialize = function(xml) {
+    var embed_code = "embed_code",
+        preroll = {
+          type: "vast",
+          first_shown: 0,
+          frequency: 2,
+          ad_set_code: "ad_set_code",
+          time:0,
+          position_type:"t"
+        },
+        content = {
+          embed_code: embed_code,
+          ads: [preroll]
+        },
+        server = {
+          html5_ssl_ad_server: "https://blah",
+          html5_ad_server: "http://blah"
+        };
+
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata(server, {}, content)).to.be(true);
+    initalPlay();
+    xml = xml || vpaidLinearXML;
+    vastAdManager.onVastResponse(preroll, xml);
   };
 
   var initalPlay = function() {
@@ -119,6 +162,13 @@ describe('ad_manager_vast', function() {
     pixelPingCalled= false;
     vastAdManager.errorInfo = {};
     vastAdManager.adBreaks = [];
+
+    //VPAID specifics
+    global.vpaid.adInit = false;
+    global.vpaid.adStarted = false;
+    global.vpaid.adStopped = false;
+    global.vpaid.adSkipped = false;
+    global.vpaid.getVPAIDAd = function() { return new global.vpaid.VpaidAd(); };
   });
 
   afterEach(_.bind(function() {
@@ -771,6 +821,64 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     expect(openedUrls.length).to.be(0);
+  });
+
+  it('Vast 2.0: should play multiple ads if multiple ads are defined', function(){
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+    vastAdManager.initialize(amc);
+    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    initalPlay();
+    expect(vastAdManager.initialPlay()).to.be(true);
+
+    vastAdManager.onVastResponse(vast_ad_mid, linearXML2Ads);
+    expect(errorType.length).to.be(0);
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654644');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
+    vastAd = adQueue[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.id).to.be('6654645');
+    vastAdManager.playAd(vastAd);
+
+    vastAdManager.adVideoPlaying();
+    vastAdManager.adVideoEnded();
   });
 
   it('Vast 3.0: should parse inline linear podded ads', function(){
@@ -1524,9 +1632,488 @@ describe('ad_manager_vast', function() {
     expect(postrollAdSource.adTagURI).to.be("adTagURI");
   });
 
+  it('Vast 3.0, VMAP: Should parse AdBreak with repeatAfter attribute properly', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAd);
+    var adBreaks = vastAdManager.adBreaks;
+    expect(adBreaks.length).to.be(3);
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.timeOffset).to.be("start");
+    expect(firstRepeatAdBreak.breakType).to.be("linear");
+    expect(firstRepeatAdBreak.breakId).to.be("repeat");
+    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:05");
+
+    expect(firstRepeatAdBreak.adSource).not.to.be(null);
+
+    var firstRepeatAdSource = firstRepeatAdBreak.adSource;
+    expect(firstRepeatAdSource.id).to.be("repeat-ad-1");
+    expect(firstRepeatAdSource.allowMultipleAds).to.be("true");
+    expect(firstRepeatAdSource.followRedirects).to.be("true");
+    expect(firstRepeatAdSource.adTagURI).to.be(undefined);
+    expect(firstRepeatAdSource.VASTAdData).not.to.be(null);
+
+    var trackingEvents = firstRepeatAdBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingurl1");
+    expect(trackingEvents[1].url).to.be("errorurl1");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.error).to.eql(["errorurl1"]);
+    expect(vastAd.ad.data.impression).to.eql(["impressionurl1"]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
+    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl1"]);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl1"]);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl1"]);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl1");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.repeatAfter).to.be(5);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.timeOffset).to.be("start");
+    expect(secondRepeatAdBreak.breakType).to.be("linear");
+    expect(secondRepeatAdBreak.breakId).to.be("repeat");
+    expect(secondRepeatAdBreak.repeatAfter).to.be("00:00:10");
+
+    expect(secondRepeatAdBreak.adSource).not.to.be(null);
+
+    var secondRepeatAdSource = secondRepeatAdBreak.adSource;
+    expect(secondRepeatAdSource.id).to.be("repeat-ad-2");
+    expect(secondRepeatAdSource.allowMultipleAds).to.be("true");
+    expect(secondRepeatAdSource.followRedirects).to.be("true");
+    expect(secondRepeatAdSource.adTagURI).to.be(undefined);
+    expect(secondRepeatAdSource.VASTAdData).not.to.be(null);
+
+    trackingEvents = secondRepeatAdBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingurl2");
+    expect(trackingEvents[1].url).to.be("errorurl2");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.error).to.eql(["errorurl2"]);
+    expect(vastAd.ad.data.impression).to.eql(["impressionurl2"]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
+    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl2"]);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl2"]);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl2"]);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl2");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.repeatAfter).to.be(10);
+
+    var thirdAdBreak = adBreaks[2];
+    expect(thirdAdBreak.timeOffset).to.be("00:00:15");
+    expect(thirdAdBreak.breakType).to.be("linear");
+    expect(thirdAdBreak.breakId).to.be("midroll");
+    expect(thirdAdBreak.repeatAfter).to.be(undefined);
+
+    expect(thirdAdBreak.adSource).not.to.be(null);
+
+    var thirdAdSource = thirdAdBreak.adSource;
+    expect(thirdAdSource.id).to.be("midroll-ad-1");
+    expect(thirdAdSource.allowMultipleAds).to.be("false");
+    expect(thirdAdSource.followRedirects).to.be("false");
+    expect(thirdAdSource.adTagURI).to.be(undefined);
+    expect(thirdAdSource.VASTAdData).not.to.be(null);
+
+    trackingEvents = thirdAdBreak.trackingEvents;
+    expect(trackingEvents[0].eventName).to.be("breakStart");
+    expect(trackingEvents[1].eventName).to.be("error");
+    expect(trackingEvents[0].url).to.be("trackingurl3");
+    expect(trackingEvents[1].url).to.be("errorurl3");
+
+    vastAd = amc.timeline[2];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.error).to.eql(["errorurl3"]);
+    expect(vastAd.ad.data.impression).to.eql(["impressionurl3"]);
+    expect(vastAd.ad.data.linear).not.to.be(null);
+    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
+    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl3"]);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl3"]);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl3"]);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl3");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 1', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput1);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("1337");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 2', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput2);
+    var adBreaks = vastAdManager.adBreaks;
+
+    var firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be("apple");
+
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+
+    var secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be("");
+
+    vastAd = amc.timeline[1];
+    expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
   it('Vast 3.0, VMAP: Should not play podded ad if allowMultipleAds is set to false', function() {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlinePodded);
     expect(amc.timeline.length).to.be(0);
+  });
+
+  it('Vast 3.0: Should use ad tag url override', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('VPAID 2.0: Should parse VPAID linear creative', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    expect(ad).to.be.an('object');
+    expect(ad.duration).to.eql(16);
+    expect(ad.position).to.eql(0);
+    var parsedAd = global.vpaidAd.ad.data;
+    expect(ad.ad).to.be.an('object');
+    expect(ad.ad.adPodIndex).to.eql(1);
+    expect(ad.ad.adPodLength).to.eql(1);
+    expect(ad.ad.sequence).to.be(null);
+    expect(ad.streams).to.eql({ mp4: '' });
+    expect(ad.ad.fallbackAd).to.be(null);
+    expect(ad.isLinear).to.be(true);
+    expect(ad.ad.data).to.be.an('object');
+    expect(ad.ad.data.adType).to.eql('vpaid');
+    expect(ad.ad.data.companion[0]).to.be.an('object');
+    expect(ad.ad.data.companion).to.eql(parsedAd.companion);
+    expect(ad.ad.data.error).to.eql('error');
+    expect(ad.ad.data.impression).to.eql(parsedAd.impression);
+    expect(ad.ad.data.linear.mediaFiles).to.eql(parsedAd.linear.mediaFiles);
+    expect(ad.ad.data.title).to.eql(parsedAd.title);
+    expect(ad.ad.data.tracking).to.eql(parsedAd.tracking);
+    expect(ad.ad.data.type).to.eql(parsedAd.type);
+    expect(ad.ad.data.version).to.eql(parsedAd.version);
+    expect(ad.ad.data.videoClickTracking).to.eql(parsedAd.videoClickTracking);
+    expect(ad.ad.data.adParams).to.eql(parsedAd.adParams);
+  });
+
+  it('VPAID 2.0: Should create slot and video slot', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(_.isElement(vastAdManager._slot)).to.be(true);
+    expect(_.isElement(vastAdManager._videoSlot)).to.be(true);
+  });
+
+  it('VPAID 2.0: initAd should be called after validations', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adInit).to.be(true)
+  });
+
+  it('VPAID 2.0: initAd should not be called when any required ad unit function is missing', function() {
+    vpaidInitialize();
+    global.vpaid.getVPAIDAd = function() { return new global.vpaid.missingFnVPAIDAd(); };
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adInit).to.be(false)
+  });
+
+  it('VPAID 2.0: initAd should not be called when using incorrect version <2.0', function() {
+    vpaidInitialize();
+    global.vpaid.getVPAIDAd = function() { return new global.vpaid.incorrectVersionVPAIDAd(); };
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adInit).to.be(false)
+  });
+
+  it('VPAID 2.0: Ad should be started', function() {
+    var podStartedNotified = 0, linearStartedNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodStarted = function() {
+      podStartedNotified++;
+    };
+
+    amc.notifyLinearAdStarted = function() {
+      linearStartedNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(global.vpaid.adStarted).to.be(true);
+    expect(podStartedNotified).to.eql(1);
+    expect(linearStartedNotified).to.eql(1);
+  });
+
+  it('VPAID 2.0: Ad should be stopped when ad video is completed', function() {
+    var podEndNotified = 0, linearEndNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    ad.vpaidAd.adVideoCompleted();
+    expect(global.vpaid.adStopped).to.be(true);
+    expect(podEndNotified).to.eql(1);
+    expect(linearEndNotified).to.eql(1);
+  });
+
+  it('VPAID 2.0: Ad should be skipped when calling skipAd', function() {
+    var podEndNotified = 0, linearEndNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    vastAdManager.cancelAd(ad, {
+      code : amc.AD_CANCEL_CODE.SKIPPED
+    });
+    expect(global.vpaid.adSkipped).to.be(true);
+    expect(podEndNotified).to.eql(1);
+    expect(linearEndNotified).to.eql(1);
+
+  });
+
+  it('VPAID 2.0: Ad skip button should display when skippableState changes to true, or hide when false', function() {
+    var allowSkipButton = false, skipOffset = 0;
+    amc.showSkipVideoAdButton = function(allowButton, offset) {
+      allowSkipButton = allowButton;
+      skipOffset = offset;
+    };
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+
+    ad.vpaidAd.setSkippableState(true);
+    expect(allowSkipButton).to.be(true);
+    ad.vpaidAd.setSkippableState(false);
+    expect(allowSkipButton).to.be(false);
+    expect(skipOffset).to.be('0');
+  });
+
+  it('VPAID 2.0: Should check and send companion ads', function() {
+    var companion;
+    var parsedAd = global.vpaidAd.ad.data;
+    amc.showCompanion = function(companionAds) {
+      companion = companionAds;
+    };
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(companion).to.eql(parsedAd.companion);
+  });
+
+  it('VPAID 2.0: Ad should not end on adVideoEnded', function() {
+    var podEndNotified = 0, linearEndNotified = 0;
+    vpaidInitialize();
+
+    amc.notifyPodEnded = function() {
+      podEndNotified++;
+    };
+
+    amc.notifyLinearAdEnded = function() {
+      linearEndNotified++;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    vastAdManager.adVideoEnded();
+    expect(podEndNotified).to.eql(0);
+    expect(linearEndNotified).to.eql(0);
+  });
+
+  it('VPAID 2.0: Ad Unit should handle clickthru if playerHandles is false, otherwise players handle the click', function() {
+    var adUnitHandling = true;
+    vpaidInitialize();
+
+    vastAdManager.openUrl = function(url) {
+      adUnitHandling = false;
+    };
+
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    ad.vpaidAd.sendClick(false);
+    expect(adUnitHandling).to.be(true);
+
+    ad.vpaidAd.sendClick(true);
+    expect(adUnitHandling).to.be(false);
+  });
+
+  it('VPAID 2.0: Should notify linear ad started when adLinearChange is sent', function() {
+    var linearStartedNotified = 0;
+    vpaidInitialize(vpaidNonLinearXML);
+
+    amc.notifyLinearAdStarted = function() {
+      linearStartedNotified++;
+    };
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    amc.adManagerSettings['linearAdSkipButtonStartTime'] = 5;
+    ad.vpaidAd.sendAdLinearChange(false);
+    expect(linearStartedNotified).to.eql(0);
+    ad.vpaidAd.sendAdLinearChange(true);
+    expect(linearStartedNotified).to.eql(1);
+  });
+
+  it('VPAID 2.0: Should parse and send ad parameters', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(JSON.parse(ad.ad.adParams)).to.eql(ad.vpaidAd.properties.adParameters);
+  });
+
+  it('VPAID 2.0: Should hide player ui', function() {
+    var hidePlayerUi = false;
+    amc.hidePlayerUi = function() {
+      hidePlayerUi = true;
+    };
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(hidePlayerUi).to.be(true);
+  });
+
+  it('VPAID 2.0: Should resize ad unit on size changed', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(ad.vpaidAd.properties.width).to.be(100);
+    expect(ad.vpaidAd.properties.height).to.be(100);
+    vastAdManager._slot.offsetWidth = 200;
+    vastAdManager._slot.offsetHeight = 300;
+    amc.publishPlayerEvent(amc.EVENTS.SIZE_CHANGED);
+    expect(ad.vpaidAd.properties.width).to.be(200);
+    expect(ad.vpaidAd.properties.height).to.be(300);
+  });
+
+  it('VPAID 2.0: Should resize ad unit on fullscreen change', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(ad.vpaidAd.properties.width).to.be(100);
+    expect(ad.vpaidAd.properties.height).to.be(100);
+    vastAdManager._slot.offsetWidth = 200;
+    vastAdManager._slot.offsetHeight = 300;
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED);
+    expect(ad.vpaidAd.properties.width).to.be(200);
+    expect(ad.vpaidAd.properties.height).to.be(300);
+  });
+
+  it('VPAID 2.0: Should check/show ad unit companions when no XML companions available', function() {
+    var companion;
+    amc.showCompanion = function(companionAds) {
+      companion = companionAds;
+    };
+    vpaidInitialize(vpaidNoCompanionXML);
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    expect(companion).to.eql({companion:{}});
+  });
+
+  it('VPAID 2.0: should fail if media file value is empty', function() {
+    vpaidInitialize(vpaidLinearNoValuesXML);
+    var ad = amc.timeline[0];
+    vastAdManager.playAd(ad);
+    expect(vastAdManager.initializeAd()).to.be(null);
+    expect(ad.duration).to.eql(16);
+    expect(global.vpaid.adInit).to.be(false);
+    expect(global.vpaid.adStarted).to.be(false);
   });
 });

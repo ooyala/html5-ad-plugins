@@ -40,7 +40,9 @@ fake_amc = function() {
     adVideoElement : $("<div>", {class: "video"}),
     pluginsElement : $("<div>", {}),
     playerSkinPluginsElement : $("<div>", {}),
-    adWrapper : $("<div>", {})
+    adWrapper : $("<div>", {}),
+    transitionToAd: function(){},
+    transitionToMainContent: function(){}
   };
   this.platform = {};
   this.pageSettings = {};

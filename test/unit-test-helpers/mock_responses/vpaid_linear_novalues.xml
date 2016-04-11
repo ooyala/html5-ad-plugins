@@ -1,0 +1,27 @@
+<VAST version="2.0">
+  <Ad id="1hp780">
+      <InLine>
+          <AdSystem>Ad Testing</AdSystem>
+          <AdTitle>title</AdTitle>
+          <Impression>impression</Impression>
+          <Error>error</Error>
+          <Creatives>
+              <Creative>
+                  <Linear>
+                      <Duration>16</Duration>
+                      <TrackingEvents>
+                        <Tracking event="start">start</Tracking>
+                        <Tracking event="firstQuartile">first</Tracking>
+                        <Tracking event="complete">complete</Tracking>
+                        <Tracking event="mute">mute</Tracking>
+                      </TrackingEvents>
+                      <AdParameters>{"tag" : "ad"}</AdParameters>
+                      <MediaFiles>
+                          <MediaFile delivery="progressive" width="16" height="9" type="application/javascript" apiFramework="VPAID"></MediaFile>
+                      </MediaFiles>
+                  </Linear>
+                </Creative>
+          </Creatives>
+      </InLine>
+  </Ad>
+</VAST>
