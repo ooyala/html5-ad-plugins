@@ -1331,6 +1331,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.extractStreamForType = function(streams, type) {
       var filter = [];
+      // TODO: Add MIME types for the other encoding types that we support
       switch (type) {
         case "hls":
           filter.push("application/x-mpegurl");
