@@ -2083,6 +2083,7 @@ require("../html5-common/js/utils/utils.js");
      */
     this.destroy = function()
     {
+      _ima.sharedVideoElement = null;
     };
 
     /**
