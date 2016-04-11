@@ -1334,11 +1334,16 @@ OO.Ads.manager(function(_, $) {
       switch (type) {
         case "hls":
           filter.push("application/x-mpegurl");
+          filter.push("application/mpegurl");
+          filter.push("audio/mpegurl");
+          filter.push("audio/x-mpegurl");
           break;
         default:
           filter.push("video/" +type);
       }
-      var stream = _.find(streams, function(v) { return (filter.indexOf(v.type) >= 0); }, this);
+      var stream = _.find(streams, function(stream) {
+        return (filter.indexOf(stream.type) >= 0);
+      }, this);
       return stream ? stream.url : null;
     };
 
