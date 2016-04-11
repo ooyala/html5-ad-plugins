@@ -1307,4 +1307,15 @@ describe('ad_manager_ima', function()
     initialize(false);
     expect(ima.sharedVideoElement).to.not.be(null);
   });
+
+  it('SingleElement: Shared video element should be null after video wrapper calls destroy function', function()
+  {
+    ima.sharedVideoElement = null;
+    amc.ui.useSingleVideoElement = true;
+    amc.ui.ooyalaVideoElement = [{ className: "video"}];
+    initAndPlay(false, vci);
+    expect(ima.sharedVideoElement).to.not.be(null);
+    videoWrapper.destroy();
+    expect(ima.sharedVideoElement).to.be(null);
+  });
 });
