@@ -546,6 +546,7 @@ OO.Ads.manager(function(_, $) {
     this.initialize = function(amc) {
       this.amc = amc;
       this.amc.addPlayerListener(this.amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(this.initialPlay, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.REPLAY_REQUESTED, _.bind(this.replay, this));
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
       this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
     };
@@ -778,6 +779,17 @@ OO.Ads.manager(function(_, $) {
      */
     this.initialPlay = function() {
       return this.loadAllVastAds();
+    };
+
+    /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
+     * clicked. Here it will try to load the rest of the vast ads at this point if there any.
+     * @public
+     * @method Vast#replay
+     */
+    this.replay = function() {
+      this.loadPreRolls();
+      this.loadAllVastAds();
     };
 
     /**
