@@ -32,6 +32,7 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
   var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
   var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
+  var vmapInlinePoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_podded.xml"), "utf8");
   var vpaidLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear.xml'), 'utf8');
   var vpaidLinearNoValuesXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_novalues.xml'), 'utf8');
   var vpaidNonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_nonlinear.xml'), 'utf8');
@@ -47,6 +48,7 @@ describe('ad_manager_vast', function() {
   var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
   var vmapAdTagPre = OO.$.parseXML(vmapAdTagPreXMLString);
   var vmapInlinePreAdTagPost = OO.$.parseXML(vmapInlinePreAdTagPostXMLString);
+  var vmapInlinePodded = OO.$.parseXML(vmapInlinePoddedXMLString);
   var vmapInlineRepeatAd = OO.$.parseXML(vmapInlineRepeatAdXMLString);
   var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
   var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
@@ -1803,6 +1805,12 @@ describe('ad_manager_vast', function() {
 
     vastAd = amc.timeline[1];
     expect(vastAd.ad.repeatAfter).to.be(null);
+  });
+
+  it('Vast 3.0, VMAP: Should not play podded ad if allowMultipleAds is set to false', function() {
+    vastAdManager.initialize(amc);
+    vastAdManager.onVMAPResponse(vmapInlinePodded);
+    expect(amc.timeline.length).to.be(0);
   });
 
   it('Vast 3.0: Should use ad tag url override', function() {
