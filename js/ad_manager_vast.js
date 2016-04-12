@@ -1351,8 +1351,20 @@ OO.Ads.manager(function(_, $) {
      */
     this.extractStreamForType = function(streams, type) {
       var filter = [];
-      filter.push("video/" +type);
-      var stream = _.find(streams, function(v) { return (filter.indexOf(v.type) >= 0); }, this);
+      // TODO: Add MIME types for the other encoding types that we support
+      switch (type) {
+        case "hls":
+          filter.push("application/x-mpegurl");
+          filter.push("application/mpegurl");
+          filter.push("audio/mpegurl");
+          filter.push("audio/x-mpegurl");
+          break;
+        default:
+          filter.push("video/" +type);
+      }
+      var stream = _.find(streams, function(stream) {
+        return (filter.indexOf(stream.type) >= 0);
+      }, this);
       return stream ? stream.url : null;
     };
 
