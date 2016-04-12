@@ -829,17 +829,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onSizeChanged = privateMember(function()
       {
-        if (!this.runningUnitTests)
-        {
-          setTimeout(_.bind(function()
-          {
-            _updateIMASize();
-          }, this), 500);
-        }
-        else
-        {
-          _updateIMASize();
-        }
+        _updateIMASize();
       });
 
       /**

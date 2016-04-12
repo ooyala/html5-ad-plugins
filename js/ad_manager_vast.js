@@ -2819,13 +2819,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_onSizeChanged
      */
     var _onSizeChanged = _.bind(function() {
-      if (!this.testMode) {
-        setTimeout(_.bind(function() {
-          _updateCreativeSize();
-        }, this), 500);
-      } else {
-        _updateCreativeSize();
-      }
+      _updateCreativeSize();
     }, this);
 
     /**
