@@ -546,6 +546,7 @@ OO.Ads.manager(function(_, $) {
     this.initialize = function(amc) {
       this.amc = amc;
       this.amc.addPlayerListener(this.amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(this.initialPlay, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.REPLAY_REQUESTED, _.bind(this.replay, this));
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
       this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
     };
@@ -553,25 +554,32 @@ OO.Ads.manager(function(_, $) {
     /**
      * Callback when the media file is loaded. Once is loaded we can initialize the ad
      * This is only required for VPAID ads
-     * @private
+     * @public
      */
-    var _initializeAd = _.bind(function() {
+    this.initializeAd = _.bind(function() {
       var eventName,
           environmentVariables,
           viewMode,
           creativeData = {};
 
+    if (_isVpaidAd(currentAd)) {
       currentAd.data = currentAd.ad.data;
-      if (!this.amc.ui.adVideoElement[0]) {
+
+      var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
+      if (!mediaFileUrl) {
+        return null;
+      }
+
+      if (!this.amc.ui.adVideoElement) {
         this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
       }
-      if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function') {
+      if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
         OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
         return;
       }
 
       try{
-        currentAd.vpaidAd = vpaidIframe.contentWindow.getVPAIDAd();
+        currentAd.vpaidAd = this.testMode ? global.vpaid.getVPAIDAd() : vpaidIframe.contentWindow.getVPAIDAd();
       } catch (e) {
         OO.log("VPAID 2.0: error while getting vpaid creative - " + e)
       }
@@ -619,6 +627,7 @@ OO.Ads.manager(function(_, $) {
 
       this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
                   this._properties['adDesiredBitrate'], creativeData, environmentVariables);
+    }
     }, this);
 
     /**
@@ -773,6 +782,17 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
+     * clicked. Here it will try to load the rest of the vast ads at this point if there any.
+     * @public
+     * @method Vast#replay
+     */
+    this.replay = function() {
+      this.loadPreRolls();
+      this.loadAllVastAds();
+    };
+
+    /**
      *
      * This is required by the Ad Manager Controller but for Vast ads nothing is done here.
      * @returns The array of the new timeline to merge into the controller timeline but Vast Manager doesn't use this
@@ -884,13 +904,13 @@ OO.Ads.manager(function(_, $) {
 
         this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
       }
-      this.checkCompanionAds(adWrapper.ad);
       if (isVPaid) {
         //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
         this.amc.hidePlayerUi();
         _getFrame();
       } else {
-        // For VPAID we can only set the skip offset when ad already started
+        // For VPAID we can only set the skip offset and check for companions when ad already started
+        this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
       }
     };
@@ -975,7 +995,7 @@ OO.Ads.manager(function(_, $) {
             _safeFunctionCall(currentAd.vpaidAd, "skipAd");
           }
         }
-        if (ad.isLinear) {
+        if (ad.isLinear && !_isVpaidAd(currentAd)) {
           this.adVideoEnded();
         } else {
           _endAd(ad, false);
@@ -1037,7 +1057,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.destroy = function() {
       // Stop any running ads
-      this.cancelAd();
+      this.cancelAd(currentAd);
       this.ready = false;
       this.currentDepth = 0;
       this.lastOverlayAd = null;
@@ -1784,8 +1804,9 @@ OO.Ads.manager(function(_, $) {
      * @return {boolean} VPaid validated value
      */
     var _isValidVpaidCreative = function(node, isLinear) {
-      var apiFramework = node.attr('apiFramework') === 'VPAID';
-      var creativeType = isLinear ? node.attr('type') : node.find('StaticResource').attr('creativeType');
+      var apiFramework = (node.attr('apiFramework') || node.attr('apiframework')) === 'VPAID';
+      var creativeType = isLinear ? node.attr('type') : (node.find('StaticResource').attr('creativeType') || 
+            node.find('StaticResource').attr('creativetype'));
       return apiFramework && creativeType === 'application/javascript';
     };
 
@@ -1964,6 +1985,12 @@ OO.Ads.manager(function(_, $) {
               handleAds([ad], adLoaded);
             }
           }
+          // A VAST response wrapped in VMAP could have allowMultipleAds specified by the VMAP AdBreak
+          else if (adLoaded.vmap) {
+            if (adLoaded.allowMultipleAds) {
+              handleAds(vastAds.podded, adLoaded, fallbackAd);
+            }
+          }
           //else show the podded ads
           else {
             handleAds(vastAds.podded, adLoaded, fallbackAd);
@@ -2094,11 +2121,20 @@ OO.Ads.manager(function(_, $) {
          *type: "",
          *url: ""
          */
+        vmap: true,
+        allowMultipleAds: true,
         time: 0,
         position_type: "t",
       };
       if (!adBreak) {
         return null;
+      }
+      if (adBreak.adSource && adBreak.adSource.allowMultipleAds) {
+        // parse the attribute, and convert string to boolean if it is "true"/"false"
+        var allowMultipleAds = adBreak.adSource.allowMultipleAds;
+        if (allowMultipleAds == "true" || allowMultipleAds == "false") {
+          adObject.allowMultipleAds = (allowMultipleAds == "true");
+        }
       }
       if (adBreak.repeatAfter) {
         adObject.repeatAfter = _convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
@@ -2316,22 +2352,25 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_beginVpaidAd
      */
     var _beginVpaidAd = _.bind(function() {
-      var ad = currentAd.vpaidAd;
-      //TODO: Is this used for anything?
-      var adLinear = _safeFunctionCall(ad, "getAdLinear");
+      if (_isVpaidAd(currentAd)) {
+        var ad = currentAd.vpaidAd;
+        var clickthru = currentAd.ad.data.nonLinear ? currentAd.ad.data.nonLinear.nonLinearClickThrough : '';
+        //TODO: Is this used for anything?
+        var adLinear = _safeFunctionCall(ad, "getAdLinear");
 
-      initSkipAdOffset(currentAd);
-      //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
-      this.amc.hidePlayerUi();
-      this.amc.notifyPodStarted(currentAd.id, currentAd.ad.adPodLength);
+        initSkipAdOffset(currentAd);
+        //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
+        this.amc.hidePlayerUi();
+        this.amc.notifyPodStarted(currentAd.id, currentAd.ad.adPodLength);
 
-      this.amc.notifyLinearAdStarted(currentAd.id, {
-        name: currentAd.data.title,
-        duration : _safeFunctionCall(ad, "getAdDuration"),
-        clickUrl: _hasClickUrl(currentAd),
-        indexInPod: currentAd.ad.sequence,
-        skippable : _safeFunctionCall(ad, "getAdSkippableState")
-      });
+        this.amc.notifyLinearAdStarted(currentAd.id, {
+          name: currentAd.data.title,
+          duration : _safeFunctionCall(ad, "getAdDuration"),
+          clickUrl: clickthru.length > 0,
+          indexInPod: currentAd.ad.sequence,
+          skippable : _safeFunctionCall(ad, "getAdSkippableState")
+        });
+      }
     }, this);
 
     /**
@@ -2496,6 +2535,10 @@ OO.Ads.manager(function(_, $) {
       switch(eventName) {
         case VPAID_EVENTS.AD_LOADED:
           adLoaded = true;
+          //For VPAID we need to check for companions after ad is created
+          if (_isVpaidAd(currentAd)) {
+            this.checkCompanionAds(currentAd.ad);
+          }
           _safeFunctionCall(currentAd.vpaidAd, "startAd");
           initSkipAdOffset(currentAd);
           // Added to make sure we display videoSlot correctly
@@ -2687,10 +2730,10 @@ OO.Ads.manager(function(_, $) {
         isValid = false;
       }
 
-      var requiredFunctions = ['handshakeVersion', 'initVpaidAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd',
+      var requiredFunctions = ['handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd',
                                'pauseAd', 'resumeAd', 'expandAd', 'collapseAd', 'subscribe', 'unsubscribe'];
       _.each(requiredFunctions, function(fn) {
-        if (!fn && typeof fn !== 'function') {
+        if (currentAd && currentAd.vpaidAd && typeof currentAd.vpaidAd[fn] !== 'function') {
           isValid = false;
           OO.log('VPaid Ad Unit is missing function: ' + fn);
         }
@@ -2725,9 +2768,9 @@ OO.Ads.manager(function(_, $) {
      */
     var _getFrame = function() {
       //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
-     vpaidIframe = document.createElement('iframe');
-     vpaidIframe.style.display = 'none';
-     vpaidIframe.onload = _onIframeLoaded;
+      vpaidIframe = document.createElement('iframe');
+      vpaidIframe.style.display = 'none';
+      vpaidIframe.onload = _onIframeLoaded;
       document.body.appendChild(vpaidIframe);
     };
 
@@ -2739,8 +2782,8 @@ OO.Ads.manager(function(_, $) {
     var _onIframeLoaded = _.bind(function() {
       var loader = vpaidIframe.contentWindow.document.createElement('script');
       loader.src = _cleanString(currentAd.ad.mediaFile.url);
-      loader.onload = _initializeAd;
-      loader.onerror = this.destroy;
+      loader.onload = this.initializeAd;
+      loader.onerror = _.bind(this.destroy, this);
       vpaidIframe.contentWindow.document.body.appendChild(loader);
     }, this);
 
