@@ -31,6 +31,10 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
   var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
   var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
+  var contentTypeHLS1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_1.xml"), "utf8");
+  var contentTypeHLS2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_2.xml"), "utf8");
+  var contentTypeHLS3XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_3.xml"), "utf8");
+  var contentTypeHLS4XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_4.xml"), "utf8");
   
   var linearXML = OO.$.parseXML(linearXMLString);
   var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
@@ -45,6 +49,10 @@ describe('ad_manager_vast', function() {
   var vmapInlineRepeatAd = OO.$.parseXML(vmapInlineRepeatAdXMLString);
   var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
   var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
+  var contentTypeHLS1 = OO.$.parseXML(contentTypeHLS1XMLString);
+  var contentTypeHLS2 = OO.$.parseXML(contentTypeHLS2XMLString);
+  var contentTypeHLS3 = OO.$.parseXML(contentTypeHLS3XMLString);
+  var contentTypeHLS4 = OO.$.parseXML(contentTypeHLS4XMLString);
 
   var wrapperXML = OO.$.parseXML(wrapperXMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
@@ -1780,5 +1788,60 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Content Type Filtering: Parser should catch content types for HLS', function() {
+    vastAdManager.initialize(amc);
+    var vast_ad = {
+      type: "vast",
+    };
+
+    // catch content-type: application/x-mpegurl
+    vastAdManager.onVastResponse(vast_ad, contentTypeHLS1);
+    var vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("application/x-mpegurl");
+    expect(vastAd.ad.streams).to.not.be(null);
+    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
+
+    amc = new fake_amc();
+    vastAdManager.destroy();
+    vastAdManager.initialize(amc);
+
+    // catch content-type: application/mpegurl
+    vastAdManager.onVastResponse(vast_ad, contentTypeHLS2);
+    vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("application/mpegurl");
+    expect(vastAd.ad.streams).to.not.be(null);
+    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
+
+    amc = new fake_amc();
+    vastAdManager.destroy();
+    vastAdManager.initialize(amc);
+
+    // catch content-type: audio/x-mpegurl
+    vastAdManager.onVastResponse(vast_ad, contentTypeHLS3);
+    vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("audio/x-mpegurl");
+    expect(vastAd.ad.streams).to.not.be(null);
+    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
+
+    amc = new fake_amc();
+    vastAdManager.destroy();
+    vastAdManager.initialize(amc);
+
+    // catch content-type: audio/mpegurl
+    vastAdManager.onVastResponse(vast_ad, contentTypeHLS4);
+    vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("audio/mpegurl");
+    expect(vastAd.ad.streams).to.not.be(null);
+    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
   });
 });
