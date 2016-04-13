@@ -551,28 +551,12 @@ OO.Ads.manager(function(_, $) {
       this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
     };
 
-    /**
-     * Callback when the media file is loaded. Once is loaded we can initialize the ad
-     * This is only required for VPAID ads
-     * @public
-     */
-    this.initializeAd = _.bind(function() {
+    var vpaidUiReady = _.bind(function() {
       var eventName,
-          environmentVariables,
-          viewMode,
-          creativeData = {};
+        environmentVariables,
+        viewMode,
+        creativeData = {};
 
-    if (_isVpaidAd(currentAd)) {
-      currentAd.data = currentAd.ad.data;
-
-      var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
-      if (!mediaFileUrl) {
-        return null;
-      }
-
-      if (!this.amc.ui.adVideoElement) {
-        this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
-      }
       if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
         OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
         return;
@@ -626,8 +610,33 @@ OO.Ads.manager(function(_, $) {
       };
 
       this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
-                  this._properties['adDesiredBitrate'], creativeData, environmentVariables);
-    }
+        this._properties['adDesiredBitrate'], creativeData, environmentVariables);
+    }, this);
+
+    /**
+     * Callback when the media file is loaded. Once is loaded we can initialize the ad
+     * This is only required for VPAID ads
+     * @public
+     */
+    this.initializeAd = _.bind(function() {
+      if (_isVpaidAd(currentAd)) {
+        currentAd.data = currentAd.ad.data;
+
+        var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
+        if (!mediaFileUrl) {
+          return null;
+        }
+
+        if (!this.amc.ui.adVideoElement || !!this.amc.ui.adVideoElement[0]
+            || this.amc.ui.adVideoElement[0].className !== "video") {
+          this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions, true);
+          if (this.testMode) {
+            vpaidUiReady();
+          }
+        } else {
+          vpaidUiReady();
+        }
+      }
     }, this);
 
     /**
@@ -657,6 +666,12 @@ OO.Ads.manager(function(_, $) {
      * @public
      */
     this.registerUi = function() {
+    };
+
+    this.updateUi = function() {
+      if (_isVpaidAd(currentAd)) {
+        vpaidUiReady();
+      }
     };
 
     /**

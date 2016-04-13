@@ -42,7 +42,8 @@ fake_amc = function() {
     playerSkinPluginsElement : $("<div>", {}),
     adWrapper : $("<div>", {}),
     transitionToAd: function(){},
-    transitionToMainContent: function(){}
+    transitionToMainContent: function(){},
+    createAdVideoElement: function(){}
   };
   this.platform = {};
   this.pageSettings = {};
