@@ -85,18 +85,24 @@ OO.Ads.manager(function(_, $) {
      */
     this.buildTimeline = function() {
       var ad1 = {}, ad2 = {};
+      //Video restrictions can be provided at the ad level. If provided, the player will
+      //attempt to create a video element that supports the given video restrictions.
+      //If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
+      //If the element is not created due to lack of support from the available video plugins,
+      //the ad will be skipped
       return [ new amc.Ad({ position: 0,
                             duration: 10,
                             adManager: this.name,
                             ad: ad1,
-                            adType: amc.ADTYPE.LINEAR_VIDEO
+                            adType: amc.ADTYPE.LINEAR_VIDEO,
+                            videoRestrictions: { technology: OO.VIDEO.TECHNOLOGY.HTML5 }
                           }),
                new amc.Ad({ position: 30,
                             duration: 10,
                             adManager: this.name,
                             ad: ad2,
                             adType: amc.ADTYPE.NONLINEAR_OVERLAY
-                          }),
+                          })
              ];
     };
 

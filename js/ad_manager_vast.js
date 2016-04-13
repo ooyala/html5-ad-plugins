@@ -570,9 +570,6 @@ OO.Ads.manager(function(_, $) {
         return null;
       }
 
-      if (!this.amc.ui.adVideoElement) {
-        this.amc.ui.createAdVideoElement({'mp4' : ''}, vpaidVideoRestrictions);
-      }
       if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
         OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
         return;
@@ -1073,7 +1070,7 @@ OO.Ads.manager(function(_, $) {
      */
     var generateAd = _.bind(function(metadata) {
       if (!metadata) return false;
-      var type, duration;
+      var duration;
 
       if (!_.isEmpty(metadata.data.linear.mediaFiles)) {
         duration = OO.timeStringToSeconds(metadata.data.linear.duration);
@@ -1083,10 +1080,16 @@ OO.Ads.manager(function(_, $) {
         duration = metadata.data.nonLinear.duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
       }
 
-      return new this.amc.Ad({
+      var ad = new this.amc.Ad({
         position: metadata.positionSeconds, duration: duration, adManager: this.name,
         ad: metadata, adType: metadata.data.type, streams: metadata.streams
       });
+
+      if (metadata.data.adType === "vpaid") {
+        ad.videoRestrictions = vpaidVideoRestrictions;
+      }
+
+      return ad;
     }, this);
 
     /**
