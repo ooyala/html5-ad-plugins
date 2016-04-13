@@ -116,9 +116,6 @@ OO.Ads.manager(function(_, $) {
                                             AD_USER_MINIMIZE          : 'AdUserMinimize'
                                           };
 
-    // If `false` prerolls won't load until intialPlay
-    this.preload                          = false;
-
     // VAST Parsed variables
     this.format                           = null;
     this.node                             = null;
@@ -679,32 +676,26 @@ OO.Ads.manager(function(_, $) {
 
       this.ready = true;
       this.amc.onAdManagerReady();
-
-      var adsPreloaded = !this.preload;
-      if (this.preload) {
-        adsPreloaded = this.loadPreRolls();
-      }
-      return adsPreloaded;
     };
 
     /**
-     * Checks to see if the current metadata contains any ads that are pre-rolls and of type vast. If there are any
+     * [DEPRECATED]Checks to see if the current metadata contains any ads that are pre-rolls and of type vast. If there are any
      * then it will load the ads.
      * @public
-     * @method Vast#loadPreRolls
+     * @method Vast#loadPreRolls[DEPRECATED]
      */
     this.loadPreRolls = function() {
-    //  return findAndLoadAd("pre");
+      //deprecated
     };
 
     /**
-     * Checks the metadata for any remaining ads of type vast that are not pre-rolls.
+     * [DEPRECATED]Checks the metadata for any remaining ads of type vast that are not pre-rolls.
      * If it finds any then it will load them.
      * @public
-     * @method Vast#loadAllVastAds
+     * @method Vast#loadAllVastAds[DEPRECATED]
      */
     this.loadAllVastAds = function() {
-    //  return findAndLoadAd("midPost");
+      //deprecated
 
     };
 
@@ -740,13 +731,13 @@ OO.Ads.manager(function(_, $) {
    /**
      * Finds ads based on the position provided to the function.
      * @private
-     * @method Vast#findAndLoadAd
+     * @method Vast#loadAd
      * @param {string} position The position of the ad to be loaded. 'pre' (preroll), 'midPost' (midroll and post rolls)
      * 'all' (all positions).
      * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
      * unit tests.
      */
-    var findAndLoadAd = _.bind(function(amcAd) {
+    var loadAd = _.bind(function(amcAd) {
       var loadedAds = false;
       var override = false;
       var ad = amcAd.ad;
@@ -795,13 +786,13 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#buildTimeline
      */
     this.buildTimeline = function() {
-      //TODO check if preloading, if true then don't add these ad requests to the timeline
       var timeline = [];
       if (this.allAdInfo && _.isArray(this.allAdInfo))
       {
         for (var i = 0; i < this.allAdInfo.length; i++)
         {
           var ad = this.allAdInfo[i];
+          //use linear overlay as fake ad so we don't have to specify stream type.
           var adData = {
             adManager: this.name,
             ad: ad,
@@ -889,14 +880,14 @@ OO.Ads.manager(function(_, $) {
       if (adWrapper) {
         currentAd = adWrapper;
         if (currentAd.isAdRequest) {
-          findAndLoadAd(currentAd);
+          loadAd(currentAd);
         } else {
-          this.playCurrentAd(adWrapper);
+          playLoadedAd(adWrapper);
         }
       }
     }
 
-    this.playCurrentAd = function(adWrapper) {
+    var playLoadedAd = _.bind(function(adWrapper) {
       this.amc.ui.createAdVideoElement(adWrapper.streams);
       var isVPaid = _isVpaidAd(currentAd);
 
@@ -942,7 +933,7 @@ OO.Ads.manager(function(_, $) {
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
       }
-    };
+    }, this);
 
     /**
      * Determine if a Vast ad is skippable, and if so, when the skip ad button should be displayed.
