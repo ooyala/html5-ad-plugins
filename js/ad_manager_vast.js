@@ -117,7 +117,7 @@ OO.Ads.manager(function(_, $) {
                                           };
 
     // If `false` prerolls won't load until intialPlay
-    this.preload                          = true;
+    this.preload                          = false;
 
     // VAST Parsed variables
     this.format                           = null;
@@ -678,13 +678,13 @@ OO.Ads.manager(function(_, $) {
       }
 
       this.ready = true;
-      var success = false;
       this.amc.onAdManagerReady();
 
+      var adsPreloaded = !this.preload;
       if (this.preload) {
-        success = this.loadPreRolls();
+        adsPreloaded = this.loadPreRolls();
       }
-      return success;
+      return adsPreloaded;
     };
 
     /**
@@ -694,7 +694,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#loadPreRolls
      */
     this.loadPreRolls = function() {
-      return findAndLoadAd("pre");
+    //  return findAndLoadAd("pre");
     };
 
     /**
@@ -704,7 +704,8 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#loadAllVastAds
      */
     this.loadAllVastAds = function() {
-      return findAndLoadAd("midPost");
+    //  return findAndLoadAd("midPost");
+
     };
 
     /**
@@ -745,28 +746,21 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
      * unit tests.
      */
-    var findAndLoadAd = _.bind(function(position) {
+    var findAndLoadAd = _.bind(function(amcAd) {
       var loadedAds = false;
       var override = false;
+      var ad = amcAd.ad;
+      this.amc.notifyPodStarted(amcAd.id, 1);
+      if (this.adURLOverride) {
+        override = true;
+        ad.tag_url = this.adURLOverride;
+      }
+      var time = typeof ad.time !== 'undefined' ? ad.time : ad.position;
+      this.currentAdBeingLoaded = ad;
 
-      if (!this.allAdInfo || this.allAdInfo.length < 1) return loadedAds;
-      for (var i = 0; i < this.allAdInfo.length; i++) {
-        var ad = this.allAdInfo[i];
-          if (this.adURLOverride) {
-            override = true;
-            ad.tag_url = this.adURLOverride;
-          }
-          var time = typeof ad.time !== 'undefined' ? ad.time : ad.position;
-
-          if (position && ((position == 'pre' && time == 0) || (position == 'midPost' && time > 0)
-            || (position == 'all'))) {
-            this.currentAdBeingLoaded = ad;
-
-            var url = typeof ad.url !== 'undefined' && !override ? ad.url : ad.tag_url;
-            this.loadUrl(url);
-            loadedAds = true;
-          }
-        }
+      var url = typeof ad.url !== 'undefined' && !override ? ad.url : ad.tag_url;
+      this.loadUrl(url);
+      loadedAds = true;
       return loadedAds;
     }, this);
 
@@ -801,7 +795,32 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#buildTimeline
      */
     this.buildTimeline = function() {
-      return null;
+      //TODO check if preloading, if true then don't add these ad requests to the timeline
+      var timeline = [];
+      if (this.allAdInfo && _.isArray(this.allAdInfo))
+      {
+        for (var i = 0; i < this.allAdInfo.length; i++)
+        {
+          var ad = this.allAdInfo[i];
+          var adData = {
+            adManager: this.name,
+            ad: ad,
+            duration: 0,
+            adType: this.amc.ADTYPE.LINEAR_OVERLAY,
+          };
+
+          if (ad.position_type == 't') {
+            adData.position = ad.time/1000;
+          } else if (ad.position_type == 'p') {
+            //TODO
+            //adData.position =
+          }
+          var amcAd = new this.amc.Ad(adData);
+          amcAd.isAdRequest = true;
+          timeline.push(amcAd);
+        }
+      }
+      return timeline;
     };
 
     /**
@@ -867,8 +886,18 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata
      */
     this.playAd = function(adWrapper) {
-      currentAd = adWrapper;
+      if (adWrapper) {
+        currentAd = adWrapper;
+        if (currentAd.isAdRequest) {
+          findAndLoadAd(currentAd);
+        } else {
+          this.playCurrentAd(adWrapper);
+        }
+      }
+    }
 
+    this.playCurrentAd = function(adWrapper) {
+      this.amc.ui.createAdVideoElement(adWrapper.streams);
       var isVPaid = _isVpaidAd(currentAd);
 
       // When the ad is done, trigger callback
@@ -1921,6 +1950,13 @@ OO.Ads.manager(function(_, $) {
       } else {
         failedAd();
       }
+
+      if (currentAd && currentAd.isAdRequest)
+      {
+        //notify the amc of the pod ending
+        this.amc.notifyPodEnded(currentAd.id);
+      }
+
     }, this);
 
     /**
