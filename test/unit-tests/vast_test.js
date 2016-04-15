@@ -435,6 +435,7 @@ describe('ad_manager_vast', function() {
     expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.videoRestrictions).to.be(undefined);
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
     expect(vastAd.ad.data.linear).not.to.be(null);
@@ -1794,6 +1795,8 @@ describe('ad_manager_vast', function() {
     expect(ad.position).to.eql(0);
     var parsedAd = global.vpaidAd.ad.data;
     expect(ad.ad).to.be.an('object');
+    expect(ad.videoRestrictions).to.eql({ technology: OO.VIDEO.TECHNOLOGY.HTML5,
+      features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] });
     expect(ad.ad.adPodIndex).to.eql(1);
     expect(ad.ad.adPodLength).to.eql(1);
     expect(ad.ad.sequence).to.be(null);
