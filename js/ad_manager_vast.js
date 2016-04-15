@@ -891,7 +891,6 @@ OO.Ads.manager(function(_, $) {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = _.bind(function(adWrapper) {
-      this.amc.ui.createAdVideoElement(adWrapper.streams);
       var isVPaid = _isVpaidAd(currentAd);
 
       // When the ad is done, trigger callback
