@@ -336,11 +336,11 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(3);
     //test assumes the timeline isn't being sorted by the amc. If that changes, this will need to change accordingly.
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
-    expect(amc.timeline[0].isAdRequest).to.be(true);
+    expect(amc.timeline[0].ad.type).to.be('adRequest');
     expect(amc.timeline[1].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
-    expect(amc.timeline[1].isAdRequest).to.be(true);
+    expect(amc.timeline[1].ad.type).to.be('adRequest');
     expect(amc.timeline[2].adType).to.be(amc.ADTYPE.LINEAR_VIDEO);
-    expect(amc.timeline[2].isAdRequest).to.be(undefined);
+    expect(amc.timeline[2].ad.type).to.be(undefined);
   });
 
   it('Init: test postroll appears in buildTimeline', function(){
@@ -364,7 +364,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content);
     expect(amc.timeline.length).to.be(1);
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
-    expect(amc.timeline[0].isAdRequest).to.be(true);
+    expect(amc.timeline[0].ad.type).to.be('adRequest');
   });
 
   it('should invalid vast', function(){
@@ -1781,7 +1781,7 @@ describe('ad_manager_vast', function() {
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
-    amc.timeline[0].id = "asdf";
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
     vastAdManager.playAd(amc.timeline[0]);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });

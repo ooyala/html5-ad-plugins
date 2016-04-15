@@ -79,7 +79,7 @@ OO.Ads.manager(function(_, $) {
     // ad settings
     var transitionFromNonLinearVideo    = false;
     var adLoaded                        = false;
-    var adRequestType                   = 'adRequest';
+    var AD_REQUEST_TYPE                 = 'adRequest';
 
     // VPAID variables
     this._slot                          = null;
@@ -746,9 +746,8 @@ OO.Ads.manager(function(_, $) {
         override = true;
         ad.tag_url = this.adURLOverride;
       }
-      var time = typeof ad.time !== 'undefined' ? ad.time : ad.position;
-      this.currentAdBeingLoaded = ad;
 
+      this.currentAdBeingLoaded = ad;
       var url = typeof ad.url !== 'undefined' && !override ? ad.url : ad.tag_url;
       this.loadUrl(url);
       loadedAds = true;
@@ -791,23 +790,23 @@ OO.Ads.manager(function(_, $) {
       {
         for (var i = 0; i < this.allAdInfo.length; i++)
         {
-          var ad = this.allAdInfo[i];
+          var adMetadata = _.clone(this.allAdInfo[i]);
+          adMetadata.type = AD_REQUEST_TYPE;
           //use linear overlay as fake ad so we don't have to specify stream type.
           var adData = {
             adManager: this.name,
-            ad: ad,
+            ad: adMetadata,
             duration: 0,
             adType: this.amc.ADTYPE.LINEAR_OVERLAY,
           };
 
-          if (ad.position_type == 't') {
-            adData.position = ad.time/1000;
-          } else if (ad.position_type == 'p') {
+          if (adMetadata.position_type == 't') {
+            adData.position = adMetadata.time/1000;
+          } else if (adMetadata.position_type == 'p') {
             //TODO
             //adData.position =
           }
           var amcAd = new this.amc.Ad(adData);
-          amcAd.isAdRequest = true;
           timeline.push(amcAd);
         }
       }
@@ -879,15 +878,22 @@ OO.Ads.manager(function(_, $) {
     this.playAd = function(adWrapper) {
       if (adWrapper) {
         currentAd = adWrapper;
-        if (currentAd.isAdRequest) {
+        if (currentAd.ad.type === AD_REQUEST_TYPE) {
           loadAd(currentAd);
         } else {
-          playLoadedAd(adWrapper);
+          _playLoadedAd(adWrapper);
         }
       }
-    }
+    };
 
-    var playLoadedAd = _.bind(function(adWrapper) {
+    /**
+     * Play an ad from the AMC timeline that has already be loaded (AKA is not an
+     * ad request).
+     * @private
+     * @method Vast#_playLoadedAd
+     * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
+     */
+    var _playLoadedAd = _.bind(function(adWrapper) {
       this.amc.ui.createAdVideoElement(adWrapper.streams);
       var isVPaid = _isVpaidAd(currentAd);
 
@@ -1942,7 +1948,7 @@ OO.Ads.manager(function(_, $) {
         failedAd();
       }
 
-      if (currentAd && currentAd.isAdRequest)
+      if (currentAd && currentAd.ad && currentAd.ad.type === AD_REQUEST_TYPE)
       {
         //notify the amc of the pod ending
         this.amc.notifyPodEnded(currentAd.id);
