@@ -78,8 +78,23 @@ OO.Ads.manager(function(_, $) {
 
     // ad settings
     var transitionFromNonLinearVideo    = false;
-    var adLoaded                        = false;
     var adRequestType                   = 'adRequest';
+
+    var vpaidIframeLoaded               = false;
+    var vpaidAdLoaded                   = false;
+    var vpaidAdStarted                  = false;
+    var vpaidAdStopped                  = false;
+
+    var vpaidIframeLoadedTimeout        = null;
+    var vpaidAdLoadedTimeout            = null;
+    var vpaidAdStartedTimeout           = null;
+    var vpaidAdStoppedTimeout           = null;
+
+    var VPAID_AD_IFRAME_TIMEOUT = 5000;
+    var VPAID_AD_LOADED_TIMEOUT = 5000;
+    var VPAID_AD_STARTED_TIMEOUT = 3000;
+    var VPAID_AD_STOPPED_TIMEOUT = 3000;
+
 
     // VPAID variables
     this._slot                          = null;
@@ -562,6 +577,8 @@ OO.Ads.manager(function(_, $) {
           viewMode,
           creativeData = {};
 
+      vpaidIframeLoaded = true;
+
     if (_isVpaidAd(currentAd)) {
       currentAd.data = currentAd.ad.data;
 
@@ -628,7 +645,8 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
-     * Initializes the ad by sending the data to the ad unit.
+     * Initializes the ad by sending the data to the ad unit. We then wait until we receive
+     * AD_LOADED from the creative before proceeding with rendering.
      * @public
      * This is only required for VPAID ads
      * @method Vast#initVpaidAd
@@ -644,8 +662,50 @@ OO.Ads.manager(function(_, $) {
         OO.log('VPaid Ad Unit is not valid.');
         return;
       }
+
+      _clearVpaidTimeouts();
+      vpaidAdLoadedTimeout = _.delay(_checkVpaidAdLoaded, VPAID_AD_LOADED_TIMEOUT);
       _safeFunctionCall(currentAd.vpaidAd, "initAd", [width, height, viewMode, desiredBitrate, creativeData, environmentVars]);
     };
+
+    var _clearVpaidTimeouts = function() {
+      clearTimeout(vpaidIframeLoadedTimeout);
+      vpaidIframeLoadedTimeout = null;
+
+      clearTimeout(vpaidAdLoadedTimeout);
+      vpaidAdLoadedTimeout = null;
+
+      clearTimeout(vpaidAdStartedTimeout);
+      vpaidAdStartedTimeout = null;
+    };
+
+    var _checkVpaidIframeLoaded = _.bind(function() {
+      if (!vpaidIframeLoaded) {
+        OO.log('VPAID: iframe did not load');
+        _endAd(currentAd, true);
+      }
+    }, this);
+
+    var _checkVpaidAdLoaded = _.bind(function() {
+      if (!vpaidAdLoaded) {
+        OO.log('VPAID: Did not receive AD_LOADED event from creative');
+        _endAd(currentAd, true);
+      }
+    }, this);
+
+    var _checkVpaidAdStarted = _.bind(function() {
+      if (!vpaidAdStarted) {
+        OO.log('VPAID: Did not receive AD_STARTED event from creative');
+        _stopVpaidAd();
+      }
+    }, this);
+
+    var _checkVpaidAdStopped = _.bind(function() {
+      if (!vpaidAdStopped) {
+        OO.log('VPAID: Did not receive AD_STOPPED event from creative');
+        _endAd(currentAd, true);
+      }
+    }, this);
 
     /**
      * Called by Ad Manager Controller.  When this function is called, the ui has been setup and the values
@@ -1009,6 +1069,7 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} failed If true, the ending of this ad was caused by a failure
      */
     var _endAd = _.bind(function(ad, failed) {
+      _clearVpaidTimeouts();
       if (typeof this._slot !== 'undefined') {
         $(this._slot).remove();
       }
@@ -1028,7 +1089,7 @@ OO.Ads.manager(function(_, $) {
             transitionFromNonLinearVideo = false;
             this.amc.notifyNonlinearAdEnded(ad.id);
           }
-          if(ad.ad.adPodIndex === ad.ad.adPodLength && !failed) {
+          if((ad.ad.adPodIndex === ad.ad.adPodLength && !failed) || !nextAd) {
             var adPod = adPodPrimary || ad.id;
             adPodPrimary = null;
             this.amc.notifyPodEnded(adPod.id);
@@ -2384,6 +2445,8 @@ OO.Ads.manager(function(_, $) {
      */
     var _stopVpaidAd = _.bind(function() {
       if (currentAd && currentAd.vpaidAd) {
+        _clearVpaidTimeouts();
+        vpaidAdStoppedTimeout = _.delay(_checkVpaidAdStopped, VPAID_AD_STOPPED_TIMEOUT);
         _safeFunctionCall(currentAd.vpaidAd, "stopAd");
       }
     }, this);
@@ -2535,28 +2598,31 @@ OO.Ads.manager(function(_, $) {
      * @param {string} eventName Name of the event to process
      */
     var _onVpaidAdEvent = _.bind(function(eventName) {
-      switch(eventName) {
+      switch (eventName) {
         case VPAID_EVENTS.AD_LOADED:
-          adLoaded = true;
+          vpaidAdLoaded = true;
           //For VPAID we need to check for companions after ad is created
           if (_isVpaidAd(currentAd)) {
             this.checkCompanionAds(currentAd.ad);
           }
+          _clearVpaidTimeouts();
+          vpaidAdStartedTimeout = _.delay(_checkVpaidAdStarted, VPAID_AD_STARTED_TIMEOUT);
           _safeFunctionCall(currentAd.vpaidAd, "startAd");
           initSkipAdOffset(currentAd);
           // Added to make sure we display videoSlot correctly
           this._videoSlot.style.zIndex = 10001;
-        break;
+          break;
 
         case VPAID_EVENTS.AD_STARTED:
+          vpaidAdStarted = true;
           _onSizeChanged();
           prevAd = currentAd ? currentAd : null;
           this.sendVpaidTracking('creativeView');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_IMPRESSION:
           this.sendVpaidImpressions();
-        break;
+          break;
 
         case VPAID_EVENTS.AD_CLICK_THRU:
           var url = arguments[1];
@@ -2570,64 +2636,65 @@ OO.Ads.manager(function(_, $) {
             }
           }
           this.sendVpaidClickTracking();
-        break;
+          break;
 
         case VPAID_EVENTS.AD_VIDEO_START:
           this.sendVpaidTracking('start');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_VIDEO_FIRST_QUARTILE:
           this.sendVpaidTracking('firstQuartile');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_VIDEO_MIDPOINT:
           this.sendVpaidTracking('midpoint');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_VIDEO_THIRD_QUARTILE:
           this.sendVpaidTracking('thirdQuartile');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_VIDEO_COMPLETE:
           this.sendVpaidTracking('complete');
           _stopVpaidAd();
-        break;
+          break;
 
         case VPAID_EVENTS.AD_STOPPED:
+          vpaidAdStopped = true;
           if (currentAd) {
             _endAd(currentAd, false);
           }
-        break;
+          break;
 
         case VPAID_EVENTS.AD_INTERACTION:
           this.sendVpaidTracking('interaction');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_ERROR:
           OO.log('VPaid: Ad unit error: ' + arguments[1]);
           this.sendVpaidTracking('error');
           this.sendVpaidError();
           failedAd();
-        break;
+          break;
 
         case VPAID_EVENTS.AD_DURATION_CHANGE:
           var remainingTime = _safeFunctionCall(currentAd.vpaidAd, "getAdRemainingTime");
           if (remainingTime <= 0) {
             _stopVpaidAd();
           }
-        break;
+          break;
 
         case VPAID_EVENTS.AD_SKIPPED:
           this.sendVpaidTracking('skip');
           if (currentAd) {
             _endAd(currentAd, false);
           }
-        break;
+          break;
 
         case VPAID_EVENTS.AD_SKIPPABLE_STATE_CHANGE:
           var skipState = _safeFunctionCall(currentAd.vpaidAd, "getAdSkippableState");
           this.amc.showSkipVideoAdButton(skipState, '0');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_LINEAR_CHANGE:
           var adLinear = _safeFunctionCall(currentAd.vpaidAd, "getAdLinear");
@@ -2636,7 +2703,7 @@ OO.Ads.manager(function(_, $) {
             _beginVpaidAd();
             this.amc.ui.transitionToAd();
           }
-        break;
+          break;
 
         case VPAID_EVENTS.AD_VOLUME_CHANGE:
           var volume = _safeFunctionCall(currentAd.vpaidAd, "getAdVolume");
@@ -2645,29 +2712,29 @@ OO.Ads.manager(function(_, $) {
           } else {
             this.sendVpaidTracking('mute');
           }
-        break;
+          break;
 
         case VPAID_EVENTS.AD_USER_ACCEPT_INVITATION:
           this.sendVpaidTracking('acceptInvitation');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_USER_MINIMIZE:
           this.sendVpaidTracking('collapse');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_USER_CLOSE:
           this.sendVpaidTracking('close');
-        break;
+          break;
 
         case VPAID_EVENTS.AD_PAUSED:
           this.sendVpaidTracking('pause');
           fromPause = true;
-        break;
+          break;
 
         case VPAID_EVENTS.AD_PLAYING:
           this.sendVpaidTracking('resume');
-        break;
-      };
+          break;
+      }
     }, this);
 
     /**
@@ -2677,11 +2744,15 @@ OO.Ads.manager(function(_, $) {
      */
     var _resetAdState = _.bind(function() {
       _removeListeners(currentAd.vpaidAd);
-      currentAd            = null;
+      currentAd = null;
       this.currentAdBeingLoaded = null;
-      this.format               = null;
-      this.node                 = null;
-      adLoaded                  = false;
+      this.format = null;
+      this.node = null;
+      vpaidIframeLoaded = false;
+      vpaidAdLoaded = false;
+      vpaidAdStarted = false;
+      vpaidAdStopped = false;
+      _clearVpaidTimeouts();
     }, this);
 
     /**
@@ -2769,7 +2840,9 @@ OO.Ads.manager(function(_, $) {
      * This is only required for VPAID ads
      * @private
      */
-    var _getFrame = function() {
+   var _getFrame = function() {
+     _clearVpaidTimeouts();
+     vpaidIframeLoadedTimeout = _.delay(_checkVpaidIframeLoaded, VPAID_AD_IFRAME_TIMEOUT);
       //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
       vpaidIframe = document.createElement('iframe');
       vpaidIframe.style.display = 'none';
@@ -2786,7 +2859,11 @@ OO.Ads.manager(function(_, $) {
       var loader = vpaidIframe.contentWindow.document.createElement('script');
       loader.src = _cleanString(currentAd.ad.mediaFile.url);
       loader.onload = this.initializeAd;
-      loader.onerror = _.bind(this.destroy, this);
+      loader.onerror = _.bind(function(e) {
+        _clearVpaidTimeouts();
+        OO.log('VPAID: iframe load threw an error: ' + e);
+        _endAd(currentAd, true);
+      }, this);
       vpaidIframe.contentWindow.document.body.appendChild(loader);
     }, this);
 
