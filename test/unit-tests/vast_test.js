@@ -97,7 +97,6 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content);
-    amc.timeline = vastAdManager.buildTimeline();
   };
 
   var vpaidInitialize = function(xml) {
@@ -120,13 +119,14 @@ describe('ad_manager_vast', function() {
         };
 
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata(server, {}, content)).to.be(true);
-    initalPlay();
+    vastAdManager.loadMetadata(server, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     xml = xml || vpaidLinearXML;
     vastAdManager.onVastResponse(preroll, xml);
   };
 
-  var initalPlay = function() {
+  var initialPlay = function() {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
 
@@ -165,6 +165,9 @@ describe('ad_manager_vast', function() {
 
   beforeEach(function() {
     amc = new fake_amc();
+    amc.adManagerList = [];
+    amc.onAdManagerReady = function() {this.timeline = this.adManagerList[0].buildTimeline()};
+    amc.adManagerList.push(vastAdManager);
     OO.playerParams.maxVastWrapperDepth = 2;
     errorType = [];
     pixelPingCalled= false;
@@ -243,7 +246,7 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.ready).to.be(true);
   });
 
-  it('Init: preroll was loaded', function(){
+  it('Init: preroll returned in buildTimeline()', function(){
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -259,18 +262,22 @@ describe('ad_manager_vast', function() {
     };
 
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    var timeline = amc.timeline;
+    expect(timeline.length).to.be(1);
+    expect(timeline[0].position).to.be(0);
+    expect(timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
   });
 
-  it('Init: no preroll was found or loaded', function(){
+  it('Init: test midroll return in buildTimeline', function(){
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
       first_shown: 0,
       frequency: 2,
       ad_set_code: "ad_set_code",
-      time:10,
+      time:10000,
       position_type:"t"
     };
     var content = {
@@ -279,37 +286,15 @@ describe('ad_manager_vast', function() {
     };
 
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    var timeline = amc.timeline;
+    expect(timeline.length).to.be(1);
+    expect(timeline[0].position).to.be(10);
+        expect(timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
   });
 
-  it('Init: no preroll but midroll was found or loaded after initial play', function(){
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
-    };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
-    };
-
-    vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager.onVastResponse(vast_ad, linearXML);
-    expect(errorType.length).to.be(0);
-    expect(amc.timeline.length).to.be(1);
-  });
-
-  it('Init: preroll loaded before play and midroll after initial play', function(){
+  it('Init: test preroll and midroll appear in buildTimeline() and prerolls loads on initialPlay', function(){
     var embed_code = "embed_code";
     var vast_ad_pre = {
       type: "vast",
@@ -334,21 +319,31 @@ describe('ad_manager_vast', function() {
     };
 
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
 
-    vastAdManager.onVastResponse(vast_ad_pre, linearXML);
-    expect(errorType.length).to.be(0);
-    expect(amc.timeline.length).to.be(1);
-
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    //vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+    expect(amc.timeline[1].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+
+    initialPlay();
+    vastAdManager.initialPlay();
+    vastAdManager.onVastResponse(vast_ad_pre, linearXML);
+    expect(errorType.length).to.be(0);
+    //test that real ad gets added to timeline when it's loaded.
+    expect(amc.timeline.length).to.be(3);
+    //test assumes the timeline isn't being sorted by the amc. If that changes, this will need to change accordingly.
+    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+    expect(amc.timeline[0].ad.type).to.be('adRequest');
+    expect(amc.timeline[1].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+    expect(amc.timeline[1].ad.type).to.be('adRequest');
+    expect(amc.timeline[2].adType).to.be(amc.ADTYPE.LINEAR_VIDEO);
+    expect(amc.timeline[2].ad.type).to.be(undefined);
   });
 
-  it('Init: postroll after initial play', function(){
+  it('Init: test postroll appears in buildTimeline', function(){
     var embed_code = "embed_code";
     var vast_ad_post = {
       type: "vast",
@@ -365,66 +360,11 @@ describe('ad_manager_vast', function() {
     };
 
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    expect(amc.timeline.length).to.be(0);
-
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager.onVastResponse(vast_ad_post, linearXML);
-    expect(errorType.length).to.be(0);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
     expect(amc.timeline.length).to.be(1);
-  });
-
-  it('Init: preroll loaded before play, then midroll and postroll after initial play', function(){
-    var embed_code = "embed_code";
-    var vast_ad_pre = {
-      type: "vast",
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
-    };
-    var vast_ad_mid = {
-      type: "vast",
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
-    };
-    var vast_ad_post = {
-      type: "vast",
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:1000000000,
-      position_type:"t",
-      url:"1.mp4"
-    };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_pre, vast_ad_mid, vast_ad_post]
-    };
-
-    vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(true);
-    vastAdManager.onVastResponse(vast_ad_pre, linearXML);
-    expect(errorType.length).to.be(0);
-    expect(amc.timeline.length).to.be(1);
-
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
-    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
-    expect(errorType.length).to.be(0);
-    expect(amc.timeline.length).to.be(2);
-
-    vastAdManager.onVastResponse(vast_ad_post, linearXML);
-    expect(errorType.length).to.be(0);
-    expect(amc.timeline.length).to.be(3);
+    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+    expect(amc.timeline[0].ad.type).to.be('adRequest');
   });
 
   it('should invalid vast', function(){
@@ -443,28 +383,31 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    expect(amc.timeline.length).to.be(1);
+
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad,'<VAST></VAST>');
+
     expect(errorType.length > 0).to.be(true);
-    expect(amc.timeline.length).to.be(0);
+    expect(amc.timeline.length).to.be(1);
     errorType = [];
 
     vastAdManager.onVastResponse(null,linearXML);
     expect(errorType.length > 0).to.be(true);
-    expect(amc.timeline.length).to.be(0);
+    expect(amc.timeline.length).to.be(1);
     errorType = [];
 
     vastAdManager.onVastResponse(vast_ad, '<VAST version="2.1"></VAST>');
     expect(errorType.length > 0).to.be(true);
-    expect(amc.timeline.length).to.be(0);
+    expect(amc.timeline.length).to.be(1);
     errorType = [];
 
     vastAdManager.onVastResponse(null, '<VAST version="2.0"></VAST>');
     expect(errorType.length > 0).to.be(true);
-    expect(amc.timeline.length).to.be(0);
+    expect(amc.timeline.length).to.be(1);
   });
 
   it('should parse inline linear ads', function(){
@@ -483,13 +426,14 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.videoRestrictions).to.be(undefined);
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -542,13 +486,13 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionOverlayUrl', 'impressionOverlay2Url',
@@ -613,10 +557,10 @@ describe('ad_manager_vast', function() {
   //    ads: [vast_ad_mid]
   //  };
   //  vastAdManager.initialize(amc);
-  //  expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-  //    "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-  //  initalPlay();
-  //  expect(vastAdManager.initialPlay()).to.be(true);
+  //  vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+  //    "html5_ad_server": "http://blah"}, {}, content);
+  //  initialPlay();
+  //  vastAdManager.initialPlay();
   //  vastAdManager.onVastResponse(vast_ad_mid, wrapperXML);
   //  var vastAd = amc.timeline[0];
   //  expect(vastAd.ad).to.be.an('object');
@@ -665,13 +609,13 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
     //value in MS. vast_3_0_linear.xml mock response has value of 00:00:05, which is 5 seconds
@@ -700,13 +644,13 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
     expect(skipOffset).to.be(undefined);
@@ -747,13 +691,13 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(1);
     expect(indexInPod).to.be(1);
@@ -783,13 +727,13 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     //1 clickthrough url is defined in vast_linear.xml
@@ -820,13 +764,13 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearNoClickthroughXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     expect(openedUrls.length).to.be(0);
@@ -861,14 +805,14 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linearXML2Ads);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
@@ -919,14 +863,14 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
     expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
@@ -998,15 +942,15 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(3);
     expect(indexInPod).to.be(1);
@@ -1079,15 +1023,15 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(0);
@@ -1195,14 +1139,14 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -1271,14 +1215,14 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad_mid]
     };
     vastAdManager.initialize(amc);
-    expect(vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content)).to.be(false);
-    initalPlay();
-    expect(vastAdManager.initialPlay()).to.be(true);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[0];
+    var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
@@ -1838,6 +1782,8 @@ describe('ad_manager_vast', function() {
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    vastAdManager.playAd(amc.timeline[0]);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });
 
@@ -1870,7 +1816,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: Should parse VPAID linear creative', function() {
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     expect(ad).to.be.an('object');
     expect(ad.duration).to.eql(16);
     expect(ad.position).to.eql(0);
@@ -1901,7 +1847,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: Should create slot and video slot', function() {
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(_.isElement(vastAdManager._slot)).to.be(true);
@@ -1910,7 +1856,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: initAd should be called after validations', function() {
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(global.vpaid.adInit).to.be(true)
@@ -1919,7 +1865,7 @@ describe('ad_manager_vast', function() {
   it('VPAID 2.0: initAd should not be called when any required ad unit function is missing', function() {
     vpaidInitialize();
     global.vpaid.getVPAIDAd = function() { return new global.vpaid.missingFnVPAIDAd(); };
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(global.vpaid.adInit).to.be(false)
@@ -1928,7 +1874,7 @@ describe('ad_manager_vast', function() {
   it('VPAID 2.0: initAd should not be called when using incorrect version <2.0', function() {
     vpaidInitialize();
     global.vpaid.getVPAIDAd = function() { return new global.vpaid.incorrectVersionVPAIDAd(); };
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(global.vpaid.adInit).to.be(false)
@@ -1946,7 +1892,7 @@ describe('ad_manager_vast', function() {
       linearStartedNotified++;
     };
 
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(global.vpaid.adStarted).to.be(true);
@@ -1966,7 +1912,7 @@ describe('ad_manager_vast', function() {
       linearEndNotified++;
     };
 
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     ad.vpaidAd.adVideoCompleted();
@@ -1987,7 +1933,7 @@ describe('ad_manager_vast', function() {
       linearEndNotified++;
     };
 
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     vastAdManager.cancelAd(ad, {
@@ -2006,7 +1952,7 @@ describe('ad_manager_vast', function() {
       skipOffset = offset;
     };
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
 
@@ -2024,7 +1970,7 @@ describe('ad_manager_vast', function() {
       companion = companionAds;
     };
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(companion).to.eql(parsedAd.companion);
@@ -2042,7 +1988,7 @@ describe('ad_manager_vast', function() {
       linearEndNotified++;
     };
 
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     vastAdManager.adVideoEnded();
@@ -2058,7 +2004,7 @@ describe('ad_manager_vast', function() {
       adUnitHandling = false;
     };
 
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     ad.vpaidAd.sendClick(false);
@@ -2075,7 +2021,7 @@ describe('ad_manager_vast', function() {
     amc.notifyLinearAdStarted = function() {
       linearStartedNotified++;
     };
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     amc.adManagerSettings['linearAdSkipButtonStartTime'] = 5;
@@ -2087,7 +2033,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: Should parse and send ad parameters', function() {
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(JSON.parse(ad.ad.adParams)).to.eql(ad.vpaidAd.properties.adParameters);
@@ -2099,7 +2045,7 @@ describe('ad_manager_vast', function() {
       hidePlayerUi = true;
     };
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(hidePlayerUi).to.be(true);
@@ -2107,7 +2053,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: Should resize ad unit on size changed', function() {
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(ad.vpaidAd.properties.width).to.be(100);
@@ -2121,7 +2067,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: Should resize ad unit on fullscreen change', function() {
     vpaidInitialize();
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(ad.vpaidAd.properties.width).to.be(100);
@@ -2139,7 +2085,7 @@ describe('ad_manager_vast', function() {
       companion = companionAds;
     };
     vpaidInitialize(vpaidNoCompanionXML);
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(companion).to.eql({companion:{}});
@@ -2147,7 +2093,7 @@ describe('ad_manager_vast', function() {
 
   it('VPAID 2.0: should fail if media file value is empty', function() {
     vpaidInitialize(vpaidLinearNoValuesXML);
-    var ad = amc.timeline[0];
+    var ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     expect(vastAdManager.initializeAd()).to.be(null);
     expect(ad.duration).to.eql(16);
