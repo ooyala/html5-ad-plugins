@@ -90,10 +90,10 @@ OO.Ads.manager(function(_, $) {
     var vpaidAdStartedTimeout           = null;
     var vpaidAdStoppedTimeout           = null;
 
-    var VPAID_AD_IFRAME_TIMEOUT = 5000;
-    var VPAID_AD_LOADED_TIMEOUT = 5000;
-    var VPAID_AD_STARTED_TIMEOUT = 3000;
-    var VPAID_AD_STOPPED_TIMEOUT = 3000;
+    this.VPAID_AD_IFRAME_TIMEOUT         = 5000;
+    this.VPAID_AD_LOADED_TIMEOUT         = 5000;
+    this.VPAID_AD_STARTED_TIMEOUT        = 5000;
+    this.VPAID_AD_STOPPED_TIMEOUT        = 5000;
 
 
     // VPAID variables
@@ -664,7 +664,7 @@ OO.Ads.manager(function(_, $) {
       }
 
       _clearVpaidTimeouts();
-      vpaidAdLoadedTimeout = _.delay(_checkVpaidAdLoaded, VPAID_AD_LOADED_TIMEOUT);
+      vpaidAdLoadedTimeout = _.delay(_checkVpaidAdLoaded, this.VPAID_AD_LOADED_TIMEOUT);
       _safeFunctionCall(currentAd.vpaidAd, "initAd", [width, height, viewMode, desiredBitrate, creativeData, environmentVars]);
     };
 
@@ -730,8 +730,28 @@ OO.Ads.manager(function(_, $) {
       this.embedCode = this.amc.currentEmbedCode;
       this.allAdInfo = movieMetadata.ads || pbMetadata.all_ads;
       this.movieMd = movieMetadata;
-      if (pbMetadata && pbMetadata.tagUrl) {
-        this.adURLOverride = pbMetadata.tagUrl;
+      if (pbMetadata) {
+        if (pbMetadata.tagUrl) {
+          this.adURLOverride = pbMetadata.tagUrl;
+        }
+
+        if (pbMetadata.vpaidTimeout) {
+          if (typeof pbMetadata.vpaidTimeout.iframe === "number") {
+            this.VPAID_AD_IFRAME_TIMEOUT = pbMetadata.vpaidTimeout.iframe * 1000;
+          }
+
+          if (typeof pbMetadata.vpaidTimeout.loaded === "number") {
+            this.VPAID_AD_LOADED_TIMEOUT = pbMetadata.vpaidTimeout.loaded * 1000;
+          }
+
+          if (typeof pbMetadata.vpaidTimeout.started === "number") {
+            this.VPAID_AD_STARTED_TIMEOUT = pbMetadata.vpaidTimeout.started * 1000;
+          }
+
+          if (typeof pbMetadata.vpaidTimeout.stopped === "number") {
+            this.VPAID_AD_STOPPED_TIMEOUT = pbMetadata.vpaidTimeout.stopped * 1000;
+          }
+        }
       }
 
       this.ready = true;
@@ -2446,7 +2466,7 @@ OO.Ads.manager(function(_, $) {
     var _stopVpaidAd = _.bind(function() {
       if (currentAd && currentAd.vpaidAd) {
         _clearVpaidTimeouts();
-        vpaidAdStoppedTimeout = _.delay(_checkVpaidAdStopped, VPAID_AD_STOPPED_TIMEOUT);
+        vpaidAdStoppedTimeout = _.delay(_checkVpaidAdStopped, this.VPAID_AD_STOPPED_TIMEOUT);
         _safeFunctionCall(currentAd.vpaidAd, "stopAd");
       }
     }, this);
@@ -2606,7 +2626,7 @@ OO.Ads.manager(function(_, $) {
             this.checkCompanionAds(currentAd.ad);
           }
           _clearVpaidTimeouts();
-          vpaidAdStartedTimeout = _.delay(_checkVpaidAdStarted, VPAID_AD_STARTED_TIMEOUT);
+          vpaidAdStartedTimeout = _.delay(_checkVpaidAdStarted, this.VPAID_AD_STARTED_TIMEOUT);
           _safeFunctionCall(currentAd.vpaidAd, "startAd");
           initSkipAdOffset(currentAd);
           // Added to make sure we display videoSlot correctly
@@ -2842,7 +2862,7 @@ OO.Ads.manager(function(_, $) {
      */
    var _getFrame = function() {
      _clearVpaidTimeouts();
-     vpaidIframeLoadedTimeout = _.delay(_checkVpaidIframeLoaded, VPAID_AD_IFRAME_TIMEOUT);
+     vpaidIframeLoadedTimeout = _.delay(_checkVpaidIframeLoaded, this.VPAID_AD_IFRAME_TIMEOUT);
       //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
       vpaidIframe = document.createElement('iframe');
       vpaidIframe.style.display = 'none';
