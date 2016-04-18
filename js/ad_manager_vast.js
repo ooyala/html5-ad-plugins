@@ -79,7 +79,7 @@ OO.Ads.manager(function(_, $) {
     // ad settings
     var transitionFromNonLinearVideo    = false;
     var adLoaded                        = false;
-    var adRequestType                   = 'adRequest';
+    var AD_REQUEST_TYPE                 = 'adRequest';
 
     // VPAID variables
     this._slot                          = null;
@@ -115,9 +115,6 @@ OO.Ads.manager(function(_, $) {
                                             AD_VOLUME_CHANGE          : 'AdVolumeChange',
                                             AD_USER_MINIMIZE          : 'AdUserMinimize'
                                           };
-
-    // If `false` prerolls won't load until intialPlay
-    this.preload                          = true;
 
     // VAST Parsed variables
     this.format                           = null;
@@ -675,33 +672,28 @@ OO.Ads.manager(function(_, $) {
       }
 
       this.ready = true;
-      var success = false;
       this.amc.onAdManagerReady();
-
-      if (this.preload) {
-        success = this.loadPreRolls();
-      }
-      return success;
     };
 
     /**
-     * Checks to see if the current metadata contains any ads that are pre-rolls and of type vast. If there are any
+     * [DEPRECATED]Checks to see if the current metadata contains any ads that are pre-rolls and of type vast. If there are any
      * then it will load the ads.
      * @public
-     * @method Vast#loadPreRolls
+     * @method Vast#loadPreRolls[DEPRECATED]
      */
     this.loadPreRolls = function() {
-      return findAndLoadAd("pre");
+      //deprecated
     };
 
     /**
-     * Checks the metadata for any remaining ads of type vast that are not pre-rolls.
+     * [DEPRECATED]Checks the metadata for any remaining ads of type vast that are not pre-rolls.
      * If it finds any then it will load them.
      * @public
-     * @method Vast#loadAllVastAds
+     * @method Vast#loadAllVastAds[DEPRECATED]
      */
     this.loadAllVastAds = function() {
-      return findAndLoadAd("midPost");
+      //deprecated
+
     };
 
     /**
@@ -736,34 +728,26 @@ OO.Ads.manager(function(_, $) {
    /**
      * Finds ads based on the position provided to the function.
      * @private
-     * @method Vast#findAndLoadAd
+     * @method Vast#loadAd
      * @param {string} position The position of the ad to be loaded. 'pre' (preroll), 'midPost' (midroll and post rolls)
      * 'all' (all positions).
      * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
      * unit tests.
      */
-    var findAndLoadAd = _.bind(function(position) {
+    var loadAd = _.bind(function(amcAd) {
       var loadedAds = false;
       var override = false;
+      var ad = amcAd.ad;
+      this.amc.notifyPodStarted(amcAd.id, 1);
+      if (this.adURLOverride) {
+        override = true;
+        ad.tag_url = this.adURLOverride;
+      }
 
-      if (!this.allAdInfo || this.allAdInfo.length < 1) return loadedAds;
-      for (var i = 0; i < this.allAdInfo.length; i++) {
-        var ad = this.allAdInfo[i];
-          if (this.adURLOverride) {
-            override = true;
-            ad.tag_url = this.adURLOverride;
-          }
-          var time = typeof ad.time !== 'undefined' ? ad.time : ad.position;
-
-          if (position && ((position == 'pre' && time == 0) || (position == 'midPost' && time > 0)
-            || (position == 'all'))) {
-            this.currentAdBeingLoaded = ad;
-
-            var url = typeof ad.url !== 'undefined' && !override ? ad.url : ad.tag_url;
-            this.loadUrl(url);
-            loadedAds = true;
-          }
-        }
+      this.currentAdBeingLoaded = ad;
+      var url = typeof ad.url !== 'undefined' && !override ? ad.url : ad.tag_url;
+      this.loadUrl(url);
+      loadedAds = true;
       return loadedAds;
     }, this);
 
@@ -798,7 +782,32 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#buildTimeline
      */
     this.buildTimeline = function() {
-      return null;
+      var timeline = [];
+      if (this.allAdInfo && _.isArray(this.allAdInfo))
+      {
+        for (var i = 0; i < this.allAdInfo.length; i++)
+        {
+          var adMetadata = _.clone(this.allAdInfo[i]);
+          adMetadata.type = AD_REQUEST_TYPE;
+          //use linear overlay as fake ad so we don't have to specify stream type.
+          var adData = {
+            adManager: this.name,
+            ad: adMetadata,
+            duration: 0,
+            adType: this.amc.ADTYPE.LINEAR_OVERLAY,
+          };
+
+          if (adMetadata.position_type == 't') {
+            adData.position = adMetadata.time/1000;
+          } else if (adMetadata.position_type == 'p') {
+            //TODO
+            //adData.position =
+          }
+          var amcAd = new this.amc.Ad(adData);
+          timeline.push(amcAd);
+        }
+      }
+      return timeline;
     };
 
     /**
@@ -864,8 +873,24 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata
      */
     this.playAd = function(adWrapper) {
-      currentAd = adWrapper;
+      if (adWrapper) {
+        currentAd = adWrapper;
+        if (currentAd.ad.type === AD_REQUEST_TYPE) {
+          loadAd(currentAd);
+        } else {
+          _playLoadedAd(adWrapper);
+        }
+      }
+    };
 
+    /**
+     * Play an ad from the AMC timeline that has already be loaded (AKA is not an
+     * ad request).
+     * @private
+     * @method Vast#_playLoadedAd
+     * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
+     */
+    var _playLoadedAd = _.bind(function(adWrapper) {
       var isVPaid = _isVpaidAd(currentAd);
 
       // When the ad is done, trigger callback
@@ -910,7 +935,7 @@ OO.Ads.manager(function(_, $) {
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
       }
-    };
+    }, this);
 
     /**
      * Determine if a Vast ad is skippable, and if so, when the skip ad button should be displayed.
@@ -1924,6 +1949,13 @@ OO.Ads.manager(function(_, $) {
       } else {
         failedAd();
       }
+
+      if (currentAd && currentAd.ad && currentAd.ad.type === AD_REQUEST_TYPE)
+      {
+        //notify the amc of the pod ending
+        this.amc.notifyPodEnded(currentAd.id);
+      }
+
     }, this);
 
     /**
