@@ -1787,6 +1787,33 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });
 
+  it('VPAID 2.0: Should use VPAID recovery timeout overrides', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"vpaidTimeout":{
+      "iframe":9,
+      "loaded":10,
+      "started":11,
+      "stopped":12
+    }}, {}, content);
+    expect(vastAdManager.VPAID_AD_IFRAME_TIMEOUT).to.be(9000);
+    expect(vastAdManager.VPAID_AD_LOADED_TIMEOUT).to.be(10000);
+    expect(vastAdManager.VPAID_AD_STARTED_TIMEOUT).to.be(11000);
+    expect(vastAdManager.VPAID_AD_STOPPED_TIMEOUT).to.be(12000);
+  });
+
   it('VPAID 2.0: Should parse VPAID linear creative', function() {
     vpaidInitialize();
     var ad = amc.timeline[1];
