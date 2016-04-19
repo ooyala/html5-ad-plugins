@@ -674,6 +674,9 @@ OO.Ads.manager(function(_, $) {
 
       clearTimeout(vpaidAdStartedTimeout);
       vpaidAdStartedTimeout = null;
+
+      clearTimeout(vpaidAdStoppedTimeout);
+      vpaidAdStoppedTimeout = null;
     };
 
     var _checkVpaidIframeLoaded = _.bind(function() {
@@ -733,19 +736,19 @@ OO.Ads.manager(function(_, $) {
         }
 
         if (pbMetadata.vpaidTimeout) {
-          if (typeof pbMetadata.vpaidTimeout.iframe === "number") {
+          if (_.isNumber(pbMetadata.vpaidTimeout.iframe) && pbMetadata.vpaidTimeout.iframe >= 0) {
             this.VPAID_AD_IFRAME_TIMEOUT = pbMetadata.vpaidTimeout.iframe * 1000;
           }
 
-          if (typeof pbMetadata.vpaidTimeout.loaded === "number") {
+          if (_.isNumber(pbMetadata.vpaidTimeout.loaded) && pbMetadata.vpaidTimeout.loaded >= 0) {
             this.VPAID_AD_LOADED_TIMEOUT = pbMetadata.vpaidTimeout.loaded * 1000;
           }
 
-          if (typeof pbMetadata.vpaidTimeout.started === "number") {
+          if (_.isNumber(pbMetadata.vpaidTimeout.started) && pbMetadata.vpaidTimeout.started >= 0) {
             this.VPAID_AD_STARTED_TIMEOUT = pbMetadata.vpaidTimeout.started * 1000;
           }
 
-          if (typeof pbMetadata.vpaidTimeout.stopped === "number") {
+          if (_.isNumber(pbMetadata.vpaidTimeout.stopped) && pbMetadata.vpaidTimeout.stopped >= 0) {
             this.VPAID_AD_STOPPED_TIMEOUT = pbMetadata.vpaidTimeout.stopped * 1000;
           }
         }
