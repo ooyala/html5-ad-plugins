@@ -637,7 +637,7 @@ OO.Ads.manager(function(_, $) {
       };
 
       this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
-                  this._properties['adDesiredBitrate'], creativeData, environmentVariables);
+                       this._properties['adDesiredBitrate'], creativeData, environmentVariables);
     }
     }, this);
 
@@ -1629,7 +1629,7 @@ OO.Ads.manager(function(_, $) {
           adUnitCompanions = currentAd.vpaidAd ? _safeFunctionCall(currentAd.vpaidAd, "getAdCompanions") : null,
           companions;
 
-      // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit      
+      // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
       // This rules is only for VPaid, it will take data.companion otherwise anyway
       companions = !_.isNull(data) && !_.isEmpty(data.companion) ? data.companion : adUnitCompanions;
 
@@ -2673,6 +2673,12 @@ OO.Ads.manager(function(_, $) {
           _onSizeChanged();
           prevAd = currentAd ? currentAd : null;
           this.sendVpaidTracking('creativeView');
+
+          // If a timing issue with VTC causes the VPAID ad to not load, force load and play once the ad is started
+          if (this._videoSlot && this._videoSlot.buffered && (this._videoSlot.buffered.length < 1)) {
+            this._videoSlot.load();
+            this._videoSlot.play();
+          }
           break;
 
         case VPAID_EVENTS.AD_IMPRESSION:
