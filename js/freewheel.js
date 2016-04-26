@@ -655,18 +655,6 @@ OO.Ads.manager(function(_, $) {
       if(currentPlayingSlot && currentAd && !currentAd.isLinear && !this.testMode){
         //Update Freewheel of size changes. At this point Freewheel will attempt to resize any ads
         notifySizeChange();
-        //Documentation (https://hub.freewheel.tv/api_docs/html5/) includes all function calls
-        //in the next line up to getRendererController function, so up to this line is ok
-        var rendererController = currentPlayingSlot.getCurrentAdInstance().getRendererController();
-        //From here on out are undocumented function calls. Since they are undocumented,
-        //they can be removed at any time. We will use a try/catch so when this happens,
-        //we fail gracefully
-        try {
-          var renderer = rendererController.getRenderer();
-          renderer.presentInline();
-        } catch(e){
-          OO.log("FW overlay resize error!");
-        }
       }
     }, this);
 
