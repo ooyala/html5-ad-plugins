@@ -2675,7 +2675,8 @@ OO.Ads.manager(function(_, $) {
           this.sendVpaidTracking('creativeView');
 
           // If a timing issue with VTC causes the VPAID ad to not load, force load and play once the ad is started
-          if (this._videoSlot && this._videoSlot.buffered && (this._videoSlot.buffered.length < 1)) {
+          var isLinear = _safeFunctionCall(currentAd.vpaidAd, "getAdLinear");
+          if (isLinear && this._videoSlot && this._videoSlot.buffered && (this._videoSlot.buffered.length < 1)) {
             this._videoSlot.load();
             this._videoSlot.play();
           }
