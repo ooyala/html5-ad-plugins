@@ -803,7 +803,11 @@ OO.Ads.manager(function(_, $) {
           } else {
             var adPod = adPodPrimary;
             adPodPrimary = null;
-            this.amc.notifyPodEnded(adPod.id);
+            if(adPod) {
+              this.amc.notifyPodEnded(adPod.id);
+            } else if (badAd) {
+              this.amc.notifyPodEnded(badAd.id);
+            }
           }
         }
     }, this);
