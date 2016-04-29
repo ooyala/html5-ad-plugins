@@ -804,7 +804,6 @@ OO.Ads.manager(function(_, $) {
           adPodPrimary = null;
           if(adPod) {
              this.amc.notifyPodEnded(adPod.id);
-             console.log("derp1");
            } else {
              this.amc.notifyPodEnded(badAd.id);
           }
