@@ -972,6 +972,26 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Helper function to retrieve the ad object's tracking urls under a specific event name.
+     * @private
+     * @method Vast#_checkTrackingEvent
+     * @param {object} adObject The ad metadata
+     * @param {string} trackingEventName The name of the tracking event
+     * @returns {string[]|null} The tracking urls associated with the event name. Returns null, if no URLs exist.
+     */
+    var _getTrackingEventURLs = function(adObject, trackingEventName) {
+      var trackingURLs = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.tracking &&
+          adObject.ad.data.tracking[trackingEventName].length > 0) {
+        trackingURLs = adObject.ad.data.tracking[trackingEventName];
+      }
+      return trackingURLs;
+    }
+
+    /**
      * Play an ad from the AMC timeline that has already be loaded (AKA is not an
      * ad request).
      * @private
@@ -979,6 +999,10 @@ OO.Ads.manager(function(_, $) {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = _.bind(function(adWrapper) {
+      var creativeViewURLs = getTrackingEventURLs(adWrapper, "creativeView");
+      if (creativeViewURLs) {
+        OO.pixelPings(creativeURLs);
+      }
       var isVPaid = _isVpaidAd(currentAd);
 
       // When the ad is done, trigger callback
