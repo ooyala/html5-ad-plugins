@@ -1336,15 +1336,24 @@ describe('ad_manager_vast', function() {
       ad_set_code: "ad_set_code",
       time:10,
       position_type:"t",
-      url:"1.jpg"
+      url:"1.jpg",
     };
+
+    var vast_ad_request = {
+      adManager:"vast",
+      ad: {
+        type:vastAdManager.AD_REQUEST_TYPE,
+        url:"1.jpg"
+        }
+    };
+
     var content = {
       embed_code: embed_code,
       ads: [vast_ad_mid]
     };
 
     vastAdManager.initialize(amc);
-
+    vastAdManager.playAd(new amc.Ad(vast_ad_request));
     vastAdManager.onVastResponse(null, linearXML);
     expect(_.contains(errorType, vastAdManager.ERROR_CODES.XML_PARSING)).to.be(true);
     errorType = [];

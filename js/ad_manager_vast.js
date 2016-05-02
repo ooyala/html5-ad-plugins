@@ -789,23 +789,26 @@ OO.Ads.manager(function(_, $) {
       var badAd = currentAd;
       currentAd = null;
 
-
-        if (badAd) {
-          if(badAd.ad && badAd.ad.fallbackAd) {
-            metadata = badAd.ad.fallbackAd;
-          }
-          _endAd(badAd, true);
-          //force fallback ad to play if it exists
-          //otherwise end the ad pod
-          if (metadata) {
-            var ad = generateAd(metadata);
-            this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
-          } else {
-            var adPod = adPodPrimary;
-            adPodPrimary = null;
-            this.amc.notifyPodEnded(adPod.id);
+      if (badAd) {
+        if(badAd.ad && badAd.ad.fallbackAd) {
+          metadata = badAd.ad.fallbackAd;
+        }
+        _endAd(badAd, true);
+        //force fallback ad to play if it exists
+        //otherwise end the ad pod
+        if (metadata) {
+          var ad = generateAd(metadata);
+          this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
+        } else {
+          var adPod = adPodPrimary;
+          adPodPrimary = null;
+          if(adPod) {
+             this.amc.notifyPodEnded(adPod.id);
+           } else {
+             this.amc.notifyPodEnded(badAd.id);
           }
         }
+      }
     }, this);
 
    /**
@@ -958,10 +961,12 @@ OO.Ads.manager(function(_, $) {
     this.playAd = function(adWrapper) {
       if (adWrapper) {
         currentAd = adWrapper;
-        if (currentAd.ad.type === AD_REQUEST_TYPE) {
-          loadAd(currentAd);
-        } else {
-          _playLoadedAd(adWrapper);
+        if (currentAd.ad) {
+          if (currentAd.ad.type === AD_REQUEST_TYPE) {
+            loadAd(currentAd);
+          } else {
+            _playLoadedAd(adWrapper);
+          }
         }
       }
     };
@@ -1034,7 +1039,13 @@ OO.Ads.manager(function(_, $) {
       if (isVPaid) {
         adSkippableState = _safeFunctionCall(adWrapper.vpaidAd, "getAdSkippableState");
       }
-      if (supportsSkipAd(adWrapper.ad.data.version)) {
+
+      var canSkipAds = false;
+      if (adWrapper && adWrapper.ad && adWrapper.ad.data) {
+        canSkipAds = supportsSkipAd(adWrapper.ad.data.version);
+      }
+
+      if (canSkipAds) {
         skipOffset = adWrapper.ad.data.linear.skipOffset;
 
         if (skipOffset) {
@@ -1631,7 +1642,7 @@ OO.Ads.manager(function(_, $) {
 
       // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
       // This rules is only for VPaid, it will take data.companion otherwise anyway
-      companions = !_.isNull(data) && !_.isEmpty(data.companion) ? data.companion : adUnitCompanions;
+      companions = data && !_.isEmpty(data.companion) ? data.companion : adUnitCompanions;
 
       if (_.isEmpty(companions)) {
         return;
