@@ -576,69 +576,69 @@ OO.Ads.manager(function(_, $) {
 
       vpaidIframeLoaded = true;
 
-    if (_isVpaidAd(currentAd)) {
-      currentAd.data = currentAd.ad.data;
+      if (_isVpaidAd(currentAd)) {
+        currentAd.data = currentAd.ad.data;
 
-      var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
-      if (!mediaFileUrl) {
-        return null;
-      }
-
-      if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
-        OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
-        return;
-      }
-
-      try{
-        currentAd.vpaidAd = this.testMode ? global.vpaid.getVPAIDAd() : vpaidIframe.contentWindow.getVPAIDAd();
-      } catch (e) {
-        OO.log("VPAID 2.0: error while getting vpaid creative - " + e)
-      }
-
-
-      // Subscribe to ad unit events
-      for (eventName in VPAID_EVENTS) {
-        try{
-          currentAd.vpaidAd.subscribe(_.bind(_onVpaidAdEvent, this, VPAID_EVENTS[eventName]),
-            VPAID_EVENTS[eventName], this);
-        } catch (e) {
-          OO.log("VPAID 2.0: error while subscribing to creative events - " + e)
+        var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
+        if (!mediaFileUrl) {
+          return null;
         }
+
+        if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
+          OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
+          return;
+        }
+
+        try{
+          currentAd.vpaidAd = this.testMode ? global.vpaid.getVPAIDAd() : vpaidIframe.contentWindow.getVPAIDAd();
+        } catch (e) {
+          OO.log("VPAID 2.0: error while getting vpaid creative - " + e)
+        }
+
+
+        // Subscribe to ad unit events
+        for (eventName in VPAID_EVENTS) {
+          try{
+            currentAd.vpaidAd.subscribe(_.bind(_onVpaidAdEvent, this, VPAID_EVENTS[eventName]),
+              VPAID_EVENTS[eventName], this);
+          } catch (e) {
+            OO.log("VPAID 2.0: error while subscribing to creative events - " + e)
+          }
+        }
+
+        this._slot = _createUniqueElement();
+        this._videoSlot = this.amc.ui.adVideoElement[0];
+
+        //PBI-1609: Midroll VPAID 2.0 ads get stuck buffering on Mac Safari if
+        //the VPAID creative does not call load() on the video. This is not
+        //observed when using the Video Suite Inspector
+
+        //Setting preload to auto seems to address this issue with our player
+        //TODO: Find the root cause behind this issue and address it
+        if (!OO.requiresSingleVideoElement && OO.isSafari) {
+          this._videoSlot.preload = "auto";
+        }
+
+        environmentVariables = _.extend({
+          slot: this._slot,
+          videoSlot: this._videoSlot,
+          videoSlotCanAutoPlay: true
+        }, this.environmentVariables);
+
+        this._properties = {
+          adWidth: this._slot.offsetWidth,
+          adHeight: this._slot.offsetHeight,
+          adDesiredBitrate: 600
+        };
+
+        viewMode = _getFsState() ? 'fullscreen' : 'normal';
+        creativeData = {
+          AdParameters: currentAd.ad.adParams
+        };
+
+        this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
+                         this._properties['adDesiredBitrate'], creativeData, environmentVariables);
       }
-
-      this._slot = _createUniqueElement();
-      this._videoSlot = this.amc.ui.adVideoElement[0];
-
-      //PBI-1609: Midroll VPAID 2.0 ads get stuck buffering on Mac Safari if
-      //the VPAID creative does not call load() on the video. This is not
-      //observed when using the Video Suite Inspector
-
-      //Setting preload to auto seems to address this issue with our player
-      //TODO: Find the root cause behind this issue and address it
-      if (!OO.requiresSingleVideoElement && OO.isSafari) {
-        this._videoSlot.preload = "auto";
-      }
-
-      environmentVariables = _.extend({
-        slot: this._slot,
-        videoSlot: this._videoSlot,
-        videoSlotCanAutoPlay: true
-      }, this.environmentVariables);
-
-      this._properties = {
-        adWidth: this._slot.offsetWidth,
-        adHeight: this._slot.offsetHeight,
-        adDesiredBitrate: 600
-      };
-
-      viewMode = _getFsState() ? 'fullscreen' : 'normal';
-      creativeData = {
-        AdParameters: currentAd.ad.adParams
-      };
-
-      this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
-                       this._properties['adDesiredBitrate'], creativeData, environmentVariables);
-    }
     }, this);
 
     /**
@@ -811,7 +811,7 @@ OO.Ads.manager(function(_, $) {
       }
     }, this);
 
-   /**
+    /**
      * Finds ads based on the position provided to the function.
      * @private
      * @method Vast#loadAd
@@ -1928,7 +1928,7 @@ OO.Ads.manager(function(_, $) {
      */
     var _isValidVpaidCreative = function(node, isLinear) {
       var apiFramework = (node.attr('apiFramework') || node.attr('apiframework')) === 'VPAID';
-      var creativeType = isLinear ? node.attr('type') : (node.find('StaticResource').attr('creativeType') || 
+      var creativeType = isLinear ? node.attr('type') : (node.find('StaticResource').attr('creativeType') ||
             node.find('StaticResource').attr('creativetype'));
       return apiFramework && creativeType === 'application/javascript';
     };
@@ -2908,12 +2908,12 @@ OO.Ads.manager(function(_, $) {
       return element;
     }, this);
 
-   /**
+    /**
      * Used to generate a frame to load ad media files.
      * This is only required for VPAID ads
      * @private
      */
-   var _getFrame = _.bind(function() {
+    var _getFrame = _.bind(function() {
      _clearVpaidTimeouts();
      vpaidIframeLoadedTimeout = _.delay(_checkVpaidIframeLoaded, this.VPAID_AD_IFRAME_TIMEOUT);
       //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
@@ -2946,7 +2946,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Vast#_getFsState
      */
-   var _getFsState = _.bind(function() {
+    var _getFsState = _.bind(function() {
       var fs;
 
       if (document.fullscreen != null) {
@@ -3012,7 +3012,7 @@ OO.Ads.manager(function(_, $) {
       }
     };
 
-   /**
+    /**
      * Resizes the ad slot.
      * This is only required for VPAID ads
      * @public
