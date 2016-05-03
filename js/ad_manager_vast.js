@@ -967,6 +967,9 @@ OO.Ads.manager(function(_, $) {
       if (!_isVpaidAd(currentAd)) {
         _endAd(currentAd, false);
       }
+
+      var completeUrls = _getTrackingEventUrls(currentAd, "complete");
+      _pingTrackingUrls({ "complete": completeUrls });
     };
 
     /**
