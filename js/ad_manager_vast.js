@@ -1012,6 +1012,20 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Helper function to ping URLs in each set of tracking event arrays.
+     * @private
+     * @method Vast#_pingTrackingUrls
+     * @param {Array.<string[]>} urlSets An array of arrays of URL strings
+     */
+    var _pingTrackingUrls = function(urlSets) {
+      _.each(urlSets, function(urlSet) {
+        if (urlSet) {
+          OO.pixelPings(urlSet);
+        }
+      }, this);
+    };
+
+    /**
      * Play an ad from the AMC timeline that has already be loaded (AKA is not an
      * ad request).
      * @private
@@ -1019,12 +1033,17 @@ OO.Ads.manager(function(_, $) {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = _.bind(function(adWrapper) {
+
+      // try and ping tracking URLs
       var creativeViewUrls = _getTrackingEventUrls(adWrapper, "creativeView");
       var startUrls = _getTrackingEventUrls(adWrapper, "start");
       var impressionUrls = _getImpressionUrls(adWrapper);
-      if (creativeViewUrls) {
-        OO.pixelPings(creativeViewUrls);
-      }
+      _pingTrackingUrls([
+          creativeViewUrls,
+          startUrls,
+          impressionUrls
+      ]);
+
       var isVPaid = _isVpaidAd(currentAd);
 
       // When the ad is done, trigger callback
