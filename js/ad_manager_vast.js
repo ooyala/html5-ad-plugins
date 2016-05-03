@@ -859,19 +859,19 @@ OO.Ads.manager(function(_, $) {
       if (!trackingEventQuartiles.firstQuartile && playhead >= firstQuartileTime) {
         OO.log("VAST: First Quartile passed");
         var firstQuartileUrls = _getTrackingEventUrls(currentAd, "firstQuartile");
-        _pingTrackingUrls([firstQuartileUrls]);
+        _pingTrackingUrls({"firstQuartile": firstQuartileUrls});
         trackingEventQuartiles.firstQuartile = true;
       }
       else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
         OO.log("VAST: Midpoint passed");
         var midpointUrls = _getTrackingEventUrls(currentAd, "midpoint");
-        _pingTrackingUrls([midpointUrls]);
+        _pingTrackingUrls({"midpoint": midpointUrls});
         trackingEventQuartiles.midpoint = true;
       }
       else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
         OO.log("VAST: Third Quartile passed");
         var thirdQuartileUrls = _getTrackingEventUrls(currentAd, "thirdQuartile");
-        _pingTrackingUrls([thirdQuartileUrls]);
+        _pingTrackingUrls({"thirdQuartile": thirdQuartileUrls});
         trackingEventQuartiles.thirdQuartile = true;
       }
     };
@@ -1056,12 +1056,19 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_pingTrackingUrls
      * @param {Array.<string[]>} urlSets An array of arrays of URL strings
      */
-    var _pingTrackingUrls = function(urlSets) {
-      _.each(urlSets, function(urlSet) {
-        if (urlSet) {
-          OO.pixelPings(urlSet);
+    var _pingTrackingUrls = function(urlObjects) {
+      for (var trackingName in urlObjects) {
+        if (urlObjects.hasOwnProperty(trackingName)) {
+          try {
+            OO.pixelPings(urlObjects[trackingName]);
+            OO.log("VAST: " + trackingName + " tracking URLs pinged.");
+          }
+          catch(e) {
+            OO.log("VAST: Failed to ping" + trackingName + "tracking URLs.");
+            this.amc.raiseAdError(e);
+          }
         }
-      }, this);
+      }
     };
 
     /**
@@ -1077,11 +1084,11 @@ OO.Ads.manager(function(_, $) {
       var creativeViewUrls = _getTrackingEventUrls(adWrapper, "creativeView");
       var startUrls = _getTrackingEventUrls(adWrapper, "start");
       var impressionUrls = _getImpressionUrls(adWrapper);
-      _pingTrackingUrls([
-          creativeViewUrls,
-          startUrls,
-          impressionUrls
-      ]);
+      _pingTrackingUrls({
+          "creativeView": creativeViewUrls,
+          "start": startUrls,
+          "impression": impressionUrls
+      });
 
       var isVPaid = _isVpaidAd(currentAd);
 
