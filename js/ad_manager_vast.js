@@ -332,6 +332,13 @@ OO.Ads.manager(function(_, $) {
       WRAPPER : "Wrapper"
     };
 
+    // Used to keep track of whether an ad's firstQuartile, midpoint, or thirdQuartile has been passed.
+    var trackingEventQuartiles = {
+      firstQuartile: false,
+      midpoint: false,
+      thirdQuartile: false
+    };
+
     /**
      * Used to keep track of what events that are tracked for vast.
      */
@@ -561,6 +568,7 @@ OO.Ads.manager(function(_, $) {
       this.amc.addPlayerListener(this.amc.EVENTS.REPLAY_REQUESTED, _.bind(this.replay, this));
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
       this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
+      this.amc.addPlayerListener(this.amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, _.bind(this.onAdPlayheadTimeChanged, this));
     };
 
     /**
@@ -836,6 +844,37 @@ OO.Ads.manager(function(_, $) {
       loadedAds = true;
       return loadedAds;
     }, this);
+
+    /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the the play head updates
+     * during ad playback.
+     * @public
+     * @method Vast#onAdPlayheadTimeChanged
+     */
+    this.onAdPlayheadTimeChanged = function(eventname, playhead, duration) {
+      var firstQuartileTime = duration / 4;
+      var midpointTime = duration / 2;
+      var thirdQuartileTime = (3 * duration) / 4;
+
+      if (!trackingEventQuartiles.firstQuartile && playhead >= firstQuartileTime) {
+        OO.log("VAST: First Quartile passed");
+        var firstQuartileUrls = _getTrackingEventUrls(currentAd, "firstQuartile");
+        _pingTrackingUrls([firstQuartileUrls]);
+        trackingEventQuartiles.firstQuartile = true;
+      }
+      else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
+        OO.log("VAST: Midpoint passed");
+        var midpointUrls = _getTrackingEventUrls(currentAd, "midpoint");
+        _pingTrackingUrls([midpointUrls]);
+        trackingEventQuartiles.midpoint = true;
+      }
+      else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
+        OO.log("VAST: Third Quartile passed");
+        var thirdQuartileUrls = _getTrackingEventUrls(currentAd, "thirdQuartile");
+        _pingTrackingUrls([thirdQuartileUrls]);
+        trackingEventQuartiles.thirdQuartile = true;
+      }
+    };
 
     /**
      * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the play button is hit
