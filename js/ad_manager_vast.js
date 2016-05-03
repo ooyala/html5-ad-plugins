@@ -1054,17 +1054,18 @@ OO.Ads.manager(function(_, $) {
      * Helper function to ping URLs in each set of tracking event arrays.
      * @private
      * @method Vast#_pingTrackingUrls
-     * @param {Array.<string[]>} urlSets An array of arrays of URL strings
+     * @param {object} urlObject An object with the tracking event names and their
+     * associated URL array.
      */
     var _pingTrackingUrls = function(urlObjects) {
       for (var trackingName in urlObjects) {
         if (urlObjects.hasOwnProperty(trackingName)) {
           try {
             OO.pixelPings(urlObjects[trackingName]);
-            OO.log("VAST: " + trackingName + " tracking URLs pinged.");
+            OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged");
           }
           catch(e) {
-            OO.log("VAST: Failed to ping" + trackingName + "tracking URLs.");
+            OO.log("VAST: Failed to ping \"" + trackingName + "\" tracking URLs");
             this.amc.raiseAdError(e);
           }
         }
@@ -1079,16 +1080,6 @@ OO.Ads.manager(function(_, $) {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = _.bind(function(adWrapper) {
-
-      // try and ping tracking URLs
-      var creativeViewUrls = _getTrackingEventUrls(adWrapper, "creativeView");
-      var startUrls = _getTrackingEventUrls(adWrapper, "start");
-      var impressionUrls = _getImpressionUrls(adWrapper);
-      _pingTrackingUrls({
-          "creativeView": creativeViewUrls,
-          "start": startUrls,
-          "impression": impressionUrls
-      });
 
       var isVPaid = _isVpaidAd(currentAd);
 
@@ -1134,6 +1125,17 @@ OO.Ads.manager(function(_, $) {
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
       }
+
+      // try and ping tracking URLs
+      var creativeViewUrls = _getTrackingEventUrls(adWrapper, "creativeView");
+      var startUrls = _getTrackingEventUrls(adWrapper, "start");
+      var impressionUrls = _getImpressionUrls(adWrapper);
+      _pingTrackingUrls({
+          "creativeView": creativeViewUrls,
+          "start": startUrls,
+          "impression": impressionUrls
+      });
+
     }, this);
 
     /**
