@@ -1011,6 +1011,41 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Helper function to retrieve the ad object's impression urls.
+     * @private
+     * @method Vast#_getImpressionUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
+     */
+    var _getImpressionUrls = function(adObject) {
+      var impressionUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.impression &&
+          adObject.ad.data.impression.length > 0) {
+        impressionUrls = adObject.ad.data.impression;
+      }
+      return impressionUrls;
+    };
+
+    /**
+     * Ping a list of tracking event names' URLs.
+     * @private
+     * @method Vast#_handleTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @param {string[]} trackingEventNames The array of tracking event names
+     */
+    var _handleTrackingUrls = function(adObject, trackingEventNames) {
+      _.each(trackingEventNames, function(trackingEventName) {
+        var urls = _getTrackingEventUrls(adObject, trackingEventName);
+        var urlObject = {};
+        urlObject[trackingEventName] = urls;
+        _pingTrackingUrls(urlObject);
+      });
+    };
+
+    /**
      * Helper function to retrieve the ad object's tracking urls under a specific event name.
      * @private
      * @method Vast#_getTrackingEventUrls
@@ -1031,24 +1066,6 @@ OO.Ads.manager(function(_, $) {
       return trackingUrls;
     };
 
-    /**
-     * Helper function to retrieve the ad object's impression urls.
-     * @private
-     * @method Vast#_getImpressionUrls
-     * @param {object} adObject The ad metadata
-     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
-     */
-    var _getImpressionUrls = function(adObject) {
-      var impressionUrls = null;
-      if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.impression &&
-          adObject.ad.data.impression.length > 0) {
-        impressionUrls = adObject.ad.data.impression;
-      }
-      return impressionUrls;
-    };
 
     /**
      * Helper function to ping URLs in each set of tracking event arrays.
