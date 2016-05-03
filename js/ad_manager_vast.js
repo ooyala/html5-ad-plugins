@@ -989,7 +989,19 @@ OO.Ads.manager(function(_, $) {
         trackingURLs = adObject.ad.data.tracking[trackingEventName];
       }
       return trackingURLs;
-    }
+    };
+
+    var _getImpressionUrls = function(adObject) {
+      var impressionUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.impression &&
+          adObject.ad.data.impression.length > 0) {
+        impressionUrls = adObject.ad.data.impression;
+      }
+      return impressionUrls;
+    };
 
     /**
      * Play an ad from the AMC timeline that has already be loaded (AKA is not an
@@ -999,7 +1011,9 @@ OO.Ads.manager(function(_, $) {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = _.bind(function(adWrapper) {
-      var creativeViewURLs = getTrackingEventURLs(adWrapper, "creativeView");
+      var creativeViewURLs = _getTrackingEventURLs(adWrapper, "creativeView");
+      var startURLs = _getTrackingEventURLs(adWrapper, "start");
+      var impressionURLs = _getImpressionURLs(adWrapper);
       if (creativeViewURLs) {
         OO.pixelPings(creativeURLs);
       }
