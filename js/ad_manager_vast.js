@@ -1438,6 +1438,7 @@ OO.Ads.manager(function(_, $) {
       if (currentAd && currentAd.vpaidAd) {
         _safeFunctionCall(currentAd.vpaidAd, "pauseAd");
       }
+      _handleTrackingUrls(amcAd, ["pause"]);
     };
 
     /**
@@ -1451,6 +1452,7 @@ OO.Ads.manager(function(_, $) {
       if (currentAd && currentAd.vpaidAd) {
         _safeFunctionCall(currentAd.vpaidAd, "resumeAd");
       }
+      _handleTrackingUrls(amcAd, ["resume"]);
     };
 
     /**
