@@ -1011,6 +1011,28 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Ping a list of tracking event names' URLs.
+     * @private
+     * @method Vast#_handleTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @param {string[]} trackingEventNames The array of tracking event names
+     */
+    var _handleTrackingUrls = function(adObject, trackingEventNames) {
+      _.each(trackingEventNames, function(trackingEventName) {
+        var urls;
+        if (trackingEventName === "impression") {
+          urls = _getImpressionUrls(adObject, trackingEventName);
+        }
+        else {
+          urls = _getTrackingEventUrls(adObject, trackingEventName);
+        }
+        var urlObject = {};
+        urlObject[trackingEventName] = urls;
+        _pingTrackingUrls(urlObject);
+      });
+    };
+
+    /**
      * Helper function to retrieve the ad object's impression urls.
      * @private
      * @method Vast#_getImpressionUrls
@@ -1027,22 +1049,6 @@ OO.Ads.manager(function(_, $) {
         impressionUrls = adObject.ad.data.impression;
       }
       return impressionUrls;
-    };
-
-    /**
-     * Ping a list of tracking event names' URLs.
-     * @private
-     * @method Vast#_handleTrackingUrls
-     * @param {object} adObject The ad metadata
-     * @param {string[]} trackingEventNames The array of tracking event names
-     */
-    var _handleTrackingUrls = function(adObject, trackingEventNames) {
-      _.each(trackingEventNames, function(trackingEventName) {
-        var urls = _getTrackingEventUrls(adObject, trackingEventName);
-        var urlObject = {};
-        urlObject[trackingEventName] = urls;
-        _pingTrackingUrls(urlObject);
-      });
     };
 
     /**
@@ -1144,15 +1150,7 @@ OO.Ads.manager(function(_, $) {
       }
 
       // try and ping tracking URLs
-      var creativeViewUrls = _getTrackingEventUrls(adWrapper, "creativeView");
-      var startUrls = _getTrackingEventUrls(adWrapper, "start");
-      var impressionUrls = _getImpressionUrls(adWrapper);
-      _pingTrackingUrls({
-          "creativeView": creativeViewUrls,
-          "start": startUrls,
-          "impression": impressionUrls
-      });
-
+      _handleTrackingUrls(adWrapper, ["creativeView", "start", "impression"]);
     }, this);
 
     /**
