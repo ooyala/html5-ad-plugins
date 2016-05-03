@@ -857,21 +857,18 @@ OO.Ads.manager(function(_, $) {
       var thirdQuartileTime = (3 * duration) / 4;
 
       if (!trackingEventQuartiles.firstQuartile && playhead >= firstQuartileTime) {
-        OO.log("VAST: First Quartile passed");
         var firstQuartileUrls = _getTrackingEventUrls(currentAd, "firstQuartile");
-        _pingTrackingUrls({"firstQuartile": firstQuartileUrls});
+        _pingTrackingUrls({ "firstQuartile": firstQuartileUrls });
         trackingEventQuartiles.firstQuartile = true;
       }
       else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
-        OO.log("VAST: Midpoint passed");
         var midpointUrls = _getTrackingEventUrls(currentAd, "midpoint");
-        _pingTrackingUrls({"midpoint": midpointUrls});
+        _pingTrackingUrls({ "midpoint": midpointUrls });
         trackingEventQuartiles.midpoint = true;
       }
       else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
-        OO.log("VAST: Third Quartile passed");
         var thirdQuartileUrls = _getTrackingEventUrls(currentAd, "thirdQuartile");
-        _pingTrackingUrls({"thirdQuartile": thirdQuartileUrls});
+        _pingTrackingUrls({ "thirdQuartile": thirdQuartileUrls });
         trackingEventQuartiles.thirdQuartile = true;
       }
     };
