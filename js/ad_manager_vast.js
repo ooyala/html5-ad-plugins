@@ -974,23 +974,31 @@ OO.Ads.manager(function(_, $) {
     /**
      * Helper function to retrieve the ad object's tracking urls under a specific event name.
      * @private
-     * @method Vast#_checkTrackingEvent
+     * @method Vast#_getTrackingEventUrls
      * @param {object} adObject The ad metadata
      * @param {string} trackingEventName The name of the tracking event
-     * @returns {string[]|null} The tracking urls associated with the event name. Returns null, if no URLs exist.
+     * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
      */
-    var _getTrackingEventURLs = function(adObject, trackingEventName) {
-      var trackingURLs = null;
+    var _getTrackingEventUrls = function(adObject, trackingEventName) {
+      var trackingUrls = null;
       if (adObject &&
           adObject.ad &&
           adObject.ad.data &&
           adObject.ad.data.tracking &&
+          adObject.ad.data.tracking[trackingEventName] &&
           adObject.ad.data.tracking[trackingEventName].length > 0) {
-        trackingURLs = adObject.ad.data.tracking[trackingEventName];
+        trackingUrls = adObject.ad.data.tracking[trackingEventName];
       }
-      return trackingURLs;
+      return trackingUrls;
     };
 
+    /**
+     * Helper function to retrieve the ad object's impression urls.
+     * @private
+     * @method Vast#_getImpressionUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
+     */
     var _getImpressionUrls = function(adObject) {
       var impressionUrls = null;
       if (adObject &&
@@ -1011,11 +1019,11 @@ OO.Ads.manager(function(_, $) {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = _.bind(function(adWrapper) {
-      var creativeViewURLs = _getTrackingEventURLs(adWrapper, "creativeView");
-      var startURLs = _getTrackingEventURLs(adWrapper, "start");
-      var impressionURLs = _getImpressionURLs(adWrapper);
-      if (creativeViewURLs) {
-        OO.pixelPings(creativeURLs);
+      var creativeViewUrls = _getTrackingEventUrls(adWrapper, "creativeView");
+      var startUrls = _getTrackingEventUrls(adWrapper, "start");
+      var impressionUrls = _getImpressionUrls(adWrapper);
+      if (creativeViewUrls) {
+        OO.pixelPings(creativeViewUrls);
       }
       var isVPaid = _isVpaidAd(currentAd);
 
