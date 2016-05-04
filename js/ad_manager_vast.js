@@ -341,6 +341,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     var mute = false;
+    var lastFullscreenMode = false;
 
     /**
      * Used to keep track of what events that are tracked for vast.
@@ -572,7 +573,7 @@ OO.Ads.manager(function(_, $) {
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
       this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
       this.amc.addPlayerListener(this.amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, _.bind(this.onAdPlayheadTimeChanged, this));
-      this.amc.addPlayerListener(this.amc.EVENTS.VOLUME_CHANGED, _.bind(this.onVolumeChanged, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
     };
 
     /**
@@ -3137,10 +3138,12 @@ OO.Ads.manager(function(_, $) {
 
       // only try to ping tracking urls if player is playing an ad
       if (adMode) {
-        if (shouldEnterFullscreen) {
+        if (shouldEnterFullscreen && !lastFullscreenMode) {
+          lastFullscreenMode = true;
           _handleTrackingUrls(currentAd, ["fullscreen"]);
         }
-        else {
+        else if (!shouldEnterFullscreen && lastFullscreenMode) {
+          lastFullscreenMode = false;
           _handleTrackingUrls(currentAd, ["exitFullscreen"]);
         }
       }
@@ -3149,9 +3152,9 @@ OO.Ads.manager(function(_, $) {
     /**
      * Callback for Ad Manager Controller. Handles volume changes.
      * @public
-     * @method Vast#onVolumeChanged
+     * @method Vast#onAdVolumeChanged
      */
-    this.onVolumeChanged = function(eventname, volume) {
+    this.onAdVolumeChanged = function(eventname, volume) {
       if (adMode) {
         if (volume === 0) {
           _handleTrackingUrls(currentAd, ["mute"]);
