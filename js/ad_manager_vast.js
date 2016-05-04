@@ -342,6 +342,7 @@ OO.Ads.manager(function(_, $) {
 
     var mute = false;
     var lastFullscreenMode = false;
+    var lastVolume;
 
     /**
      * Used to keep track of what events that are tracked for vast.
@@ -3138,12 +3139,10 @@ OO.Ads.manager(function(_, $) {
 
       // only try to ping tracking urls if player is playing an ad
       if (adMode) {
-        if (shouldEnterFullscreen && !lastFullscreenMode) {
-          lastFullscreenMode = true;
+        if (shouldEnterFullscreen) {
           _handleTrackingUrls(currentAd, ["fullscreen"]);
         }
-        else if (!shouldEnterFullscreen && lastFullscreenMode) {
-          lastFullscreenMode = false;
+        else if (!shouldEnterFullscreen) {
           _handleTrackingUrls(currentAd, ["exitFullscreen"]);
         }
       }
@@ -3156,13 +3155,15 @@ OO.Ads.manager(function(_, $) {
      */
     this.onAdVolumeChanged = function(eventname, volume) {
       if (adMode) {
-        if (volume === 0) {
-          _handleTrackingUrls(currentAd, ["mute"]);
+        if (volume === 0 && volume !== lastVolume) {
           mute = true;
+          lastVolume = volume;
+          _handleTrackingUrls(currentAd, ["mute"]);
         }
-        else if (mute) {
-          _handleTrackingUrls(currentAd, ["unmute"]);
+        else if (mute && volume !== lastVolume) {
           mute = false;
+          lastVolume = volume;
+          _handleTrackingUrls(currentAd, ["unmute"]);
         }
       }
     };
