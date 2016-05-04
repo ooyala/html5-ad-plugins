@@ -340,6 +340,8 @@ OO.Ads.manager(function(_, $) {
       thirdQuartile: false
     };
 
+    var mute = false;
+
     /**
      * Used to keep track of what events that are tracked for vast.
      */
@@ -570,6 +572,7 @@ OO.Ads.manager(function(_, $) {
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
       this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
       this.amc.addPlayerListener(this.amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, _.bind(this.onAdPlayheadTimeChanged, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.VOLUME_CHANGED, _.bind(this.onVolumeChanged, this));
     };
 
     /**
@@ -3139,6 +3142,24 @@ OO.Ads.manager(function(_, $) {
         }
         else {
           _handleTrackingUrls(currentAd, ["exitFullscreen"]);
+        }
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles volume changes.
+     * @public
+     * @method Vast#onVolumeChanged
+     */
+    this.onVolumeChanged = function(eventname, volume) {
+      if (adMode) {
+        if (volume === 0) {
+          _handleTrackingUrls(currentAd, ["mute"]);
+          mute = true;
+        }
+        else if (mute) {
+          _handleTrackingUrls(currentAd, ["unmute"]);
+          mute = false;
         }
       }
     };
