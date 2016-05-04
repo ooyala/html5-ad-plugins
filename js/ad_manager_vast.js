@@ -314,6 +314,7 @@ OO.Ads.manager(function(_, $) {
     var nextAd = null;
     var prevAd = null;
     var adPodPrimary = null;
+    var adMode = false;
 
     var VERSION_MAJOR_2 = '2';
     var VERSION_MAJOR_3 = '3';
@@ -343,7 +344,7 @@ OO.Ads.manager(function(_, $) {
      * Used to keep track of what events that are tracked for vast.
      */
     var TrackingEvents = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
-    'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'expand', 'collapse', 'acceptInvitation',
+    'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'exitFullscreen', 'expand', 'collapse', 'acceptInvitation',
     'close' ];
 
     /**
@@ -970,6 +971,8 @@ OO.Ads.manager(function(_, $) {
 
       var completeUrls = _getTrackingEventUrls(currentAd, "complete");
       _pingTrackingUrls({ "complete": completeUrls });
+
+      adMode = false;
     };
 
     /**
@@ -998,6 +1001,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata
      */
     this.playAd = function(adWrapper) {
+      adMode = true;
       if (adWrapper) {
         currentAd = adWrapper;
         if (currentAd.ad) {
@@ -3125,8 +3129,18 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Vast#onFullScreenChanged
      */
-    var _onFullscreenChanged = function() {
+    var _onFullscreenChanged = function(eventname, shouldEnterFullscreen) {
       _onSizeChanged();
+
+      // only try to ping tracking urls if player is playing an ad
+      if (adMode) {
+        if (shouldEnterFullscreen) {
+          _handleTrackingUrls(currentAd, ["fullscreen"]);
+        }
+        else {
+          _handleTrackingUrls(currentAd, ["exitFullscreen"]);
+        }
+      }
     };
 
     /**
