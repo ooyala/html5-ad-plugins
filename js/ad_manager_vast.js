@@ -863,18 +863,15 @@ OO.Ads.manager(function(_, $) {
       var thirdQuartileTime = (3 * duration) / 4;
 
       if (!trackingEventQuartiles.firstQuartile && playhead >= firstQuartileTime) {
-        var firstQuartileUrls = _getTrackingEventUrls(currentAd, "firstQuartile");
-        _pingTrackingUrls({ "firstQuartile": firstQuartileUrls });
+        _handleTrackingUrls(currentAd, "firstQuartile");
         trackingEventQuartiles.firstQuartile = true;
       }
       else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
-        var midpointUrls = _getTrackingEventUrls(currentAd, "midpoint");
-        _pingTrackingUrls({ "midpoint": midpointUrls });
+        _handleTrackingUrls(currentAd, "midpoint");
         trackingEventQuartiles.midpoint = true;
       }
       else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
-        var thirdQuartileUrls = _getTrackingEventUrls(currentAd, "thirdQuartile");
-        _pingTrackingUrls({ "thirdQuartile": thirdQuartileUrls });
+        _handleTrackingUrls(currentAd, "thirdQuartile");
         trackingEventQuartiles.thirdQuartile = true;
       }
     };
@@ -974,9 +971,7 @@ OO.Ads.manager(function(_, $) {
         _endAd(currentAd, false);
       }
 
-      var completeUrls = _getTrackingEventUrls(currentAd, "complete");
-      _pingTrackingUrls({ "complete": completeUrls });
-
+      _handleTrackingUrls(currentAd, "complete");
       adMode = false;
     };
 
