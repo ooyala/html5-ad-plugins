@@ -340,8 +340,7 @@ OO.Ads.manager(function(_, $) {
       thirdQuartile: false
     };
 
-    var mute = false;
-    var lastFullscreenMode = false;
+    var isMuted = false;
     var lastVolume;
 
     /**
@@ -856,22 +855,25 @@ OO.Ads.manager(function(_, $) {
      * during ad playback.
      * @public
      * @method Vast#onAdPlayheadTimeChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {number} playhead Current video time (seconds)
+     * @param {number} duration Duration of the current video (seconds)
      */
-    this.onAdPlayheadTimeChanged = function(eventname, playhead, duration) {
+    this.onAdPlayheadTimeChanged = function(eventName, playhead, duration) {
       var firstQuartileTime = duration / 4;
       var midpointTime = duration / 2;
       var thirdQuartileTime = (3 * duration) / 4;
 
       if (!trackingEventQuartiles.firstQuartile && playhead >= firstQuartileTime) {
-        _handleTrackingUrls(currentAd, "firstQuartile");
+        _handleTrackingUrls(currentAd, ["firstQuartile"]);
         trackingEventQuartiles.firstQuartile = true;
       }
       else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
-        _handleTrackingUrls(currentAd, "midpoint");
+        _handleTrackingUrls(currentAd, ["midpoint"]);
         trackingEventQuartiles.midpoint = true;
       }
       else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
-        _handleTrackingUrls(currentAd, "thirdQuartile");
+        _handleTrackingUrls(currentAd, ["thirdQuartile"]);
         trackingEventQuartiles.thirdQuartile = true;
       }
     };
@@ -971,7 +973,7 @@ OO.Ads.manager(function(_, $) {
         _endAd(currentAd, false);
       }
 
-      _handleTrackingUrls(currentAd, "complete");
+      _handleTrackingUrls(currentAd, ["complete"]);
       adMode = false;
     };
 
@@ -1084,11 +1086,11 @@ OO.Ads.manager(function(_, $) {
      * @param {object} urlObject An object with the tracking event names and their
      * associated URL array.
      */
-    var _pingTrackingUrls = function(urlObjects) {
-      for (var trackingName in urlObjects) {
-        if (urlObjects.hasOwnProperty(trackingName)) {
+    var _pingTrackingUrls = function(urlObject) {
+      for (var trackingName in urlObject) {
+        if (urlObject.hasOwnProperty(trackingName)) {
           try {
-            OO.pixelPings(urlObjects[trackingName]);
+            OO.pixelPings(urlObject[trackingName]);
             OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged");
           }
           catch(e) {
@@ -3128,16 +3130,18 @@ OO.Ads.manager(function(_, $) {
      * This is only required for VPAID ads
      * @private
      * @method Vast#onFullScreenChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
      */
-    var _onFullscreenChanged = function(eventname, shouldEnterFullscreen) {
+    var _onFullscreenChanged = function(eventname, isFullscreen) {
       _onSizeChanged();
 
       // only try to ping tracking urls if player is playing an ad
       if (adMode) {
-        if (shouldEnterFullscreen) {
+        if (isFullscreen) {
           _handleTrackingUrls(currentAd, ["fullscreen"]);
         }
-        else if (!shouldEnterFullscreen) {
+        else if (!isFullscreen) {
           _handleTrackingUrls(currentAd, ["exitFullscreen"]);
         }
       }
@@ -3147,16 +3151,18 @@ OO.Ads.manager(function(_, $) {
      * Callback for Ad Manager Controller. Handles volume changes.
      * @public
      * @method Vast#onAdVolumeChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {number} volume The current volume level
      */
     this.onAdVolumeChanged = function(eventname, volume) {
       if (adMode) {
         if (volume === 0 && volume !== lastVolume) {
-          mute = true;
+          isMuted = true;
           lastVolume = volume;
           _handleTrackingUrls(currentAd, ["mute"]);
         }
-        else if (mute && volume !== lastVolume) {
-          mute = false;
+        else if (isMuted && volume !== lastVolume) {
+          isMuted = false;
           lastVolume = volume;
           _handleTrackingUrls(currentAd, ["unmute"]);
         }
