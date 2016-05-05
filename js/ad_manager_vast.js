@@ -1086,7 +1086,7 @@ OO.Ads.manager(function(_, $) {
      * @param {object} urlObject An object with the tracking event names and their
      * associated URL array.
      */
-    var _pingTrackingUrls = function(urlObject) {
+    var _pingTrackingUrls = _.bind(function(urlObject) {
       for (var trackingName in urlObject) {
         if (urlObject.hasOwnProperty(trackingName)) {
           try {
@@ -1095,11 +1095,13 @@ OO.Ads.manager(function(_, $) {
           }
           catch(e) {
             OO.log("VAST: Failed to ping \"" + trackingName + "\" tracking URLs");
-            this.amc.raiseAdError(e);
+            if (this.amc) {
+              this.amc.raiseAdError(e);
+            }
           }
         }
       }
-    };
+    }, this);
 
     /**
      * Play an ad from the AMC timeline that has already be loaded (AKA is not an
