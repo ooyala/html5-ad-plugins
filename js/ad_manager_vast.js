@@ -1502,7 +1502,9 @@ OO.Ads.manager(function(_, $) {
       if (!url || typeof url !== 'string') {
         return;
       }
-      window.open(url);
+      var newWindow = window.open(url);
+      newWindow.opener = null;
+      newWindow.location = url;
     };
 
     /**
