@@ -5,7 +5,7 @@ fake_amc = function() {
     this.callbacks[event] = callback;
   };
   this.publishPlayerEvent = function(event){    //convenience method for unit tests
-    if(typeof this.callbacks[event] === "function"){
+    if(event && typeof this.callbacks[event] === "function"){
       this.callbacks[event].apply(this, arguments);
     }
   };
