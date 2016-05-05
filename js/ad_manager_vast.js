@@ -348,7 +348,7 @@ OO.Ads.manager(function(_, $) {
      */
     var TrackingEvents = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
     'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'exitFullscreen', 'expand', 'collapse', 'acceptInvitation',
-    'close' ];
+    'close', 'skip' ];
 
     /**
      * Helper function to verify that XML is valid
@@ -1235,23 +1235,29 @@ OO.Ads.manager(function(_, $) {
       if (!this.amc || !this.amc.ui || !ad) {
         return;
       }
-      if(params && params.code === this.amc.AD_CANCEL_CODE.TIMEOUT) {
-        failedAd();
-      } else {
-
-        if (params && params.code === this.amc.AD_CANCEL_CODE.SKIPPED && currentAd) {
+      if (params) {
+        if (params.code === this.amc.AD_CANCEL_CODE.TIMEOUT) {
+          failedAd();
+        }
+        else if (params.code === this.amc.AD_CANCEL_CODE.SKIPPED && currentAd) {
           if (currentAd.vpaidAd) {
             // Notify Ad Unit that we are skipping the ad
             _safeFunctionCall(currentAd.vpaidAd, "skipAd");
           }
-        }
-        if (ad.isLinear && !_isVpaidAd(currentAd)) {
-          this.adVideoEnded();
-        } else {
-          _endAd(ad, false);
+          if (ad.isLinear && !_isVpaidAd(currentAd)) {
+            _skipAd();
+          }
         }
       }
+      else {
+        _endAd(ad, false);
+      }
     };
+
+    var _skipAd = _.bind(function() {
+      _endAd(currentAd, false);
+      _handleTrackingUrls(currentAd, ["skip"]);
+    }, this);
 
     /**
      * Ends an ad. Notifies the AMC about the end of the ad. If it is the last linear ad in the pod,
