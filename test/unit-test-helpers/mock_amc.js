@@ -10,8 +10,22 @@ fake_amc = function() {
     }
   };
   this.EVENTS = {
-    INITIAL_PLAY_REQUESTED : "initialPlayRequested",
-    PLAYHEAD_TIME_CHANGED : "playheadTimeChanged"
+    INITIAL_PLAY_REQUESTED :    "initialPlayRequested",
+    PLAY_STARTED :              "playStarted",
+    PLAYHEAD_TIME_CHANGED :     "playheadTimeChanged",
+    AD_PLAYHEAD_TIME_CHANGED :  "adPlayheadTimeChanged",
+    PAUSE :                     "pause",
+    RESUME :                    "resume",
+    CONTENT_COMPLETED :         "contentCompleted",
+    CONTENT_AND_ADS_COMPLETED : "contentAndAdsCompleted",
+    SIZE_CHANGED :              "sizeChanged",
+    CONTROLS_SHOWN :            "controlsShown",
+    CONTROLS_HIDDEN :           "controlsHidden",
+    CONTENT_CHANGED :           "contentChanged",
+    FULLSCREEN_CHANGED :        "fullscreenChanged",
+    VOLUME_CHANGED :            "volumeChanged",
+    AD_VOLUME_CHANGED :         "adVolumeChanged",
+    MAIN_CONTENT_IN_FOCUS :     "mainContentInFocus"
   };
   this.AD_SETTINGS  = {};
   this.ADTYPE = {
