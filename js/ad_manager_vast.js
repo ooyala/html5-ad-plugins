@@ -971,9 +971,9 @@ OO.Ads.manager(function(_, $) {
       //VPAID 2.0 ads will end after notifying the ad of stopAd
       if (!_isVpaidAd(currentAd)) {
         _endAd(currentAd, false);
+        _handleTrackingUrls(prevAd, ["complete"]);
       }
 
-      _handleTrackingUrls(currentAd, ["complete"]);
       adMode = false;
     };
 
@@ -1272,8 +1272,10 @@ OO.Ads.manager(function(_, $) {
      * @param {object} currentAd The ad metadata
      */
     var _skipAd = _.bind(function() {
+      prevAd = currentAd;
       _endAd(currentAd, false);
-      _handleTrackingUrls(currentAd, ["skip"]);
+      _handleTrackingUrls(prevAd, ["skip"]);
+      adMode = false;
     }, this);
 
     /**
