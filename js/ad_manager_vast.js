@@ -1024,18 +1024,27 @@ OO.Ads.manager(function(_, $) {
      * @param {string[]} trackingEventNames The array of tracking event names
      */
     var _handleTrackingUrls = function(adObject, trackingEventNames) {
-      _.each(trackingEventNames, function(trackingEventName) {
-        var urls;
-        if (trackingEventName === "impression") {
-          urls = _getImpressionUrls(adObject, trackingEventName);
-        }
-        else {
-          urls = _getTrackingEventUrls(adObject, trackingEventName);
-        }
-        var urlObject = {};
-        urlObject[trackingEventName] = urls;
-        _pingTrackingUrls(urlObject);
-      });
+      if (adObject) {
+        _.each(trackingEventNames, function(trackingEventName) {
+          var urls;
+          if (trackingEventName === "impression") {
+            urls = _getImpressionUrls(adObject, trackingEventName);
+          }
+          else {
+            urls = _getTrackingEventUrls(adObject, trackingEventName);
+          }
+          var urlObject = {};
+          urlObject[trackingEventName] = urls;
+          _pingTrackingUrls(urlObject);
+        });
+      }
+      else {
+        console.log(
+            "VAST: Tried to ping URLs: [" + trackingEventNames +
+            "] but ad object passed in was: " + adObject
+        );
+        return;
+      }
     };
 
     /**
@@ -1247,7 +1256,7 @@ OO.Ads.manager(function(_, $) {
             _safeFunctionCall(currentAd.vpaidAd, "skipAd");
           }
           if (ad.isLinear && !_isVpaidAd(currentAd)) {
-            _skipAd();
+            _skipAd(currentAd);
           }
         }
       }
@@ -1256,6 +1265,12 @@ OO.Ads.manager(function(_, $) {
       }
     };
 
+    /**
+     * Called when a linear ad is skipped.
+     * @private
+     * @method Vast#_skipAd()
+     * @param {object} currentAd The ad metadata
+     */
     var _skipAd = _.bind(function() {
       _endAd(currentAd, false);
       _handleTrackingUrls(currentAd, ["skip"]);
