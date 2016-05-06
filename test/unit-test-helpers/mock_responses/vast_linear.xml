@@ -5,14 +5,14 @@
 <AdTitle>video</AdTitle>
 <Description>video ad</Description>
 <Error>errorurl</Error>
-<Impression>impressionurl</Impression>
+<Impression>impressionUrl</Impression>
 <Creatives>
 <Creative sequence="1">
 <Linear>
 <Duration>00:00:52</Duration>
 <TrackingEvents>
-<Tracking event="start">starturl</Tracking>
-<Tracking event="firstQuartile">firstQuartileurl</Tracking>
+<Tracking event="start">startUrl</Tracking>
+<Tracking event="firstQuartile">firstQuartileUrl</Tracking>
 <Tracking event="midpoint">midpointUrl</Tracking>
 <Tracking event="thirdQuartile">thirdQuartileUrl</Tracking>
 <Tracking event="complete">completeUrl</Tracking>
@@ -21,9 +21,11 @@
 <Tracking event="rewind">rewindUrl</Tracking>
 <Tracking event="pause">pauseUrl</Tracking>
 <Tracking event="resume">resumeUrl</Tracking>
-<Tracking event="fullscreen">fullScreenUrl</Tracking>
+<Tracking event="fullscreen">fullscreenUrl</Tracking>
+<Tracking event="exitFullscreen">exitFullscreenUrl</Tracking>
 <Tracking event="acceptInvitation"></Tracking>
 <Tracking event="creativeView">creativeViewUrl</Tracking>
+<Tracking event="skip">skipUrl</Tracking>
 </TrackingEvents>
 <VideoClicks>
 <ClickThrough id="GDFP">clickThroughUrl</ClickThrough>
