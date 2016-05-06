@@ -1255,7 +1255,7 @@ OO.Ads.manager(function(_, $) {
             // Notify Ad Unit that we are skipping the ad
             _safeFunctionCall(currentAd.vpaidAd, "skipAd");
           }
-          if (ad.isLinear && !_isVpaidAd(currentAd)) {
+          else if (ad.isLinear) {
             _skipAd(currentAd);
           }
         }
