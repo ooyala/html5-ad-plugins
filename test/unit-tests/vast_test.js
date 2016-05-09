@@ -2176,8 +2176,8 @@ describe('ad_manager_vast', function() {
   });
 
   // Tracking Event Tests
-  
-  it('Vast: Tracking Events URLs should be pinged if Linear Creative plays', function() {
+
+  it('Vast: Linear Creative Tracking Events URLs should be pinged', function() {
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -2224,18 +2224,18 @@ describe('ad_manager_vast', function() {
     vastAdManager.resumeAd(ad);
 
     // "mute" and "unmute" tracking events
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0); 
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0); 
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 1); 
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.5); 
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0); 
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.01); 
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 1);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.5);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.01);
 
     // "fullscreen" and "exitFullscreen" tracking events
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true); 
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false); 
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true); 
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false); 
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true);
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false);
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true);
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false);
 
     // "complete" tracking event
     vastAdManager.adVideoEnded();
@@ -2263,6 +2263,48 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.exitFullscreenUrl).to.be  (2);
     expect(trackingUrlsPinged.completeUrl).to.be        (1);
     expect(trackingUrlsPinged.skipUrl).to.be            (1);
+  });
+
+  it('Vast: NonLinear Creative Tracking Events URLs should be pinged', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+    vastAdManager.onVastResponse(vast_ad, nonLinearXML);
+
+    var ad = amc.timeline[1];
+
+    // play video once with no player click
+    vastAdManager.playAd(ad);
+    vastAdManager.adVideoEnded();
+
+    // play video again with player click
+    vastAdManager.playAd(ad);
+    vastAdManager.playerClicked(ad, true);
+    vastAdManager.adVideoEnded();
+
+    expect(trackingUrlsPinged.impressionOverlayUrl).to.be       (2);
+    expect(trackingUrlsPinged.impressionOverlay2Url).to.be      (2);
+    expect(trackingUrlsPinged.impressionOverlay3Url).to.be      (2);
+    expect(trackingUrlsPinged.impressionOverlay4Url).to.be      (2);
+    expect(trackingUrlsPinged.impressionOverlay5Url).to.be      (2);
+    expect(trackingUrlsPinged.impressionOverlay6Url).to.be      (2);
+    expect(trackingUrlsPinged.nonLinearClickTrackingUrl).to.be  (1);
   });
 
 });
