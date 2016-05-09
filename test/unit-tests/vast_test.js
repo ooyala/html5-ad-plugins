@@ -531,7 +531,7 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.nonLinear.tracking.expand).to.eql([]);
     expect(vastAd.ad.data.nonLinear.tracking.collapse).to.eql(['collapseUrl']);
     expect(vastAd.ad.data.nonLinear.tracking.acceptInvitation).to.eql(['acceptInvitationUrl']);
-    expect(vastAd.ad.data.nonLinear.tracking.close).to.eql([]);
+    expect(vastAd.ad.data.nonLinear.tracking.close).to.eql(['closeUrl']);
 
     expect(vastAd.ad.data.companion).to.be.an('array');
     expect(vastAd.ad.data.companion.length).to.be(2);
@@ -2298,13 +2298,19 @@ describe('ad_manager_vast', function() {
     vastAdManager.playerClicked(ad, true);
     vastAdManager.adVideoEnded();
 
-    expect(trackingUrlsPinged.impressionOverlayUrl).to.be       (2);
-    expect(trackingUrlsPinged.impressionOverlay2Url).to.be      (2);
-    expect(trackingUrlsPinged.impressionOverlay3Url).to.be      (2);
-    expect(trackingUrlsPinged.impressionOverlay4Url).to.be      (2);
-    expect(trackingUrlsPinged.impressionOverlay5Url).to.be      (2);
-    expect(trackingUrlsPinged.impressionOverlay6Url).to.be      (2);
+    // play video again with close button clicked
+    vastAdManager.playAd(ad);
+    vastAdManager.cancelOverlay();
+    vastAdManager.adVideoEnded();
+
+    expect(trackingUrlsPinged.impressionOverlayUrl).to.be       (3);
+    expect(trackingUrlsPinged.impressionOverlay2Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay3Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay4Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay5Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay6Url).to.be      (3);
     expect(trackingUrlsPinged.nonLinearClickTrackingUrl).to.be  (1);
+    expect(trackingUrlsPinged.closeUrl).to.be                   (1);
   });
 
 });

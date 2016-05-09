@@ -1634,7 +1634,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * This function gets called by the ad Manager Controller when an ad has completed playing. If the main video is
+     * This function gets called by the Ad Manager Controller when an ad has completed playing. If the main video is
      * finished playing and there was an overlay displayed before the post-roll then it needs to be cleared out of memory. If the main
      * video hasn't finished playing and then it needs to be displayed agained but VAST doesn't need to do anything here.
      * @public
@@ -1644,6 +1644,15 @@ OO.Ads.manager(function(_, $) {
       if (this.amc.ended && this.lastOverlayAd) {
         this.cancelAd(lastOverlayAd);
       }
+    };
+
+    /**
+     * This function gets called by the Ad Manager Controller when an overlay has been canceled by clicking the close button.
+     * @public
+     * @method Vast#cancelOverlay
+     */
+    this.cancelOverlay = function() {
+      _handleTrackingUrls(currentAd, ["close"]);
     };
 
     /**

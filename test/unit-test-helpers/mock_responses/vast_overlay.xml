@@ -20,6 +20,7 @@
             <TrackingEvents>
               <Tracking event="acceptInvitation">acceptInvitationUrl</Tracking>
               <Tracking event="collapse">collapseUrl</Tracking>
+              <Tracking event="close">closeUrl</Tracking>
             </TrackingEvents>
           </NonLinearAds>
         </Creative>
