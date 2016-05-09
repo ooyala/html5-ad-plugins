@@ -2177,7 +2177,7 @@ describe('ad_manager_vast', function() {
 
   // Tracking Event Tests
   
-  it('Vast: Tracking Events URLs should be pinged', function() {
+  it('Vast: Tracking Events URLs should be pinged if Linear Creative plays', function() {
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -2213,6 +2213,9 @@ describe('ad_manager_vast', function() {
     amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, firstQuartileTime, duration);
     amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, midpointTime, duration);
     amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, thirdQuartileTime, duration);
+
+    // ClickTracking event
+    vastAdManager.playerClicked(ad, true);
 
     // "pause" and "resume" tracking events
     vastAdManager.pauseAd(ad);
@@ -2251,6 +2254,7 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.firstQuartileUrl).to.be   (1);
     expect(trackingUrlsPinged.midpointUrl).to.be        (1);
     expect(trackingUrlsPinged.thirdQuartileUrl).to.be   (1);
+    expect(trackingUrlsPinged.clickTrackingUrl).to.be   (1);
     expect(trackingUrlsPinged.pauseUrl).to.be           (2);
     expect(trackingUrlsPinged.resumeUrl).to.be          (2);
     expect(trackingUrlsPinged.muteUrl).to.be            (2);

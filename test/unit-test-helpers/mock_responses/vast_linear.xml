@@ -29,6 +29,7 @@
 </TrackingEvents>
 <VideoClicks>
 <ClickThrough id="GDFP">clickThroughUrl</ClickThrough>
+<ClickTracking id="GDFP">clickTrackingUrl</ClickTracking>
 </VideoClicks>
 <MediaFiles>
 <MediaFile id="GDFP" delivery="progressive" bitrate="338" width="426" height="240" type="video/x-flv" scalable="false" maintainAspectRatio="false">1.flv</MediaFile>

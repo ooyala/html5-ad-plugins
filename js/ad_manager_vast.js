@@ -1027,11 +1027,18 @@ OO.Ads.manager(function(_, $) {
       if (adObject) {
         _.each(trackingEventNames, function(trackingEventName) {
           var urls;
-          if (trackingEventName === "impression") {
-            urls = _getImpressionUrls(adObject, trackingEventName);
-          }
-          else {
-            urls = _getTrackingEventUrls(adObject, trackingEventName);
+          switch (trackingEventName) {
+            case "impression":
+              urls = _getImpressionUrls(adObject);
+              break;
+            case "linearClickTracking":
+              urls = _getLinearClickTrackingUrls(adObject);
+              break;
+            case "nonLinearClickTracking":
+              urls = _getNonLinearClickTrackingUrls(adObject);
+              break;
+            default:
+              urls = _getTrackingEventUrls(adObject, trackingEventName);
           }
           var urlObject = {};
           urlObject[trackingEventName] = urls;
@@ -1067,6 +1074,122 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Helper function to retrieve the ad object's linear click tracking urls.
+     * @private
+     * @method Vast#_getLinearClickTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of linear click tracking urls. Returns null if no
+     * URLs exist.
+     */
+    var _getLinearClickTrackingUrls = function(adObject) {
+      var linearClickTrackingUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.clickTracking &&
+          adObject.ad.data.linear.clickTracking.length > 0) {
+        linearClickTrackingUrls = adObject.ad.data.linear.clickTracking;
+      }
+      return linearClickTrackingUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click through url.
+     * @private
+     * @method Vast#_getLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The linear click through url. Returns null if no
+     * URL exists.
+     */
+    var _getLinearClickThroughUrl = function(adObject) {
+      var linearClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.clickThrough) {
+        linearClickThroughUrl = adObject.ad.data.linear.clickThrough;
+      }
+      return linearClickThroughUrl;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's nonlinear click through url.
+     * @private
+     * @method Vast#_getNonLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The nonlinear click through url. Returns null if no
+     * URL exists.
+     */
+    var _getNonLinearClickThroughUrl = function(adObject) {
+      var nonLinearClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.nonLinear &&
+          adObject.ad.data.nonLinear.nonLinearClickThrough) {
+        nonLinearClickThroughUrl = adObject.ad.data.nonLinear.nonLinearClickThrough;
+      }
+      return nonLinearClickThroughUrl;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's nonlinear click tracking urls.
+     * @private
+     * @method Vast#_getNonLinearClickTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of nonlinear click tracking urls. Returns null if no
+     * URLs exist.
+     */
+    var _getNonLinearClickTrackingUrls = function(adObject) {
+      var nonLinearClickTrackingUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.nonLinear &&
+          adObject.ad.data.nonLinear.nonLinearClickTracking &&
+          adObject.ad.data.nonLinear.nonLinearClickTracking.length > 0) {
+        nonLinearClickTrackingUrls = adObject.ad.data.nonLinear.nonLinearClickTracking;
+      }
+      return nonLinearClickTrackingUrls;
+    };
+
+    /**
+     * Helper function to get an ad object's "high level" click through url.
+     * @private
+     * @method Vast#_getHighLevelClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
+     */
+    var _getHighLevelClickThroughUrl = function(adObject) {
+      var highLevelClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.clickThrough) {
+        highLevelClickThroughUrl = adObject.ad.data.clickThrough;
+      }
+      return highLevelClickThroughUrl;
+    };
+
+    /**
+     * Helper function to get an ad object's "ooyala" click through url.
+     * @private
+     * @method Vast#_getOoyalaClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
+     */
+    var _getOoyalaClickThroughUrl = function(adObject) {
+      var ooyalaClickThroughUrl = null;
+      if (adObject &&
+          adObject.click_url) {
+        ooyalaClickThroughUrl = adObject.click_url;
+      }
+      return ooyalaClickThroughUrl;
+    };
+
+    /**
      * Helper function to retrieve the ad object's tracking urls under a specific event name.
      * @private
      * @method Vast#_getTrackingEventUrls
@@ -1099,8 +1222,14 @@ OO.Ads.manager(function(_, $) {
       for (var trackingName in urlObject) {
         if (urlObject.hasOwnProperty(trackingName)) {
           try {
-            OO.pixelPings(urlObject[trackingName]);
-            OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged");
+            var urls = urlObject[trackingName];
+            if (urls) {
+              OO.pixelPings(urls);
+              OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged");
+            }
+            else {
+              OO.log("VAST: No \"" + trackingName + "\" tracking URLs provided to ping");
+            }
           }
           catch(e) {
             OO.log("VAST: Failed to ping \"" + trackingName + "\" tracking URLs");
@@ -1437,22 +1566,30 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} showPage If set to true then we show the page, if it is false then we don't show the page
      */
     this.playerClicked = function(amcAd, showPage) {
-      if (!showPage) {
+      if (!amcAd || !showPage) {
         return;
       }
-      var highLevelClickThroughUrl = amcAd.ad.data && amcAd.ad.data.clickThrough;
-      var adSpecificClickThroughUrl = null;
-      var ooyalaClickUrl = amcAd.click_url;
+      var highLevelClickThroughUrl = _getHighLevelClickThroughUrl(amcAd);
+      var ooyalaClickUrl = _getOoyalaClickThroughUrl(amcAd);
+      var adSpecificClickThroughUrl;
+
+      if (highLevelClickThroughUrl) {
+        this.openUrl(highLevelClickThroughUrl);
+      }
+
+      if (ooyalaClickUrl) {
+        this.openUrl(ooyalaClickUrl);
+      }
+
       //TODO: Why was this amcAd.ad.data in the else removed? Was it causing an issue?
       if (amcAd.isLinear) {
-        adSpecificClickThroughUrl = amcAd.ad.data.linear.clickThrough;
-      } else {
-        adSpecificClickThroughUrl = amcAd.ad.data.nonLinear.nonLinearClickThrough;
-      }
-      if (highLevelClickThroughUrl || ooyalaClickUrl || adSpecificClickThroughUrl) {
-        this.openUrl(highLevelClickThroughUrl);
-        this.openUrl(ooyalaClickUrl);
+        adSpecificClickThroughUrl = _getLinearClickThroughUrl(amcAd);
         this.openUrl(adSpecificClickThroughUrl);
+        _handleTrackingUrls(amcAd, ["linearClickTracking"]);
+      } else {
+        adSpecificClickThroughUrl = _getNonLinearClickThroughUrl(amcAd);
+        this.openUrl(adSpecificClickThroughUrl);
+        _handleTrackingUrls(amcAd, ["nonLinearClickTracking"]);
       }
     };
 
@@ -1951,6 +2088,9 @@ OO.Ads.manager(function(_, $) {
         result.maintainAspectRatio = nonLinear.attr("maintainAspectRatio");
         result.minSuggestedDuration = nonLinear.attr("minSuggestedDuration");
         result.nonLinearClickThrough = nonLinear.find("NonLinearClickThrough").text();
+        result.nonLinearClickTracking = filterEmpty($(nonLinearAdsXml).
+                                        find("NonLinearClickTracking").
+                                        map(function() { return $(this).text(); }));
 
         if (staticResource.size() > 0) {
           _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
