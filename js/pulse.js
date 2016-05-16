@@ -1,7 +1,7 @@
 /*
  * Pulse ad player ad manager
  *
- * version 1.0
+ * version 4.3.3
  */
 
 (function(_, $)
@@ -806,7 +806,8 @@
          */
         this.sharedElementGive = function() {
             setTimeout(function(){
-                _adManager.ui.ooyalaVideoElement[0].play();
+                _adManager.sharedVideoElement.style.display = "block";
+                _adManager.sharedVideoElement.play();
             }, 100);
             _adManager.sharedVideoElement.style.visibility ="hidden";
             _adManager._isControllingVideo = false;
