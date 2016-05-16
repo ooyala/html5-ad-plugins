@@ -1375,35 +1375,13 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * If the Ad failed to load, then the Vast manager will try to load the Ad again. This time it will create a new url
-     * using a proxy url, if one is set in the player params, attach an encoded original url as a parameter, then
-     * it will return the new Url to be used. If a proxy url was not provided then one is created and returned.
-     * @public
-     * @method Vast#getProxyUrl
-     * @returns {string} the proxy url with all the data and encoding that is necessary to make it able to be used for loading.
-     */
-    this.getProxyUrl = function() {
-      OO.publicApi[this.loaderId] = _.bind(this.onVastProxyResult, this);
-      if (OO.playerParams.vast_proxy_url) {
-        return [OO.playerParams.vast_proxy_url, "?callback=OO.", this.loaderId, "&tag_url=",
-          encodeURI(this.vastUrl), "&embed_code=", this.embedCode].join("");
-      }
-      return OO.URLS.VAST_PROXY({
-        cb: "OO." + this.loaderId,
-        embedCode: this.embedCode,
-        expires: (new Date()).getTime() + 1000,
-        tagUrl: encodeURI(this.vastUrl)
-      });
-    };
-
-    /**
-     *  If the Ad fails to load this callback is called. It will try to load again using a proxy url.
+     *  If the Ad fails to load this callback is called.
      *  @public
      *  @method Vast#onVastError
      */
     this.onVastError = function() {
-      OO.log("VAST: Direct Ajax Failed Error");
-      this.ajax(this.getProxyUrl(), this.onFinalError, 'script');
+      OO.log("VAST: Ad failed to load");
+      failedAd();
     };
 
     /**
@@ -1450,18 +1428,6 @@ OO.Ads.manager(function(_, $) {
       _.each(urls, function() {
         pingURL(code, url);
       }, this);
-    };
-
-    /**
-     * If the ad fails to load a second time, this callback is called. Doesn't try to
-     * reload the ad.
-     * @public
-     * @method Vast#onFinalError
-     * @fires this.Error
-     */
-    this.onFinalError = function() {
-      OO.log("VAST: Proxy Ajax Failed Error");
-      failedAd();
     };
 
     /**
@@ -1649,17 +1615,6 @@ OO.Ads.manager(function(_, $) {
       }
 
       this.amc.showCompanion(companions);
-    };
-
-    /**
-     * If using the proxy url doesn't fail, then we parse the data into xml and call the vastResponse callback.
-     * @public
-     * @method Vast#onVastProxyResult
-     * @param {string} value The new proxy url to use and try to load the ad again with
-     */
-    this.onVastProxyResult = function(value) {
-      var xml = $.parseXML(value);
-      this.onVastResponse(this.currentAdBeingLoaded, xml);
     };
 
     /**
