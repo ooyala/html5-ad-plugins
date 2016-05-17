@@ -334,11 +334,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     // Used to keep track of whether an ad's firstQuartile, midpoint, or thirdQuartile has been passed.
-    var trackingEventQuartiles = {
-      firstQuartile: false,
-      midpoint: false,
-      thirdQuartile: false
-    };
+    var trackingEventQuartiles = {};
 
     var isMuted = false;
     var lastVolume;
@@ -1004,6 +1000,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.playAd = function(adWrapper) {
       adMode = true;
+      trackingEventQuartiles = {};
       if (adWrapper) {
         currentAd = adWrapper;
         if (currentAd.ad) {
