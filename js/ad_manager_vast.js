@@ -971,7 +971,6 @@ OO.Ads.manager(function(_, $) {
       }
 
       adMode = false;
-      trackingEventQuartiles = {};
     };
 
     /**
