@@ -314,6 +314,7 @@ OO.Ads.manager(function(_, $) {
     var nextAd = null;
     var prevAd = null;
     var adPodPrimary = null;
+    var adMode = false;
 
     var VERSION_MAJOR_2 = '2';
     var VERSION_MAJOR_3 = '3';
@@ -332,12 +333,18 @@ OO.Ads.manager(function(_, $) {
       WRAPPER : "Wrapper"
     };
 
+    // Used to keep track of whether an ad's firstQuartile, midpoint, or thirdQuartile has been passed.
+    var trackingEventQuartiles = {};
+
+    var isMuted = false;
+    var lastVolume;
+
     /**
      * Used to keep track of what events that are tracked for vast.
      */
     var TrackingEvents = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
-    'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'expand', 'collapse', 'acceptInvitation',
-    'close' ];
+    'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'exitFullscreen', 'expand', 'collapse', 'acceptInvitation',
+    'close', 'skip' ];
 
     /**
      * Helper function to verify that XML is valid
@@ -561,6 +568,8 @@ OO.Ads.manager(function(_, $) {
       this.amc.addPlayerListener(this.amc.EVENTS.REPLAY_REQUESTED, _.bind(this.replay, this));
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
       this.amc.addPlayerListener(this.amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
+      this.amc.addPlayerListener(this.amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, _.bind(this.onAdPlayheadTimeChanged, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
     };
 
     /**
@@ -838,6 +847,34 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the the play head updates
+     * during ad playback.
+     * @public
+     * @method Vast#onAdPlayheadTimeChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {number} playhead Current video time (seconds)
+     * @param {number} duration Duration of the current video (seconds)
+     */
+    this.onAdPlayheadTimeChanged = function(eventName, playhead, duration) {
+      var firstQuartileTime = duration / 4;
+      var midpointTime = duration / 2;
+      var thirdQuartileTime = (3 * duration) / 4;
+
+      if (!trackingEventQuartiles.firstQuartile && playhead >= firstQuartileTime) {
+        _handleTrackingUrls(currentAd, ["firstQuartile"]);
+        trackingEventQuartiles.firstQuartile = true;
+      }
+      else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
+        _handleTrackingUrls(currentAd, ["midpoint"]);
+        trackingEventQuartiles.midpoint = true;
+      }
+      else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
+        _handleTrackingUrls(currentAd, ["thirdQuartile"]);
+        trackingEventQuartiles.thirdQuartile = true;
+      }
+    };
+
+    /**
      * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the play button is hit
      * or the video automatically plays the first time. Here it will try to load the rest of the vast ads at this point
      * if there any. This function should only be used if you need to do something the first time the user hits play.
@@ -930,7 +967,10 @@ OO.Ads.manager(function(_, $) {
       //VPAID 2.0 ads will end after notifying the ad of stopAd
       if (!_isVpaidAd(currentAd)) {
         _endAd(currentAd, false);
+        _handleTrackingUrls(prevAd, ["complete"]);
       }
+
+      adMode = false;
     };
 
     /**
@@ -959,6 +999,8 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adWrapper The current Ad's metadata
      */
     this.playAd = function(adWrapper) {
+      adMode = true;
+      trackingEventQuartiles = {};
       if (adWrapper) {
         currentAd = adWrapper;
         if (currentAd.ad) {
@@ -972,6 +1014,231 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Ping a list of tracking event names' URLs.
+     * @private
+     * @method Vast#_handleTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @param {string[]} trackingEventNames The array of tracking event names
+     */
+    var _handleTrackingUrls = function(adObject, trackingEventNames) {
+      if (adObject) {
+        _.each(trackingEventNames, function(trackingEventName) {
+          var urls;
+          switch (trackingEventName) {
+            case "impression":
+              urls = _getImpressionUrls(adObject);
+              break;
+            case "linearClickTracking":
+              urls = _getLinearClickTrackingUrls(adObject);
+              break;
+            case "nonLinearClickTracking":
+              urls = _getNonLinearClickTrackingUrls(adObject);
+              break;
+            default:
+              urls = _getTrackingEventUrls(adObject, trackingEventName);
+          }
+          var urlObject = {};
+          urlObject[trackingEventName] = urls;
+          _pingTrackingUrls(urlObject);
+        });
+      }
+      else {
+        console.log(
+            "VAST: Tried to ping URLs: [" + trackingEventNames +
+            "] but ad object passed in was: " + adObject
+        );
+        return;
+      }
+    };
+
+    /**
+     * Helper function to retrieve the ad object's impression urls.
+     * @private
+     * @method Vast#_getImpressionUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
+     */
+    var _getImpressionUrls = function(adObject) {
+      var impressionUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.impression &&
+          adObject.ad.data.impression.length > 0) {
+        impressionUrls = adObject.ad.data.impression;
+      }
+      return impressionUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click tracking urls.
+     * @private
+     * @method Vast#_getLinearClickTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of linear click tracking urls. Returns null if no
+     * URLs exist.
+     */
+    var _getLinearClickTrackingUrls = function(adObject) {
+      var linearClickTrackingUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.clickTracking &&
+          adObject.ad.data.linear.clickTracking.length > 0) {
+        linearClickTrackingUrls = adObject.ad.data.linear.clickTracking;
+      }
+      return linearClickTrackingUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click through url.
+     * @private
+     * @method Vast#_getLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The linear click through url. Returns null if no
+     * URL exists.
+     */
+    var _getLinearClickThroughUrl = function(adObject) {
+      var linearClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.clickThrough) {
+        linearClickThroughUrl = adObject.ad.data.linear.clickThrough;
+      }
+      return linearClickThroughUrl;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's nonlinear click through url.
+     * @private
+     * @method Vast#_getNonLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The nonlinear click through url. Returns null if no
+     * URL exists.
+     */
+    var _getNonLinearClickThroughUrl = function(adObject) {
+      var nonLinearClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.nonLinear &&
+          adObject.ad.data.nonLinear.nonLinearClickThrough) {
+        nonLinearClickThroughUrl = adObject.ad.data.nonLinear.nonLinearClickThrough;
+      }
+      return nonLinearClickThroughUrl;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's nonlinear click tracking urls.
+     * @private
+     * @method Vast#_getNonLinearClickTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of nonlinear click tracking urls. Returns null if no
+     * URLs exist.
+     */
+    var _getNonLinearClickTrackingUrls = function(adObject) {
+      var nonLinearClickTrackingUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.nonLinear &&
+          adObject.ad.data.nonLinear.nonLinearClickTracking &&
+          adObject.ad.data.nonLinear.nonLinearClickTracking.length > 0) {
+        nonLinearClickTrackingUrls = adObject.ad.data.nonLinear.nonLinearClickTracking;
+      }
+      return nonLinearClickTrackingUrls;
+    };
+
+    /**
+     * Helper function to get an ad object's "high level" click through url.
+     * @private
+     * @method Vast#_getHighLevelClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
+     */
+    var _getHighLevelClickThroughUrl = function(adObject) {
+      var highLevelClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.clickThrough) {
+        highLevelClickThroughUrl = adObject.ad.data.clickThrough;
+      }
+      return highLevelClickThroughUrl;
+    };
+
+    /**
+     * Helper function to get an ad object's "ooyala" click through url.
+     * @private
+     * @method Vast#_getOoyalaClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
+     */
+    var _getOoyalaClickThroughUrl = function(adObject) {
+      var ooyalaClickThroughUrl = null;
+      if (adObject &&
+          adObject.click_url) {
+        ooyalaClickThroughUrl = adObject.click_url;
+      }
+      return ooyalaClickThroughUrl;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's tracking urls under a specific event name.
+     * @private
+     * @method Vast#_getTrackingEventUrls
+     * @param {object} adObject The ad metadata
+     * @param {string} trackingEventName The name of the tracking event
+     * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
+     */
+    var _getTrackingEventUrls = function(adObject, trackingEventName) {
+      var trackingUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.tracking &&
+          adObject.ad.data.tracking[trackingEventName] &&
+          adObject.ad.data.tracking[trackingEventName].length > 0) {
+        trackingUrls = adObject.ad.data.tracking[trackingEventName];
+      }
+      return trackingUrls;
+    };
+
+
+    /**
+     * Helper function to ping URLs in each set of tracking event arrays.
+     * @private
+     * @method Vast#_pingTrackingUrls
+     * @param {object} urlObject An object with the tracking event names and their
+     * associated URL array.
+     */
+    var _pingTrackingUrls = _.bind(function(urlObject) {
+      for (var trackingName in urlObject) {
+        if (urlObject.hasOwnProperty(trackingName)) {
+          try {
+            var urls = urlObject[trackingName];
+            if (urls) {
+              OO.pixelPings(urls);
+              OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged");
+            }
+            else {
+              OO.log("VAST: No \"" + trackingName + "\" tracking URLs provided to ping");
+            }
+          }
+          catch(e) {
+            OO.log("VAST: Failed to ping \"" + trackingName + "\" tracking URLs");
+            if (this.amc) {
+              this.amc.raiseAdError(e);
+            }
+          }
+        }
+      }
+    }, this);
+
+    /**
      * Play an ad from the AMC timeline that has already be loaded (AKA is not an
      * ad request).
      * @private
@@ -979,6 +1246,7 @@ OO.Ads.manager(function(_, $) {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = _.bind(function(adWrapper) {
+
       var isVPaid = _isVpaidAd(currentAd);
 
       // When the ad is done, trigger callback
@@ -1023,6 +1291,9 @@ OO.Ads.manager(function(_, $) {
         this.checkCompanionAds(adWrapper.ad);
         initSkipAdOffset(adWrapper);
       }
+
+      // try and ping tracking URLs
+      _handleTrackingUrls(adWrapper, ["creativeView", "start", "impression"]);
     }, this);
 
     /**
@@ -1101,23 +1372,37 @@ OO.Ads.manager(function(_, $) {
       if (!this.amc || !this.amc.ui || !ad) {
         return;
       }
-      if(params && params.code === this.amc.AD_CANCEL_CODE.TIMEOUT) {
-        failedAd();
-      } else {
-
-        if (params && params.code === this.amc.AD_CANCEL_CODE.SKIPPED && currentAd) {
+      if (params) {
+        if (params.code === this.amc.AD_CANCEL_CODE.TIMEOUT) {
+          failedAd();
+        }
+        else if (params.code === this.amc.AD_CANCEL_CODE.SKIPPED && currentAd) {
           if (currentAd.vpaidAd) {
             // Notify Ad Unit that we are skipping the ad
             _safeFunctionCall(currentAd.vpaidAd, "skipAd");
           }
-        }
-        if (ad.isLinear && !_isVpaidAd(currentAd)) {
-          this.adVideoEnded();
-        } else {
-          _endAd(ad, false);
+          else if (ad.isLinear) {
+            _skipAd(currentAd);
+          }
         }
       }
+      else {
+        _endAd(ad, false);
+      }
     };
+
+    /**
+     * Called when a linear ad is skipped.
+     * @private
+     * @method Vast#_skipAd()
+     * @param {object} currentAd The ad metadata
+     */
+    var _skipAd = _.bind(function() {
+      prevAd = currentAd;
+      _endAd(currentAd, false);
+      _handleTrackingUrls(prevAd, ["skip"]);
+      adMode = false;
+    }, this);
 
     /**
      * Ends an ad. Notifies the AMC about the end of the ad. If it is the last linear ad in the pod,
@@ -1278,22 +1563,30 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} showPage If set to true then we show the page, if it is false then we don't show the page
      */
     this.playerClicked = function(amcAd, showPage) {
-      if (!showPage) {
+      if (!amcAd || !showPage) {
         return;
       }
-      var highLevelClickThroughUrl = amcAd.ad.data && amcAd.ad.data.clickThrough;
-      var adSpecificClickThroughUrl = null;
-      var ooyalaClickUrl = amcAd.click_url;
+      var highLevelClickThroughUrl = _getHighLevelClickThroughUrl(amcAd);
+      var ooyalaClickUrl = _getOoyalaClickThroughUrl(amcAd);
+      var adSpecificClickThroughUrl;
+
+      if (highLevelClickThroughUrl) {
+        this.openUrl(highLevelClickThroughUrl);
+      }
+
+      if (ooyalaClickUrl) {
+        this.openUrl(ooyalaClickUrl);
+      }
+
       //TODO: Why was this amcAd.ad.data in the else removed? Was it causing an issue?
       if (amcAd.isLinear) {
-        adSpecificClickThroughUrl = amcAd.ad.data.linear.clickThrough;
-      } else {
-        adSpecificClickThroughUrl = amcAd.ad.data.nonLinear.nonLinearClickThrough;
-      }
-      if (highLevelClickThroughUrl || ooyalaClickUrl || adSpecificClickThroughUrl) {
-        this.openUrl(highLevelClickThroughUrl);
-        this.openUrl(ooyalaClickUrl);
+        adSpecificClickThroughUrl = _getLinearClickThroughUrl(amcAd);
         this.openUrl(adSpecificClickThroughUrl);
+        _handleTrackingUrls(amcAd, ["linearClickTracking"]);
+      } else {
+        adSpecificClickThroughUrl = _getNonLinearClickThroughUrl(amcAd);
+        this.openUrl(adSpecificClickThroughUrl);
+        _handleTrackingUrls(amcAd, ["nonLinearClickTracking"]);
       }
     };
 
@@ -1308,6 +1601,7 @@ OO.Ads.manager(function(_, $) {
       if (currentAd && currentAd.vpaidAd) {
         _safeFunctionCall(currentAd.vpaidAd, "pauseAd");
       }
+      _handleTrackingUrls(amcAd, ["pause"]);
     };
 
     /**
@@ -1321,6 +1615,7 @@ OO.Ads.manager(function(_, $) {
       if (currentAd && currentAd.vpaidAd) {
         _safeFunctionCall(currentAd.vpaidAd, "resumeAd");
       }
+      _handleTrackingUrls(amcAd, ["resume"]);
     };
 
     /**
@@ -1336,7 +1631,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * This function gets called by the ad Manager Controller when an ad has completed playing. If the main video is
+     * This function gets called by the Ad Manager Controller when an ad has completed playing. If the main video is
      * finished playing and there was an overlay displayed before the post-roll then it needs to be cleared out of memory. If the main
      * video hasn't finished playing and then it needs to be displayed agained but VAST doesn't need to do anything here.
      * @public
@@ -1349,6 +1644,15 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * This function gets called by the Ad Manager Controller when an overlay has been canceled by clicking the close button.
+     * @public
+     * @method Vast#cancelOverlay
+     */
+    this.cancelOverlay = function() {
+      _handleTrackingUrls(currentAd, ["close"]);
+    };
+
+    /**
      * Opens a new page pointing to the URL provided.
      * @public
      * @method Vast#openUrl
@@ -1358,7 +1662,9 @@ OO.Ads.manager(function(_, $) {
       if (!url || typeof url !== 'string') {
         return;
       }
-      window.open(url);
+      var newWindow = window.open(url);
+      newWindow.opener = null;
+      newWindow.location = url;
     };
 
     /**
@@ -1743,6 +2049,9 @@ OO.Ads.manager(function(_, $) {
         result.maintainAspectRatio = nonLinear.attr("maintainAspectRatio");
         result.minSuggestedDuration = nonLinear.attr("minSuggestedDuration");
         result.nonLinearClickThrough = nonLinear.find("NonLinearClickThrough").text();
+        result.nonLinearClickTracking = filterEmpty($(nonLinearAdsXml).
+                                        find("NonLinearClickTracking").
+                                        map(function() { return $(this).text(); }));
 
         if (staticResource.size() > 0) {
           _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
@@ -2949,9 +3258,43 @@ OO.Ads.manager(function(_, $) {
      * This is only required for VPAID ads
      * @private
      * @method Vast#onFullScreenChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
      */
-    var _onFullscreenChanged = function() {
+    var _onFullscreenChanged = function(eventname, isFullscreen) {
       _onSizeChanged();
+
+      // only try to ping tracking urls if player is playing an ad
+      if (adMode) {
+        if (isFullscreen) {
+          _handleTrackingUrls(currentAd, ["fullscreen"]);
+        }
+        else if (!isFullscreen) {
+          _handleTrackingUrls(currentAd, ["exitFullscreen"]);
+        }
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles volume changes.
+     * @public
+     * @method Vast#onAdVolumeChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {number} volume The current volume level
+     */
+    this.onAdVolumeChanged = function(eventname, volume) {
+      if (adMode) {
+        if (volume === 0 && volume !== lastVolume) {
+          isMuted = true;
+          lastVolume = volume;
+          _handleTrackingUrls(currentAd, ["mute"]);
+        }
+        else if (isMuted && volume !== lastVolume) {
+          isMuted = false;
+          lastVolume = volume;
+          _handleTrackingUrls(currentAd, ["unmute"]);
+        }
+      }
     };
 
     /**

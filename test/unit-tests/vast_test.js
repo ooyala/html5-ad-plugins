@@ -69,6 +69,7 @@ describe('ad_manager_vast', function() {
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
   var errorType = [];
   var pixelPingCalled = false;
+  var trackingUrlsPinged = {};
 
   // Helper functions
   var fakeAd = function(timePositionClass, position, duration) {
@@ -141,8 +142,16 @@ describe('ad_manager_vast', function() {
     require(SRC_ROOT + "ad_manager_vast.js");
 
     // mock pixelPing to test error tracking
-    OO.pixelPing = function(code) {
-      pixelPingCalled= true;
+    OO.pixelPing = function(url) {
+      pixelPingCalled = true;
+      if (url) {
+        if (trackingUrlsPinged.hasOwnProperty(url)) {
+          trackingUrlsPinged[url] += 1;
+        }
+        else {
+          trackingUrlsPinged[url] = 1;
+        }
+      }
     };
 
     // mock trackError function to test error tracking
@@ -152,7 +161,7 @@ describe('ad_manager_vast', function() {
         if (currentAdId && currentAdId in this.errorInfo) {
 
           //directly ping url
-          OO.pixelPing(code);
+          OO.pixelPing();
         }
       }
     };
@@ -171,6 +180,7 @@ describe('ad_manager_vast', function() {
     OO.playerParams.maxVastWrapperDepth = 2;
     errorType = [];
     pixelPingCalled= false;
+    trackingUrlsPinged = {};
     vastAdManager.errorInfo = {};
     vastAdManager.adBreaks = [];
 
@@ -437,10 +447,10 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.videoRestrictions).to.be(undefined);
     expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.impression).to.eql([ 'impressionUrl' ]);
     expect(vastAd.ad.data.linear).not.to.be(null);
-    expect(vastAd.ad.data.linear.tracking.start).to.eql(['starturl']);
-    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(['firstQuartileurl']);
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(['startUrl']);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(['firstQuartileUrl']);
     expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(['midpointUrl']);
     expect(vastAd.ad.data.linear.tracking.thirdQuartile).to.eql(['thirdQuartileUrl']);
     expect(vastAd.ad.data.linear.tracking.complete).to.eql(['completeUrl']);
@@ -450,7 +460,7 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.linear.tracking.pause).to.eql(['pauseUrl']);
     expect(vastAd.ad.data.linear.tracking.resume).to.eql(['resumeUrl']);
     expect(vastAd.ad.data.linear.tracking.creativeView).to.eql(['creativeViewUrl']);
-    expect(vastAd.ad.data.linear.tracking.fullscreen).to.eql(['fullScreenUrl']);
+    expect(vastAd.ad.data.linear.tracking.fullscreen).to.eql(['fullscreenUrl']);
     expect(vastAd.ad.data.linear.tracking.acceptInvitation).to.eql([]);
     expect(vastAd.ad.data.companion).to.be.an('array');
     expect(vastAd.ad.data.companion.length).to.be(2);
@@ -521,7 +531,7 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.nonLinear.tracking.expand).to.eql([]);
     expect(vastAd.ad.data.nonLinear.tracking.collapse).to.eql(['collapseUrl']);
     expect(vastAd.ad.data.nonLinear.tracking.acceptInvitation).to.eql(['acceptInvitationUrl']);
-    expect(vastAd.ad.data.nonLinear.tracking.close).to.eql([]);
+    expect(vastAd.ad.data.nonLinear.tracking.close).to.eql(['closeUrl']);
 
     expect(vastAd.ad.data.companion).to.be.an('array');
     expect(vastAd.ad.data.companion.length).to.be(2);
@@ -2164,4 +2174,143 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.streams).to.not.be(null);
     expect(vastAd.ad.streams.hls).to.be("1.m3u8");
   });
+
+  // Tracking Event Tests
+
+  it('Vast: Linear Creative Tracking Events URLs should be pinged', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+    vastAdManager.onVastResponse(vast_ad, linearXML);
+
+    var ad = amc.timeline[1];
+
+    // creativeView, impression, and start tracking events
+    vastAdManager.playAd(ad);
+
+    var duration = 52;
+    var firstQuartileTime = duration / 4;
+    var midpointTime = duration / 2;
+    var thirdQuartileTime = (3 * duration) / 4;
+
+    // "firstQuartile", "midpoint" and "thirdQuartile" tracking events
+    amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, firstQuartileTime, duration);
+    amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, midpointTime, duration);
+    amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, thirdQuartileTime, duration);
+
+    // ClickTracking event
+    vastAdManager.playerClicked(ad, true);
+
+    // "pause" and "resume" tracking events
+    vastAdManager.pauseAd(ad);
+    vastAdManager.resumeAd(ad);
+    vastAdManager.pauseAd(ad);
+    vastAdManager.resumeAd(ad);
+
+    // "mute" and "unmute" tracking events
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 1);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.5);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
+    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.01);
+
+    // "fullscreen" and "exitFullscreen" tracking events
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true);
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false);
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true);
+    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false);
+
+    // "complete" tracking event
+    vastAdManager.adVideoEnded();
+
+    // play ad again to test "skip" tracking
+    vastAdManager.playAd(ad);
+
+    // "skip" tracking event
+    vastAdManager.cancelAd(ad, {
+      code : amc.AD_CANCEL_CODE.SKIPPED
+    });
+
+    expect(trackingUrlsPinged.startUrl).to.be           (2);
+    expect(trackingUrlsPinged.creativeViewUrl).to.be    (2);
+    expect(trackingUrlsPinged.impressionUrl).to.be      (2);
+    expect(trackingUrlsPinged.firstQuartileUrl).to.be   (1);
+    expect(trackingUrlsPinged.midpointUrl).to.be        (1);
+    expect(trackingUrlsPinged.thirdQuartileUrl).to.be   (1);
+    expect(trackingUrlsPinged.clickTrackingUrl).to.be   (1);
+    expect(trackingUrlsPinged.pauseUrl).to.be           (2);
+    expect(trackingUrlsPinged.resumeUrl).to.be          (2);
+    expect(trackingUrlsPinged.muteUrl).to.be            (2);
+    expect(trackingUrlsPinged.unmuteUrl).to.be          (2);
+    expect(trackingUrlsPinged.fullscreenUrl).to.be      (2);
+    expect(trackingUrlsPinged.exitFullscreenUrl).to.be  (2);
+    expect(trackingUrlsPinged.completeUrl).to.be        (1);
+    expect(trackingUrlsPinged.skipUrl).to.be            (1);
+  });
+
+  it('Vast: NonLinear Creative Tracking Events URLs should be pinged', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+    vastAdManager.onVastResponse(vast_ad, nonLinearXML);
+
+    var ad = amc.timeline[1];
+
+    // play video once with no player click
+    vastAdManager.playAd(ad);
+    vastAdManager.adVideoEnded();
+
+    // play video again with player click
+    vastAdManager.playAd(ad);
+    vastAdManager.playerClicked(ad, true);
+    vastAdManager.adVideoEnded();
+
+    // play video again with close button clicked
+    vastAdManager.playAd(ad);
+    vastAdManager.cancelOverlay();
+    vastAdManager.adVideoEnded();
+
+    expect(trackingUrlsPinged.impressionOverlayUrl).to.be       (3);
+    expect(trackingUrlsPinged.impressionOverlay2Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay3Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay4Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay5Url).to.be      (3);
+    expect(trackingUrlsPinged.impressionOverlay6Url).to.be      (3);
+    expect(trackingUrlsPinged.nonLinearClickTrackingUrl).to.be  (1);
+    expect(trackingUrlsPinged.closeUrl).to.be                   (1);
+  });
+
 });
