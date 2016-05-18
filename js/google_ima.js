@@ -147,6 +147,7 @@ require("../html5-common/js/utils/utils.js");
         this.adPlaybackStarted = false;
         this.vcPlayRequested = false;
         this.savedVolume = -1;
+        this.useGoogleAdUI = false;
 
         //flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
@@ -245,6 +246,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("additionalAdTagParameters"))
         {
           this.additionalAdTagParameters = metadata.additionalAdTagParameters;
+        }
+
+        this.useGoogleAdUI = false;
+        if (metadata.hasOwnProperty("useGoogleAdUI"))
+        {
+          this.useGoogleAdUI = metadata.useGoogleAdUI;
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
@@ -1188,6 +1195,7 @@ require("../html5-common/js/utils/utils.js");
         var adsSettings = new google.ima.AdsRenderingSettings();
         adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
+        adsSettings.useStyledLinearAds = this.useGoogleAdUI;
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
 
         // When the ads manager is ready, we are ready to apply css changes to the video element
