@@ -64,9 +64,6 @@ OO.Ads.manager(function(_, $) {
     var freeWheelCompanionAdsWrapperId = null;
     var freeWheelCompanionAdsWrapper   = null;
 
-    //configuration
-    var marqueeCountdown = true;
-
     //fake video for overlays to work with player_skin_plugins div
     var fakeVideo = null;
     var overlayContainer = null;
@@ -817,18 +814,6 @@ OO.Ads.manager(function(_, $) {
         freeWheelCompanionAdsWrapper.hide();
       }
     };
-
-    /**
-     * If marquee should show the countdown, updates the marquee with the remaining time
-     * @private
-     * @method Freewheel#_updateCountdown
-     */
-    var _updateCountdown = _.bind(function(currentTime, duration) {
-      if (marqueeCountdown && (duration > 0) && (duration >= currentTime)) {
-        var remainingTime = Math.ceil(duration - currentTime);
-        amc.ui.updateAdMarqueeTime(remainingTime);
-      }
-    }, this);
 
     /**
      * Called by Freewheel js when an ad is clicked.  Raises the event with the ad manager controller by
