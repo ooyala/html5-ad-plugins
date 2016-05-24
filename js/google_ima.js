@@ -148,6 +148,7 @@ require("../html5-common/js/utils/utils.js");
         this.vcPlayRequested = false;
         this.savedVolume = -1;
         this.useGoogleAdUI = false;
+        this.useInsecureVpaidMode = false;
 
         //flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
@@ -252,6 +253,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("useGoogleAdUI"))
         {
           this.useGoogleAdUI = metadata.useGoogleAdUI;
+        }
+
+        this.useInsecureVpaidMode = false;
+        if (metadata.hasOwnProperty("vpaidMode"))
+        {
+          this.useInsecureVpaidMode = metadata.vpaidMode === "insecure";
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
@@ -988,7 +995,14 @@ require("../html5-common/js/utils/utils.js");
         //These are required by Google for tracking purposes.
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
-        google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+        if (this.useInsecureVpaidMode)
+        {
+          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+        }
+        else
+        {
+          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+        }
 
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
