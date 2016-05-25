@@ -564,36 +564,44 @@ describe('ad_manager_ima', function()
   it('AMC Integration, IMA Event: IMA STARTED event notifies amc of linear ad start for a linear ad', function()
   {
     var notified = false;
+    var adId = -1;
     initAndPlay(true, vci);
-    amc.notifyLinearAdStarted = function()
+    amc.notifyLinearAdStarted = function(id)
     {
+      adId = id;
       notified = true;
     };
     ima.playAd(
     {
+      id : 1000,
       ad : {}
     });
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     expect(notified).to.be(true);
+    expect(adId).to.be(1000);
   });
 
   it('AMC Integration, IMA Event: IMA COMPLETE event notifies amc of linear ad end for a linear ad', function()
   {
     var notified = false;
+    var adId = -1;
     initAndPlay(true, vci);
-    amc.notifyLinearAdEnded = function()
+    amc.notifyLinearAdEnded = function(id)
     {
+      adId = id;
       notified = true;
     };
     ima.playAd(
     {
+      id : 1000,
       ad : {}
     });
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
     expect(notified).to.be(true);
+    expect(adId).to.be(1000);
   });
 
   it('AMC Integration, IMA Event: IMA USER_CLOSE event notifies amc of linear ad end for a linear ad', function()
