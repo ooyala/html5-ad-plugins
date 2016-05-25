@@ -1749,7 +1749,6 @@ require("../html5-common/js/utils/utils.js");
       {
         if (this.currentAMCAdPod)
         {
-          var adId = this.currentAMCAdPod;
           if (this.currentIMAAd)
           {
             var currentIMAAd = this.currentIMAAd;
@@ -1766,7 +1765,7 @@ require("../html5-common/js/utils/utils.js");
                 _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
               }
 
-              _amc.notifyLinearAdEnded(adId);
+              _amc.notifyLinearAdEnded(this.currentAMCAdPod.id);
 
               var adPos = adPodInfo.getAdPosition();
               var totalAds = adPodInfo.getTotalAds();
