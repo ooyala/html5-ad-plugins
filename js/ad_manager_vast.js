@@ -1588,6 +1588,8 @@ OO.Ads.manager(function(_, $) {
         this.openUrl(adSpecificClickThroughUrl);
         _handleTrackingUrls(amcAd, ["nonLinearClickTracking"]);
       }
+
+      this.amc.adsClickthrough();
     };
 
     /**
