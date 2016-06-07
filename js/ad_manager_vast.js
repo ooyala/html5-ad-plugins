@@ -1566,30 +1566,33 @@ OO.Ads.manager(function(_, $) {
       if (!amcAd || !showPage) {
         return;
       }
+      var urlOpened = false;
       var highLevelClickThroughUrl = _getHighLevelClickThroughUrl(amcAd);
       var ooyalaClickUrl = _getOoyalaClickThroughUrl(amcAd);
       var adSpecificClickThroughUrl;
 
       if (highLevelClickThroughUrl) {
-        this.openUrl(highLevelClickThroughUrl);
+        urlOpened = urlOpened || this.openUrl(highLevelClickThroughUrl);
       }
 
       if (ooyalaClickUrl) {
-        this.openUrl(ooyalaClickUrl);
+        urlOpened = urlOpened || this.openUrl(ooyalaClickUrl);
       }
 
       //TODO: Why was this amcAd.ad.data in the else removed? Was it causing an issue?
       if (amcAd.isLinear) {
         adSpecificClickThroughUrl = _getLinearClickThroughUrl(amcAd);
-        this.openUrl(adSpecificClickThroughUrl);
+        urlOpened = urlOpened || this.openUrl(adSpecificClickThroughUrl);
         _handleTrackingUrls(amcAd, ["linearClickTracking"]);
       } else {
         adSpecificClickThroughUrl = _getNonLinearClickThroughUrl(amcAd);
-        this.openUrl(adSpecificClickThroughUrl);
+        urlOpened = urlOpened || this.openUrl(adSpecificClickThroughUrl);
         _handleTrackingUrls(amcAd, ["nonLinearClickTracking"]);
       }
 
-      this.amc.adsClickthrough();
+      if (urlOpened) {
+        this.amc.adsClickthrough();
+      }
     };
 
     /**
@@ -1659,14 +1662,16 @@ OO.Ads.manager(function(_, $) {
      * @public
      * @method Vast#openUrl
      * @param {string} url The url that we need to open in a new page
+     * @returns {boolean} true, if the URL is valid. Returns false, if url is invalid.
      */
     this.openUrl = function(url) {
       if (!url || typeof url !== 'string') {
-        return;
+        return false;
       }
       var newWindow = window.open(url);
       newWindow.opener = null;
       newWindow.location = url;
+      return true;
     };
 
     /**
