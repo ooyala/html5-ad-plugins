@@ -1270,6 +1270,7 @@ require("../html5-common/js/utils/utils.js");
       var _IMA_SDK_onAdClicked = privateMember(function(adEvent)
       {
         _amc.adsClicked();
+        _amc.adsClickthrough();
       });
 
       /**

@@ -13,6 +13,8 @@ describe('ad_manager_freewheel', function() {
   require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
   require(TEST_ROOT + "unit-test-helpers/mock_fw.js");
 
+  var adsClickthroughCalled;
+
   // Helper functions
   var fakeAd = function(timePositionClass, position, duration, customId) {
     this.getTimePositionClass = function() {
@@ -70,6 +72,7 @@ describe('ad_manager_freewheel', function() {
 
   beforeEach(function() {
     amc = new fake_amc();
+    adsClickthroughCalled = 0;
   });
 
   afterEach(_.bind(function() {
@@ -235,5 +238,22 @@ describe('ad_manager_freewheel', function() {
       adInstance : adInstance
     });
     expect(notified).to.be(true);
+  });
+
+  it('Ad Clickthrough: AMC\'s adsClickthrough() should be called when FW\'s ads click event occurs', function() {
+    amc.adsClickthrough = function() {
+      adsClickthroughCalled += 1;
+    };
+    getTemporalSlots = function(){
+      return [
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+      ];
+    };
+    initialize();
+    expect(amc.timeline.length).to.be(1);
+    play();
+    fw.playAd(amc.timeline[0]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_CLICK]();
+    expect(adsClickthroughCalled).to.be(1);
   });
 });

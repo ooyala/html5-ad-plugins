@@ -69,6 +69,7 @@ fake_amc = function() {
   this.raiseAdError = function() {};
   this.raiseAdPlayhead = function() {};
   this.adsClicked = function() {};
+  this.adsClickthrough = function() {};
   this.notifyPodStarted = function() {};
   this.notifyPodEnded = function() {};
   this.notifyLinearAdStarted = function() {};

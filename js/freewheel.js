@@ -831,6 +831,8 @@ OO.Ads.manager(function(_, $) {
         handlingClick = false;
       }
 
+      amc.adsClickthrough();
+
       // Exit full screen to open the link?
       //amc.changeFullscreen(false);
     };
