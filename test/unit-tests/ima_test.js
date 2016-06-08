@@ -19,7 +19,7 @@ describe('ad_manager_ima', function()
   var originalMockAmc = null;
   var notifyEventName = null;
   var notifyParams = null;
-  var adsClickthroughCalled;
+  var adsClickthroughOpenedCalled;
 
   require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
   require(TEST_ROOT + "unit-test-helpers/mock_ima.js");
@@ -130,7 +130,7 @@ describe('ad_manager_ima', function()
   beforeEach(function()
   {
     originalMockAmc = _.clone(amc);
-    adsClickthroughCalled = 0;
+    adsClickthroughOpenedCalled = 0;
   });
 
   afterEach(_.bind(function()
@@ -452,8 +452,8 @@ describe('ad_manager_ima', function()
     {
       notified = true;
     };
-    amc.adsClickthrough = function() {
-      adsClickthroughCalled += 1;
+    amc.adsClickthroughOpened = function() {
+      adsClickthroughOpenedCalled += 1;
     };
     ima.playAd(
     {
@@ -462,7 +462,7 @@ describe('ad_manager_ima', function()
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.CLICK);
     expect(notified).to.be(true);
-    expect(adsClickthroughCalled).to.be(1);
+    expect(adsClickthroughOpenedCalled).to.be(1);
   });
 
   it('AMC Integration, IMA Event: IMA AD_ERROR gives back control and ends current ad and ad pod', function()

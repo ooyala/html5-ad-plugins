@@ -70,7 +70,7 @@ describe('ad_manager_vast', function() {
   var errorType = [];
   var pixelPingCalled = false;
   var trackingUrlsPinged = {};
-  var adsClickthroughCalled = 0;
+  var adsClickthroughOpenedCalled = 0;
 
   // Helper functions
   var fakeAd = function(timePositionClass, position, duration) {
@@ -184,7 +184,7 @@ describe('ad_manager_vast', function() {
     trackingUrlsPinged = {};
     vastAdManager.errorInfo = {};
     vastAdManager.adBreaks = [];
-    adsClickthroughCalled = 0;
+    adsClickthroughOpenedCalled = 0;
 
     //VPAID specifics
     global.vpaid.adInit = false;
@@ -726,8 +726,8 @@ describe('ad_manager_vast', function() {
       }
       return false;
     };
-    amc.adsClickthrough = function() {
-      adsClickthroughCalled += 1;
+    amc.adsClickthroughOpened = function() {
+      adsClickthroughOpenedCalled += 1;
     };
     var embed_code = "embed_code";
     var vast_ad_mid = {
@@ -755,7 +755,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.playerClicked(vastAd, true);
     //1 clickthrough url is defined in vast_linear.xml
     expect(openedUrls.length).to.be(1);
-    expect(adsClickthroughCalled).to.be(1);
+    expect(adsClickthroughOpenedCalled).to.be(1);
   });
 
   it('Vast 2.0: should not open a clickthrough url if one is not defined', function(){
@@ -769,8 +769,8 @@ describe('ad_manager_vast', function() {
       }
       return false;
     };
-    amc.adsClickthrough = function() {
-      adsClickthroughCalled += 1;
+    amc.adsClickthroughOpened = function() {
+      adsClickthroughOpenedCalled += 1;
     };
     var embed_code = "embed_code";
     var vast_ad_mid = {
@@ -797,7 +797,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     expect(openedUrls.length).to.be(0);
-    expect(adsClickthroughCalled).to.be(0);
+    expect(adsClickthroughOpenedCalled).to.be(0);
   });
 
   it('Vast 2.0: should play multiple ads if multiple ads are defined', function(){
