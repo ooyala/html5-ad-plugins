@@ -831,7 +831,7 @@ OO.Ads.manager(function(_, $) {
         handlingClick = false;
       }
 
-      amc.adsClickthrough();
+      amc.adsClickthroughOpened();
 
       // Exit full screen to open the link?
       //amc.changeFullscreen(false);

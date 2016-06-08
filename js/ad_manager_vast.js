@@ -1591,7 +1591,7 @@ OO.Ads.manager(function(_, $) {
       }
 
       if (urlOpened) {
-        this.amc.adsClickthrough();
+        this.amc.adsClickthroughOpened();
       }
     };
 
