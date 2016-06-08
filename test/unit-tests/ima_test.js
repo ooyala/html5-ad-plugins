@@ -19,6 +19,7 @@ describe('ad_manager_ima', function()
   var originalMockAmc = null;
   var notifyEventName = null;
   var notifyParams = null;
+  var adsClickthroughCalled;
 
   require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
   require(TEST_ROOT + "unit-test-helpers/mock_ima.js");
@@ -129,6 +130,7 @@ describe('ad_manager_ima', function()
   beforeEach(function()
   {
     originalMockAmc = _.clone(amc);
+    adsClickthroughCalled = 0;
   });
 
   afterEach(_.bind(function()
@@ -186,7 +188,7 @@ describe('ad_manager_ima', function()
     expect(typeof videoWrapper).to.be("object");
   });
 
-  it('Init: VTC Integration is creatable from existin element after ad manager is initialized', function()
+  it('Init: VTC Integration is creatable from existing element after ad manager is initialized', function()
   {
     ima.initialize(amc, playerId);
     var wrapper = imaVideoPluginFactory.createFromExisting("domId", {}, playerId);
@@ -450,6 +452,9 @@ describe('ad_manager_ima', function()
     {
       notified = true;
     };
+    amc.adsClickthrough = function() {
+      adsClickthroughCalled += 1;
+    };
     ima.playAd(
     {
       ad : {}
@@ -457,6 +462,7 @@ describe('ad_manager_ima', function()
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.CLICK);
     expect(notified).to.be(true);
+    expect(adsClickthroughCalled).to.be(1);
   });
 
   it('AMC Integration, IMA Event: IMA AD_ERROR gives back control and ends current ad and ad pod', function()
