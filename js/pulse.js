@@ -265,15 +265,23 @@
                 showAdTitle = adManagerMetadata.pulse_show_ad_title || false;
                 protocol = getProtocolFromPulseHost(this._pulseHost);
                 pulse_account_name = getPulseAccount(this._pulseHost);
-                //Load the Pulse SDK
 
-                //amc.loadAdModule(this.name,"../../plugin_html5_2.x/dist/pulse-sdk-html5-2.1.16.5.0.js", _.bind(function(success) {
-                amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, _.bind(function(success) {
-                    adModuleJsReady = success;
+                //Load the Pulse SDK if not already included
+                if(!OO.Pulse){
+                    amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, _.bind(function(success) {
+                        adModuleJsReady = success;
+                        if(isWaitingForPrerolls){
+                            _onInitialPlay.call(this);
+                        }
+                    }, this));
+                } else {
+                    adModuleJsReady = true;
                     if(isWaitingForPrerolls){
                         _onInitialPlay.call(this);
                     }
-                }, this));
+                }
+
+
 
                 //The request settings and content metadata are going to be assembled progressively here
 
@@ -281,7 +289,7 @@
                 this._requestSettings = {
                     height:   adManagerMetadata.pulse_height,
                     width:   adManagerMetadata.pulse_width,
-                    maxBitrate:   adManagerMetadata.pulse_max_bitrate
+                    maxBitRate:   adManagerMetadata.pulse_max_bitrate
                 };
 
                 //Then the parameters that always overriden by the custom metadata or the integration metadata are set
@@ -321,6 +329,8 @@
                     movieMetadata.duration /1000);
 
                 this._contentMetadata.customParameters = adManagerMetadata.pulse_custom_parameters;
+
+                this._requestSettings.vptpTicketData =  adManagerMetadata.pulse_vptp_data;
 
                 this._requestSettings.linearPlaybackPositions =
                     safeMap(safeSplit(getByPriority(adManagerMetadata.pulse_linear_cuepoints,
@@ -511,12 +521,8 @@
 
             this.startContentPlayback = function() {
                 isWaitingForPrerolls = false;
-                if(this._isInPlayAd){ // We just entered ad mode and need to exit it now
-                    this.notifyAdPodStarted();
-                }
-                if(isInAdMode){
-                    this.notifyAdPodEnded();
 
+                if(isInAdMode){
                     if(adPlayer){
                         adPlayer.contentStarted();
                     }
@@ -538,7 +544,6 @@
                 {
                     setTimeout(playPlaceholder,1);
                 }
-                //ui.ooyalaVideoElement[0].pause();
 
                 if(this.ui.useSingleVideoElement && !this._isControllingVideo){
                     waitingForContentPause = true;
@@ -806,7 +811,8 @@
          */
         this.sharedElementGive = function() {
             setTimeout(function(){
-                _adManager.ui.ooyalaVideoElement[0].play();
+                _adManager.sharedVideoElement.style.display = "block";
+                _adManager.sharedVideoElement.play();
             }, 100);
             _adManager.sharedVideoElement.style.visibility ="hidden";
             _adManager._isControllingVideo = false;
@@ -820,7 +826,7 @@
          * @method PulseVideoWrapper#sharedElementTake
          */
         this.sharedElementTake = function() {
-            _adManager.sharedVideoElement.crossOrigin = null;
+            _adManager.sharedVideoElement.crossorigin = null;
             _adManager._isControllingVideo = true;
             _adManager.sharedVideoElement.style.visibility ="visible";
             if(_adManager && _adManager._waitingForContentPause) {
@@ -956,6 +962,9 @@
          * @param {object} css The css to apply in key value pairs
          */
         this.applyCss = function(css) {
+            if(_adManager.sharedVideoElement){
+                $(_adManager.sharedVideoElement).css(css);
+            }
         };
 
         /**
