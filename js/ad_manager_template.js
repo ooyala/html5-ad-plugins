@@ -220,8 +220,18 @@ OO.Ads.manager(function(_, $) {
 
     };
 
-    this.onVideoTagFound = function() {
-      OO.log("TAG FOUND: ", arguments);
+    /**
+     * This is an example callback that interprets video stream tags.  The event is subscribed to in
+     * the initialize function.
+     * @public
+     * @method AdManager#onVideoTagFound
+     * @param {string} event The event that triggered this callback.
+     * @param {string} videoId The id of the video element that processed a tag.
+     * @param {string} tagType The type of tag that was detected.
+     * @param {object} metadata Any metadata attached to the found tag.
+     */
+    this.onVideoTagFound = function(event, videoId, tagType, metadata) {
+      OO.log("TAG FOUND w/ args: ", arguments);
     }
 
     /**
