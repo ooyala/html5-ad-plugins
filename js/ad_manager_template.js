@@ -41,6 +41,9 @@ OO.Ads.manager(function(_, $) {
       // Add any player event listeners now
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
 
+      //ID3 Tag example
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
+
       // Loads a remote file.  Use this function to load the client SDK for your ad module.
       amc.loadAdModule(this.name, remoteModuleJs, _.bind(function(success) {
         adModuleJsReady = success;
@@ -216,6 +219,10 @@ OO.Ads.manager(function(_, $) {
     this.adVideoPlaying = function() {
 
     };
+
+    this.onVideoTagFound = function() {
+      OO.log("TAG FOUND: ", arguments);
+    }
 
     /**
      * <i>Optional.</i><br/>
