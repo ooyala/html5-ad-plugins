@@ -41,6 +41,9 @@ OO.Ads.manager(function(_, $) {
       // Add any player event listeners now
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
 
+      //ID3 Tag example
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
+
       // Loads a remote file.  Use this function to load the client SDK for your ad module.
       amc.loadAdModule(this.name, remoteModuleJs, _.bind(function(success) {
         adModuleJsReady = success;
@@ -216,6 +219,20 @@ OO.Ads.manager(function(_, $) {
     this.adVideoPlaying = function() {
 
     };
+
+    /**
+     * This is an example callback that interprets video stream tags.  The event is subscribed to in
+     * the initialize function.
+     * @public
+     * @method AdManager#onVideoTagFound
+     * @param {string} event The event that triggered this callback.
+     * @param {string} videoId The id of the video element that processed a tag.
+     * @param {string} tagType The type of tag that was detected.
+     * @param {object} metadata Any metadata attached to the found tag.
+     */
+    this.onVideoTagFound = function(event, videoId, tagType, metadata) {
+      OO.log("TAG FOUND w/ args: ", arguments);
+    }
 
     /**
      * <i>Optional.</i><br/>
