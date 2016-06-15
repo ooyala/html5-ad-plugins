@@ -35,6 +35,12 @@ OO.Ads.manager(function(_, $) {
 
     var amc  = null;
 
+    // Tracking Event states
+    var adMode = false;
+    var isFullscreen = false;
+    var isMuted = false;
+    var lastVolume = -1;
+
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
      * remote JS files.
@@ -56,6 +62,9 @@ OO.Ads.manager(function(_, $) {
       // Stream URL
       //amc.addPlayerListener(amc.EVENTS.STREAM_URL_RECEIVED, _.bind(this.onStreamUrlReceived, this));
 
+      // Listeners for tracking events
+      this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
+      this.amc.addPlayerListener(this.amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
     };
 
     /**
@@ -232,7 +241,7 @@ OO.Ads.manager(function(_, $) {
      * @method SsaiPulse#onStreamUrlReceived
      * @param {string} url The stream url
      */
-    this.onStreamUrlReceived = function(event, url) {
+    this.onStreamUrlReceived = function(eventName, url) {
       requestUrl = makeSpecialUrl(url);
       // TODO: Change mock function
       amc.publishStreamUrl(url);
@@ -248,8 +257,54 @@ OO.Ads.manager(function(_, $) {
      * @param {string} tagType The type of tag that was detected
      * @param {object} metadata Any metadata attached to the found tag
      */
-    this.onVideoTagFound = function(event, videoId, tagType, metadata) {
+    this.onVideoTagFound = function(eventName, videoId, tagType, metadata) {
       OO.log("TAG FOUND w/ args: ", arguments);
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
+     * This is only required for VPAID ads
+     * @public
+     * @method Vast#onFullScreenChanged
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
+     */
+    this.onFullscreenChanged = function(eventName, isFullscreen) {
+      // only try to ping tracking urls if player is playing an ad
+      if (adMode) {
+        if (isFullscreen) {
+          // TODO: Hook up with new Vast parser util
+          //_handleTrackingUrls(currentAd, ["fullscreen"]);
+        }
+        else if (!isFullscreen) {
+          // TODO: Hook up with new Vast parser util
+          //_handleTrackingUrls(currentAd, ["exitFullscreen"]);
+        }
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles volume changes.
+     * @public
+     * @method Vast#onAdVolumeChanged
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {number} volume The current volume level
+     */
+    this.onAdVolumeChanged = function(eventName, volume) {
+      if (adMode) {
+        if (volume === 0 && volume !== lastVolume) {
+          isMuted = true;
+          lastVolume = volume;
+          // TODO: Hook up with new Vast parser util
+          //_handleTrackingUrls(currentAd, ["mute"]);
+        }
+        else if (isMuted && volume !== lastVolume) {
+          isMuted = false;
+          lastVolume = volume;
+          // TODO: Hook up with new Vast parser util
+          //_handleTrackingUrls(currentAd, ["unmute"]);
+        }
+      }
     };
 
     /**
@@ -292,8 +347,6 @@ OO.Ads.manager(function(_, $) {
       var requestUrl = '';
       return requestUrl;
     };
-
   };
-
   return new SsaiPulse();
 });
