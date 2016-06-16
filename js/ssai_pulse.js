@@ -41,6 +41,9 @@ OO.Ads.manager(function(_, $) {
     var isMuted = false;
     var lastVolume = -1;
 
+    // Smart URL parameter
+    var SMART_PLAYER = "oosm=1";
+
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
      * remote JS files.
@@ -336,16 +339,14 @@ OO.Ads.manager(function(_, $) {
     // Helper Functions
 
     /**
-     * TODO: Fill mock function
-     * Appends a unique identifer to the request URL that signifies the player is "special"
+     * Appends the smart player identifier to the request URL.
      * @private
      * @method SsaiPulse#makeSpecialUrl
      * @param {string} url The stream url
      * @returns {string} The modified stream url with the appended unique identifier.
      */
-    var makeSpecialUrl = function(url) {
-      var requestUrl = '';
-      return requestUrl;
+    var makeSmartUrl = function(url) {
+      return url.concat(SMART_PLAYER);
     };
   };
   return new SsaiPulse();
