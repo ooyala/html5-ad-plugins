@@ -14,6 +14,8 @@ require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/utils/environment.js");
 
+require("../utils/VastParser.js");
+
 OO.Ads.manager(function(_, $) {
   /**
    * @class SsaiPulse
