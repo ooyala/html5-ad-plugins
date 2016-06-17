@@ -51,6 +51,19 @@ OO.Ads.manager(function(_, $) {
 
     var adId = {};
 
+    // The expected query parameters in an ID3 Metadata String
+    var ID3_QUERY_PARAMETERS = {
+      // The ID of the ad, will correspond to an ad id found in the Vast Ad Response XML
+      AD_ID: "adid",
+
+      // At the moment this value does not mean anything. PRD states this parameter should actually
+      // be the ad progress percentage. Live team the progress percentage will be added for Q3.
+      TIME: "t",
+
+      // Duration of the ad
+      DURATION: "d"
+    };
+
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
      * remote JS files.
@@ -66,8 +79,7 @@ OO.Ads.manager(function(_, $) {
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
 
       // ID3 Tag
-      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
-
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this)); 
       // Stream URL
       amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
 
@@ -250,7 +262,7 @@ OO.Ads.manager(function(_, $) {
      * @param {string} url The stream url
      */
     this.onContentUrlChanged = function(eventName, url) {
-      requestUrl = makeSmartUrl(url);
+      requestUrl = _makeSmartUrl(url);
       amc.updateMainStreamUrl(url);
     };
 
@@ -266,7 +278,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.onVideoTagFound = function(eventName, videoId, tagType, metadata) {
       OO.log("TAG FOUND w/ args: ", arguments);
-      sendRequest(requestUrl);
+      _sendRequest(requestUrl);
     };
 
     this.onResponse = function(xml) {
@@ -355,21 +367,21 @@ OO.Ads.manager(function(_, $) {
     /**
      * Appends the smart player identifier to the request URL.
      * @private
-     * @method SsaiPulse#makeSpecialUrl
+     * @method SsaiPulse#_makeSmartUrl
      * @param {string} url The stream url
      * @returns {string} The modified stream url with the appended unique identifier.
      */
-    var makeSmartUrl = function(url) {
+    var _makeSmartUrl = function(url) {
       return url.concat(SMART_PLAYER);
     };
 
     /**
      * Attempts to load the Ad after normalizing the url.
      * @private
-     * @method SsaiPulse#sendRequest
+     * @method SsaiPulse#_sendRequest
      * @param {string} url The url that contains the Ad creative
      */
-    var sendRequest = _.bind(function(url) {
+    var _sendRequest = _.bind(function(url) {
       $.ajax({
         url: OO.getNormalizedTagUrl(url, this.embedCode),
         type: 'GET',
@@ -383,6 +395,84 @@ OO.Ads.manager(function(_, $) {
         error: _.bind(this.onRequestError, this)
       });
     }, this);
+
+    /**
+     * TODO: Improve return statement jsdoc
+     * Parses the ID3 metadata that is received.
+     * @private
+     * @method SsaiPulse#_parseId3Object
+     * @param {object} id3Object The ID3 metadata passed in
+     * @returns {object} An object with "adId", "time", and "duration" as properties.
+     */
+    var _parseId3Object = _.bind(function(id3Object) {
+      var parsedId3Object = null;
+      if (id3Object.hasOwnProperty("TXXX")) {
+        var id3String = id3Object.TXXX;
+        var parsedId3Object = _parseId3String(id3String);
+      }
+      else {
+        OO.log("SSAI Pulse: Expected ID3 Metadata Object to have a 'TXXX' property");
+      }
+      return parsedId3Object;
+    }, this);
+
+    /**
+     * TODO: Improve return statement jsdoc
+     * Parses the string contained in the ID3 metadata.
+     * @private
+     * @method SsaiPulse#_parseId3String
+     * @param {string} id3String The string contained under the "TXXX" property to parse
+     * @returns {object} An object with "adId", "time", and "duration" as properties.
+     */
+    var _parseId3String = _.bind(function(id3String) {
+      var parsedId3Object = {};
+      var queryParameterStrings = id3String.split("&");
+      if (queryParameterStrings.length === 3) {
+        for (var i = 0; i < queryParameterStrings.length; i++) {
+          var queryParameterString = queryParameterStrings[i];
+          var queryParameterSplit = queryParameterString.split("=");
+          var queryParameterKey = queryParameterSplit[0];
+          var queryParameterValue = queryParameterSplit[1];
+          if (queryParameterKey === ID3_QUERY_PARAMETERS.AD_ID) {
+            parsedId3Object.adId = queryParameterValue;
+          }
+          else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME) {
+            parsedId3Object.time = queryParameterValue;
+          }
+          else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION) {
+            parsedId3Object.duration = queryParameterValue;
+          }
+          else {
+            OO.log("SSAI Pulse: " + queryParameterKey + " is an unrecognized query parameter.\n" +
+                   "Recognized query parameters: " + _id3QueryParametersToString());
+            parsedId3Object = null;
+            break;
+          }
+        }
+      }
+      else {
+        OO.log("SSAI Pulse: ID3 Metadata String contains" + queryParameterStrings.length +
+               "query parameters, but was expected to contain 3 query parameters: " +
+               _id3QueryParametersToString());
+        parsedId3Object = null;
+      }
+      return parsedId3Object;
+    }, this);
+
+    /**
+     * Helper function to pretty print the ID3_QUERY_PARAMETERS object.
+     * @private
+     * @method SsaiPulse#_id3QueryParametersToString
+     * @returns {string} The string: "adid, t, d".
+     */
+    var _id3QueryParametersToString = function() {
+      var result = "";
+      _.each(_.values(ID3_QUERY_PARAMETERS), function(value) {
+        result = result + value + ", ";
+      });
+      result = result.slice(0, -2);
+      return result;
+    };
   };
   return new SsaiPulse();
 });
