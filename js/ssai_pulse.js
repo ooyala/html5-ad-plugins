@@ -44,7 +44,12 @@ OO.Ads.manager(function(_, $) {
     var lastVolume = -1;
 
     // Smart URL parameter
-    var SMART_PLAYER = "oosm=1";
+    // First query string appended
+    var SMART_PLAYER = "?oosm=1";
+
+    var requestUrl = "";
+
+    var adId = {};
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -63,9 +68,8 @@ OO.Ads.manager(function(_, $) {
       // ID3 Tag
       amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
 
-      // TODO: Change mock event
       // Stream URL
-      //amc.addPlayerListener(amc.EVENTS.STREAM_URL_RECEIVED, _.bind(this.onStreamUrlReceived, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
 
       // Listeners for tracking events
       this.amc.addPlayerListener(this.amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
@@ -241,15 +245,13 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * TODO: Fill mock
      * @public
-     * @method SsaiPulse#onStreamUrlReceived
+     * @method SsaiPulse#onContentUrlChanged
      * @param {string} url The stream url
      */
-    this.onStreamUrlReceived = function(eventName, url) {
-      requestUrl = makeSpecialUrl(url);
-      // TODO: Change mock function
-      amc.publishStreamUrl(url);
+    this.onContentUrlChanged = function(eventName, url) {
+      requestUrl = makeSmartUrl(url);
+      amc.updateMainStreamUrl(url);
     };
 
     /**
@@ -264,6 +266,16 @@ OO.Ads.manager(function(_, $) {
      */
     this.onVideoTagFound = function(eventName, videoId, tagType, metadata) {
       OO.log("TAG FOUND w/ args: ", arguments);
+      sendRequest(requestUrl);
+    };
+
+    this.onResponse = function(xml) {
+      console.log("SSAI Pulse: Response");
+      console.log(xml);
+    };
+
+    this.onRequestError = function() {
+      console.log("SSAI Pulse: Error");
     };
 
     /**
@@ -350,6 +362,27 @@ OO.Ads.manager(function(_, $) {
     var makeSmartUrl = function(url) {
       return url.concat(SMART_PLAYER);
     };
+
+    /**
+     * Attempts to load the Ad after normalizing the url.
+     * @private
+     * @method SsaiPulse#sendRequest
+     * @param {string} url The url that contains the Ad creative
+     */
+    var sendRequest = _.bind(function(url) {
+      $.ajax({
+        url: OO.getNormalizedTagUrl(url, this.embedCode),
+        type: 'GET',
+        beforeSend: function(xhr) {
+          xhr.withCredentials = true;
+        },
+        dataType: "xml",
+        crossDomain: true,
+        cache:false,
+        success: _.bind(this.onResponse, this),
+        error: _.bind(this.onRequestError, this)
+      });
+    }, this);
   };
   return new SsaiPulse();
 });
