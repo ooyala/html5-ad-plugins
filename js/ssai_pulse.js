@@ -257,6 +257,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * Called when the player creates a new video element and selects the stream url.
      * @public
      * @method SsaiPulse#onContentUrlChanged
      * @param {string} url The stream url
