@@ -37,6 +37,7 @@ OO.Ads.manager(function(_, $) {
     this.testMode = false;
 
     this.currentId3Object = null;
+    this.currentAd = null;
 
     var amc  = null;
 
@@ -69,6 +70,9 @@ OO.Ads.manager(function(_, $) {
       // Duration of the ad
       DURATION: "d"
     };
+
+    // variable to store the timeout used to keep track of how long an SSAI ad plays
+    var adDurationTimeout;
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -150,11 +154,28 @@ OO.Ads.manager(function(_, $) {
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
     this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) {
+      if (this.currentAd && this.currentAd !== ad) {
+        clearAdDurationTimeout();
+      }
+      this.currentAd = ad;
+
+      amc.notifyLinearAdStarted(ad.id, {
+        name: ad.ad.name,
+        hasClickUrl: true,
+        duration: ad.duration,
+        ssai: ad.ad.ssai,
+        isLive: ad.ad.isLive
+      });
       // When the ad impression has started or when the first ad in a set of podded ads has begun,  trigger
       //   adStartedCallback
       // When the ad or group of podded ads are done, trigger adEndedCallback
       // Each time an ad impression starts, trigger adStartedCallback
       // Each time an ad ends, trigger adEndedCallback
+    };
+
+    var clearAdDurationTimeout = function() {
+      clearTimeout(adDurationTimeout);
+      adDurationTimeout = null;
     };
 
     /**
@@ -278,16 +299,33 @@ OO.Ads.manager(function(_, $) {
         requestUrl = baseRequestUrl;
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
         if (!this.testMode) {
-          _sendRequest(requestUrl);
+          // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
+          //_sendRequest(requestUrl);
+          this.onResponse(null);
+          _.delay(_adEndedCallback, this.currentId3Object.duration);
         }
       }
     };
 
-    this.onResponse = function(xml) {
+    /**
+     * Called if the ajax call succeeds
+     * @public
+     * @method SsaiPulse#onResponse
+     * @param {XMLDocument} xml The xml returned from loading the ad
+     * @param {number} adDuration The duration of the current ad
+     */
+    this.onResponse = function(xml, adDuration) {
       console.log("SSAI Pulse: Response");
-      console.log(xml);
+      // Call VastParser code
+      // var vastAds = OO.VastParser.parser(xml);
+      _forceMockAd(adDuration);
     };
 
+    /**
+     * Called if the ajax call fails
+     * @public
+     * @method SsaiPulse#onRequestError
+     */
     this.onRequestError = function() {
       console.log("SSAI Pulse: Error");
     };
@@ -374,7 +412,7 @@ OO.Ads.manager(function(_, $) {
      * @returns {string} The modified stream url with the appended unique identifier.
      */
     var _makeSmartUrl = function(url) {
-      return url.concat(SMART_PLAYER);
+      return url + SMART_PLAYER;
     };
 
     var _appendAdsProxyQueryParameters = function(url, adId) {
@@ -449,10 +487,10 @@ OO.Ads.manager(function(_, $) {
             parsedId3Object.adId = queryParameterValue;
           }
           else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME) {
-            parsedId3Object.time = queryParameterValue;
+            parsedId3Object.time = +queryParameterValue;
           }
           else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION) {
-            parsedId3Object.duration = queryParameterValue;
+            parsedId3Object.duration = +queryParameterValue;
           }
           else {
             OO.log("SSAI Pulse: " + queryParameterKey + " is an unrecognized query parameter.\n" +
@@ -484,6 +522,32 @@ OO.Ads.manager(function(_, $) {
       });
       result = result.slice(0, -2);
       return result;
+    };
+
+    /**
+     * Temporary mock function to force an ad to play until live team fixes ad proxy.
+     * @private
+     * @method SsaiPulse#_forceMockAd
+     * @param {number} adDuration The duration of the current ad
+     */
+    var _forceMockAd = function(adDuration) {
+      var ad1 = {
+        clickthrough: "http://www.ooyala.com",
+        name: "Test SSAI Ad 1",
+        ssai: true,
+        isLive: true
+      };
+      amc.forceAdToPlay(this.name, ad1, amc.ADTYPE.LINEAR_VIDEO, {}, adDuration);
+    };
+
+    /**
+     * Callback used when the duration of an ad has passed.
+     * @private
+     * @method SsaiPulse#_adEndedCallback
+     */
+    var _adEndedCallback = function() {
+      amc.notifyLinearAdEnded(this.currentId3Object.adId);
+      amc.notifyPodEnded(this.currentId3Object.adId);
     };
   };
   return new SsaiPulse();
