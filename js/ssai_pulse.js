@@ -34,6 +34,9 @@ OO.Ads.manager(function(_, $) {
     this.name = "ssai-pulse-ads-manager";
     this.ready = false;
     this.videoRestrictions = {};
+    this.testMode = false;
+
+    this.currentId3Object = null;
 
     var amc  = null;
 
@@ -43,13 +46,16 @@ OO.Ads.manager(function(_, $) {
     var isMuted = false;
     var lastVolume = -1;
 
-    // Smart URL parameter
-    // First query string appended
-    var SMART_PLAYER = "?oosm=1";
+    // Params required for ads proxy ads request
+    var SMART_PLAYER = "&oosm=1";
+    var OFFSET_PARAM = "&offset=";
+    var OFFSET_VALUE = "5";
+    var AD_ID_PARAM = "&aid=";
 
+    var baseRequestUrl = "";
     var requestUrl = "";
 
-    var adId = {};
+    var adIdDictionary = {};
 
     // The expected query parameters in an ID3 Metadata String
     var ID3_QUERY_PARAMETERS = {
@@ -79,7 +85,7 @@ OO.Ads.manager(function(_, $) {
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
 
       // ID3 Tag
-      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this)); 
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
       // Stream URL
       amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
 
@@ -263,8 +269,10 @@ OO.Ads.manager(function(_, $) {
      * @param {string} url The stream url
      */
     this.onContentUrlChanged = function(eventName, url) {
-      requestUrl = _makeSmartUrl(url);
+      //baseRequestUrl = _makeSmartUrl(url);
+      baseRequestUrl = url;
       amc.updateMainStreamUrl(url);
+      baseRequestUrl = preformatUrl(baseRequestUrl);
     };
 
     /**
@@ -279,7 +287,16 @@ OO.Ads.manager(function(_, $) {
      */
     this.onVideoTagFound = function(eventName, videoId, tagType, metadata) {
       OO.log("TAG FOUND w/ args: ", arguments);
-      _sendRequest(requestUrl);
+      this.currentId3Object = _parseId3Object(metadata);
+      if (!_.has(adIdDictionary, this.currentId3Object.adId)) {
+        adIdDictionary[this.currentId3Object.adId] = true;
+        requestUrl = baseRequestUrl;
+        requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
+        console.log("Request URL: " + requestUrl);
+        if (!this.testMode) {
+          _sendRequest(requestUrl);
+        }
+      }
     };
 
     this.onResponse = function(xml) {
@@ -376,6 +393,16 @@ OO.Ads.manager(function(_, $) {
       return url.concat(SMART_PLAYER);
     };
 
+    var _appendAdsProxyQueryParameters = function(url, adId) {
+      // vastUrl + '&offset=5&aid=' + adid
+      return url + OFFSET_PARAM + OFFSET_VALUE + AD_ID_PARAM + adId;
+    };
+
+    var preformatUrl = function(url){
+      //return ((url||'').indexOf('https') === -1 ? (url||'').replace('http:','https:') : url||'').replace('/hls/','/ai/');
+      return (url ||'').replace('/hls/','/ai/');
+    };
+
     /**
      * Attempts to load the Ad after normalizing the url.
      * @private
@@ -384,7 +411,7 @@ OO.Ads.manager(function(_, $) {
      */
     var _sendRequest = _.bind(function(url) {
       $.ajax({
-        url: OO.getNormalizedTagUrl(url, this.embedCode),
+        url: url,
         type: 'GET',
         beforeSend: function(xhr) {
           xhr.withCredentials = true;
@@ -407,9 +434,9 @@ OO.Ads.manager(function(_, $) {
      */
     var _parseId3Object = _.bind(function(id3Object) {
       var parsedId3Object = null;
-      if (id3Object.hasOwnProperty("TXXX")) {
+      if (_.has(id3Object, "TXXX")) {
         var id3String = id3Object.TXXX;
-        var parsedId3Object = _parseId3String(id3String);
+        parsedId3Object = _parseId3String(id3String);
       }
       else {
         OO.log("SSAI Pulse: Expected ID3 Metadata Object to have a 'TXXX' property");
