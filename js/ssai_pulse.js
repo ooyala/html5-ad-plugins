@@ -408,6 +408,7 @@ OO.Ads.manager(function(_, $) {
       this.currentAd = null;
       this.currentId3Object = null;
       adIdDictionary = {};
+      _removeAMCListeners();
     };
 
     var _onContentChanged = function() {
@@ -597,6 +598,21 @@ OO.Ads.manager(function(_, $) {
       clearTimeout(adDurationTimeout);
       adDurationTimeout = null;
     };
+
+    /**
+     * Remove listeners from the Ad Manager Controller about playback.
+     * @private
+     * @method SsaiPulse#_removeAMCListeners
+     */
+    var _removeAMCListeners = _.bind(function() {
+      if (amc) {
+        amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
+        amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
+        amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
+        amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
+        amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+      }
+    }, this);
   };
   return new SsaiPulse();
 });
