@@ -38,6 +38,7 @@ describe('ad_manager_freewheel', function() {
     fw.loadMetadata({"fw_mrm_network_id":"100",
                      "html5_ssl_ad_server":"https://blah",
                      "html5_ad_server": "http://blah"},
+                    {},
                     {});
     amc.timeline = fw.buildTimeline();
   };
@@ -78,6 +79,8 @@ describe('ad_manager_freewheel', function() {
   afterEach(_.bind(function() {
     fw.destroy();
     fwContext = null;
+    getTemporalSlots = function() {};
+    setVideoAsset = function() {};
   }, this));
 
   //   ------   TESTS   ------
@@ -112,7 +115,150 @@ describe('ad_manager_freewheel', function() {
     expect(function() { fw.loadMetadata({"fw_mrm_network_id":"100",
                                          "html5_ssl_ad_server":"https://blah",
                                          "html5_ad_server": "http://blah"},
+                                        {},
                                         {}); }).to.not.throwException();
+  });
+
+  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is not provided', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var videoAssetId = null;
+    setVideoAsset = function(id) {
+      videoAssetId = id;
+    };
+    expect(function() { fw.loadMetadata(
+      {"fw_mrm_network_id":"100",
+        "html5_ssl_ad_server":"https://blah",
+        "html5_ad_server": "http://blah",
+        "use_external_id":false,
+        "embedCode":"myEmbedCode"
+      },
+      {},
+      {}); }).to.not.throwException();
+    amc.timeline = fw.buildTimeline();
+    play();
+    fw.playAd(amc.timeline[0]);
+    expect(videoAssetId).to.be("myEmbedCode");
+  });
+
+  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is false', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var videoAssetId = null;
+    setVideoAsset = function(id) {
+      videoAssetId = id;
+    };
+    expect(function() { fw.loadMetadata(
+      {"fw_mrm_network_id":"100",
+        "html5_ssl_ad_server":"https://blah",
+        "html5_ad_server": "http://blah",
+        "use_external_id":false,
+        "embedCode":"myEmbedCode"
+      },
+      {},
+      {
+        "external_id":"myExternalId"
+      }); }).to.not.throwException();
+    amc.timeline = fw.buildTimeline();
+    play();
+    fw.playAd(amc.timeline[0]);
+    expect(videoAssetId).to.be("myEmbedCode");
+  });
+
+  it('Init: ad manager can set video asset id to external id in loadMetadata function when use_external_id is true', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var videoAssetId = null;
+    setVideoAsset = function(id) {
+      videoAssetId = id;
+    };
+    expect(function() { fw.loadMetadata(
+      {"fw_mrm_network_id":"100",
+        "html5_ssl_ad_server":"https://blah",
+        "html5_ad_server": "http://blah",
+        "use_external_id":true,
+        "embedCode":"myEmbedCode"
+      },
+      {},
+      {
+        "external_id":"myExternalId"
+      }); }).to.not.throwException();
+    amc.timeline = fw.buildTimeline();
+    play();
+    fw.playAd(amc.timeline[0]);
+    expect(videoAssetId).to.be("myExternalId");
+  });
+
+  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is true but there is no external id', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var videoAssetId = null;
+    setVideoAsset = function(id) {
+      videoAssetId = id;
+    };
+    expect(function() { fw.loadMetadata(
+      {"fw_mrm_network_id":"100",
+        "html5_ssl_ad_server":"https://blah",
+        "html5_ad_server": "http://blah",
+        "use_external_id":true,
+        "embedCode":"myEmbedCode"
+      },
+      {},
+      {}); }).to.not.throwException();
+    amc.timeline = fw.buildTimeline();
+    play();
+    fw.playAd(amc.timeline[0]);
+    expect(videoAssetId).to.be("myEmbedCode");
+  });
+
+  it('Init: ad manager can set video asset id to external id with a filter in loadMetadata function when use_external_id is true', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var videoAssetId = null;
+    setVideoAsset = function(id) {
+      videoAssetId = id;
+    };
+    expect(function() { fw.loadMetadata(
+      {"fw_mrm_network_id":"100",
+        "html5_ssl_ad_server":"https://blah",
+        "html5_ad_server": "http://blah",
+        "use_external_id":true,
+        "external_id_filter":"[^:]*$",
+        "embedCode":"myEmbedCode"
+      },
+      {},
+      {
+        "external_id":"espn:myExternalId"
+      }); }).to.not.throwException();
+    amc.timeline = fw.buildTimeline();
+    play();
+    fw.playAd(amc.timeline[0]);
+    expect(videoAssetId).to.be("myExternalId");
+  });
+
+  it('Init: ad manager can set video asset id to external id with a non-applicable filter in loadMetadata function when use_external_id is true', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var videoAssetId = null;
+    setVideoAsset = function(id) {
+      videoAssetId = id;
+    };
+    expect(function() { fw.loadMetadata(
+      {"fw_mrm_network_id":"100",
+        "html5_ssl_ad_server":"https://blah",
+        "html5_ad_server": "http://blah",
+        "use_external_id":true,
+        "external_id_filter":"",
+        "embedCode":"myEmbedCode"
+      },
+      {},
+      {
+        "external_id":"espn:myExternalId"
+      }); }).to.not.throwException();
+    amc.timeline = fw.buildTimeline();
+    play();
+    fw.playAd(amc.timeline[0]);
+    expect(videoAssetId).to.be("espn:myExternalId");
   });
 
   it('Init: ad manager is ready', function(){
@@ -122,6 +268,7 @@ describe('ad_manager_freewheel', function() {
     fw.loadMetadata({"fw_mrm_network_id":"100",
                      "html5_ssl_ad_server":"https://blah",
                      "html5_ad_server": "http://blah"},
+                    {},
                     {});
     expect(fw.ready).to.be(true);
   });
