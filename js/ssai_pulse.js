@@ -155,13 +155,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) {
       adMode = true;
-
-      // clear timeouts and notify end of ad
-      if (this.currentAd && this.currentAd !== ad) {
-        _adEndedCallback();
-      }
       this.currentAd = ad;
-
       amc.notifyLinearAdStarted(ad.id, {
         name: ad.ad.name,
         hasClickUrl: true,
@@ -169,14 +163,6 @@ OO.Ads.manager(function(_, $) {
         ssai: ad.ad.ssai,
         isLive: ad.ad.isLive
       });
-
-      //adDurationTimeout = setTimeout(_adEndedCallback, this.currentId3Object.duration * 1000);
-
-      // When the ad impression has started or when the first ad in a set of podded ads has begun,  trigger
-      //   adStartedCallback
-      // When the ad or group of podded ads are done, trigger adEndedCallback
-      // Each time an ad impression starts, trigger adStartedCallback
-      // Each time an ad ends, trigger adEndedCallback
     };
 
     /**
@@ -257,6 +243,7 @@ OO.Ads.manager(function(_, $) {
      * @public
     */
     this.playerClicked = function(amcAd, showPage) {
+      window.open(amcAd.ad.clickthrough);
     };
 
     /**
@@ -266,7 +253,6 @@ OO.Ads.manager(function(_, $) {
      * @public
      */
     this.adVideoPlaying = function() {
-
     };
 
     /**
@@ -299,10 +285,19 @@ OO.Ads.manager(function(_, $) {
         adIdDictionary[this.currentId3Object.adId] = true;
         requestUrl = baseRequestUrl;
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
+
+        // Clear any previous timeouts and notify end of ad.
+        if (this.currentAd) {
+          _adEndedCallback();
+        }
+
+        // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
         if (!this.testMode) {
-          // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
           //_sendRequest(requestUrl);
           this.onResponse(null, this.currentId3Object.duration);
+
+          // Set timer for duration of the ad.
+          adDurationTimeout = _.delay(_adEndedCallback, this.currentId3Object.duration * 1000);
         }
       }
     };
@@ -318,7 +313,7 @@ OO.Ads.manager(function(_, $) {
       console.log("SSAI Pulse: Response");
       // Call VastParser code
       // var vastAds = OO.VastParser.parser(xml);
-      _forceMockAd(adDuration);
+      var _forceMockAd(adDuration);
     };
 
     /**
@@ -549,10 +544,8 @@ OO.Ads.manager(function(_, $) {
      */
     var _forceMockAd = function(adDuration) {
       var ad1 = {
-        adId: "adId",
-        duration: adDuration,
-        clickthrough: "http://www.ooyala.com",
-        name: "Test SSAI Ad 1",
+        clickthrough: "http://www.google.com",
+        name: "Test SSAI Ad",
         ssai: true,
         isLive: true
       };
@@ -565,8 +558,8 @@ OO.Ads.manager(function(_, $) {
      * @method SsaiPulse#_adEndedCallback
      */
     var _adEndedCallback = _.bind(function() {
-      amc.notifyLinearAdEnded(this.currentAd.adId);
-      amc.notifyPodEnded(this.currentAd.adId);
+      amc.notifyLinearAdEnded(this.currentAd.id);
+      amc.notifyPodEnded(this.currentAd.id);
       _clearAdDurationTimeout();
       this.currentAd = null;
       admode = false;
