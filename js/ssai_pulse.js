@@ -48,9 +48,11 @@ OO.Ads.manager(function(_, $) {
     var lastVolume = -1;
 
     // Params required for ads proxy ads request
+    // Request URL will already have initial query parameters; none of these query parameters
+    // will be the first (will not need a prefixed "?").
     var SMART_PLAYER = "&oosm=1";
     var OFFSET_PARAM = "&offset=";
-    var OFFSET_VALUE = "5";
+    var OFFSET_VALUE = "5"; // seconds
     var AD_ID_PARAM = "&aid=";
 
     var baseRequestUrl = "";
@@ -138,6 +140,7 @@ OO.Ads.manager(function(_, $) {
       //If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
       //If the element is not created due to lack of support from the available video plugins,
       //the ad will be skipped
+      return null;
     };
 
     /**
@@ -294,12 +297,14 @@ OO.Ads.manager(function(_, $) {
 
           // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
           if (!this.testMode) {
-            //_sendRequest(requestUrl);
-            this.onResponse(null, this.currentId3Object.duration);
-
             // Set timer for duration of the ad.
             adDurationTimeout = _.delay(_adEndedCallback, this.currentId3Object.duration * 1000);
+
+            //_sendRequest(requestUrl);
           }
+          // Remove this if calling _sendRequest()
+          this.onResponse(null, this.currentId3Object.duration);
+
         }
       }
     };
@@ -312,7 +317,7 @@ OO.Ads.manager(function(_, $) {
      * @param {number} adDuration The duration of the current ad
      */
     this.onResponse = function(xml, adDuration) {
-      console.log("SSAI Pulse: Response");
+      OO.log("SSAI Pulse: Response");
       // Call VastParser code
       // var vastAds = OO.VastParser.parser(xml);
       _forceMockAd(adDuration);
@@ -324,7 +329,7 @@ OO.Ads.manager(function(_, $) {
      * @method SsaiPulse#onRequestError
      */
     this.onRequestError = function() {
-      console.log("SSAI Pulse: Error");
+      OO.log("SSAI Pulse: Error");
     };
 
     /**
@@ -394,6 +399,9 @@ OO.Ads.manager(function(_, $) {
     this.destroy = function() {
       // Stop any running ads
       this.ready = false;
+      this.currentAd = null;
+      this.currentId3Object = null;
+      adIdDictionary = {};
     };
 
     var _onContentChanged = function() {
@@ -565,11 +573,11 @@ OO.Ads.manager(function(_, $) {
      * @method SsaiPulse#_adEndedCallback
      */
     var _adEndedCallback = _.bind(function() {
+      _clearAdDurationTimeout();
       amc.notifyLinearAdEnded(this.currentAd.id);
       amc.notifyPodEnded(this.currentAd.id);
-      _clearAdDurationTimeout();
+      adMode = false;
       this.currentAd = null;
-      admode = false;
     }, this);
 
     /**
