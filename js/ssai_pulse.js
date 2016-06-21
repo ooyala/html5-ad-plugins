@@ -291,42 +291,59 @@ OO.Ads.manager(function(_, $) {
       OO.log("TAG FOUND w/ args: ", arguments);
       this.currentId3Object = _parseId3Object(metadata);
       if (this.currentId3Object) {
+        requestUrl = baseRequestUrl;
+        requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
+
+        // Check to see if we already have adId in dictionary
         if (!_.has(adIdDictionary, this.currentId3Object.adId)) {
           adIdDictionary[this.currentId3Object.adId] = true;
-          requestUrl = baseRequestUrl;
-          requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
 
           // Clear any previous timeouts and notify end of ad.
           if (this.currentAd) {
             _adEndedCallback();
           }
 
-          // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
-          if (!this.testMode) {
-            // Set timer for duration of the ad.
-            adDurationTimeout = _.delay(_adEndedCallback, this.currentId3Object.duration * 1000);
-
-            //_sendRequest(requestUrl);
-          }
-          // Remove this if calling _sendRequest()
-          this.onResponse(null, this.currentId3Object.duration);
-
+          _handleId3Ad(this.currentId3Object);
         }
+        /*
+         *else if (!this.currentAd || // Check if there is a current ad, if there isn't, replay the ad that was cached.
+         *         (this.currentAd && this.currentAd.id3AdId !== this.currentAd3Object.adId)) { // Check if the ad already playing is not itself
+         *  _handleId3Ad(this.currentId3Object);
+         *}
+         */
       }
     };
+
+    /**
+     * Helper function to handle the ID3 Ad timeout and request.
+     * @private
+     * @method SsaiPulse#_handleId3Ad
+     * @param {object} id3Object The ID3 object
+     */
+    var _handleId3Ad = _.bind(function(id3Object) {
+      // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
+      this.onResponse(null, id3Object);
+      if (!this.testMode) {
+        // Set timer for duration of the ad.
+        adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
+
+        //_sendRequest(requestUrl);
+      }
+      // Remove this if calling _sendRequest()
+    }, this);
 
     /**
      * Called if the ajax call succeeds
      * @public
      * @method SsaiPulse#onResponse
      * @param {XMLDocument} xml The xml returned from loading the ad
-     * @param {number} adDuration The duration of the current ad
+     * @param {object} id3Object The ID3 object
      */
-    this.onResponse = function(xml, adDuration) {
+    this.onResponse = function(xml, id3Object) {
       OO.log("SSAI Pulse: Response");
       // Call VastParser code
       // var vastAds = OO.VastParser.parser(xml);
-      _forceMockAd(adDuration);
+      _forceMockAd(id3Object);
     };
 
     /**
@@ -562,16 +579,16 @@ OO.Ads.manager(function(_, $) {
      * Temporary mock function to force an ad to play until live team fixes ad proxy.
      * @private
      * @method SsaiPulse#_forceMockAd
-     * @param {number} adDuration The duration of the current ad
+     * @param {object} id3Object The ID3 object
      */
-    var _forceMockAd = function(adDuration) {
+    var _forceMockAd = function(id3Object) {
       var ad1 = {
         clickthrough: "http://www.google.com",
         name: "Test SSAI Ad",
         ssai: true,
         isLive: true
       };
-      amc.forceAdToPlay(this.name, ad1, amc.ADTYPE.LINEAR_VIDEO, {}, adDuration);
+      amc.forceAdToPlay(this.name, ad1, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
     };
 
     /**
