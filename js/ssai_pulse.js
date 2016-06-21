@@ -281,23 +281,25 @@ OO.Ads.manager(function(_, $) {
     this.onVideoTagFound = function(eventName, videoId, tagType, metadata) {
       OO.log("TAG FOUND w/ args: ", arguments);
       this.currentId3Object = _parseId3Object(metadata);
-      if (!_.has(adIdDictionary, this.currentId3Object.adId)) {
-        adIdDictionary[this.currentId3Object.adId] = true;
-        requestUrl = baseRequestUrl;
-        requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
+      if (this.currentId3Object) {
+        if (!_.has(adIdDictionary, this.currentId3Object.adId)) {
+          adIdDictionary[this.currentId3Object.adId] = true;
+          requestUrl = baseRequestUrl;
+          requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
 
-        // Clear any previous timeouts and notify end of ad.
-        if (this.currentAd) {
-          _adEndedCallback();
-        }
+          // Clear any previous timeouts and notify end of ad.
+          if (this.currentAd) {
+            _adEndedCallback();
+          }
 
-        // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
-        if (!this.testMode) {
-          //_sendRequest(requestUrl);
-          this.onResponse(null, this.currentId3Object.duration);
+          // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
+          if (!this.testMode) {
+            //_sendRequest(requestUrl);
+            this.onResponse(null, this.currentId3Object.duration);
 
-          // Set timer for duration of the ad.
-          adDurationTimeout = _.delay(_adEndedCallback, this.currentId3Object.duration * 1000);
+            // Set timer for duration of the ad.
+            adDurationTimeout = _.delay(_adEndedCallback, this.currentId3Object.duration * 1000);
+          }
         }
       }
     };
@@ -313,7 +315,7 @@ OO.Ads.manager(function(_, $) {
       console.log("SSAI Pulse: Response");
       // Call VastParser code
       // var vastAds = OO.VastParser.parser(xml);
-      var _forceMockAd(adDuration);
+      _forceMockAd(adDuration);
     };
 
     /**
@@ -468,12 +470,14 @@ OO.Ads.manager(function(_, $) {
      */
     var _parseId3Object = _.bind(function(id3Object) {
       var parsedId3Object = null;
-      if (_.has(id3Object, "TXXX")) {
-        var id3String = id3Object.TXXX;
-        parsedId3Object = _parseId3String(id3String);
-      }
-      else {
-        OO.log("SSAI Pulse: Expected ID3 Metadata Object to have a 'TXXX' property");
+      if (id3Object) {
+        if (_.has(id3Object, "TXXX")) {
+          var id3String = id3Object.TXXX;
+          parsedId3Object = _parseId3String(id3String);
+        }
+        else {
+          OO.log("SSAI Pulse: Expected ID3 Metadata Object to have a 'TXXX' property");
+        }
       }
       return parsedId3Object;
     }, this);
@@ -487,36 +491,39 @@ OO.Ads.manager(function(_, $) {
      * @returns {object} An object with "adId", "time", and "duration" as properties.
      */
     var _parseId3String = _.bind(function(id3String) {
-      var parsedId3Object = {};
-      var queryParameterStrings = id3String.split("&");
-      if (queryParameterStrings.length === 3) {
-        for (var i = 0; i < queryParameterStrings.length; i++) {
-          var queryParameterString = queryParameterStrings[i];
-          var queryParameterSplit = queryParameterString.split("=");
-          var queryParameterKey = queryParameterSplit[0];
-          var queryParameterValue = queryParameterSplit[1];
-          if (queryParameterKey === ID3_QUERY_PARAMETERS.AD_ID) {
-            parsedId3Object.adId = queryParameterValue;
-          }
-          else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME) {
-            parsedId3Object.time = +queryParameterValue;
-          }
-          else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION) {
-            parsedId3Object.duration = +queryParameterValue;
-          }
-          else {
-            OO.log("SSAI Pulse: " + queryParameterKey + " is an unrecognized query parameter.\n" +
-                   "Recognized query parameters: " + _id3QueryParametersToString());
-            parsedId3Object = null;
-            break;
+      var parsedId3Object = null;
+      if (id3String) {
+        parsedId3Object = {};
+        var queryParameterStrings = id3String.split("&");
+        if (queryParameterStrings.length === 3) {
+          for (var i = 0; i < queryParameterStrings.length; i++) {
+            var queryParameterString = queryParameterStrings[i];
+            var queryParameterSplit = queryParameterString.split("=");
+            var queryParameterKey = queryParameterSplit[0];
+            var queryParameterValue = queryParameterSplit[1];
+            if (queryParameterKey === ID3_QUERY_PARAMETERS.AD_ID) {
+              parsedId3Object.adId = queryParameterValue;
+            }
+            else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME) {
+              parsedId3Object.time = +queryParameterValue;
+            }
+            else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION) {
+              parsedId3Object.duration = +queryParameterValue;
+            }
+            else {
+              OO.log("SSAI Pulse: " + queryParameterKey + " is an unrecognized query parameter.\n" +
+                     "Recognized query parameters: " + _id3QueryParametersToString());
+              parsedId3Object = null;
+              break;
+            }
           }
         }
-      }
-      else {
-        OO.log("SSAI Pulse: ID3 Metadata String contains" + queryParameterStrings.length +
-               "query parameters, but was expected to contain 3 query parameters: " +
-               _id3QueryParametersToString());
-        parsedId3Object = null;
+        else {
+          OO.log("SSAI Pulse: ID3 Metadata String contains" + queryParameterStrings.length +
+                 "query parameters, but was expected to contain 3 query parameters: " +
+                 _id3QueryParametersToString());
+          parsedId3Object = null;
+        }
       }
       return parsedId3Object;
     }, this);

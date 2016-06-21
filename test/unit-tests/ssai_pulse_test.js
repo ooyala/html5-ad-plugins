@@ -137,4 +137,34 @@ describe('ad_manager_ssai_pulse', function() {
       "html5_ad_server": "http://blah"}, {}, content);
     expect(SsaiPulse.ready).to.be(true);
   });
+
+  it('ID3 Object should be parsed', function() {
+    SsaiPulse.initialize(amc);
+    var mockId3Tag = {
+      TXXX: "adid=adid1&t=0&d=100"
+    };
+    var expectedResult = {
+      adId: "adid1",
+      time: 0,
+      duration: 100
+    };
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OO._.isEqual(SsaiPulse.currentId3Object, expectedResult)).to.be(true);
+
+    // test bad inputs
+    mockId3Tag.TXXX = "adid=adid2&banana=0";
+    expectedResult = null;
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(SsaiPulse.currentId3Object).to.be(null);
+
+    mockId3Tag.TXXX = "";
+    expectedResult = null;
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(SsaiPulse.currentId3Object).to.be(null);
+
+    mockId3Tag.TXXX = null;
+    expectedResult = null;
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(SsaiPulse.currentId3Object).to.be(null);
+  });
 });
