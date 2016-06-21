@@ -154,8 +154,11 @@ OO.Ads.manager(function(_, $) {
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
     this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) {
+      adMode = true;
+
+      // clear timeouts and notify end of ad
       if (this.currentAd && this.currentAd !== ad) {
-        clearAdDurationTimeout();
+        _adEndedCallback();
       }
       this.currentAd = ad;
 
@@ -166,16 +169,14 @@ OO.Ads.manager(function(_, $) {
         ssai: ad.ad.ssai,
         isLive: ad.ad.isLive
       });
+
+      //adDurationTimeout = setTimeout(_adEndedCallback, this.currentId3Object.duration * 1000);
+
       // When the ad impression has started or when the first ad in a set of podded ads has begun,  trigger
       //   adStartedCallback
       // When the ad or group of podded ads are done, trigger adEndedCallback
       // Each time an ad impression starts, trigger adStartedCallback
       // Each time an ad ends, trigger adEndedCallback
-    };
-
-    var clearAdDurationTimeout = function() {
-      clearTimeout(adDurationTimeout);
-      adDurationTimeout = null;
     };
 
     /**
@@ -278,7 +279,7 @@ OO.Ads.manager(function(_, $) {
       //baseRequestUrl = _makeSmartUrl(url);
       baseRequestUrl = url;
       amc.updateMainStreamUrl(url);
-      baseRequestUrl = preformatUrl(baseRequestUrl);
+      baseRequestUrl = _preformatUrl(baseRequestUrl);
     };
 
     /**
@@ -301,8 +302,7 @@ OO.Ads.manager(function(_, $) {
         if (!this.testMode) {
           // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
           //_sendRequest(requestUrl);
-          this.onResponse(null);
-          _.delay(_adEndedCallback, this.currentId3Object.duration);
+          this.onResponse(null, this.currentId3Object.duration);
         }
       }
     };
@@ -396,6 +396,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.destroy = function() {
       // Stop any running ads
+      this.ready = false;
     };
 
     var _onContentChanged = function() {
@@ -415,12 +416,28 @@ OO.Ads.manager(function(_, $) {
       return url + SMART_PLAYER;
     };
 
+    /**
+     * Helper function to append "offset" and "aid" query parameters to the request URL.
+     * @private
+     * @method SsaiPulse#_appendAdsProxyQueryParameters
+     * @param {string} url The request URL
+     * @param {string} adId The ID of the ad
+     * @returns {string} The request URL with the appended query parameters.
+     */
     var _appendAdsProxyQueryParameters = function(url, adId) {
       // vastUrl + '&offset=5&aid=' + adid
       return url + OFFSET_PARAM + OFFSET_VALUE + AD_ID_PARAM + adId;
     };
 
-    var preformatUrl = function(url){
+    /**
+     * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
+     * the Vast Ad Response from the ads proxy.
+     * @private
+     * @method SsaiPulse#_preformatUrl
+     * @param {string} url The request URL
+     * @returns {string} The request URL with the formatted request URL.
+     */
+    var _preformatUrl = function(url){
       //return ((url||'').indexOf('https') === -1 ? (url||'').replace('http:','https:') : url||'').replace('/hls/','/ai/');
       return (url ||'').replace('/hls/','/ai/');
     };
@@ -532,6 +549,8 @@ OO.Ads.manager(function(_, $) {
      */
     var _forceMockAd = function(adDuration) {
       var ad1 = {
+        adId: "adId",
+        duration: adDuration,
         clickthrough: "http://www.ooyala.com",
         name: "Test SSAI Ad 1",
         ssai: true,
@@ -545,9 +564,22 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method SsaiPulse#_adEndedCallback
      */
-    var _adEndedCallback = function() {
-      amc.notifyLinearAdEnded(this.currentId3Object.adId);
-      amc.notifyPodEnded(this.currentId3Object.adId);
+    var _adEndedCallback = _.bind(function() {
+      amc.notifyLinearAdEnded(this.currentAd.adId);
+      amc.notifyPodEnded(this.currentAd.adId);
+      _clearAdDurationTimeout();
+      this.currentAd = null;
+      admode = false;
+    }, this);
+
+    /**
+     * Helper function to clear ad duration timeout.
+     * @private
+     * @method SsaiPulse#_clearAdDurationTimeout
+     */
+    var _clearAdDurationTimeout = function() {
+      clearTimeout(adDurationTimeout);
+      adDurationTimeout = null;
     };
   };
   return new SsaiPulse();
