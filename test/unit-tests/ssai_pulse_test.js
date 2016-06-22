@@ -11,7 +11,8 @@ require(COMMON_SRC_ROOT + "classes/emitter.js");
 
 var fs = require("fs");
 
-describe('ad_manager_ssai_pulse', function() {
+describe('ad_manager_ssai_pulse', function()
+{
   var amc, SsaiPulse;
   var name = "ssai-pulse-ads-manager";
   var originalOoAds = _.clone(OO.Ads);
@@ -20,7 +21,8 @@ describe('ad_manager_ssai_pulse', function() {
   var adsClickthroughOpenedCalled = 0;
 
   // Helper functions
-  var fakeAd = function(timePositionClass, position, duration) {
+  var fakeAd = function(timePositionClass, position, duration)
+  {
     var timePositionClass = timePositionClass;
     var position = position;
     var duration = duration;
@@ -29,7 +31,8 @@ describe('ad_manager_ssai_pulse', function() {
     this.getTotalDuration = function() { return duration; };
   };
 
-  var initialize = function() {
+  var initialize = function()
+  {
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -39,7 +42,8 @@ describe('ad_manager_ssai_pulse', function() {
       time:0,
       position_type:"t"
     };
-    var content = {
+    var content =
+    {
       embed_code: embed_code,
       ads: [vast_ad]
     };
@@ -48,13 +52,17 @@ describe('ad_manager_ssai_pulse', function() {
       "html5_ad_server": "http://blah"}, {}, content);
   };
 
-  var initialPlay = function() {
+  var initialPlay = function()
+  {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
 
-  before(_.bind(function() {
-    OO.Ads = {
-      manager: function(adManager){
+  before(_.bind(function()
+  {
+    OO.Ads =
+    {
+      manager: function(adManager)
+      {
         SsaiPulse = adManager(_, $);
         SsaiPulse.testMode = true;
       }
@@ -64,43 +72,57 @@ describe('ad_manager_ssai_pulse', function() {
 
   }, this));
 
-  after(function() {
+  after(function()
+  {
     OO.Ads = originalOoAds;
   });
 
-  beforeEach(function() {
+  beforeEach(function()
+  {
     amc = new fake_amc();
     amc.adManagerList = [];
     amc.onAdManagerReady = function() {this.timeline = this.adManagerList[0].buildTimeline()};
     amc.adManagerList.push(SsaiPulse);
   });
 
-  afterEach(_.bind(function() {
+  afterEach(_.bind(function()
+  {
     amc.timeline = [];
     SsaiPulse.destroy();
   }, this));
 
   //   ------   TESTS   ------
 
-  it('Init: mock amc is ready', function(){
+  it('Init: mock amc is ready', function()
+  {
     expect(typeof amc).to.be("object");
   });
 
-  it('Init: ad manager is registered', function(){
+  it('Init: ad manager is registered', function()
+  {
     expect(SsaiPulse).to.not.be(null);
   });
 
-  it('Init: ad manager has the expected name', function(){
+  it('Init: ad manager has the expected name', function()
+  {
     expect(SsaiPulse.name).to.be(name);
   });
 
-  it('Init: ad manager handles the initialize function', function(){
-    expect(function() { SsaiPulse.initialize(amc); }).to.not.throwException();
+  it('Init: ad manager handles the initialize function', function()
+  {
+    expect(
+      function()
+      {
+        SsaiPulse.initialize(amc);
+      }
+    ).to.not.throwException();
   });
 
-  it('Init: ad manager handles the loadMetadata function', function(){
+  it('Init: ad manager handles the loadMetadata function', function()
+  {
     var embed_code = "embed_code";
-    var vast_ad = {
+    var vast_ad =
+    {
       type: "vast",
       first_shown: 0,
       frequency: 2,
@@ -108,7 +130,8 @@ describe('ad_manager_ssai_pulse', function() {
       time:0,
       position_type:"t"
     };
-    var content = {
+    var content =
+    {
       embed_code: embed_code,
       ads: [vast_ad]
     };
@@ -117,9 +140,11 @@ describe('ad_manager_ssai_pulse', function() {
       "html5_ad_server": "http://blah"}, {}, content);}).to.not.throwException();
   });
 
-  it('Init: ad manager is ready', function(){
+  it('Init: ad manager is ready', function()
+  {
     var embed_code = "embed_code";
-    var vast_ad = {
+    var vast_ad =
+    {
       type: "vast",
       first_shown: 0,
       frequency: 2,
@@ -127,7 +152,8 @@ describe('ad_manager_ssai_pulse', function() {
       time:0,
       position_type:"t"
     };
-    var content = {
+    var content =
+    {
       embed_code: embed_code,
       ads: [vast_ad]
     };
@@ -138,12 +164,15 @@ describe('ad_manager_ssai_pulse', function() {
     expect(SsaiPulse.ready).to.be(true);
   });
 
-  it('ID3 Object should be parsed', function() {
+  it('ID3 Object should be parsed', function()
+  {
     SsaiPulse.initialize(amc);
-    var mockId3Tag = {
+    var mockId3Tag =
+    {
       TXXX: "adid=adid1&t=0&d=100"
     };
-    var expectedResult = {
+    var expectedResult =
+    {
       adId: "adid1",
       time: 0,
       duration: 100
@@ -168,21 +197,26 @@ describe('ad_manager_ssai_pulse', function() {
     expect(SsaiPulse.currentId3Object).to.be(null);
   });
 
-  it('Ad should end if new ID3 tag detected', function() {
+  it('Ad should end if new ID3 tag detected', function()
+  {
     var notifyLinearAdEndedCount = 0;
     var notifyLinearAdStartedCount = 0;
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function()
+    {
       notifyLinearAdEndedCount++;
     };
-    amc.notifyLinearAdStarted = function() {
+    amc.notifyLinearAdStarted = function()
+    {
       notifyLinearAdStartedCount++;
     };
-    amc.forceAdToPlay = function() {
+    amc.forceAdToPlay = function()
+    {
       amc.notifyLinearAdStarted();
       SsaiPulse.currentAd = {id:"id"};
     };
 
-    var mockId3Tag = {
+    var mockId3Tag =
+    {
       TXXX: "adid=adid1&t=0&d=100"
     };
     SsaiPulse.initialize(amc);
@@ -201,21 +235,26 @@ describe('ad_manager_ssai_pulse', function() {
     expect(notifyLinearAdEndedCount).to.be(2);
   });
 
-  it('Previously played ad should be able to replay given that it is not already playing', function() {
+  it('Previously played ad should be able to replay given that it is not already playing', function()
+  {
     var notifyLinearAdEndedCount = 0;
     var notifyLinearAdStartedCount = 0;
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function()
+    {
       notifyLinearAdEndedCount++;
     };
-    amc.notifyLinearAdStarted = function() {
+    amc.notifyLinearAdStarted = function()
+    {
       notifyLinearAdStartedCount++;
     };
-    amc.forceAdToPlay = function() {
+    amc.forceAdToPlay = function()
+    {
       amc.notifyLinearAdStarted();
       SsaiPulse.currentAd = {id:"id"};
     };
 
-    var mockId3Tag = {
+    var mockId3Tag =
+    {
       TXXX: "adid=adid1&t=0&d=100"
     };
     SsaiPulse.initialize(amc);
