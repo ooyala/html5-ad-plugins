@@ -666,7 +666,8 @@ OO.Ads.manager(function(_, $)
     var _adEndedCallback = _.bind(function()
     {
       _clearAdDurationTimeout();
-      if (this.currentAd) {
+      if (this.currentAd)
+      {
         amc.notifyLinearAdEnded(this.currentAd.id);
         amc.notifyPodEnded(this.currentAd.id);
       }
