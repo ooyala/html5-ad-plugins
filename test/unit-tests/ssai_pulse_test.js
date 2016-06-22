@@ -200,4 +200,38 @@ describe('ad_manager_ssai_pulse', function() {
     expect(notifyLinearAdStartedCount).to.be(3);
     expect(notifyLinearAdEndedCount).to.be(2);
   });
+
+  it('Previously played ad should be able to replay given that it is not already playing', function() {
+    var notifyLinearAdEndedCount = 0;
+    var notifyLinearAdStartedCount = 0;
+    amc.notifyLinearAdEnded = function() {
+      notifyLinearAdEndedCount++;
+    };
+    amc.notifyLinearAdStarted = function() {
+      notifyLinearAdStartedCount++;
+    };
+    amc.forceAdToPlay = function() {
+      amc.notifyLinearAdStarted();
+      SsaiPulse.currentAd = {id:"id"};
+    };
+
+    var mockId3Tag = {
+      TXXX: "adid=adid1&t=0&d=100"
+    };
+    SsaiPulse.initialize(amc);
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(notifyLinearAdStartedCount).to.be(1);
+    expect(notifyLinearAdEndedCount).to.be(0);
+
+    mockId3Tag.TXXX = "adid=adid2&t=0&d=101";
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(notifyLinearAdStartedCount).to.be(2);
+    expect(notifyLinearAdEndedCount).to.be(1);
+
+    // try to replay first ad ("adid1")
+    mockId3Tag.TXXX = "adid=adid1&t=0&d=100";
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(notifyLinearAdStartedCount).to.be(3);
+    expect(notifyLinearAdEndedCount).to.be(2);
+  });
 });

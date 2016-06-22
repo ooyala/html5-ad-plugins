@@ -299,12 +299,15 @@ OO.Ads.manager(function(_, $) {
 
           _handleId3Ad(this.currentId3Object);
         }
-        /*
-         *else if (!this.currentAd || // Check if there is a current ad, if there isn't, replay the ad that was cached.
-         *         (this.currentAd && this.currentAd.id3AdId !== this.currentAd3Object.adId)) { // Check if the ad already playing is not itself
-         *  _handleId3Ad(this.currentId3Object);
-         *}
-         */
+        // Check if there is a current ad, if there isn't, replay the ad that was cached.
+        else if (!this.currentAd) {
+          _handleId3Ad(this.currentId3Object);
+        }
+        // Check if the ad already playing is not itself
+        else if (this.currentAd && this.currentAd.id3AdId !== this.currentId3Object.adId) {
+          _adEndedCallback();
+          _handleId3Ad(this.currentId3Object);
+        }
       }
     };
 
@@ -316,7 +319,6 @@ OO.Ads.manager(function(_, $) {
      */
     var _handleId3Ad = _.bind(function(id3Object) {
       // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
-      this.onResponse(null, id3Object);
       if (!this.testMode) {
         // Set timer for duration of the ad.
         adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
@@ -324,6 +326,7 @@ OO.Ads.manager(function(_, $) {
         //_sendRequest(requestUrl);
       }
       // Remove this if calling _sendRequest()
+      this.onResponse(null, id3Object);
     }, this);
 
     /**
@@ -434,9 +437,9 @@ OO.Ads.manager(function(_, $) {
      * @param {string} url The stream url
      * @returns {string} The modified stream url with the appended unique identifier.
      */
-    var _makeSmartUrl = function(url) {
+    var _makeSmartUrl = _.bind(function(url) {
       return url + SMART_PLAYER;
-    };
+    }, this);
 
     /**
      * Helper function to append "offset" and "aid" query parameters to the request URL.
@@ -446,10 +449,10 @@ OO.Ads.manager(function(_, $) {
      * @param {string} adId The ID of the ad
      * @returns {string} The request URL with the appended query parameters.
      */
-    var _appendAdsProxyQueryParameters = function(url, adId) {
+    var _appendAdsProxyQueryParameters = _.bind(function(url, adId) {
       // vastUrl + '&offset=5&aid=' + adid
       return url + OFFSET_PARAM + OFFSET_VALUE + AD_ID_PARAM + adId;
-    };
+    }, this);
 
     /**
      * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
@@ -459,10 +462,10 @@ OO.Ads.manager(function(_, $) {
      * @param {string} url The request URL
      * @returns {string} The request URL with the formatted request URL.
      */
-    var _preformatUrl = function(url){
+    var _preformatUrl = _.bind(function(url){
       //return ((url||'').indexOf('https') === -1 ? (url||'').replace('http:','https:') : url||'').replace('/hls/','/ai/');
       return (url ||'').replace('/hls/','/ai/');
-    };
+    }, this);
 
     /**
      * Attempts to load the Ad after normalizing the url.
@@ -559,14 +562,14 @@ OO.Ads.manager(function(_, $) {
      * @method SsaiPulse#_id3QueryParametersToString
      * @returns {string} The string: "adid, t, d".
      */
-    var _id3QueryParametersToString = function() {
+    var _id3QueryParametersToString = _.bind(function() {
       var result = "";
       _.each(_.values(ID3_QUERY_PARAMETERS), function(value) {
         result = result + value + ", ";
       });
       result = result.slice(0, -2);
       return result;
-    };
+    }, this);
 
     /**
      * Temporary mock function to force an ad to play until live team fixes ad proxy.
@@ -574,7 +577,7 @@ OO.Ads.manager(function(_, $) {
      * @method SsaiPulse#_forceMockAd
      * @param {object} id3Object The ID3 object
      */
-    var _forceMockAd = function(id3Object) {
+    var _forceMockAd = _.bind(function(id3Object) {
       var ad1 = {
         clickthrough: "http://www.google.com",
         name: "Test SSAI Ad",
@@ -582,7 +585,7 @@ OO.Ads.manager(function(_, $) {
         isLive: true
       };
       amc.forceAdToPlay(this.name, ad1, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
-    };
+    }, this);
 
     /**
      * Callback used when the duration of an ad has passed.
@@ -602,10 +605,25 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method SsaiPulse#_clearAdDurationTimeout
      */
-    var _clearAdDurationTimeout = function() {
+    var _clearAdDurationTimeout = _.bind(function() {
       clearTimeout(adDurationTimeout);
       adDurationTimeout = null;
-    };
+    }, this);
+
+    /**
+     * Remove listeners from the Ad Manager Controller about playback.
+     * @private
+     * @method SsaiPulse#_removeAMCListeners
+     */
+    var _removeAMCListeners = _.bind(function() {
+      if (amc) {
+        amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
+        amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
+        amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
+        amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
+        amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+      }
+    }, this);
   };
   return new SsaiPulse();
 });
