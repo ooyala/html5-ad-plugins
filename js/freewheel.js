@@ -96,11 +96,30 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#loadMetadata
      * @param {object} metadata Ad manager metadata from Backlot and from the page level
      * @param {object} baseMetadata Base level metadata from Backlot
+     * @param {object} movieMetadata Metadata pertaining specifically to the movie being played
      */
-    this.loadMetadata = function(metadata, baseMetadata) {
+    this.loadMetadata = function(metadata, baseMetadata, movieMetadata) {
       // initialize values
       this.ready = false;
-      videoAssetId = amc.currentEmbedCode;
+      videoAssetId = null;
+      //if we have all the required parameters for using an external id, set videoAssetId to the external id
+      var externalId = movieMetadata['external_id'];
+      if (metadata['use_external_id'] && externalId) {
+        var filter = metadata['external_id_filter'];
+        if (filter) {
+          var match = externalId.match(filter);
+          if (match.length > 0) {
+            //the first element of match will contain the match itself
+            videoAssetId = match[0];
+          }
+        } else {
+          videoAssetId = externalId;
+        }
+      }
+      //fallback to embed code if we do not have a video asset id yet
+      if (!videoAssetId) {
+        videoAssetId = metadata['embedCode'];
+      }
       remoteModuleJs = amc.platform.isSSL ?
         'https://m.v.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js' :
         'http://adm.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js';

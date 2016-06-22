@@ -163,19 +163,24 @@ OO.Ads.manager(function(_, $)
      * @param {function} adStartedCallback Call this function each time an ad in the set starts
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
-    this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback)
-    {
-      adMode = true;
-      this.currentAd = ad;
-      amc.notifyLinearAdStarted(ad.id,
+    this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) {
+      if (ad)
+      {
+        adMode = true;
+        this.currentAd = ad;
+        if (ad.ad)
         {
-          name: ad.ad.name,
-          hasClickUrl: true,
-          duration: ad.duration,
-          ssai: ad.ad.ssai,
-          isLive: ad.ad.isLive
+          amc.notifyLinearAdStarted(ad.id,
+            {
+              name: ad.ad.name,
+              hasClickUrl: true,
+              duration: ad.duration,
+              ssai: ad.ad.ssai,
+              isLive: ad.ad.isLive
+            }
+          );
         }
-      );
+      }
     };
 
     /**
@@ -261,7 +266,10 @@ OO.Ads.manager(function(_, $)
     */
     this.playerClicked = function(amcAd, showPage)
     {
-      window.open(amcAd.ad.clickthrough);
+      if (amcAd && amcAd.ad)
+      {
+        window.open(amcAd.ad.clickthrough);
+      }
     };
 
     /**
@@ -657,8 +665,11 @@ OO.Ads.manager(function(_, $)
     var _adEndedCallback = _.bind(function()
     {
       _clearAdDurationTimeout();
-      amc.notifyLinearAdEnded(this.currentAd.id);
-      amc.notifyPodEnded(this.currentAd.id);
+      if (this.currentAd)
+      {
+        amc.notifyLinearAdEnded(this.currentAd.id);
+        amc.notifyPodEnded(this.currentAd.id);
+      }
       adMode = false;
       this.currentAd = null;
     }, this);

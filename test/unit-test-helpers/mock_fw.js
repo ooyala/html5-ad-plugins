@@ -1,5 +1,7 @@
 fwContext = null;
 getTemporalSlots = function() {};
+setVideoAsset = function() {};
+
 AdInstance = function(params) {
   this._eventCallbacks = {};
   this._creative = {
@@ -53,7 +55,7 @@ tv = {
           fwContext = new function() {
             this.callbacks = {};
             this.setProfile = function(){};
-            this.setVideoAsset = function(){};
+            this.setVideoAsset = setVideoAsset;
             this.setSiteSection = function(){};
             this.addKeyValue = function(){};
             this.addEventListener = function(event, callback){
