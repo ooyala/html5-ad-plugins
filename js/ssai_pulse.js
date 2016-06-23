@@ -359,7 +359,7 @@ OO.Ads.manager(function(_, $)
         // Set timer for duration of the ad.
         adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
 
-        _sendRequest(requestUrl);
+        //_sendRequest(requestUrl);
       }
       // Remove this if calling _sendRequest()
       this.onResponse(null, id3Object);
@@ -378,14 +378,6 @@ OO.Ads.manager(function(_, $)
       // Call VastParser code
       // var vastAds = OO.VastParser.parser(xml);
       _forceMockAd(id3Object);
-    };
-
-    this.onResponseTest = function(xml)
-    {
-      OO.log("SSAI Pulse: Response TEST");
-      console.log(xml);
-      // Call VastParser code
-      // var vastAds = OO.VastParser.parser(xml);
     };
 
     /**
@@ -547,7 +539,7 @@ OO.Ads.manager(function(_, $)
         dataType: "xml",
         crossDomain: true,
         cache:false,
-        success: _.bind(this.onResponseTest, this),
+        success: _.bind(this.onResponse, this),
         error: _.bind(this.onRequestError, this)
       });
     }, this);
