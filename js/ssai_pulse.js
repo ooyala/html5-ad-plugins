@@ -170,6 +170,7 @@ OO.Ads.manager(function(_, $)
         this.currentAd = ad;
         if (ad.ad)
         {
+          this.currentAd.ad.id3AdId = this.currentId3Object.adId;
           amc.notifyLinearAdStarted(ad.id,
             {
               name: ad.ad.name,
@@ -334,7 +335,9 @@ OO.Ads.manager(function(_, $)
           _handleId3Ad(this.currentId3Object);
         }
         // Check if the ad already playing is not itself
-        else if (this.currentAd && this.currentAd.id3AdId !== this.currentId3Object.adId)
+        else if (this.currentAd &&
+                 this.currentAd.ad &&
+                 this.currentAd.ad.id3AdId !== this.currentId3Object.adId)
         {
           _adEndedCallback();
           _handleId3Ad(this.currentId3Object);
@@ -356,7 +359,7 @@ OO.Ads.manager(function(_, $)
         // Set timer for duration of the ad.
         adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
 
-        //_sendRequest(requestUrl);
+        _sendRequest(requestUrl);
       }
       // Remove this if calling _sendRequest()
       this.onResponse(null, id3Object);
@@ -375,6 +378,14 @@ OO.Ads.manager(function(_, $)
       // Call VastParser code
       // var vastAds = OO.VastParser.parser(xml);
       _forceMockAd(id3Object);
+    };
+
+    this.onResponseTest = function(xml)
+    {
+      OO.log("SSAI Pulse: Response TEST");
+      console.log(xml);
+      // Call VastParser code
+      // var vastAds = OO.VastParser.parser(xml);
     };
 
     /**
@@ -536,7 +547,7 @@ OO.Ads.manager(function(_, $)
         dataType: "xml",
         crossDomain: true,
         cache:false,
-        success: _.bind(this.onResponse, this),
+        success: _.bind(this.onResponseTest, this),
         error: _.bind(this.onRequestError, this)
       });
     }, this);
