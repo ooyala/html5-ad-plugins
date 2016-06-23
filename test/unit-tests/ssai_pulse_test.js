@@ -211,8 +211,12 @@ describe('ad_manager_ssai_pulse', function()
     };
     amc.forceAdToPlay = function()
     {
-      amc.notifyLinearAdStarted();
-      SsaiPulse.currentAd = {id:"id"};
+      var currentAd =
+      {
+        id:"id",
+        ad: {}
+      };
+      SsaiPulse.playAd(currentAd);
     };
 
     var mockId3Tag =
@@ -249,8 +253,12 @@ describe('ad_manager_ssai_pulse', function()
     };
     amc.forceAdToPlay = function()
     {
-      amc.notifyLinearAdStarted();
-      SsaiPulse.currentAd = {id:"id"};
+      var currentAd =
+      {
+        id:"id",
+        ad: {}
+      };
+      SsaiPulse.playAd(currentAd);
     };
 
     var mockId3Tag =
