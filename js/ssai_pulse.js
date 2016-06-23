@@ -169,16 +169,16 @@ OO.Ads.manager(function(_, $)
       {
         adMode = true;
         this.currentAd = ad;
-        if (ad.ad)
+        if (this.currentAd.ad)
         {
           this.currentAd.ad.id3AdId = this.currentId3Object.adId;
-          amc.notifyLinearAdStarted(ad.id,
+          amc.notifyLinearAdStarted(this.currentAd.id,
             {
-              name: ad.ad.name,
+              name: this.currentAd.ad.name,
               hasClickUrl: true,
-              duration: ad.duration,
-              ssai: ad.ad.ssai,
-              isLive: ad.ad.isLive
+              duration: this.currentAd.duration,
+              ssai: this.currentAd.ad.ssai,
+              isLive: this.currentAd.ad.isLive
             }
           );
         }
