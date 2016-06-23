@@ -2073,6 +2073,14 @@ require("../html5-common/js/utils/utils.js");
     };
 
     /**
+     * Callback to handle notifications that ad finished playing
+     * @private
+     * @method GoogleIMAVideoWrapper#onAdsPlayed
+     */
+    this.onAdsPlayed = function() {
+    };
+
+    /**
      * Does the application of css to the video element if the video element is shared and under ima control.
      * @private
      * @method GoogleIMAVideoWrapper#applyCssToElemenet
