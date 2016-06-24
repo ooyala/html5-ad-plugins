@@ -291,8 +291,8 @@ OO.Ads.manager(function(_, $)
      */
     this.onContentUrlChanged = function(eventName, url)
     {
-      //baseRequestUrl = _makeSmartUrl(url);
-      baseRequestUrl = url;
+      baseRequestUrl = _makeSmartUrl(url);
+      //baseRequestUrl = url;
       amc.updateMainStreamUrl(url);
       baseRequestUrl = _preformatUrl(baseRequestUrl);
     };
@@ -359,7 +359,7 @@ OO.Ads.manager(function(_, $)
         // Set timer for duration of the ad.
         adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
 
-        //_sendRequest(requestUrl);
+        _sendRequest(requestUrl);
       }
       // Remove this if calling _sendRequest()
       this.onResponse(null, id3Object);
@@ -378,6 +378,14 @@ OO.Ads.manager(function(_, $)
       // Call VastParser code
       // var vastAds = OO.VastParser.parser(xml);
       _forceMockAd(id3Object);
+    };
+
+    this.onResponseTest = function(xml, id3Object)
+    {
+      OO.log("SSAI Pulse: Response");
+      // Call VastParser code
+      // var vastAds = OO.VastParser.parser(xml);
+      console.log(xml);
     };
 
     /**
@@ -528,21 +536,45 @@ OO.Ads.manager(function(_, $)
      */
     var _sendRequest = _.bind(function(url)
     {
-      $.ajax
-      ({
-        url: url,
-        type: 'GET',
-        beforeSend: function(xhr)
-        {
-          xhr.withCredentials = true;
-        },
-        dataType: "xml",
-        crossDomain: true,
-        cache:false,
-        success: _.bind(this.onResponse, this),
-        error: _.bind(this.onRequestError, this)
+      $.ajaxPrefilter( function( options, originalOptions, jqXHR ) {
+        options.crossDomain ={
+          crossDomain: true
+        };
+        options.xhrFields = {
+          withCredentials: true
+        };
       });
+      $.ajax
+        ({
+          url: url,
+          type: 'GET',
+          beforeSend: function(xhr){
+            xhr.setRequestHeader('Accept-Encoding', 'gzip, deflate');
+          },
+          cache:false,
+          success: _.bind(this.onResponseTest, this),
+          error: _.bind(this.onRequestError, this)
+        });
     }, this);
+    /*
+     *var _sendRequest = _.bind(function(url)
+     *{
+     *  $.ajax
+     *  ({
+     *    url: url,
+     *    type: 'GET',
+     *    beforeSend: function(xhr)
+     *    {
+     *      xhr.withCredentials = true;
+     *    },
+     *    dataType: "xml",
+     *    crossDomain: true,
+     *    cache:false,
+     *    success: _.bind(this.onResponse, this),
+     *    error: _.bind(this.onRequestError, this)
+     *  });
+     *}, this);
+     */
 
     /**
      * TODO: Improve return statement jsdoc
