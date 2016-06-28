@@ -49,6 +49,7 @@ require("../html5-common/js/utils/utils.js");
       var _uiContainer = null;
 
       //Constants
+      var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
       var DEFAULT_ADS_REQUEST_TIME_OUT = 3000;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
@@ -149,6 +150,7 @@ require("../html5-common/js/utils/utils.js");
         this.savedVolume = -1;
         this.useGoogleAdUI = false;
         this.useInsecureVpaidMode = false;
+        this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
 
         //flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
@@ -259,6 +261,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("vpaidMode"))
         {
           this.useInsecureVpaidMode = metadata.vpaidMode === "insecure";
+        }
+
+        this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
+        if (metadata.hasOwnProperty("iframeZIndex"))
+        {
+          this.imaIframeZIndex = metadata.iframeZIndex;
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
@@ -1014,7 +1022,7 @@ require("../html5-common/js/utils/utils.js");
         video ads not showing.
         */
         var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
-        IMAiframe.style.zIndex = "10004";
+        IMAiframe.style.zIndex = this.imaIframeZIndex;
       });
 
       /**
