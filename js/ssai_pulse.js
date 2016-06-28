@@ -292,9 +292,9 @@ OO.Ads.manager(function(_, $)
      */
     this.onContentUrlChanged = function(eventName, url)
     {
-      //baseRequestUrl = _makeSmartUrl(url);
-      baseRequestUrl = url;
-      amc.updateMainStreamUrl(url);
+      // important that smart player parameter is set here
+      baseRequestUrl = _makeSmartUrl(url);
+      amc.updateMainStreamUrl(baseRequestUrl);
       baseRequestUrl = _preformatUrl(baseRequestUrl);
     };
 
