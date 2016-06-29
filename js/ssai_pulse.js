@@ -76,6 +76,12 @@ OO.Ads.manager(function(_, $)
       DURATION: "d"
     };
 
+    var STATE =
+    {
+      WAITING: "waiting",
+      PLAYED: "played"
+    };
+
     // variable to store the timeout used to keep track of how long an SSAI ad plays
     var adDurationTimeout;
 
@@ -319,7 +325,7 @@ OO.Ads.manager(function(_, $)
         // Check to see if we already have adId in dictionary
         if (!_.has(adIdDictionary, this.currentId3Object.adId))
         {
-          adIdDictionary[this.currentId3Object.adId] = true;
+          adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
 
           // Clear any previous timeouts and notify end of ad.
           if (this.currentAd)
@@ -329,9 +335,11 @@ OO.Ads.manager(function(_, $)
 
           _handleId3Ad(this.currentId3Object);
         }
-        // Check if there is a current ad, if there isn't, replay the ad that was cached.
-        else if (!this.currentAd)
+        // If there isn't a current ad playing and an ad request associated to the adid
+        // also hasn't sent a request, then play ad in the dictionary.
+        else if (!this.currentAd && adIdDictionary[this.currentId3Object.adId] !== STATE.WAITING)
         {
+          adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
           _handleId3Ad(this.currentId3Object);
         }
         // Check if the ad already playing is not itself
@@ -339,6 +347,7 @@ OO.Ads.manager(function(_, $)
                  this.currentAd.ad &&
                  this.currentAd.ad.id3AdId !== this.currentId3Object.adId)
         {
+          adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
           _adEndedCallback();
           _handleId3Ad(this.currentId3Object);
         }
@@ -359,10 +368,11 @@ OO.Ads.manager(function(_, $)
         // Set timer for duration of the ad.
         adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
 
-        //_sendRequest(requestUrl);
+        _sendRequest(requestUrl);
       }
-      // Remove this if calling _sendRequest()
-      this.onResponse(null, id3Object);
+      else {
+        this.onResponse(id3Object, null);
+      }
     }, this);
 
     /**
@@ -372,13 +382,93 @@ OO.Ads.manager(function(_, $)
      * @param {XMLDocument} xml The xml returned from loading the ad
      * @param {object} id3Object The ID3 object
      */
-    this.onResponse = function(xml, id3Object)
+    this.onResponse = function(id3Object, xml)
     {
       OO.log("SSAI Pulse: Response");
       // Call VastParser code
-      // var vastAds = OO.VastParser.parser(xml);
-      _forceMockAd(id3Object);
+      var vastAds = OO.VastParser.parser(xml);
+      var adIdVastData = _parseVastAdsObject(vastAds);
+
+      var ssaiAd =
+      {
+        clickthrough: "",
+        name: "",
+        ssai: true,
+        isLive: true
+      };
+
+      if (_.has(adIdVastData, id3Object.adId))
+      {
+        var adObject = adIdVastData[id3Object.adId];
+        adIdDictionary[id3Object.adId].vastData = adObject;
+        ssaiAd.clickthrough = _getLinearClickThroughUrl(adObject);
+        ssaiAd.name = _getTitle(adObject);
+      }
+
+      adIdDictionary[id3Object.adId] = STATE.PLAYED;
+      amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
+
+      //_forceMockAd(id3Object);
     };
+
+    /**
+     * Helper function to retrieve the ad object's linear click through url.
+     * @private
+     * @method SsaiPulse#_getLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The linear click through url. Returns null if no
+     * URL exists.
+     */
+    var _getLinearClickThroughUrl = function(adObject) {
+      var linearClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.clickThrough) {
+        linearClickThroughUrl = adObject.ad.data.linear.clickThrough;
+      }
+      return linearClickThroughUrl;
+    };
+
+    var _getTitle = function(adObject) {
+      var title = null;
+      if (adObject && adObject.title) {
+        title = adObject.title;
+      }
+      return title;
+    };
+
+    var _parseVastAdsObject = _.bind(function(vastAds)
+    {
+      var _adIdVastData = {};
+      if (vastAds)
+      {
+        if (vastAds.podded && vastAds.podded.length > 0)
+        {
+          for (var i = 0; i < vastAds.podded.length; i++)
+          {
+            var vastAd = vastAds.podded[i];
+            if (vastAd && vastAd.id)
+            {
+              _adIdVastData[vastAd.id] = vastAd;
+            }
+          }
+        }
+        if (vastAds.standalone && vastAds.standalone.length > 0)
+        {
+          for (var i = 0; i < vastAds.standalone.length; i++)
+          {
+            var vastAd = vastAds.standalone[i];
+            if (vastAd && vastAd.id)
+            {
+              _adIdVastData[vastAd.id] = vastAd;
+            }
+          }
+        }
+      }
+      return _adIdVastData;
+    }, this);
 
     /**
      * Called if the ajax call fails
@@ -539,7 +629,7 @@ OO.Ads.manager(function(_, $)
         dataType: "xml",
         crossDomain: true,
         cache:false,
-        success: _.bind(this.onResponse, this),
+        success: _.bind(this.onResponse, this, this.currentId3Object),
         error: _.bind(this.onRequestError, this)
       });
     }, this);
