@@ -60,7 +60,7 @@ OO.Ads.manager(function(_, $)
     var baseRequestUrl = "";
     var requestUrl = "";
 
-    var adIdDictionary = {};
+    this.adIdDictionary = {};
 
     // The expected query parameters in an ID3 Metadata String
     var ID3_QUERY_PARAMETERS =
@@ -74,6 +74,16 @@ OO.Ads.manager(function(_, $)
 
       // Duration of the ad
       DURATION: "d"
+    };
+
+    // Constants used to denote the status of particular ad ID request
+    var STATE =
+    {
+      // Denotes that an ad request is waiting for a response
+      WAITING: "waiting",
+
+      // Denotes that a response has returned for an ad request and the ad is "playing"
+      PLAYING: "playing"
     };
 
     // variable to store the timeout used to keep track of how long an SSAI ad plays
@@ -171,6 +181,7 @@ OO.Ads.manager(function(_, $)
         if (this.currentAd.ad)
         {
           this.currentAd.ad.id3AdId = this.currentId3Object.adId;
+          _handleTrackingUrls(this.currentAd, ["impression", "start"]);
           amc.notifyLinearAdStarted(this.currentAd.id,
             {
               name: this.currentAd.ad.name,
@@ -269,6 +280,7 @@ OO.Ads.manager(function(_, $)
     {
       if (amcAd && amcAd.ad)
       {
+        _handleTrackingUrls(amcAd, ["linearClickTracking"]);
         window.open(amcAd.ad.clickthrough);
       }
     };
@@ -291,9 +303,9 @@ OO.Ads.manager(function(_, $)
      */
     this.onContentUrlChanged = function(eventName, url)
     {
-      //baseRequestUrl = _makeSmartUrl(url);
-      baseRequestUrl = url;
-      amc.updateMainStreamUrl(url);
+      // important that smart player parameter is set here
+      baseRequestUrl = _makeSmartUrl(url);
+      amc.updateMainStreamUrl(baseRequestUrl);
       baseRequestUrl = _preformatUrl(baseRequestUrl);
     };
 
@@ -317,9 +329,9 @@ OO.Ads.manager(function(_, $)
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
 
         // Check to see if we already have adId in dictionary
-        if (!_.has(adIdDictionary, this.currentId3Object.adId))
+        if (!_.has(this.adIdDictionary, this.currentId3Object.adId))
         {
-          adIdDictionary[this.currentId3Object.adId] = true;
+          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
 
           // Clear any previous timeouts and notify end of ad.
           if (this.currentAd)
@@ -329,9 +341,11 @@ OO.Ads.manager(function(_, $)
 
           _handleId3Ad(this.currentId3Object);
         }
-        // Check if there is a current ad, if there isn't, replay the ad that was cached.
-        else if (!this.currentAd)
+        // If there isn't a current ad playing and an ad request associated to the adid
+        // also hasn't sent a request, then play ad in the dictionary.
+        else if (!this.currentAd && this.adIdDictionary[this.currentId3Object.adId] !== STATE.WAITING)
         {
+          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
           _handleId3Ad(this.currentId3Object);
         }
         // Check if the ad already playing is not itself
@@ -339,6 +353,7 @@ OO.Ads.manager(function(_, $)
                  this.currentAd.ad &&
                  this.currentAd.ad.id3AdId !== this.currentId3Object.adId)
         {
+          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
           _adEndedCallback();
           _handleId3Ad(this.currentId3Object);
         }
@@ -359,25 +374,48 @@ OO.Ads.manager(function(_, $)
         // Set timer for duration of the ad.
         adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
 
-        //_sendRequest(requestUrl);
+        _sendRequest(requestUrl);
       }
-      // Remove this if calling _sendRequest()
-      this.onResponse(null, id3Object);
+      else {
+        this.onResponse(id3Object, null);
+      }
     }, this);
 
     /**
      * Called if the ajax call succeeds
      * @public
      * @method SsaiPulse#onResponse
-     * @param {XMLDocument} xml The xml returned from loading the ad
      * @param {object} id3Object The ID3 object
+     * @param {XMLDocument} xml The xml returned from loading the ad
      */
-    this.onResponse = function(xml, id3Object)
+    this.onResponse = function(id3Object, xml)
     {
       OO.log("SSAI Pulse: Response");
       // Call VastParser code
-      // var vastAds = OO.VastParser.parser(xml);
-      _forceMockAd(id3Object);
+      var vastAds = OO.VastParser.parser(xml);
+      var adIdVastData = _parseVastAdsObject(vastAds);
+
+      var ssaiAd =
+      {
+        clickthrough: "",
+        name: "",
+        ssai: true,
+        isLive: true
+      };
+
+      if (_.has(adIdVastData, id3Object.adId))
+      {
+        var adObject = adIdVastData[id3Object.adId];
+        this.adIdDictionary[id3Object.adId].vastData = adObject;
+        ssaiAd.data = adObject;
+        ssaiAd.clickthrough = _getLinearClickThroughUrl(adObject);
+        ssaiAd.name = _getTitle(adObject);
+      }
+
+      this.adIdDictionary[id3Object.adId] = STATE.PLAYING;
+      amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
+
+      //_forceMockAd(id3Object);
     };
 
     /**
@@ -394,7 +432,7 @@ OO.Ads.manager(function(_, $)
      * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
      * This is only required for VPAID ads
      * @public
-     * @method Vast#onFullScreenChanged
+     * @method SsaiPulse#onFullScreenChanged
      * @param {string} eventName The name of the event for which this callback is called
      * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
      */
@@ -405,13 +443,11 @@ OO.Ads.manager(function(_, $)
       {
         if (isFullscreen)
         {
-          // TODO: Hook up with new Vast parser util
-          //_handleTrackingUrls(currentAd, ["fullscreen"]);
+          _handleTrackingUrls(this.currentAd, ["fullscreen"]);
         }
         else if (!isFullscreen)
         {
-          // TODO: Hook up with new Vast parser util
-          //_handleTrackingUrls(currentAd, ["exitFullscreen"]);
+          _handleTrackingUrls(this.currentAd, ["exitFullscreen"]);
         }
       }
     };
@@ -419,7 +455,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Callback for Ad Manager Controller. Handles volume changes.
      * @public
-     * @method Vast#onAdVolumeChanged
+     * @method SsaiPulse#onAdVolumeChanged
      * @param {string} eventName The name of the event for which this callback is called
      * @param {number} volume The current volume level
      */
@@ -431,15 +467,13 @@ OO.Ads.manager(function(_, $)
         {
           isMuted = true;
           lastVolume = volume;
-          // TODO: Hook up with new Vast parser util
-          //_handleTrackingUrls(currentAd, ["mute"]);
+          _handleTrackingUrls(this.currentAd, ["mute"]);
         }
         else if (isMuted && volume !== lastVolume)
         {
           isMuted = false;
           lastVolume = volume;
-          // TODO: Hook up with new Vast parser util
-          //_handleTrackingUrls(currentAd, ["unmute"]);
+          _handleTrackingUrls(this.currentAd, ["unmute"]);
         }
       }
     };
@@ -469,7 +503,7 @@ OO.Ads.manager(function(_, $)
       this.ready = false;
       this.currentAd = null;
       this.currentId3Object = null;
-      adIdDictionary = {};
+      this.adIdDictionary = {};
       _removeAMCListeners();
     };
 
@@ -539,7 +573,7 @@ OO.Ads.manager(function(_, $)
         dataType: "xml",
         crossDomain: true,
         cache:false,
-        success: _.bind(this.onResponse, this),
+        success: _.bind(this.onResponse, this, this.currentId3Object),
         error: _.bind(this.onRequestError, this)
       });
     }, this);
@@ -661,6 +695,212 @@ OO.Ads.manager(function(_, $)
     }, this);
 
     /**
+     * Ping a list of tracking event names' URLs.
+     * @private
+     * @method SsaiPulse#_handleTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @param {string[]} trackingEventNames The array of tracking event names
+     */
+    var _handleTrackingUrls = function(adObject, trackingEventNames) {
+      if (adObject) {
+        _.each(trackingEventNames, function(trackingEventName) {
+          var urls;
+          switch (trackingEventName) {
+            case "impression":
+              urls = _getImpressionUrls(adObject);
+              break;
+            case "linearClickTracking":
+              urls = _getLinearClickTrackingUrls(adObject);
+              break;
+            default:
+              /*
+               * Note: Had to change _getTrackingEventUrls to a less generic, _getLinearTrackingEventUrls.
+               * Slight discrepancy between ssai pulse and vast ad manager here. For vast, the
+               * "tracking" object exists in the ad.data object, but not in ssai pulse.
+               */
+              urls = _getLinearTrackingEventUrls(adObject, trackingEventName);
+          }
+          var urlObject = {};
+          urlObject[trackingEventName] = urls;
+          _pingTrackingUrls(urlObject);
+        });
+      }
+      else {
+        console.log(
+            "SSAI Pulse: Tried to ping URLs: [" + trackingEventNames +
+            "] but ad object passed in was: " + adObject
+        );
+        return;
+      }
+    };
+
+    /**
+     * Helper function to retrieve the ad object's impression urls.
+     * @private
+     * @method SsaiPulse#_getImpressionUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
+     */
+    var _getImpressionUrls = function(adObject) {
+      var impressionUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.impression &&
+          adObject.ad.data.impression.length > 0) {
+        impressionUrls = adObject.ad.data.impression;
+      }
+      return impressionUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click through url.
+     * @private
+     * @method SsaiPulse#_getLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The linear click through url. Returns null if no
+     * URL exists.
+     */
+    var _getLinearClickThroughUrl = function(adObject) {
+      var linearClickThroughUrl = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.clickThrough) {
+        linearClickThroughUrl = adObject.ad.data.linear.clickThrough;
+      }
+      return linearClickThroughUrl;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click tracking urls.
+     * @private
+     * @method SsaiPulse#_getLinearClickTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of linear click tracking urls. Returns null if no
+     * URLs exist.
+     */
+    var _getLinearClickTrackingUrls = function(adObject) {
+      var linearClickTrackingUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.clickTracking &&
+          adObject.ad.data.linear.clickTracking.length > 0) {
+        linearClickTrackingUrls = adObject.ad.data.linear.clickTracking;
+      }
+      return linearClickTrackingUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's tracking urls under a specific event name.
+     * @private
+     * @method SsaiPulse#_getLinearTrackingEventUrls
+     * @param {object} adObject The ad metadata
+     * @param {string} trackingEventName The name of the tracking event
+     * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
+     */
+    var _getLinearTrackingEventUrls = function(adObject, trackingEventName) {
+      var trackingUrls = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.linear &&
+          adObject.ad.data.linear.tracking &&
+          adObject.ad.data.linear.tracking[trackingEventName] &&
+          adObject.ad.data.linear.tracking[trackingEventName].length > 0) {
+        trackingUrls = adObject.ad.data.linear.tracking[trackingEventName];
+      }
+      return trackingUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's title.
+     * @private
+     * @method SsaiPulse#_getTitle
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The title of the ad. Returns null if no title exists.
+     */
+    var _getTitle = function(adObject) {
+      var title = null;
+      if (adObject && adObject.title) {
+        title = adObject.title;
+      }
+      return title;
+    };
+
+    /**
+     * Helper function to convert the ad object returned by the Vast#parser function into
+     * a key-value pair object where the key is the ad id and the value is the ad object.
+     * @private
+     * @method SsaiPulse#_parseVastAdsObject
+     * @param {object} vastAds The object containing the parsed ad data
+     * @returns {object} The key-value pair object.
+     */
+    var _parseVastAdsObject = _.bind(function(vastAds)
+    {
+      var _adIdVastData = {};
+      if (vastAds)
+      {
+        if (vastAds.podded && vastAds.podded.length > 0)
+        {
+          for (var i = 0; i < vastAds.podded.length; i++)
+          {
+            var vastAd = vastAds.podded[i];
+            if (vastAd && vastAd.id)
+            {
+              _adIdVastData[vastAd.id] = vastAd;
+            }
+          }
+        }
+        if (vastAds.standalone && vastAds.standalone.length > 0)
+        {
+          for (var i = 0; i < vastAds.standalone.length; i++)
+          {
+            var vastAd = vastAds.standalone[i];
+            if (vastAd && vastAd.id)
+            {
+              _adIdVastData[vastAd.id] = vastAd;
+            }
+          }
+        }
+      }
+      return _adIdVastData;
+    }, this);
+
+    /**
+     * Helper function to ping URLs in each set of tracking event arrays.
+     * @private
+     * @method SsaiPulse#_pingTrackingUrls
+     * @param {object} urlObject An object with the tracking event names and their
+     * associated URL array.
+     */
+    var _pingTrackingUrls = _.bind(function(urlObject) {
+      for (var trackingName in urlObject) {
+        if (urlObject.hasOwnProperty(trackingName)) {
+          try {
+            var urls = urlObject[trackingName];
+            if (urls) {
+              OO.pixelPings(urls);
+              OO.log("SSAI Pulse: \"" + trackingName + "\" tracking URLs pinged");
+            }
+            else {
+              OO.log("SSAI Pulse: No \"" + trackingName + "\" tracking URLs provided to ping");
+            }
+          }
+          catch(e) {
+            OO.log("SSAI Pulse: Failed to ping \"" + trackingName + "\" tracking URLs");
+            if (amc) {
+              amc.raiseAdError(e);
+            }
+          }
+        }
+      }
+    }, this);
+
+    /**
      * Callback used when the duration of an ad has passed.
      * @private
      * @method SsaiPulse#_adEndedCallback
@@ -672,6 +912,7 @@ OO.Ads.manager(function(_, $)
       {
         amc.notifyLinearAdEnded(this.currentAd.id);
         amc.notifyPodEnded(this.currentAd.id);
+        _handleTrackingUrls(this.currentAd, ["firstQuartile", "midpoint", "thirdQuartile", "complete"]);
       }
       adMode = false;
       this.currentAd = null;
