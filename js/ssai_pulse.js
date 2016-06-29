@@ -60,7 +60,7 @@ OO.Ads.manager(function(_, $)
     var baseRequestUrl = "";
     var requestUrl = "";
 
-    var adIdDictionary = {};
+    this.adIdDictionary = {};
 
     // The expected query parameters in an ID3 Metadata String
     var ID3_QUERY_PARAMETERS =
@@ -330,9 +330,9 @@ OO.Ads.manager(function(_, $)
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
 
         // Check to see if we already have adId in dictionary
-        if (!_.has(adIdDictionary, this.currentId3Object.adId))
+        if (!_.has(this.adIdDictionary, this.currentId3Object.adId))
         {
-          adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
+          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
 
           // Clear any previous timeouts and notify end of ad.
           if (this.currentAd)
@@ -344,9 +344,9 @@ OO.Ads.manager(function(_, $)
         }
         // If there isn't a current ad playing and an ad request associated to the adid
         // also hasn't sent a request, then play ad in the dictionary.
-        else if (!this.currentAd && adIdDictionary[this.currentId3Object.adId] !== STATE.WAITING)
+        else if (!this.currentAd && this.adIdDictionary[this.currentId3Object.adId] !== STATE.WAITING)
         {
-          adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
+          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
           _handleId3Ad(this.currentId3Object);
         }
         // Check if the ad already playing is not itself
@@ -354,7 +354,7 @@ OO.Ads.manager(function(_, $)
                  this.currentAd.ad &&
                  this.currentAd.ad.id3AdId !== this.currentId3Object.adId)
         {
-          adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
+          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
           _adEndedCallback();
           _handleId3Ad(this.currentId3Object);
         }
@@ -407,13 +407,13 @@ OO.Ads.manager(function(_, $)
       if (_.has(adIdVastData, id3Object.adId))
       {
         var adObject = adIdVastData[id3Object.adId];
-        adIdDictionary[id3Object.adId].vastData = adObject;
+        this.adIdDictionary[id3Object.adId].vastData = adObject;
         ssaiAd.data = adObject;
         ssaiAd.clickthrough = _getLinearClickThroughUrl(adObject);
         ssaiAd.name = _getTitle(adObject);
       }
 
-      adIdDictionary[id3Object.adId] = STATE.PLAYED;
+      this.adIdDictionary[id3Object.adId] = STATE.PLAYED;
       amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
 
       //_forceMockAd(id3Object);
@@ -504,7 +504,7 @@ OO.Ads.manager(function(_, $)
       this.ready = false;
       this.currentAd = null;
       this.currentId3Object = null;
-      adIdDictionary = {};
+      this.adIdDictionary = {};
       _removeAMCListeners();
     };
 

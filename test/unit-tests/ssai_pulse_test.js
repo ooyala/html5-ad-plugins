@@ -20,6 +20,11 @@ describe('ad_manager_ssai_pulse', function()
 
   var adsClickthroughOpenedCalled = 0;
 
+  // Vast XML
+  var ssaiXmlString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/ssai.xml"), "utf8");
+  var ssaiXml = OO.$.parseXML(ssaiXmlString);
+  var trackingUrlsPinged = {};
+
   // Helper functions
   var fakeAd = function(timePositionClass, position, duration)
   {
@@ -67,6 +72,19 @@ describe('ad_manager_ssai_pulse', function()
         SsaiPulse.testMode = true;
       }
     };
+
+    // mock pixelPing to test error tracking
+    OO.pixelPing = function(url) {
+      if (url) {
+        if (trackingUrlsPinged.hasOwnProperty(url)) {
+          trackingUrlsPinged[url] += 1;
+        }
+        else {
+          trackingUrlsPinged[url] = 1;
+        }
+      }
+    };
+
     delete require.cache[require.resolve(SRC_ROOT + "ssai_pulse.js")];
     require(SRC_ROOT + "ssai_pulse.js");
 
@@ -83,6 +101,7 @@ describe('ad_manager_ssai_pulse', function()
     amc.adManagerList = [];
     amc.onAdManagerReady = function() {this.timeline = this.adManagerList[0].buildTimeline()};
     amc.adManagerList.push(SsaiPulse);
+    trackingUrlsPinged = {};
   });
 
   afterEach(_.bind(function()
@@ -280,5 +299,70 @@ describe('ad_manager_ssai_pulse', function()
     SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
     expect(notifyLinearAdStartedCount).to.be(3);
     expect(notifyLinearAdEndedCount).to.be(2);
+  });
+
+  it('Linear Creative Tracking Events URLs should be pinged', function() {
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.mp4"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    SsaiPulse.initialize(amc);
+    SsaiPulse.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+
+    SsaiPulse.currentId3Object =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      t: 0,
+      d: 15
+    };
+
+    SsaiPulse.adIdDictionary =
+    {
+      "11de5230-ff5c-4d36-ad77-c0c7644d28e9": true
+    };
+
+    SsaiPulse.currentAd =
+    {
+      ad: {}
+    };
+      
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
+
+    var ad = adQueue[0];
+
+    // impression, and start tracking events
+    SsaiPulse.playAd(ad);
+    expect(trackingUrlsPinged.startUrl).to.be(1);
+    expect(trackingUrlsPinged.startUrl2).to.be(1);
+    expect(trackingUrlsPinged.impressionUrl).to.be(1);
+    expect(trackingUrlsPinged.impressionUrl2).to.be(1);
+
+    // clickthrough tracking events
+    SsaiPulse.playerClicked(ad);
+    expect(trackingUrlsPinged.linearClickTrackingUrl).to.be(1);
   });
 });
