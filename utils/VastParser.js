@@ -243,7 +243,7 @@
         // there could be an <Error> element in the vast response
         var noAdsErrorURL = $(vastXML).find("Error").text();
         if (noAdsErrorURL) {
-          this.pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
+          this.pingErrorURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
         }
         // if the ad response came from a wrapper, then go up the chain and ping those error urls
         //this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
@@ -255,11 +255,11 @@
     /**
      * Helper function to ping error URL. Replaces error macro if it exists.
      * @public
-     * @method VastParser#pingURL
+     * @method VastParser#pingErrorURL
      * @param {number} code Error code
      * @param {string} url URL to ping
      */
-    this.pingURL = function(code, url) {
+    this.pingErrorURL = function(code, url) {
       url = url.replace(/\[ERRORCODE\]/, code);
       OO.pixelPing(url);
     };
@@ -267,13 +267,13 @@
     /**
      * Helper function to ping error URLs.
      * @public
-     * @method VastParser#pingURLs
+     * @method VastParser#pingErrorURLs
      * @param {number} code Error code
      * @param {string[]} urls URLs to ping
      */
-    this.pingURLs = function(code, urls) {
+    this.pingErrorURLs = function(code, urls) {
       _.each(urls, function() {
-        pingURL(code, url);
+        this.pingErrorURL(code, url);
       }, this);
     };
 
@@ -283,7 +283,7 @@
      * Note: <Error> can only live in three places: directly under <VAST>, <Ad>, or <Wrapper> elements.
      * <Error> tags are also optional so they may not always exist.
      * @public
-     * @method Vast#getErrorTrackingInfo
+     * @method VastParser#getErrorTrackingInfo
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @param {object} ads A jQuery object which contains the collection of ad elements found
      */
@@ -306,7 +306,7 @@
     /**
      * Helper function to verify that XML is valid
      * @public
-     * @method Vast#isValidVastXML
+     * @method VastParser#isValidVastXML
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
      */
@@ -317,7 +317,7 @@
     /**
      * Helper function to verify XML has valid VAST root tag.
      * @public
-     * @method Vast#isValidRootTagName
+     * @method VastParser#isValidRootTagName
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
      */
@@ -333,7 +333,7 @@
     /**
      * Helper function to verify XML is a valid VAST version.
      * @public
-     * @method Vast#isValidVastVersion
+     * @method VastParser#isValidVastVersion
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
      */
@@ -350,7 +350,7 @@
     /**
      * Returns the Vast version of the provided XML.
      * @private
-     * @method Vast#getVastVersion
+     * @method VastParser#getVastVersion
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {string} The Vast version.
      */
@@ -362,7 +362,7 @@
     /**
      * Helper function to get the VAST root element.
      * @private
-     * @method Vast#getVastRoot
+     * @method VastParser#getVastRoot
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
      * @returns {object} null if a VAST tag is absent, or if there are multiple VAST tags. Otherwise,
      * returns the VAST root element.
@@ -383,7 +383,7 @@
     /**
      * Returns the Vast major version. For example, the '3' in 3.0.
      * @private
-     * @method Vast#getMajorVersion
+     * @method VastParser#getMajorVersion
      * @param {string} version The Vast version as parsed from the XML
      * @returns {string} The major version.
      */
@@ -396,7 +396,7 @@
     /**
      * Checks to see if this ad manager supports a given Vast version.
      * @private
-     * @method Vast#supportsVersion
+     * @method VastParser#supportsVersion
      * @param {string} version The Vast version as parsed from the XML
      * @returns {boolean} true if the version is supported by this ad manager, false otherwise.
      */
@@ -408,7 +408,7 @@
      * Checks to see if the given Vast version supports the podded ads functionality, as per Vast specs
      * for different versions.
      * @private
-     * @method Vast#supportsPoddedAds
+     * @method VastParser#supportsPoddedAds
      * @returns {boolean} true if the podded ads functionality is supported in the specified Vast version,
      *                    false otherwise
      */
@@ -420,7 +420,7 @@
      * Checks to see if the given Vast version supports the ad fallback functionality, as per Vast specs
      * for different versions.
      * @private
-     * @method Vast#supportsAdFallback
+     * @method VastParser#supportsAdFallback
      * @returns {boolean} true if the ad fallback functionality is supported in the specified Vast version,
      *                    false otherwise
      */
@@ -431,7 +431,7 @@
     /**
      * Default template to use when creating the vast ad object.
      * @private
-     * @method Vast#getVastTemplate
+     * @method VastParser#getVastTemplate
      * @returns {object} The ad object that is formated to what we expect vast to look like.
      */
     var getVastTemplate = _.bind(function() {
@@ -448,7 +448,7 @@
     /**
      * Helper function to remove empty items.
      * @private
-     * @method Vast#filterEmpty
+     * @method VastParser#filterEmpty
      * @param {Array} array An array that is the be checked if it is empty
      * @returns {Array} The filtered array.
      */
@@ -459,7 +459,7 @@
     /**
      * While getting the ad data the manager needs to parse the companion ad data as well and add it to the object.
      * @private
-     * @method Vast#parseCompanionAd
+     * @method VastParser#parseCompanionAd
      * @param {XMLDocument} companionAdXML XML that contains the companion ad data
      * @returns {object} The ad object with companion ad.
      */
@@ -495,7 +495,7 @@
      * Checks if there is any companion ads associated with the ad and if one is found, it will call the Ad Manager
      * Controller to show it.
      * @public
-     * @method Vast#checkCompanionAds
+     * @method VastParser#checkCompanionAds
      * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = function(adInfo) {
@@ -517,7 +517,7 @@
     /**
      * The xml is parsed to find any tracking events and then returned as part of an object.
      * @private
-     * @method Vast#parseTrackingEvents
+     * @method VastParser#parseTrackingEvents
      * @param {object} tracking The tracking object to be mutated
      * @param {XMLDocument} xml The data of the ad with tracking info
      * @param {string[]} trackingEvents List of events that are tracked, if null then it uses the global one
