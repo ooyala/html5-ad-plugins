@@ -82,8 +82,8 @@ OO.Ads.manager(function(_, $)
       // Denotes that an ad request is waiting for a response
       WAITING: "waiting",
 
-      // Denotes that a response has returned for an ad request and the ad has "played"
-      PLAYED: "played"
+      // Denotes that a response has returned for an ad request and the ad is "playing"
+      PLAYING: "playing"
     };
 
     // variable to store the timeout used to keep track of how long an SSAI ad plays
@@ -181,6 +181,7 @@ OO.Ads.manager(function(_, $)
         if (this.currentAd.ad)
         {
           this.currentAd.ad.id3AdId = this.currentId3Object.adId;
+          _handleTrackingUrls(this.currentAd, ["impression", "start"]);
           amc.notifyLinearAdStarted(this.currentAd.id,
             {
               name: this.currentAd.ad.name,
@@ -190,7 +191,6 @@ OO.Ads.manager(function(_, $)
               isLive: this.currentAd.ad.isLive
             }
           );
-          _handleTrackingUrls(this.currentAd, ["impression", "start"]);
         }
       }
     };
@@ -280,8 +280,8 @@ OO.Ads.manager(function(_, $)
     {
       if (amcAd && amcAd.ad)
       {
-        window.open(amcAd.ad.clickthrough);
         _handleTrackingUrls(amcAd, ["linearClickTracking"]);
+        window.open(amcAd.ad.clickthrough);
       }
     };
 
@@ -385,8 +385,8 @@ OO.Ads.manager(function(_, $)
      * Called if the ajax call succeeds
      * @public
      * @method SsaiPulse#onResponse
-     * @param {XMLDocument} xml The xml returned from loading the ad
      * @param {object} id3Object The ID3 object
+     * @param {XMLDocument} xml The xml returned from loading the ad
      */
     this.onResponse = function(id3Object, xml)
     {
@@ -412,7 +412,7 @@ OO.Ads.manager(function(_, $)
         ssaiAd.name = _getTitle(adObject);
       }
 
-      this.adIdDictionary[id3Object.adId] = STATE.PLAYED;
+      this.adIdDictionary[id3Object.adId] = STATE.PLAYING;
       amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
 
       //_forceMockAd(id3Object);
@@ -797,7 +797,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to retrieve the ad object's tracking urls under a specific event name.
      * @private
-     * @method SsaiPulse#_getTrackingEventUrls
+     * @method SsaiPulse#_getLinearTrackingEventUrls
      * @param {object} adObject The ad metadata
      * @param {string} trackingEventName The name of the tracking event
      * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
