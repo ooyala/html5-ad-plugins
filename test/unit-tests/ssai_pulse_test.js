@@ -301,9 +301,11 @@ describe('ad_manager_ssai_pulse', function()
     expect(notifyLinearAdEndedCount).to.be(2);
   });
 
-  it('Linear Creative Tracking Events URLs should be pinged', function() {
+  it('Linear Creative Tracking Events URLs should be pinged', function()
+  {
     var adQueue = [];
-    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
+    amc.forceAdToPlay = function(adManager, ad, adType, streams)
+    {
       var adData = {
         "adManager": adManager,
         "adType": adType,
@@ -315,23 +317,7 @@ describe('ad_manager_ssai_pulse', function()
       adQueue.push(newAd);
     };
 
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
-    };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
-    };
     SsaiPulse.initialize(amc);
-    SsaiPulse.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
 
     SsaiPulse.currentId3Object =
     {
@@ -364,5 +350,55 @@ describe('ad_manager_ssai_pulse', function()
     // clickthrough tracking events
     SsaiPulse.playerClicked(ad);
     expect(trackingUrlsPinged.linearClickTrackingUrl).to.be(1);
+  });
+
+  it('Correct clickthrough URL should be opened', function()
+  {
+    var adQueue = [];
+    var clickThroughUrl = "";
+    amc.forceAdToPlay = function(adManager, ad, adType, streams)
+    {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    window.open = function(url)
+    {
+      clickThroughUrl = url;
+    };
+
+    SsaiPulse.initialize(amc);
+
+    SsaiPulse.currentId3Object =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      t: 0,
+      d: 15
+    };
+
+    SsaiPulse.adIdDictionary =
+    {
+      "11de5230-ff5c-4d36-ad77-c0c7644d28e9": true
+    };
+
+    SsaiPulse.currentAd =
+    {
+      ad: {}
+    };
+
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
+
+    var ad = adQueue[0];
+
+    // clickthrough tracking events
+    SsaiPulse.playerClicked(ad);
+    expect(clickThroughUrl).to.be("clickThroughUrl");
   });
 });

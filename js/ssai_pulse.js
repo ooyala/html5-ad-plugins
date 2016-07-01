@@ -275,7 +275,7 @@ OO.Ads.manager(function(_, $)
      * called
      * @method SsaiPulse#playerClicked
      * @public
-    */
+     */
     this.playerClicked = function(amcAd, showPage)
     {
       if (amcAd && amcAd.ad)
