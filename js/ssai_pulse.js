@@ -754,26 +754,6 @@ OO.Ads.manager(function(_, $)
     };
 
     /**
-     * Helper function to retrieve the ad object's linear click through url.
-     * @private
-     * @method SsaiPulse#_getLinearClickThroughUrl
-     * @param {object} adObject The ad metadata
-     * @return {string|null} The linear click through url. Returns null if no
-     * URL exists.
-     */
-    var _getLinearClickThroughUrl = function(adObject) {
-      var linearClickThroughUrl = null;
-      if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.linear &&
-          adObject.ad.data.linear.clickThrough) {
-        linearClickThroughUrl = adObject.ad.data.linear.clickThrough;
-      }
-      return linearClickThroughUrl;
-    };
-
-    /**
      * Helper function to retrieve the ad object's linear click tracking urls.
      * @private
      * @method SsaiPulse#_getLinearClickTrackingUrls
@@ -829,6 +809,24 @@ OO.Ads.manager(function(_, $)
         title = adObject.title;
       }
       return title;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click through url.
+     * @private
+     * @method SsaiPulse#_getLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The linear click through url. Returns null if no
+     * URL exists.
+     */
+    var _getLinearClickThroughUrl = function(adObject) {
+      var linearClickThroughUrl = null;
+      if (adObject &&
+          adObject.linear &&
+          adObject.linear.clickThrough) {
+        linearClickThroughUrl = adObject.linear.clickThrough;
+      }
+      return linearClickThroughUrl;
     };
 
     /**
