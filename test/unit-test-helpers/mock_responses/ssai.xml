@@ -118,6 +118,7 @@
               </MediaFile>
             </MediaFiles>
             <VideoClicks>
+              <ClickThrough>clickThroughUrl</ClickThrough>
               <ClickTracking>linearClickTrackingUrl</ClickTracking>
             </VideoClicks>
           </Linear>
