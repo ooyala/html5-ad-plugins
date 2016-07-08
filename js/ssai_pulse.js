@@ -902,11 +902,6 @@ OO.Ads.manager(function(_, $)
               {
                 urls = _cacheBuster(urls);
               }
-
-              // log for QA testing purposes; remove before merging to master
-              OO.log("URLs Pinged: ");
-              OO.log(urls);
-
               OO.pixelPings(urls);
               OO.log("SSAI Pulse: \"" + trackingName + "\" tracking URLs pinged");
             }
