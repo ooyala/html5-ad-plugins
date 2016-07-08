@@ -6,6 +6,8 @@
       <Error>errorUrl</Error>
       <Impression>impressionUrl</Impression>
       <Impression>impressionUrl2</Impression>
+      <Impression>impressionUrl3?rnd=%5BCACHEBUSTING%5D</Impression>
+      <Impression>impressionUrl4?rnd=[CACHEBUSTING]</Impression>
       <Creatives>
         <Creative id="video">
           <Linear>
