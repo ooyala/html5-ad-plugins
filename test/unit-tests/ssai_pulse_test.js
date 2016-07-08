@@ -401,4 +401,61 @@ describe('ad_manager_ssai_pulse', function()
     SsaiPulse.playerClicked(ad);
     expect(clickThroughUrl).to.be("clickThroughUrl");
   });
+
+  it('Tracking Events URL with CACHEBUSTING macro should be replaced', function()
+  {
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams)
+    {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    SsaiPulse.initialize(amc);
+
+    SsaiPulse.currentId3Object =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      t: 0,
+      d: 15
+    };
+
+    SsaiPulse.adIdDictionary =
+    {
+      "11de5230-ff5c-4d36-ad77-c0c7644d28e9": true
+    };
+
+    SsaiPulse.currentAd =
+    {
+      ad: {}
+    };
+
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
+
+    var ad = adQueue[0];
+
+    // impression, and start tracking events
+    SsaiPulse.playAd(ad);
+
+    // get the urls in with the "rnd" query parameter, this will contain the
+    // CACHEBUSTING macro that should be replaced.
+    var url;
+    for (url in trackingUrlsPinged)
+    {
+      if (_.has(trackingUrlsPinged, url) && /rnd=/.test(url))
+      {
+        // should not have the cachebusting macros and should be pinged
+        expect(url).to.not.have.string("[CACHEBUSTING]");
+        expect(url).to.not.have.string("%5BCACHEBUSTING%5D");
+        expect(trackingUrlsPinged[url]).to.be(1);
+      }
+    }
+  });
 });

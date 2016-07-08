@@ -89,6 +89,9 @@ OO.Ads.manager(function(_, $)
     // variable to store the timeout used to keep track of how long an SSAI ad plays
     var adDurationTimeout;
 
+    // player configuration parameters / page level params
+    var bustTheCache = true;
+
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
      * remote JS files.
@@ -138,6 +141,14 @@ OO.Ads.manager(function(_, $)
     this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata)
     {
       this.ready = true;
+
+      if (adManagerMetadata)
+      {
+        if (adManagerMetadata["cacheBuster"] === "false")
+        {
+          bustTheCache = false;
+        }
+      }
     };
 
     /**
@@ -876,27 +887,64 @@ OO.Ads.manager(function(_, $)
      * @param {object} urlObject An object with the tracking event names and their
      * associated URL array.
      */
-    var _pingTrackingUrls = _.bind(function(urlObject) {
-      for (var trackingName in urlObject) {
-        if (urlObject.hasOwnProperty(trackingName)) {
-          try {
+    var _pingTrackingUrls = _.bind(function(urlObject)
+    {
+      for (var trackingName in urlObject)
+      {
+        if (urlObject.hasOwnProperty(trackingName))
+        {
+          try
+          {
             var urls = urlObject[trackingName];
-            if (urls) {
+            if (urls)
+            {
+              if (bustTheCache)
+              {
+                urls = _cacheBuster(urls);
+              }
+
+              // log for QA testing purposes; remove before merging to master
+              OO.log("URLs Pinged: ");
+              OO.log(urls);
+
               OO.pixelPings(urls);
               OO.log("SSAI Pulse: \"" + trackingName + "\" tracking URLs pinged");
             }
-            else {
+            else
+            {
               OO.log("SSAI Pulse: No \"" + trackingName + "\" tracking URLs provided to ping");
             }
           }
-          catch(e) {
+          catch(e)
+          {
             OO.log("SSAI Pulse: Failed to ping \"" + trackingName + "\" tracking URLs");
-            if (amc) {
+            if (amc)
+            {
               amc.raiseAdError(e);
             }
           }
         }
       }
+    }, this);
+
+    /**
+     * Replaces the %5BCACHEBUSTING%5D / [CACHEBUSTING] string in each URL in the array with a
+     * random generated string. The purpose of a cachebuster is to keep the URLs unique to prevent
+     * cached responses.
+     * @private
+     * @method SsaiPulse#_cacheBuster
+     * @param {string[]} urls The array of URLs
+     * @returns {string[] The new array of URLs.
+     */
+    var _cacheBuster = _.bind(function(urls)
+    {
+      for (var i = 0; i < urls.length; i++)
+      {
+        var regex = /%5bcachebusting%5d|\[cachebusting\]/i;
+        var randString = OO.getRandomString();
+        urls[i] = urls[i].replace(regex, randString);
+      }
+      return urls;
     }, this);
 
     /**
