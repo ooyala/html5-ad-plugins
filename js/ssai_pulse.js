@@ -144,9 +144,21 @@ OO.Ads.manager(function(_, $)
 
       if (adManagerMetadata)
       {
-        if (adManagerMetadata["cacheBuster"] === "false")
+        if (adManagerMetadata["cacheBuster"])
         {
-          bustTheCache = false;
+          if (adManagerMetadata["cacheBuster"] === "true")
+          {
+            bustTheCache = true;
+          }
+          else if (adManagerMetadata["cacheBuster"] === "false")
+          {
+            bustTheCache = false;
+          }
+          else
+          {
+            OO.log("SSAI Pulse: page level parameter: \"cacheBuster\" expected value: \"true\"" +
+                   " or \"false\", but value received was: " + adManagerMetadata["cacheBuster"]);
+          }
         }
       }
     };
@@ -934,7 +946,9 @@ OO.Ads.manager(function(_, $)
     {
       for (var i = 0; i < urls.length; i++)
       {
-        var regex = /%5bcachebusting%5d|\[cachebusting\]/i;
+        var searchString = "[CACHEBUSTING]";
+        var encodedSearchString = encodeURIComponent(searchString);
+        var regex = new RegExp(encodedSearchString, "i");
         var randString = OO.getRandomString();
         urls[i] = urls[i].replace(regex, randString);
       }
