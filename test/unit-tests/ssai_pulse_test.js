@@ -452,10 +452,21 @@ describe('ad_manager_ssai_pulse', function()
       if (_.has(trackingUrlsPinged, url) && /rnd=/.test(url))
       {
         // should not have the cachebusting macros and should be pinged
-        expect(url).to.not.have.string("[CACHEBUSTING]");
         expect(url).to.not.have.string("%5BCACHEBUSTING%5D");
+
+        // replaced value is not be undefined or ""
+        var rndValue = url.split("=")[1];
+        expect(rndValue).to.not.be(undefined);
+        expect(rndValue).to.not.be("");
+
         expect(trackingUrlsPinged[url]).to.be(1);
       }
     }
+
+    // cacheBuster function should not mutate other URLs without the cachebusting macro"
+    expect(_.keys(trackingUrlsPinged)).to.contain("impressionUrl");
+    expect(_.keys(trackingUrlsPinged)).to.contain("impressionUrl2");
+    expect(_.keys(trackingUrlsPinged)).to.contain("startUrl");
+    expect(_.keys(trackingUrlsPinged)).to.contain("startUrl2");
   });
 });
