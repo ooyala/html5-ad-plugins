@@ -928,7 +928,7 @@ OO.Ads.manager(function(_, $)
      * @private
      * @method SsaiPulse#_cacheBuster
      * @param {string[]} urls The array of URLs
-     * @returns {string[] The new array of URLs.
+     * @returns {string[]} The new array of URLs.
      */
     var _cacheBuster = _.bind(function(urls)
     {
