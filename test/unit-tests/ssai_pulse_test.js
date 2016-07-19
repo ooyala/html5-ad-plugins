@@ -503,9 +503,17 @@ describe('ad_manager_ssai_pulse', function()
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
     expect(SsaiPulse.bustTheCache).to.be(true);
 
+    // boolean true/false should work
     adManagerMetadata =
     {
-      "cacheBuster": false // will not accept boolean
+      "cacheBuster": false
+    };
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.bustTheCache).to.be(false);
+
+    adManagerMetadata =
+    {
+      "cacheBuster": true
     };
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
     expect(SsaiPulse.bustTheCache).to.be(true);

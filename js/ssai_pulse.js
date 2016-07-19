@@ -144,21 +144,32 @@ OO.Ads.manager(function(_, $)
 
       if (adManagerMetadata)
       {
-        if (adManagerMetadata["cacheBuster"])
+        // allow boolean true/false
+        if (_.isBoolean(adManagerMetadata["cacheBuster"]))
         {
-          if (adManagerMetadata["cacheBuster"] === "true")
+          if (adManagerMetadata["cacheBuster"])
           {
             this.bustTheCache = true;
           }
-          else if (adManagerMetadata["cacheBuster"] === "false")
+          else
           {
             this.bustTheCache = false;
           }
-          else
-          {
-            OO.log("SSAI Pulse: page level parameter: \"cacheBuster\" expected value: \"true\"" +
-                   " or \"false\", but value received was: " + adManagerMetadata["cacheBuster"]);
-          }
+        }
+        // allow string true/false
+        else if (adManagerMetadata["cacheBuster"] === "true")
+        {
+          this.bustTheCache = true;
+        }
+        else if (adManagerMetadata["cacheBuster"] === "false")
+        {
+          this.bustTheCache = false;
+        }
+        // log message if parameter does not conform to any of the above values
+        else
+        {
+          OO.log("SSAI Pulse: page level parameter: \"cacheBuster\" expected value: \"true\"" +
+                 " or \"false\", but value received was: " + adManagerMetadata["cacheBuster"]);
         }
       }
     };
