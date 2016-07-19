@@ -479,7 +479,7 @@ describe('ad_manager_ssai_pulse', function()
     var backlotBaseMetadata = {};
     var movieMetadata = {};
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
-    expect(SsaiPulse.bustTheCache).to.be(true);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
 
     // test bad inputs, should default to true
     adManagerMetadata =
@@ -487,21 +487,21 @@ describe('ad_manager_ssai_pulse', function()
       "cacheBuster": ""
     };
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
-    expect(SsaiPulse.bustTheCache).to.be(true);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
 
     adManagerMetadata =
     {
       "cacheBuster": "abcd"
     };
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
-    expect(SsaiPulse.bustTheCache).to.be(true);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
 
     adManagerMetadata =
     {
       "cacheBuster": 0
     };
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
-    expect(SsaiPulse.bustTheCache).to.be(true);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
 
     // boolean true/false should work
     adManagerMetadata =
@@ -509,14 +509,14 @@ describe('ad_manager_ssai_pulse', function()
       "cacheBuster": false
     };
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
-    expect(SsaiPulse.bustTheCache).to.be(false);
+    expect(SsaiPulse.getBustTheCache()).to.be(false);
 
     adManagerMetadata =
     {
       "cacheBuster": true
     };
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
-    expect(SsaiPulse.bustTheCache).to.be(true);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
 
     // should change to false when value is explicitly "false"
     adManagerMetadata =
@@ -524,6 +524,6 @@ describe('ad_manager_ssai_pulse', function()
       "cacheBuster": "false"
     };
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
-    expect(SsaiPulse.bustTheCache).to.be(false);
+    expect(SsaiPulse.getBustTheCache()).to.be(false);
   });
 });

@@ -41,9 +41,6 @@ OO.Ads.manager(function(_, $)
     this.currentId3Object = null;
     this.currentAd = null;
 
-    // player configuration parameters / page level params
-    this.bustTheCache = true;
-
     var amc  = null;
 
     // Tracking Event states
@@ -91,6 +88,9 @@ OO.Ads.manager(function(_, $)
 
     // variable to store the timeout used to keep track of how long an SSAI ad plays
     var adDurationTimeout;
+
+    // player configuration parameters / page level params
+    var bustTheCache = true;
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -149,21 +149,21 @@ OO.Ads.manager(function(_, $)
         {
           if (adManagerMetadata["cacheBuster"])
           {
-            this.bustTheCache = true;
+            bustTheCache = true;
           }
           else
           {
-            this.bustTheCache = false;
+            bustTheCache = false;
           }
         }
         // allow string true/false
         else if (adManagerMetadata["cacheBuster"] === "true")
         {
-          this.bustTheCache = true;
+          bustTheCache = true;
         }
         else if (adManagerMetadata["cacheBuster"] === "false")
         {
-          this.bustTheCache = false;
+          bustTheCache = false;
         }
         // log message if parameter does not conform to any of the above values
         else
@@ -549,6 +549,17 @@ OO.Ads.manager(function(_, $)
     // Helper Functions
 
     /**
+     * Getter for the bustTheCache variable
+     * @public
+     * @method SsaiPulse#_getBustTheCache
+     * @returns {boolean} the bustTheCache variable
+     */
+    this.getBustTheCache = _.bind(function()
+    {
+      return bustTheCache;
+    }, this);
+
+    /**
      * Appends the smart player identifier to the request URL.
      * @private
      * @method SsaiPulse#_makeSmartUrl
@@ -920,7 +931,7 @@ OO.Ads.manager(function(_, $)
             var urls = urlObject[trackingName];
             if (urls)
             {
-              if (this.bustTheCache)
+              if (bustTheCache)
               {
                 urls = _cacheBuster(urls);
               }
