@@ -551,7 +551,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Getter for the bustTheCache variable
      * @public
-     * @method SsaiPulse#_getBustTheCache
+     * @method SsaiPulse#getBustTheCache
      * @returns {boolean} the bustTheCache variable
      */
     this.getBustTheCache = _.bind(function()
