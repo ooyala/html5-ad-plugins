@@ -144,21 +144,25 @@ OO.Ads.manager(function(_, $)
 
       if (adManagerMetadata)
       {
-        if (adManagerMetadata["cacheBuster"])
+        // allow boolean true/false
+        if (_.isBoolean(adManagerMetadata["cacheBuster"]))
         {
-          if (adManagerMetadata["cacheBuster"] === "true")
-          {
-            bustTheCache = true;
-          }
-          else if (adManagerMetadata["cacheBuster"] === "false")
-          {
-            bustTheCache = false;
-          }
-          else
-          {
-            OO.log("SSAI Pulse: page level parameter: \"cacheBuster\" expected value: \"true\"" +
-                   " or \"false\", but value received was: " + adManagerMetadata["cacheBuster"]);
-          }
+          bustTheCache = adManagerMetadata["cacheBuster"];
+        }
+        // allow string true/false
+        else if (adManagerMetadata["cacheBuster"] === "true")
+        {
+          bustTheCache = true;
+        }
+        else if (adManagerMetadata["cacheBuster"] === "false")
+        {
+          bustTheCache = false;
+        }
+        // log message if parameter does not conform to any of the above values
+        else
+        {
+          OO.log("SSAI Pulse: page level parameter: \"cacheBuster\" expected value: \"true\"" +
+                 " or \"false\", but value received was: " + adManagerMetadata["cacheBuster"]);
         }
       }
     };
@@ -536,6 +540,17 @@ OO.Ads.manager(function(_, $)
     };
 
     // Helper Functions
+
+    /**
+     * Getter for the bustTheCache variable
+     * @public
+     * @method SsaiPulse#getBustTheCache
+     * @returns {boolean} the bustTheCache variable
+     */
+    this.getBustTheCache = _.bind(function()
+    {
+      return bustTheCache;
+    }, this);
 
     /**
      * Appends the smart player identifier to the request URL.

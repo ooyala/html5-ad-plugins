@@ -335,7 +335,7 @@ describe('ad_manager_ssai_pulse', function()
     {
       ad: {}
     };
-      
+
     SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
 
     var ad = adQueue[0];
@@ -468,5 +468,62 @@ describe('ad_manager_ssai_pulse', function()
     expect(_.keys(trackingUrlsPinged)).to.contain("impressionUrl2");
     expect(_.keys(trackingUrlsPinged)).to.contain("startUrl");
     expect(_.keys(trackingUrlsPinged)).to.contain("startUrl2");
+  });
+
+  it('Tracking Events URL with CACHEBUSTING macro should be replaced', function()
+  {
+    var adManagerMetadata =
+    {
+      "cacheBuster": "true"
+    };
+    var backlotBaseMetadata = {};
+    var movieMetadata = {};
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
+
+    // test bad inputs, should default to true
+    adManagerMetadata =
+    {
+      "cacheBuster": ""
+    };
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
+
+    adManagerMetadata =
+    {
+      "cacheBuster": "abcd"
+    };
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
+
+    adManagerMetadata =
+    {
+      "cacheBuster": 0
+    };
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
+
+    // boolean true/false should work
+    adManagerMetadata =
+    {
+      "cacheBuster": false
+    };
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.getBustTheCache()).to.be(false);
+
+    adManagerMetadata =
+    {
+      "cacheBuster": true
+    };
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.getBustTheCache()).to.be(true);
+
+    // should change to false when value is explicitly "false"
+    adManagerMetadata =
+    {
+      "cacheBuster": "false"
+    };
+    SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
+    expect(SsaiPulse.getBustTheCache()).to.be(false);
   });
 });
