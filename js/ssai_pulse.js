@@ -149,7 +149,7 @@ OO.Ads.manager(function(_, $)
         {
           if (adManagerMetadata["cacheBuster"])
           {
-            bustTheCache = true;
+            bustTheCache = adManagerMetadata["cacheBuster"];
           }
           else
           {
