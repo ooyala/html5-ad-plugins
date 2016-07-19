@@ -41,6 +41,9 @@ OO.Ads.manager(function(_, $)
     this.currentId3Object = null;
     this.currentAd = null;
 
+    // player configuration parameters / page level params
+    this.bustTheCache = true;
+
     var amc  = null;
 
     // Tracking Event states
@@ -88,9 +91,6 @@ OO.Ads.manager(function(_, $)
 
     // variable to store the timeout used to keep track of how long an SSAI ad plays
     var adDurationTimeout;
-
-    // player configuration parameters / page level params
-    var bustTheCache = true;
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -148,11 +148,11 @@ OO.Ads.manager(function(_, $)
         {
           if (adManagerMetadata["cacheBuster"] === "true")
           {
-            bustTheCache = true;
+            this.bustTheCache = true;
           }
           else if (adManagerMetadata["cacheBuster"] === "false")
           {
-            bustTheCache = false;
+            this.bustTheCache = false;
           }
           else
           {
@@ -909,7 +909,7 @@ OO.Ads.manager(function(_, $)
             var urls = urlObject[trackingName];
             if (urls)
             {
-              if (bustTheCache)
+              if (this.bustTheCache)
               {
                 urls = _cacheBuster(urls);
               }
