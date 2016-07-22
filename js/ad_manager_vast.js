@@ -2650,7 +2650,9 @@ OO.Ads.manager(function(_, $) {
       }
 
       var $paramsNode = $node.find('AdParameters');
-      var $mediaNode = isLinear ? $node.find('MediaFile') : $node.find('StaticResource');
+      //PBI-1828 there have been cases where ads have multiple mediafile tags and it results in a bad url.
+      //so make sure we just pick one of the files. Otherwise, they all get appended to each other later in the code.
+      var $mediaNode = isLinear ? $node.find('MediaFile').first() : $node.find('StaticResource');
       var $companionsNode = this.$_node.find('CompanionAds');
       var $validNode = isLinear ? $mediaNode : $node;
 
