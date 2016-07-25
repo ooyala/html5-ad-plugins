@@ -1056,10 +1056,42 @@ OO.Ads.manager(function(_, $) {
           this.adTrackingInfo[adId] &&
           this.adTrackingInfo[adId].wrapperParentId) {
         var parentId = this.adTrackingInfo[adId].wrapperParentId;
-        var parentAdObject = this.adTrackingInfo[parentId];
-        _handleTrackingUrls(parentAdObject, trackingEventNames);
+        var parentAdTrackingObject = this.adTrackingInfo[parentId];
+        if (parentAdTrackingObject) {
+          var parentAdObject = this.adTrackingInfo[parentId].adObject;
+          _handleTrackingUrls(parentAdObject, trackingEventNames);
+        }
       }
     }, this);
+
+    /**
+     * Helper function to return the object that directly contains the VAST ad information.
+     * The name "adObject" or "ad" is a loaded name in our code. At different points of the
+     * plugin logic, these ad objects contain different properties/information (i.e. the "ad
+     * object" returned from AMC or the "ad object" returned from parsing the VAST ad response).
+     * The "ad object" returned from AMC has the VAST ad object nested in it.
+     * @private
+     * @method Vast#_getVastAdObject
+     * @param {object} adObject The object containing the VAST ad object, or the VAST ad object
+     * itself
+     * @returns {object} The VAST ad object.
+     */
+    var _getVastAdObject = function(adObject) {
+      var vastAdObject = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data) {
+        vastAdObject = adObject.ad.data;
+      }
+      else if (adObject &&
+               adObject.data) {
+        vastAdObject = adObject.data;
+      }
+      else {
+        vastAdObject = adObject;
+      }
+      return vastAdObject;
+    };
 
     /**
      * Helper function to retrieve the ad object's impression urls.
@@ -1069,13 +1101,12 @@ OO.Ads.manager(function(_, $) {
      * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
      */
     var _getImpressionUrls = function(adObject) {
+      adObject = _getVastAdObject(adObject);
       var impressionUrls = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.impression &&
-          adObject.ad.data.impression.length > 0) {
-        impressionUrls = adObject.ad.data.impression;
+          adObject.impression &&
+          adObject.impression.length > 0) {
+        impressionUrls = adObject.impression;
       }
       return impressionUrls;
     };
@@ -1089,14 +1120,13 @@ OO.Ads.manager(function(_, $) {
      * URLs exist.
      */
     var _getLinearClickTrackingUrls = function(adObject) {
+      adObject = _getVastAdObject(adObject);
       var linearClickTrackingUrls = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.linear &&
-          adObject.ad.data.linear.clickTracking &&
-          adObject.ad.data.linear.clickTracking.length > 0) {
-        linearClickTrackingUrls = adObject.ad.data.linear.clickTracking;
+          adObject.linear &&
+          adObject.linear.clickTracking &&
+          adObject.linear.clickTracking.length > 0) {
+        linearClickTrackingUrls = adObject.linear.clickTracking;
       }
       return linearClickTrackingUrls;
     };
@@ -1110,13 +1140,12 @@ OO.Ads.manager(function(_, $) {
      * URL exists.
      */
     var _getLinearClickThroughUrl = function(adObject) {
+      adObject = _getVastAdObject(adObject);
       var linearClickThroughUrl = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.linear &&
-          adObject.ad.data.linear.clickThrough) {
-        linearClickThroughUrl = adObject.ad.data.linear.clickThrough;
+          adObject.linear &&
+          adObject.linear.clickThrough) {
+        linearClickThroughUrl = adObject.linear.clickThrough;
       }
       return linearClickThroughUrl;
     };
@@ -1130,13 +1159,12 @@ OO.Ads.manager(function(_, $) {
      * URL exists.
      */
     var _getNonLinearClickThroughUrl = function(adObject) {
+      adObject = _getVastAdObject(adObject);
       var nonLinearClickThroughUrl = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.nonLinear &&
-          adObject.ad.data.nonLinear.nonLinearClickThrough) {
-        nonLinearClickThroughUrl = adObject.ad.data.nonLinear.nonLinearClickThrough;
+          adObject.nonLinear &&
+          adObject.nonLinear.nonLinearClickThrough) {
+        nonLinearClickThroughUrl = adObject.nonLinear.nonLinearClickThrough;
       }
       return nonLinearClickThroughUrl;
     };
@@ -1150,14 +1178,13 @@ OO.Ads.manager(function(_, $) {
      * URLs exist.
      */
     var _getNonLinearClickTrackingUrls = function(adObject) {
+      adObject = _getVastAdObject(adObject);
       var nonLinearClickTrackingUrls = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.nonLinear &&
-          adObject.ad.data.nonLinear.nonLinearClickTracking &&
-          adObject.ad.data.nonLinear.nonLinearClickTracking.length > 0) {
-        nonLinearClickTrackingUrls = adObject.ad.data.nonLinear.nonLinearClickTracking;
+          adObject.nonLinear &&
+          adObject.nonLinear.nonLinearClickTracking &&
+          adObject.nonLinear.nonLinearClickTracking.length > 0) {
+        nonLinearClickTrackingUrls = adObject.nonLinear.nonLinearClickTracking;
       }
       return nonLinearClickTrackingUrls;
     };
@@ -1170,12 +1197,11 @@ OO.Ads.manager(function(_, $) {
      * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
      */
     var _getHighLevelClickThroughUrl = function(adObject) {
+      adObject = _getVastAdObject(adObject);
       var highLevelClickThroughUrl = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.clickThrough) {
-        highLevelClickThroughUrl = adObject.ad.data.clickThrough;
+          adObject.clickThrough) {
+        highLevelClickThroughUrl = adObject.clickThrough;
       }
       return highLevelClickThroughUrl;
     };
@@ -1205,14 +1231,13 @@ OO.Ads.manager(function(_, $) {
      * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
      */
     var _getTrackingEventUrls = function(adObject, trackingEventName) {
+      adObject = _getVastAdObject(adObject);
       var trackingUrls = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.tracking &&
-          adObject.ad.data.tracking[trackingEventName] &&
-          adObject.ad.data.tracking[trackingEventName].length > 0) {
-        trackingUrls = adObject.ad.data.tracking[trackingEventName];
+          adObject.tracking &&
+          adObject.tracking[trackingEventName] &&
+          adObject.tracking[trackingEventName].length > 0) {
+        trackingUrls = adObject.tracking[trackingEventName];
       }
       return trackingUrls;
     };
@@ -1226,12 +1251,11 @@ OO.Ads.manager(function(_, $) {
      * @returns {string|null} The ad's ID attribute. Returns null if the ID does not exist.
      */
     var _getAdId = function(adObject) {
+      adObject = _getVastAdObject(adObject);
       var adId = null;
       if (adObject &&
-          adObject.ad &&
-          adObject.ad.data &&
-          adObject.ad.data.id) {
-        adId = adObject.ad.data.id;
+          adObject.id) {
+        adId = adObject.id;
       }
       return adId;
     };
