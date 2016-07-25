@@ -159,7 +159,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.trackError = function (code, currentAdId) {
       errorType.push(code);
       if (currentAdId) {
-        if (currentAdId && currentAdId in this.errorInfo) {
+        if (currentAdId && currentAdId in this.adTrackingInfo) {
 
           //directly ping url
           OO.pixelPing();
@@ -182,7 +182,7 @@ describe('ad_manager_vast', function() {
     errorType = [];
     pixelPingCalled= false;
     trackingUrlsPinged = {};
-    vastAdManager.errorInfo = {};
+    vastAdManager.adTrackingInfo = {};
     vastAdManager.adBreaks = [];
     adsClickthroughOpenedCalled = 0;
 
@@ -1263,24 +1263,24 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.id).to.be('6654600');
   });
 
-  it('Vast 3.0, Error Reporting: errorInfo should parse the correct number of errorURLs and ads', function(){
+  it('Vast 3.0, Error Reporting: adTrackingInfo should parse the correct number of errorURLs and ads', function(){
     var jqueryAds = $(linearXML).find("Ad");
     vastAdManager.getErrorTrackingInfo(linearXML, jqueryAds);
     // should have one ad
-    var adIDs = _.keys(vastAdManager.errorInfo);
+    var adIDs = _.keys(vastAdManager.adTrackingInfo);
     expect(adIDs.length).to.be(1);
     // should have only one errorurl
-    var adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    var adErrorInfo = vastAdManager.adTrackingInfo[adIDs[0]];
     expect(adErrorInfo.errorURLs.length).to.be(1);
-    vastAdManager.errorInfo = {};
+    vastAdManager.adTrackingInfo = {};
 
     jqueryAds = $(nonLinearXML).find("Ad");
     vastAdManager.getErrorTrackingInfo(nonLinearXML, jqueryAds);
     // should have one ad
-    adIDs = _.keys(vastAdManager.errorInfo);
+    adIDs = _.keys(vastAdManager.adTrackingInfo);
     expect(adIDs.length).to.be(1);
     // should have only no errorurls
-    adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    adErrorInfo = vastAdManager.adTrackingInfo[adIDs[0]];
     expect(adErrorInfo.errorURLs.length).to.be(0);
   });
 
@@ -1311,7 +1311,7 @@ describe('ad_manager_vast', function() {
    *        }
    *      ]
    *    };
-   *    vastAdManager.errorInfo = {
+   *    vastAdManager.adTrackingInfo = {
    *      "wrapperId": {}
    *    };
    *
@@ -1477,7 +1477,7 @@ describe('ad_manager_vast', function() {
 
     // setup parameters so nonlinear ad fails because there are no mediaFiles in XML
     // but still pings error url if there is an error tag
-    vastAdManager.errorInfo = {
+    vastAdManager.adTrackingInfo = {
       "linearAd1": {}
     };
 
@@ -1505,7 +1505,7 @@ describe('ad_manager_vast', function() {
 
     // setup parameters so nonlinear ad fails because there is no ad url
     // but still pings error url if there is an error tag
-    vastAdManager.errorInfo = {
+    vastAdManager.adTrackingInfo = {
       "nonLinearAd1": {}
     };
 
