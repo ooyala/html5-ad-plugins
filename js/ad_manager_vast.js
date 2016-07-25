@@ -36,7 +36,7 @@ OO.Ads.manager(function(_, $) {
    * @property {string} adURLOverride If the page level params override the ad url then it is stored here
    * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
-   * @property {object} errorInfo The object that holds each individual ad id's error urls. Used for error reporting.
+   * @property {object} adTrackingInfo The object that holds each individual ad id's tracking urls.
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
    * show the ads
    * @property {object} currentAdBeingLoaded Stores the ad data of the ad that is currently being loaded
@@ -57,7 +57,7 @@ OO.Ads.manager(function(_, $) {
     this.movieMd = null;
     this.adURLOverride;
     this.lastOverlayAd;
-    this.errorInfo = {};
+    this.adTrackingInfo = {};
     this.VAST_AD_CONTAINER = '#vast_ad_container';
     this.currentAdBeingLoaded = null;
     // when wrapper ajax callback returns, wrapperParentId will be properly set
@@ -482,7 +482,7 @@ OO.Ads.manager(function(_, $) {
           error.errorURLs = [errorElement.text()];
         }
         var adId = $(ad).prop("id");
-        this.errorInfo[adId] = error;
+        this.adTrackingInfo[adId] = error;
       }, this);
     };
 
@@ -1020,7 +1020,9 @@ OO.Ads.manager(function(_, $) {
      * @param {object} adObject The ad metadata
      * @param {string[]} trackingEventNames The array of tracking event names
      */
-    var _handleTrackingUrls = function(adObject, trackingEventNames) {
+    var _handleTrackingUrls = _.bind(function(adObject, trackingEventNames) {
+      var adId = _getAdId(adObject);
+
       if (adObject) {
         _.each(trackingEventNames, function(trackingEventName) {
           var urls;
@@ -1039,7 +1041,7 @@ OO.Ads.manager(function(_, $) {
           }
           var urlObject = {};
           urlObject[trackingEventName] = urls;
-          _pingTrackingUrls(urlObject);
+          _pingTrackingUrls(urlObject, adId);
         });
       }
       else {
@@ -1047,9 +1049,17 @@ OO.Ads.manager(function(_, $) {
             "VAST: Tried to ping URLs: [" + trackingEventNames +
             "] but ad object passed in was: " + adObject
         );
-        return;
       }
-    };
+
+      // Try to ping parent tracking events as well
+      if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+        var parentId = this.adTrackingInfo[adId].wrapperParentId;
+        var parentAdObject = this.adTrackingInfo[parentId];
+        _handleTrackingUrls(parentAdObject, trackingEventNames);
+      }
+    }, this);
 
     /**
      * Helper function to retrieve the ad object's impression urls.
@@ -1207,6 +1217,24 @@ OO.Ads.manager(function(_, $) {
       return trackingUrls;
     };
 
+    /**
+     * Helper function to retrieve the ad object's ad ID (the value of the <Ad> element's "id" attribute).
+     * Not the "id" our ad manager assigns.
+     * @private
+     * @method Vast#_getAdId
+     * @param {object} adObject The ad metadata
+     * @returns {string|null} The ad's ID attribute. Returns null if the ID does not exist.
+     */
+    var _getAdId = function(adObject) {
+      var adId = null;
+      if (adObject &&
+          adObject.ad &&
+          adObject.ad.data &&
+          adObject.ad.data.id) {
+        adId = adObject.ad.data.id;
+      }
+      return adId;
+    };
 
     /**
      * Helper function to ping URLs in each set of tracking event arrays.
@@ -1214,22 +1242,23 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#_pingTrackingUrls
      * @param {object} urlObject An object with the tracking event names and their
      * associated URL array.
+     * @param {object} adId The ad ID
      */
-    var _pingTrackingUrls = _.bind(function(urlObject) {
+    var _pingTrackingUrls = _.bind(function(urlObject, adId) {
       for (var trackingName in urlObject) {
         if (urlObject.hasOwnProperty(trackingName)) {
           try {
             var urls = urlObject[trackingName];
             if (urls) {
               OO.pixelPings(urls);
-              OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged");
+              OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged for VAST Ad Id: " + adId);
             }
             else {
-              OO.log("VAST: No \"" + trackingName + "\" tracking URLs provided to ping");
+              OO.log("VAST: No \"" + trackingName + "\" tracking URLs provided to ping for VAST Ad Id: " + adId);
             }
           }
           catch(e) {
-            OO.log("VAST: Failed to ping \"" + trackingName + "\" tracking URLs");
+            OO.log("VAST: Failed to ping \"" + trackingName + "\" tracking URLs for VAST Ad Id: " + adId);
             if (this.amc) {
               this.amc.raiseAdError(e);
             }
@@ -1533,9 +1562,9 @@ OO.Ads.manager(function(_, $) {
      * @param {string} dataType Type of data, currently either "xml" if vast fails to load and "script" if it loads
      * successfully.
      * @param {object} loadingAd The current Ad metadata that is being loaded
-     * @param {string} wrapperParentId Is the current ad's "parent" wrapper ID. Could be
+     * @param {string} wrapperParentId The current ad's "parent" ad id. Could be
      * undefined if ad does not have parent/wrapper. We want to pass this in to the next vast response
-     * so the new ad knows who its parent is for error reporting purposes.
+     * so the new ad knows who its parent is for tracking event purposes.
      */
     this.ajax = function(url, errorCallback, dataType, loadingAd, wrapperParentId) {
       $.ajax({
@@ -1548,8 +1577,8 @@ OO.Ads.manager(function(_, $) {
         crossDomain: true,
         cache:false,
         //TODO: should pass wrapperParentId here for wrapper
-        success: (dataType == "script") ? function() {} : _.bind(this.onResponse, this, loadingAd
-          || this.currentAdBeingLoaded),
+        success: (dataType == "script") ? function() {} : _.bind(this.onResponse, this, wrapperParentId,
+            loadingAd || this.currentAdBeingLoaded),
         error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
       });
       this.currentAdBeingLoaded = null;
@@ -1707,9 +1736,9 @@ OO.Ads.manager(function(_, $) {
      * @param {boolean} currentAdId Ad ID of current ad
      */
     this.trackError = function(code, currentAdId) {
-      if (currentAdId && currentAdId in this.errorInfo) {
-        this.pingURLs(this.errorInfo[currentAdId].errorURLs);
-        var parentId = this.errorInfo[currentAdId].wrapperParentId;
+      if (currentAdId && currentAdId in this.adTrackingInfo) {
+        this.pingURLs(this.adTrackingInfo[currentAdId].errorURLs);
+        var parentId = this.adTrackingInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
         if (parentId) {
@@ -2100,7 +2129,7 @@ OO.Ads.manager(function(_, $) {
       var linear = jqueryXML.find("Linear").eq(0);
       var nonLinearAds = jqueryXML.find("NonLinearAds");
 
-      if (result.type === AD_TYPE.WRAPPER) { result.VASTAdTagURI = jqueryXML.find("VASTAdTagURI").text(); }
+      if (result.type === AD_TYPE.WRAPPER) { result.vastAdTagUri = jqueryXML.find("VASTAdTagURI").text(); }
       result.error = filterEmpty(jqueryXML.find("Error").map(function() { return $(this).text(); }));
       result.impression = filterEmpty(jqueryXML.find("Impression").map(function() { return $(this).text(); }));
       result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function() { return $(this).text(); })));
@@ -2268,6 +2297,7 @@ OO.Ads.manager(function(_, $) {
           }
         } else if (ad.type === AD_TYPE.WRAPPER) {
           //TODO: Wrapper ads
+          _handleWrapperAd(ad, adLoaded);
         }
       }, this));
 
@@ -2292,6 +2322,9 @@ OO.Ads.manager(function(_, $) {
           } else {
             processedFallbackAd = fallbackAd;
           }
+        }
+        else if (ad.type === AD_TYPE.WRAPPER) {
+          _handleWrapperAd(ad, adLoaded);
         }
       }
 
@@ -2324,6 +2357,28 @@ OO.Ads.manager(function(_, $) {
 
     }, this);
 
+    var _handleWrapperAd = _.bind(function(ad, adLoaded) {
+      if (ad.vastAdTagUri) {
+        // Store the ad object
+        if (_.has(this.adTrackingInfo, ad.id)) {
+          this.adTrackingInfo[ad.id].adObject = ad;
+          this.adTrackingInfo[ad.id].wrapperParentId = this.wrapperParentId;
+        }
+        // Theoretically, this branch should not ever execute because _getErrorTrackingInfo()
+        // should have already added the ad id to the adTrackingInfo dictionary.
+        else {
+          this.adTrackingInfo[ad.id] = {
+            adObject: ad,
+            errorURLs: [],
+            wrapperParentId: this.wrapperParentId
+          };
+        }
+        if (!this.testMode) {
+          this.ajax(ad.vastAdTagUri, this.onVastError, 'xml', adLoaded, ad.id);
+        }
+      }
+    }, this);
+
     /**
      * Helper function to determine if the response XML is a VMAP XML.
      * @private
@@ -2340,15 +2395,18 @@ OO.Ads.manager(function(_, $) {
      * When the ad tag url comes back with a response.
      * @public
      * @method Vast#onResponse
+     * @param {string} wrapperParentId The current ad's "parent" ad id. Could be
+     * undefined if ad does not have parent/wrapper. We want to pass this in to the next vast response
+     * so the new ad knows who its parent is for tracking event purposes.
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {XMLDocument} xml The xml returned from loading the ad
      */
-    this.onResponse = function(adLoaded, xml) {
+    this.onResponse = function(wrapperParentId, adLoaded, xml) {
       if (_isVMAPResponse(xml)) {
         this.onVMAPResponse(xml);
       }
       else {
-        this.onVastResponse(adLoaded, xml);
+        this.onVastResponse(adLoaded, xml, wrapperParentId);
       }
     };
 
@@ -2360,7 +2418,7 @@ OO.Ads.manager(function(_, $) {
      * @method Vast#onVastResponse
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {XMLDocument} xml The xml returned from loading the ad
-     * @param {string} wrapperParentIdArg Is the current ad's "parent" wrapper ID. This argument would be set on an ajax
+     * @param {string} wrapperParentIdArg Is the current ad's "parent" ad id. This argument would be set on an ajax
      * call for a wrapper ad. This argument could also be undefined if ad did not have parent/wrapper.
      */
     this.onVastResponse = function(adLoaded, xml, wrapperParentIdArg) {
