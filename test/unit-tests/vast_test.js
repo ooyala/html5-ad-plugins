@@ -2355,7 +2355,7 @@ describe('ad_manager_vast', function() {
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
     var parentDepthOneId = "wrapper-parent-1";
     var parentDepthTwoId = "wrapper-parent-2";
-    var leafId = "6654644";
+    var leafId = "6654644"; // Ad ID from linearXML file
 
     // need to fake wrapper ajax calls
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
@@ -2410,32 +2410,22 @@ describe('ad_manager_vast', function() {
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
     var parentDepthOneId = "wrapper-parent-1";
     var parentDepthTwoId = "wrapper-parent-2";
-    var leafId = "6654644";
+    var leafId = "6654644"; // Ad ID from linearXML file
 
     // need to fake wrapper ajax calls
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
     vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
     vastAdManager.onVastResponse(vast_ad, linearXML, parentDepthTwoId);
-   
-    var adTrackingInfo = vastAdManager.adTrackingInfo;
 
-    // adTrackingInfo should have the three ads parsed
-    expect(_.keys(adTrackingInfo).length).to.be(3);
-    expect(_.has(adTrackingInfo, parentDepthOneId)).to.be(true);
-    expect(_.has(adTrackingInfo, parentDepthTwoId)).to.be(true);
-    expect(_.has(adTrackingInfo, leafId)).to.be(true);
+    var ad = amc.timeline[1];
 
-    var parentDepthOneObject = adTrackingInfo[parentDepthOneId];
-    var parentDepthTwoObject = adTrackingInfo[parentDepthTwoId];
-    var leafObject = adTrackingInfo[leafId];
+    // creativeView, impression, and start tracking events
+    vastAdManager.playAd(ad);
 
-    // Ad Tracking Objects should have correct wrapper parent IDs
-    expect(parentDepthOneObject.wrapperParentId).to.be(null);
-    expect(parentDepthTwoObject.wrapperParentId).to.be(parentDepthOneId);
-    expect(leafObject.wrapperParentId).to.be(parentDepthTwoId);
-
-    expect(parentDepthOneObject.adObject).to.not.be(null);
-    expect(parentDepthTwoObject.adObject).to.not.be(null);
-    expect(leafObject.adObject).to.be(null);
+    // all three ads have the impression and start url, but only
+    // the inline linear ad has the creative url
+    expect(trackingUrlsPinged.impressionUrl).to.be(3);
+    expect(trackingUrlsPinged.startUrl).to.be(3);
+    expect(trackingUrlsPinged.creativeViewUrl).to.be(1);
   });
 });
