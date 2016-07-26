@@ -2379,9 +2379,9 @@ describe('ad_manager_vast', function() {
     expect(parentDepthTwoObject.wrapperParentId).to.be(parentDepthOneId);
     expect(leafObject.wrapperParentId).to.be(parentDepthTwoId);
 
-    expect(parentDepthOneObject.adObject).to.not.be(null);
-    expect(parentDepthTwoObject.adObject).to.not.be(null);
-    expect(leafObject.adObject).to.be(null);
+    expect(parentDepthOneObject.vastAdObject).to.not.be(null);
+    expect(parentDepthTwoObject.vastAdObject).to.not.be(null);
+    expect(leafObject.vastAdObject).to.be(null);
   });
 
   it('VAST: Wrapper ads\' tracking events should be pinged if child\'s events are pinged', function() {
@@ -2422,10 +2422,15 @@ describe('ad_manager_vast', function() {
     // creativeView, impression, and start tracking events
     vastAdManager.playAd(ad);
 
-    // all three ads have the impression and start url, but only
-    // the inline linear ad has the creative url
-    expect(trackingUrlsPinged.impressionUrl).to.be(3);
-    expect(trackingUrlsPinged.startUrl).to.be(3);
+    // leaf and parent level ad events should be pinged
+    expect(trackingUrlsPinged.impressionUrl).to.be(1);
+    expect(trackingUrlsPinged.startUrl).to.be(1);
     expect(trackingUrlsPinged.creativeViewUrl).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper2Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper2Url).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
   });
 });
