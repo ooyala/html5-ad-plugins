@@ -36,7 +36,7 @@ OO.Ads.manager(function(_, $) {
    * @property {string} adURLOverride If the page level params override the ad url then it is stored here
    * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
-   * @property {object} adTrackingInfo The object that holds each individual ad id's tracking urls.
+   * @property {object} adTrackingInfo The object that holds each individual ad id's tracking urls (including error reporting).
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
    * show the ads
    * @property {object} currentAdBeingLoaded Stores the ad data of the ad that is currently being loaded
@@ -473,7 +473,7 @@ OO.Ads.manager(function(_, $) {
     this.getErrorTrackingInfo = function(vastXML, ads) {
       _.each(ads, function(ad) {
         var error = {
-          adObject: null,
+          vastAdObject: null,
           errorURLs: [],
           wrapperParentId: this.wrapperParentId || null
         };
@@ -1018,27 +1018,27 @@ OO.Ads.manager(function(_, $) {
      * Ping a list of tracking event names' URLs.
      * @private
      * @method Vast#_handleTrackingUrls
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @param {string[]} trackingEventNames The array of tracking event names
      */
-    var _handleTrackingUrls = _.bind(function(adObject, trackingEventNames) {
-      var adId = _getAdId(adObject);
+    var _handleTrackingUrls = _.bind(function(amcAd, trackingEventNames) {
+      var adId = _getAdId(amcAd);
 
-      if (adObject) {
+      if (amcAd) {
         _.each(trackingEventNames, function(trackingEventName) {
           var urls;
           switch (trackingEventName) {
             case "impression":
-              urls = _getImpressionUrls(adObject);
+              urls = _getImpressionUrls(amcAd);
               break;
             case "linearClickTracking":
-              urls = _getLinearClickTrackingUrls(adObject);
+              urls = _getLinearClickTrackingUrls(amcAd);
               break;
             case "nonLinearClickTracking":
-              urls = _getNonLinearClickTrackingUrls(adObject);
+              urls = _getNonLinearClickTrackingUrls(amcAd);
               break;
             default:
-              urls = _getTrackingEventUrls(adObject, trackingEventName);
+              urls = _getTrackingEventUrls(amcAd, trackingEventName);
           }
           var urlObject = {};
           urlObject[trackingEventName] = urls;
@@ -1048,7 +1048,7 @@ OO.Ads.manager(function(_, $) {
       else {
         console.log(
             "VAST: Tried to ping URLs: [" + trackingEventNames +
-            "] but ad object passed in was: " + adObject
+            "] but ad object passed in was: " + amcAd
         );
       }
 
@@ -1059,7 +1059,7 @@ OO.Ads.manager(function(_, $) {
         var parentId = this.adTrackingInfo[adId].wrapperParentId;
         var parentAdTrackingObject = this.adTrackingInfo[parentId];
         if (parentAdTrackingObject) {
-          var parentAdObject = this.adTrackingInfo[parentId].adObject;
+          var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
           _handleTrackingUrls(parentAdObject, trackingEventNames);
         }
       }
@@ -1067,29 +1067,25 @@ OO.Ads.manager(function(_, $) {
 
     /**
      * Helper function to return the object that directly contains the VAST ad information.
-     * The name "adObject" or "ad" is a loaded name in our code. At different points of the
-     * plugin logic, these ad objects contain different properties/information (i.e. the "ad
-     * object" returned from AMC or the "ad object" returned from parsing the VAST ad response).
-     * The "ad object" returned from AMC has the VAST ad object nested in it.
      * @private
      * @method Vast#_getVastAdObject
-     * @param {object} adObject The object containing the VAST ad object, or the VAST ad object
-     * itself
+     * @param {object} amcAd The AMC Ad object containing the VAST ad object, or the VAST ad
+     * object itself
      * @returns {object} The VAST ad object.
      */
-    var _getVastAdObject = function(adObject) {
+    var _getVastAdObject = function(amcAd) {
       var vastAdObject = null;
-      if (adObject &&
-          adObject.ad &&
-          adObject.ad.data) {
-        vastAdObject = adObject.ad.data;
+      if (amcAd &&
+          amcAd.ad &&
+          amcAd.ad.data) {
+        vastAdObject = amcAd.ad.data;
       }
-      else if (adObject &&
-               adObject.data) {
-        vastAdObject = adObject.data;
+      else if (amcAd &&
+               amcAd.data) {
+        vastAdObject = amcAd.data;
       }
       else {
-        vastAdObject = adObject;
+        vastAdObject = amcAd;
       }
       return vastAdObject;
     };
@@ -1098,16 +1094,16 @@ OO.Ads.manager(function(_, $) {
      * Helper function to retrieve the ad object's impression urls.
      * @private
      * @method Vast#_getImpressionUrls
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
      */
-    var _getImpressionUrls = function(adObject) {
-      adObject = _getVastAdObject(adObject);
+    var _getImpressionUrls = function(amcAd) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var impressionUrls = null;
-      if (adObject &&
-          adObject.impression &&
-          adObject.impression.length > 0) {
-        impressionUrls = adObject.impression;
+      if (vastAdObject &&
+          vastAdObject.impression &&
+          vastAdObject.impression.length > 0) {
+        impressionUrls = vastAdObject.impression;
       }
       return impressionUrls;
     };
@@ -1116,18 +1112,18 @@ OO.Ads.manager(function(_, $) {
      * Helper function to retrieve the ad object's linear click tracking urls.
      * @private
      * @method Vast#_getLinearClickTrackingUrls
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @return {string[]|null} The array of linear click tracking urls. Returns null if no
      * URLs exist.
      */
-    var _getLinearClickTrackingUrls = function(adObject) {
-      adObject = _getVastAdObject(adObject);
+    var _getLinearClickTrackingUrls = function(amcAd) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var linearClickTrackingUrls = null;
-      if (adObject &&
-          adObject.linear &&
-          adObject.linear.clickTracking &&
-          adObject.linear.clickTracking.length > 0) {
-        linearClickTrackingUrls = adObject.linear.clickTracking;
+      if (vastAdObject &&
+          vastAdObject.linear &&
+          vastAdObject.linear.clickTracking &&
+          vastAdObject.linear.clickTracking.length > 0) {
+        linearClickTrackingUrls = vastAdObject.linear.clickTracking;
       }
       return linearClickTrackingUrls;
     };
@@ -1136,17 +1132,17 @@ OO.Ads.manager(function(_, $) {
      * Helper function to retrieve the ad object's linear click through url.
      * @private
      * @method Vast#_getLinearClickThroughUrl
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @return {string|null} The linear click through url. Returns null if no
      * URL exists.
      */
-    var _getLinearClickThroughUrl = function(adObject) {
-      adObject = _getVastAdObject(adObject);
+    var _getLinearClickThroughUrl = function(amcAd) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var linearClickThroughUrl = null;
-      if (adObject &&
-          adObject.linear &&
-          adObject.linear.clickThrough) {
-        linearClickThroughUrl = adObject.linear.clickThrough;
+      if (vastAdObject &&
+          vastAdObject.linear &&
+          vastAdObject.linear.clickThrough) {
+        linearClickThroughUrl = vastAdObject.linear.clickThrough;
       }
       return linearClickThroughUrl;
     };
@@ -1155,17 +1151,17 @@ OO.Ads.manager(function(_, $) {
      * Helper function to retrieve the ad object's nonlinear click through url.
      * @private
      * @method Vast#_getNonLinearClickThroughUrl
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @return {string|null} The nonlinear click through url. Returns null if no
      * URL exists.
      */
-    var _getNonLinearClickThroughUrl = function(adObject) {
-      adObject = _getVastAdObject(adObject);
+    var _getNonLinearClickThroughUrl = function(amcAd) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var nonLinearClickThroughUrl = null;
-      if (adObject &&
-          adObject.nonLinear &&
-          adObject.nonLinear.nonLinearClickThrough) {
-        nonLinearClickThroughUrl = adObject.nonLinear.nonLinearClickThrough;
+      if (vastAdObject &&
+          vastAdObject.nonLinear &&
+          vastAdObject.nonLinear.nonLinearClickThrough) {
+        nonLinearClickThroughUrl = vastAdObject.nonLinear.nonLinearClickThrough;
       }
       return nonLinearClickThroughUrl;
     };
@@ -1174,18 +1170,18 @@ OO.Ads.manager(function(_, $) {
      * Helper function to retrieve the ad object's nonlinear click tracking urls.
      * @private
      * @method Vast#_getNonLinearClickTrackingUrls
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @return {string[]|null} The array of nonlinear click tracking urls. Returns null if no
      * URLs exist.
      */
-    var _getNonLinearClickTrackingUrls = function(adObject) {
-      adObject = _getVastAdObject(adObject);
+    var _getNonLinearClickTrackingUrls = function(amcAd) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var nonLinearClickTrackingUrls = null;
-      if (adObject &&
-          adObject.nonLinear &&
-          adObject.nonLinear.nonLinearClickTracking &&
-          adObject.nonLinear.nonLinearClickTracking.length > 0) {
-        nonLinearClickTrackingUrls = adObject.nonLinear.nonLinearClickTracking;
+      if (vastAdObject &&
+          vastAdObject.nonLinear &&
+          vastAdObject.nonLinear.nonLinearClickTracking &&
+          vastAdObject.nonLinear.nonLinearClickTracking.length > 0) {
+        nonLinearClickTrackingUrls = vastAdObject.nonLinear.nonLinearClickTracking;
       }
       return nonLinearClickTrackingUrls;
     };
@@ -1194,15 +1190,15 @@ OO.Ads.manager(function(_, $) {
      * Helper function to get an ad object's "high level" click through url.
      * @private
      * @method Vast#_getHighLevelClickThroughUrl
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
      */
-    var _getHighLevelClickThroughUrl = function(adObject) {
-      adObject = _getVastAdObject(adObject);
+    var _getHighLevelClickThroughUrl = function(amcAd) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var highLevelClickThroughUrl = null;
-      if (adObject &&
-          adObject.clickThrough) {
-        highLevelClickThroughUrl = adObject.clickThrough;
+      if (vastAdObject &&
+          vastAdObject.clickThrough) {
+        highLevelClickThroughUrl = vastAdObject.clickThrough;
       }
       return highLevelClickThroughUrl;
     };
@@ -1211,14 +1207,14 @@ OO.Ads.manager(function(_, $) {
      * Helper function to get an ad object's "ooyala" click through url.
      * @private
      * @method Vast#_getOoyalaClickThroughUrl
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
      */
-    var _getOoyalaClickThroughUrl = function(adObject) {
+    var _getOoyalaClickThroughUrl = function(amcAd) {
       var ooyalaClickThroughUrl = null;
-      if (adObject &&
-          adObject.click_url) {
-        ooyalaClickThroughUrl = adObject.click_url;
+      if (amcAd &&
+          amcAd.click_url) {
+        ooyalaClickThroughUrl = amcAd.click_url;
       }
       return ooyalaClickThroughUrl;
     };
@@ -1227,32 +1223,32 @@ OO.Ads.manager(function(_, $) {
      * Helper function to retrieve the ad object's tracking urls under a specific event name.
      * @private
      * @method Vast#_getTrackingEventUrls
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @param {string} trackingEventName The name of the tracking event
      * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
      */
-    var _getTrackingEventUrls = function(adObject, trackingEventName) {
-      adObject = _getVastAdObject(adObject);
+    var _getTrackingEventUrls = function(amcAd, trackingEventName) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var trackingUrls = null;
 
       // get tracking urls from both the linear and nonLinear object
       var linearTrackingUrls = [];
       var nonLinearTrackingUrls = [];
 
-      if (adObject &&
-          adObject.linear &&
-          adObject.linear.tracking &&
-          adObject.linear.tracking[trackingEventName] &&
-          adObject.linear.tracking[trackingEventName].length > 0) {
-        linearTrackingUrls = adObject.linear.tracking[trackingEventName];
+      if (vastAdObject &&
+          vastAdObject.linear &&
+          vastAdObject.linear.tracking &&
+          vastAdObject.linear.tracking[trackingEventName] &&
+          vastAdObject.linear.tracking[trackingEventName].length > 0) {
+        linearTrackingUrls = vastAdObject.linear.tracking[trackingEventName];
       }
 
-      if (adObject &&
-          adObject.nonLinear &&
-          adObject.nonLinear.tracking &&
-          adObject.nonLinear.tracking[trackingEventName] &&
-          adObject.nonLinear.tracking[trackingEventName].length > 0) {
-        nonLinearTrackingUrls = adObject.nonLinear.tracking[trackingEventName];
+      if (vastAdObject &&
+          vastAdObject.nonLinear &&
+          vastAdObject.nonLinear.tracking &&
+          vastAdObject.nonLinear.tracking[trackingEventName] &&
+          vastAdObject.nonLinear.tracking[trackingEventName].length > 0) {
+        nonLinearTrackingUrls = vastAdObject.nonLinear.tracking[trackingEventName];
       }
 
       if (!_.isEmpty(linearTrackingUrls) || !_.isEmpty(nonLinearTrackingUrls)) {
@@ -1267,15 +1263,15 @@ OO.Ads.manager(function(_, $) {
      * Not the "id" our ad manager assigns.
      * @private
      * @method Vast#_getAdId
-     * @param {object} adObject The ad metadata
+     * @param {object} amcAd The AMC ad object
      * @returns {string|null} The ad's ID attribute. Returns null if the ID does not exist.
      */
-    var _getAdId = function(adObject) {
-      adObject = _getVastAdObject(adObject);
+    var _getAdId = function(amcAd) {
+      var vastAdObject = _getVastAdObject(amcAd);
       var adId = null;
-      if (adObject &&
-          adObject.id) {
-        adId = adObject.id;
+      if (vastAdObject &&
+          vastAdObject.id) {
+        adId = vastAdObject.id;
       }
       return adId;
     };
@@ -2340,14 +2336,13 @@ OO.Ads.manager(function(_, $) {
             adUnits.push(ad);
           }
         } else if (ad.type === AD_TYPE.WRAPPER) {
-          //TODO: Wrapper ads
+          //TODO: Add wrapper ad depth limit
           _handleWrapperAd(ad, adLoaded);
         }
       }, this));
 
       if (fallbackAd) {
-        //Only handle inline fallback ads right now.
-        //TODO: Wrapper fallback ads
+        //TODO: Add wrapper ad depth limit
         if (fallbackAd.type === AD_TYPE.INLINE) {
           wrapperAds = {
             error: [],
@@ -2401,24 +2396,32 @@ OO.Ads.manager(function(_, $) {
 
     }, this);
 
-    var _handleWrapperAd = _.bind(function(ad, adLoaded) {
-      if (ad.vastAdTagUri) {
+    /**
+     * Helper function to handle wrapper ads.
+     * @private
+     * @method Vast#_handleWrapperAd
+     * @param {object} vastAdObject The VAST ad object
+     * @param {object} adLoaded The ad loaded object and metadata
+     */
+    var _handleWrapperAd = _.bind(function(vastAdObject, adLoaded) {
+      if (vastAdObject.vastAdTagUri) {
+        var adId = _getAdId(vastAdObject);
         // Store the ad object
-        if (_.has(this.adTrackingInfo, ad.id)) {
-          this.adTrackingInfo[ad.id].adObject = ad;
-          this.adTrackingInfo[ad.id].wrapperParentId = this.wrapperParentId || null;
+        if (_.has(this.adTrackingInfo, adId)) {
+          this.adTrackingInfo[adId].vastAdObject = vastAdObject;
+          this.adTrackingInfo[adId].wrapperParentId = this.wrapperParentId || null;
         }
         // Theoretically, this branch should not ever execute because _getErrorTrackingInfo()
         // should have already added the ad id to the adTrackingInfo dictionary.
         else {
-          this.adTrackingInfo[ad.id] = {
-            adObject: ad,
+          this.adTrackingInfo[adId] = {
+            vastAdObject: vastAdObject,
             errorURLs: [],
             wrapperParentId: this.wrapperParentId || null
           };
         }
         if (!this.testMode) {
-          this.ajax(ad.vastAdTagUri, this.onVastError, 'xml', adLoaded, ad.id);
+          this.ajax(vastAdObject.vastAdTagUri, this.onVastError, 'xml', adLoaded, adId);
         }
       }
     }, this);

@@ -3,17 +3,17 @@
   <Wrapper>
     <AdTitle>wrapperParentAd2</AdTitle>
     <VASTAdTagURI>vastad.xml</VASTAdTagURI>
-    <Impression>impressionUrl</Impression>
-    <Error>errorUrl</Error>
+    <Impression>impressionWrapper2Url</Impression>
+    <Error>errorWrapper2Url</Error>
 	<Creatives>
 		<Creative AdID="wrapper-parent-creative-id-2">
 			<Linear>
 				<TrackingEvents>
-          <Tracking event="start">startUrl</Tracking>
-          <Tracking event="firstQuartile">firstQuartileUrl</Tracking>
-          <Tracking event="midpoint">midpointUrl</Tracking>
-          <Tracking event="thirdQuartile">thirdQuartileUrl</Tracking>
-          <Tracking event="complete">completeUrl</Tracking>
+          <Tracking event="start">startWrapper2Url</Tracking>
+          <Tracking event="firstQuartile">firstQuartileWrapper2Url</Tracking>
+          <Tracking event="midpoint">midpointWrapper2Url</Tracking>
+          <Tracking event="thirdQuartile">thirdQuartileWrapper2Url</Tracking>
+          <Tracking event="complete">completeWrapper2Url</Tracking>
 				</TrackingEvents>
 			</Linear>
 		</Creative>
