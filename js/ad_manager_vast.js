@@ -473,6 +473,7 @@ OO.Ads.manager(function(_, $) {
     this.getErrorTrackingInfo = function(vastXML, ads) {
       _.each(ads, function(ad) {
         var error = {
+          adObject: null,
           errorURLs: [],
           wrapperParentId: this.wrapperParentId || null
         };
@@ -2386,7 +2387,7 @@ OO.Ads.manager(function(_, $) {
         // Store the ad object
         if (_.has(this.adTrackingInfo, ad.id)) {
           this.adTrackingInfo[ad.id].adObject = ad;
-          this.adTrackingInfo[ad.id].wrapperParentId = this.wrapperParentId;
+          this.adTrackingInfo[ad.id].wrapperParentId = this.wrapperParentId || null;
         }
         // Theoretically, this branch should not ever execute because _getErrorTrackingInfo()
         // should have already added the ad id to the adTrackingInfo dictionary.
@@ -2394,7 +2395,7 @@ OO.Ads.manager(function(_, $) {
           this.adTrackingInfo[ad.id] = {
             adObject: ad,
             errorURLs: [],
-            wrapperParentId: this.wrapperParentId
+            wrapperParentId: this.wrapperParentId || null
           };
         }
         if (!this.testMode) {
