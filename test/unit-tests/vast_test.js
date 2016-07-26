@@ -26,7 +26,8 @@ describe('ad_manager_vast', function() {
   var linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml"), "utf8");
   var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
   var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
-  var wrapperXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper.xml"), "utf8");
+  var wrapper1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper_1.xml"), "utf8");
+  var wrapper2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper_2.xml"), "utf8");
   var vmapAdTagPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_adtag_pre.xml"), "utf8");
   var vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml"), "utf8");
   var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
@@ -65,7 +66,8 @@ describe('ad_manager_vast', function() {
   var contentTypeHLS3 = OO.$.parseXML(contentTypeHLS3XMLString);
   var contentTypeHLS4 = OO.$.parseXML(contentTypeHLS4XMLString);
 
-  var wrapperXML = OO.$.parseXML(wrapperXMLString);
+  var wrapper1XML = OO.$.parseXML(wrapper1XMLString);
+  var wrapper2XML = OO.$.parseXML(wrapper2XMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
   var errorType = [];
   var pixelPingCalled = false;
@@ -159,7 +161,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.trackError = function (code, currentAdId) {
       errorType.push(code);
       if (currentAdId) {
-        if (currentAdId && currentAdId in this.errorInfo) {
+        if (currentAdId && currentAdId in this.adTrackingInfo) {
 
           //directly ping url
           OO.pixelPing();
@@ -182,7 +184,7 @@ describe('ad_manager_vast', function() {
     errorType = [];
     pixelPingCalled= false;
     trackingUrlsPinged = {};
-    vastAdManager.errorInfo = {};
+    vastAdManager.adTrackingInfo = {};
     vastAdManager.adBreaks = [];
     adsClickthroughOpenedCalled = 0;
 
@@ -573,7 +575,7 @@ describe('ad_manager_vast', function() {
   //    "html5_ad_server": "http://blah"}, {}, content);
   //  initialPlay();
   //  vastAdManager.initialPlay();
-  //  vastAdManager.onVastResponse(vast_ad_mid, wrapperXML);
+  //  vastAdManager.onVastResponse(vast_ad_mid, wrapper1XML);
   //  var vastAd = amc.timeline[0];
   //  expect(vastAd.ad).to.be.an('object');
   //  expect(vastAd.ad.data.impression).to.eql(['impressionOverlayUrl', 'impressionOverlay2Url', 'impressionOverlay3Url',
@@ -1263,24 +1265,24 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.id).to.be('6654600');
   });
 
-  it('Vast 3.0, Error Reporting: errorInfo should parse the correct number of errorURLs and ads', function(){
+  it('Vast 3.0, Error Reporting: adTrackingInfo should parse the correct number of errorURLs and ads', function(){
     var jqueryAds = $(linearXML).find("Ad");
     vastAdManager.getErrorTrackingInfo(linearXML, jqueryAds);
     // should have one ad
-    var adIDs = _.keys(vastAdManager.errorInfo);
+    var adIDs = _.keys(vastAdManager.adTrackingInfo);
     expect(adIDs.length).to.be(1);
     // should have only one errorurl
-    var adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    var adErrorInfo = vastAdManager.adTrackingInfo[adIDs[0]];
     expect(adErrorInfo.errorURLs.length).to.be(1);
-    vastAdManager.errorInfo = {};
+    vastAdManager.adTrackingInfo = {};
 
     jqueryAds = $(nonLinearXML).find("Ad");
     vastAdManager.getErrorTrackingInfo(nonLinearXML, jqueryAds);
     // should have one ad
-    adIDs = _.keys(vastAdManager.errorInfo);
+    adIDs = _.keys(vastAdManager.adTrackingInfo);
     expect(adIDs.length).to.be(1);
     // should have only no errorurls
-    adErrorInfo = vastAdManager.errorInfo[adIDs[0]];
+    adErrorInfo = vastAdManager.adTrackingInfo[adIDs[0]];
     expect(adErrorInfo.errorURLs.length).to.be(0);
   });
 
@@ -1311,11 +1313,11 @@ describe('ad_manager_vast', function() {
    *        }
    *      ]
    *    };
-   *    vastAdManager.errorInfo = {
+   *    vastAdManager.adTrackingInfo = {
    *      "wrapperId": {}
    *    };
    *
-   *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
+   *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapper1XML);
    *    expect(errorType).to.be(vastAdManager.ERROR_CODES.WRAPPER_LIMIT_REACHED);
    *    expect(pixelPingCalled).to.be(true);
    *  });
@@ -1340,13 +1342,13 @@ describe('ad_manager_vast', function() {
    *    var vastAd = {
    *      ads: null
    *    };
-   *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
+   *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapper1XML);
    *    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_WRAPPER);
    *
    *    vastAd = {
    *      ads: []
    *    };
-   *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapperXML);
+   *    vastAdManager.handleWrapper(vast_ad_mid, vastAd, wrapper1XML);
    *    expect(errorType).to.be(vastAdManager.ERROR_CODES.GENERAL_WRAPPER);
    *  });
    */
@@ -1477,7 +1479,7 @@ describe('ad_manager_vast', function() {
 
     // setup parameters so nonlinear ad fails because there are no mediaFiles in XML
     // but still pings error url if there is an error tag
-    vastAdManager.errorInfo = {
+    vastAdManager.adTrackingInfo = {
       "linearAd1": {}
     };
 
@@ -1505,7 +1507,7 @@ describe('ad_manager_vast', function() {
 
     // setup parameters so nonlinear ad fails because there is no ad url
     // but still pings error url if there is an error tag
-    vastAdManager.errorInfo = {
+    vastAdManager.adTrackingInfo = {
       "nonLinearAd1": {}
     };
 
@@ -2327,4 +2329,108 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.closeUrl).to.be                   (1);
   });
 
+  it('VAST: Wrapper ads should be properly parsed into the adTrackingInfo object', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+    
+    // Wrapper ads could be visualized as a tree with parents and children,
+    // but in this case, it looks more like a linked list:
+    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
+    var parentDepthOneId = "wrapper-parent-1";
+    var parentDepthTwoId = "wrapper-parent-2";
+    var leafId = "6654644"; // Ad ID from linearXML file
+
+    // need to fake wrapper ajax calls
+    vastAdManager.onVastResponse(vast_ad, wrapper1XML);
+    vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
+    vastAdManager.onVastResponse(vast_ad, linearXML, parentDepthTwoId);
+   
+    var adTrackingInfo = vastAdManager.adTrackingInfo;
+
+    // adTrackingInfo should have the three ads parsed
+    expect(_.keys(adTrackingInfo).length).to.be(3);
+    expect(_.has(adTrackingInfo, parentDepthOneId)).to.be(true);
+    expect(_.has(adTrackingInfo, parentDepthTwoId)).to.be(true);
+    expect(_.has(adTrackingInfo, leafId)).to.be(true);
+
+    var parentDepthOneObject = adTrackingInfo[parentDepthOneId];
+    var parentDepthTwoObject = adTrackingInfo[parentDepthTwoId];
+    var leafObject = adTrackingInfo[leafId];
+
+    // Ad Tracking Objects should have correct wrapper parent IDs
+    expect(parentDepthOneObject.wrapperParentId).to.be(null);
+    expect(parentDepthTwoObject.wrapperParentId).to.be(parentDepthOneId);
+    expect(leafObject.wrapperParentId).to.be(parentDepthTwoId);
+
+    expect(parentDepthOneObject.vastAdObject).to.not.be(null);
+    expect(parentDepthTwoObject.vastAdObject).to.not.be(null);
+    expect(leafObject.vastAdObject).to.be(null);
+  });
+
+  it('VAST: Wrapper ads\' tracking events should be pinged if child\'s events are pinged', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+    
+    // Wrapper ads could be visualized as a tree with parents and children,
+    // but in this case, it looks more like a linked list:
+    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
+    var parentDepthOneId = "wrapper-parent-1";
+    var parentDepthTwoId = "wrapper-parent-2";
+    var leafId = "6654644"; // Ad ID from linearXML file
+
+    // need to fake wrapper ajax calls
+    vastAdManager.onVastResponse(vast_ad, wrapper1XML);
+    vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
+    vastAdManager.onVastResponse(vast_ad, linearXML, parentDepthTwoId);
+
+    var ad = amc.timeline[1];
+
+    // creativeView, impression, and start tracking events
+    vastAdManager.playAd(ad);
+
+    // leaf and parent level ad events should be pinged
+    expect(trackingUrlsPinged.impressionUrl).to.be(1);
+    expect(trackingUrlsPinged.startUrl).to.be(1);
+    expect(trackingUrlsPinged.creativeViewUrl).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper2Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper2Url).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
+  });
 });

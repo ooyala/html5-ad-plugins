@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?><VAST version="2.0">
+  <Ad id="wrapper-parent-2">
+  <Wrapper>
+    <AdTitle>wrapperParentAd2</AdTitle>
+    <VASTAdTagURI>vastad.xml</VASTAdTagURI>
+    <Impression>impressionWrapper2Url</Impression>
+    <Error>errorWrapper2Url</Error>
+	<Creatives>
+		<Creative AdID="wrapper-parent-creative-id-2">
+			<Linear>
+				<TrackingEvents>
+          <Tracking event="start">startWrapper2Url</Tracking>
+          <Tracking event="firstQuartile">firstQuartileWrapper2Url</Tracking>
+          <Tracking event="midpoint">midpointWrapper2Url</Tracking>
+          <Tracking event="thirdQuartile">thirdQuartileWrapper2Url</Tracking>
+          <Tracking event="complete">completeWrapper2Url</Tracking>
+				</TrackingEvents>
+			</Linear>
+		</Creative>
+	</Creatives>
+  </Wrapper>
+  </Ad>
+</VAST>
