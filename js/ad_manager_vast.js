@@ -1234,12 +1234,31 @@ OO.Ads.manager(function(_, $) {
     var _getTrackingEventUrls = function(adObject, trackingEventName) {
       adObject = _getVastAdObject(adObject);
       var trackingUrls = null;
+
+      // get tracking urls from both the linear and nonLinear object
+      var linearTrackingUrls = [];
+      var nonLinearTrackingUrls = [];
+
       if (adObject &&
-          adObject.tracking &&
-          adObject.tracking[trackingEventName] &&
-          adObject.tracking[trackingEventName].length > 0) {
-        trackingUrls = adObject.tracking[trackingEventName];
+          adObject.linear &&
+          adObject.linear.tracking &&
+          adObject.linear.tracking[trackingEventName] &&
+          adObject.linear.tracking[trackingEventName].length > 0) {
+        linearTrackingUrls = adObject.linear.tracking[trackingEventName];
       }
+
+      if (adObject &&
+          adObject.nonLinear &&
+          adObject.nonLinear.tracking &&
+          adObject.nonLinear.tracking[trackingEventName] &&
+          adObject.nonLinear.tracking[trackingEventName].length > 0) {
+        nonLinearTrackingUrls = adObject.nonLinear.tracking[trackingEventName];
+      }
+
+      if (!_.isEmpty(linearTrackingUrls) || !_.isEmpty(nonLinearTrackingUrls)) {
+        trackingUrls = linearTrackingUrls.concat(nonLinearTrackingUrls);
+      }
+
       return trackingUrls;
     };
 
