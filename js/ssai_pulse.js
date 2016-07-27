@@ -597,7 +597,8 @@ OO.Ads.manager(function(_, $)
         {
           return url + "&" + param;
         }
-        else {
+        else
+        {
           return url + "?" + param;
         }
       }
