@@ -52,10 +52,10 @@ OO.Ads.manager(function(_, $)
     // Params required for ads proxy ads request
     // Request URL will already have initial query parameters; none of these query parameters
     // will be the first (will not need a prefixed "?").
-    var SMART_PLAYER = "&oosm=1";
-    var OFFSET_PARAM = "&offset=";
+    var SMART_PLAYER = "oosm=1";
+    var OFFSET_PARAM = "offset=";
     var OFFSET_VALUE = "5"; // seconds
-    var AD_ID_PARAM = "&aid=";
+    var AD_ID_PARAM = "aid=";
 
     var baseRequestUrl = "";
     var requestUrl = "";
@@ -561,7 +561,7 @@ OO.Ads.manager(function(_, $)
      */
     var _makeSmartUrl = _.bind(function(url)
     {
-      return url + SMART_PLAYER;
+      return _appendParamToUrl(url, SMART_PLAYER);
     }, this);
 
     /**
@@ -574,9 +574,36 @@ OO.Ads.manager(function(_, $)
      */
     var _appendAdsProxyQueryParameters = _.bind(function(url, adId)
     {
-      // vastUrl + '&offset=5&aid=' + adid
-      return url + OFFSET_PARAM + OFFSET_VALUE + AD_ID_PARAM + adId;
+      var offset = OFFSET_PARAM + OFFSET_VALUE;
+      var newUrl = _appendParamToUrl(url, offset);
+
+      var adIdParam = AD_ID_PARAM + adId;
+      newUrl = _appendParamToUrl(newUrl, adIdParam);
+      return newUrl;
     }, this);
+
+    /**
+     * Appends a parameter to a url.
+     * @private
+     * @param  {string} url   Url to append the param to
+     * @param  {string} param The parameter to be appended
+     * @returns {string}       The resulting url after appending the param
+     */
+    var _appendParamToUrl = function(url, param)
+    {
+      if (_.isString(url) && _.isString(param))
+      {
+        if (url.indexOf("?") > -1)
+        {
+          return url + "&" + param;
+        }
+        else
+        {
+          return url + "?" + param;
+        }
+      }
+      return url;
+    };
 
     /**
      * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
