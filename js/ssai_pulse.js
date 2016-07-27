@@ -578,7 +578,7 @@ OO.Ads.manager(function(_, $)
       var newUrl = _appendParamToUrl(url, offset);
 
       var adIdParam = AD_ID_PARAM + adId;
-      newUrl = _appendParamToUrl(url, adIdParam);
+      newUrl = _appendParamToUrl(newUrl, adIdParam);
       return newUrl;
     }, this);
 
@@ -601,8 +601,8 @@ OO.Ads.manager(function(_, $)
           return url + "?" + param;
         }
       }
-      return "";
-    }
+      return url;
+    };
 
     /**
      * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
