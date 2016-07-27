@@ -615,7 +615,10 @@ OO.Ads.manager(function(_, $)
      */
     var _preformatUrl = _.bind(function(url)
     {
-      //return ((url||'').indexOf('https') === -1 ? (url||'').replace('http:','https:') : url||'').replace('/hls/','/ai/');
+      if (window.location.protocol === 'https:')
+      {
+        url = url.replace('https', 'http');
+      }
       return (url ||'').replace('/hls/','/ai/');
     }, this);
 
