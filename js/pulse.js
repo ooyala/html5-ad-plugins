@@ -387,7 +387,7 @@
             /**
              * Mandatory method. We just return a placeholder ad that will prevent the content from starting. It will allow
              * the SDK to start the session and return if actual ads are present or not
-             * @returns {*[]}
+             * @returns {array}
              */
             this.buildTimeline = function() {
                 return [ makePlaceholderAd.call(this,"adRequest", 0)];
