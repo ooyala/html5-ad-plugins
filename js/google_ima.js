@@ -95,7 +95,7 @@ require("../html5-common/js/utils/utils.js");
 
         _amc = amcIn;
 
-        var ext = _amc.platform.DEV ? '_debug.js' : '.js';
+        var ext = OO.DEBUG ? '_debug.js' : '.js';
         var remoteModuleJs = "//imasdk.googleapis.com/js/sdkloader/ima3" + ext;
         _resetVars();
         _createAMCListeners();
