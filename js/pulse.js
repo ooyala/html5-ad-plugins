@@ -47,6 +47,7 @@
              */
             this.initialize = function(adManagerController, playerId) {
                 amc = adManagerController; // the AMC is how the code interacts with the player
+                amc.adManagerWillControlAds();
                 pulseAdManagers[playerId] = this;
 
                 // Add any player event listeners now
@@ -69,7 +70,8 @@
             this.registerUi = function() {
                 this.ui = amc.ui;
 
-                if(this.ui.useSingleVideoElement){
+                if (amc.ui.useSingleVideoElement && !this.sharedVideoElement && amc.ui.ooyalaVideoElement[0] &&
+                    (amc.ui.ooyalaVideoElement[0].className === "video")) {
                     this.sharedVideoElement = this.ui.ooyalaVideoElement[0];
                 }
             }
@@ -523,6 +525,7 @@
                 isWaitingForPrerolls = false;
 
                 if(isInAdMode){
+                    this.notifyAdPodEnded();
                     if(adPlayer){
                         adPlayer.contentStarted();
                     }
@@ -549,7 +552,8 @@
                     waitingForContentPause = true;
 
                 }
-                if(isWaitingForPrerolls){
+
+                if(isInAdMode || (isWaitingForPrerolls && ! this.ui.useSingleVideoElement)){
                     return true;
                 }
                 return false;
@@ -589,7 +593,6 @@
             };
 
             var _onContentFinished = function(){
-                amc.adManagerWillControlAds();
                 this._contentFinished = true;
                 if(adPlayer)
                     adPlayer.contentFinished();
