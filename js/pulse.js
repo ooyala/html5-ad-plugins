@@ -47,7 +47,6 @@
              */
             this.initialize = function(adManagerController, playerId) {
                 amc = adManagerController; // the AMC is how the code interacts with the player
-                amc.adManagerWillControlAds();
                 pulseAdManagers[playerId] = this;
 
                 // Add any player event listeners now
@@ -651,6 +650,7 @@
 
             var _onInitialPlay = function() {
                 isWaitingForPrerolls = true;
+                amc.adManagerWillControlAds();
                 if(adModuleJsReady){
                     if(!adPlayer){
                         this.tryInitAdPlayer();
