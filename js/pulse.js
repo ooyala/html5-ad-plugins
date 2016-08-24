@@ -1,7 +1,7 @@
 /*
  * Pulse ad player ad manager
  *
- * version 1.0
+ * version 4.3.3
  */
 
 (function(_, $)
