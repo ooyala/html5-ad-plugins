@@ -37,6 +37,9 @@
             var amc  = null;
             var pulseSDKUrl = "/proxy/pulse-sdk-html5/2.1/latest.min.js";
             var adModuleJsReady = false;
+            var pluginCallbacks = {
+
+            };
 
             /**
              * Ad manager init
@@ -282,7 +285,17 @@
                     }
                 }
 
+                // Check for some callbacks to expose plugin internals
+                if(adManagerMetadata.pulse_callbacks) {
+                    var callback;
+                    for(var name in adManagerMetadata.pulse_callbacks) {
+                        callback = adManagerMetadata.pulse_callbacks[name];
 
+                        if(typeof callback === 'function') {
+                            pluginCallbacks[name] = callback;
+                        }
+                    }
+                }
 
                 //The request settings and content metadata are going to be assembled progressively here
 
@@ -643,6 +656,10 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked,this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused,this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying,this));
+
+                        if(pluginCallbacks.onAdPlayerCreated) {
+                            pluginCallbacks.onAdPlayerCreated(adPlayer);
+                        }
                     }
                 }
             };
@@ -659,6 +676,9 @@
                         // //console.log('> ' + logItem.source + ': ' + logItem.message);
                     });
                     session = OO.Pulse.createSession(this._contentMetadata, this._requestSettings);
+                    if(pluginCallbacks.onSessionCreated) {
+                        pluginCallbacks.onSessionCreated(session);
+                    }
                     //We start the Pulse session
                     if(adPlayer){
                         adPlayer.startSession(session, this);
