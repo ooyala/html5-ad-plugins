@@ -370,7 +370,7 @@ require("../html5-common/js/utils/utils.js");
                   "adManager": this.name,
                   "ad": ad,
                   "streams": streams,
-                  "adType": _amc.ADTYPE.LINEAR_VIDEO
+                  "adType": _amc.ADTYPE.LINEAR_OVERLAY
                 };
 
                 //percentage position types require a different calculation.
@@ -480,7 +480,7 @@ require("../html5-common/js/utils/utils.js");
         }
 
         //IMA doesn't use the adVideoElement layer so make sure to hide it.
-        if (!_amc.ui.useSingleVideoElement)
+        if (!_amc.ui.useSingleVideoElement && _amc.ui.adVideoElement)
         {
           _amc.ui.adVideoElement.css(INVISIBLE_CSS);
         }
@@ -598,7 +598,6 @@ require("../html5-common/js/utils/utils.js");
             _IMAAdsManager.start();
             this.adPlaybackStarted = true;
           }
-
         }
       };
 
@@ -777,7 +776,7 @@ require("../html5-common/js/utils/utils.js");
             }
             _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
-            if(this.vcPlayRequested)
+            if(this.vcPlayRequested || (this.currentAMCAdPod && this.currentAMCAdPod.adType !== _amc.ADTYPE.LINEAR_VIDEO))
             {
               this.resumeAd();
             }
@@ -1222,11 +1221,17 @@ require("../html5-common/js/utils/utils.js");
 
         // When the ads manager is ready, we are ready to apply css changes to the video element
         // If the sharedVideoElement is not used, mark it as null before applying css
-        this.videoControllerWrapper.readyForCss = true;
+        if (this.videoControllerWrapper)
+        {
+          this.videoControllerWrapper.readyForCss = true;
+        }
         if (!_IMAAdsManager.isCustomPlaybackUsed()) {
           this.setupSharedVideoElement(null);
         }
-        this.videoControllerWrapper.applyStoredCss();
+        if (this.videoControllerWrapper)
+        {
+          this.videoControllerWrapper.applyStoredCss();
+        }
 
         //a cue point index of 0 references a preroll, so we know we have a preroll if we find it in cuePoints
         var cuePoints = _IMAAdsManager.getCuePoints();
