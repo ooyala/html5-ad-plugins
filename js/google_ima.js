@@ -149,6 +149,7 @@ require("../html5-common/js/utils/utils.js");
         this.vcPlayRequested = false;
         this.savedVolume = -1;
         this.useGoogleAdUI = false;
+        this.useGoogleCountdown = false;
         this.useInsecureVpaidMode = false;
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
 
@@ -255,6 +256,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("useGoogleAdUI"))
         {
           this.useGoogleAdUI = metadata.useGoogleAdUI;
+        }
+
+        this.useGoogleCountdown = false;
+        if (metadata.hasOwnProperty("useGoogleCountdown"))
+        {
+          this.useGoogleCountdown = metadata.useGoogleCountdown;
         }
 
         this.useInsecureVpaidMode = false;
@@ -1216,6 +1223,12 @@ require("../html5-common/js/utils/utils.js");
         var adsSettings = new google.ima.AdsRenderingSettings();
         adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
+        if (this.useGoogleCountdown)
+        {
+          //both COUNTDOWN and AD_ATTRIBUTION are required as per
+          //https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.UiElements
+          adsSettings.uiElements = [google.ima.UiElements.COUNTDOWN, google.ima.UiElements.AD_ATTRIBUTION];
+        }
         adsSettings.useStyledLinearAds = this.useGoogleAdUI;
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
 
