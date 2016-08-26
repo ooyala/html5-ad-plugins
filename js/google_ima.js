@@ -377,7 +377,7 @@ require("../html5-common/js/utils/utils.js");
                   "adManager": this.name,
                   "ad": ad,
                   "streams": streams,
-                  "adType": _amc.ADTYPE.LINEAR_OVERLAY
+                  "adType": _amc.ADTYPE.LINEAR_VIDEO
                 };
 
                 //percentage position types require a different calculation.
@@ -783,7 +783,7 @@ require("../html5-common/js/utils/utils.js");
             }
             _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
-            if(this.vcPlayRequested || (this.currentAMCAdPod && this.currentAMCAdPod.adType !== _amc.ADTYPE.LINEAR_VIDEO))
+            if(this.vcPlayRequested)
             {
               this.resumeAd();
             }

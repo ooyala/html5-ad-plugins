@@ -318,8 +318,6 @@ describe('ad_manager_ima', function()
   {
     initialize(false);
     play();
-    //we expect the ad request ad to be of type linear overlay
-    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
     ima.playAd(amc.timeline[0]);
     expect(ima.adsRequested).to.be(true);
   });
