@@ -286,6 +286,8 @@
                 }
 
                 // Check for some callbacks to expose plugin internals
+                // (clear any old callbacks that may have been registered first)
+                pluginCallbacks = { };
                 if(adManagerMetadata.pulse_callbacks) {
                     var callback;
                     for(var name in adManagerMetadata.pulse_callbacks) {
