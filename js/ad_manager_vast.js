@@ -2682,8 +2682,11 @@ OO.Ads.manager(function(_, $) {
     var _convertTimeStampToMilliseconds = _.bind(function(timeString) {
       var hms = timeString.split(":");
       // + unary operator converts string to number
-      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (+hms[2]) * 1000;
-      return seconds;
+      var hoursInSeconds = +hms[0] * 60 * 60;
+      var minutesInSeconds = +hms[1] * 60;
+      var seconds = +hms[2];
+      var milliseconds = (hoursInSeconds + minutesInSeconds + seconds) * 1000;
+      return milliseconds;
     }, this);
 
     /**
