@@ -658,6 +658,7 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked,this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused,this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying,this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted,this));
 
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
@@ -676,9 +677,7 @@
                     }
 
                     session = OO.Pulse.createSession(this._contentMetadata, this._requestSettings);
-                    if(pluginCallbacks && pluginCallbacks.onSessionCreated) {
-                        pluginCallbacks.onSessionCreated(session);
-                    }
+
                     //We start the Pulse session
                     if(adPlayer){
                         adPlayer.startSession(session, this);
@@ -718,6 +717,13 @@
             var _onAdPlaying = function(event,metadata){
                 this.videoControllerWrapper.raisePlayingEvent();
             }
+
+            var _onSessionStarted = function(event, metadata) {
+                if(pluginCallbacks && pluginCallbacks.onSessionCreated) {
+                    pluginCallbacks.onSessionCreated(session);
+                }
+            }
+
             var _onAdTimeUpdate = function(event, eventData) {
 
                 var duration = eventData.duration ? eventData.duration :this.currentAd.getCoreAd().creatives[0].duration;
