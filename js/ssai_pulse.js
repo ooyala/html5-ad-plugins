@@ -14,7 +14,7 @@ require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/utils/environment.js");
 
-require("../utils/vast_parser.js");
+var vastParser = require("../utils/vast_parser.js");
 
 OO.Ads.manager(function(_, $)
 {
@@ -419,7 +419,7 @@ OO.Ads.manager(function(_, $)
     {
       OO.log("SSAI Pulse: Response");
       // Call VastParser code
-      var vastAds = OO.VastParser.parser(xml);
+      var vastAds = vastParser.parser(xml);
       var adIdVastData = _parseVastAdsObject(vastAds);
 
       var ssaiAd =
