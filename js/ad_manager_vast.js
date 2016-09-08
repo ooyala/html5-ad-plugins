@@ -14,6 +14,8 @@ require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/utils/environment.js");
 
+var adManagerUtils = require("../utils/ad_manager_utils.js");
+
 OO.Ads.manager(function(_, $) {
   /**
    * @class Vast
@@ -2657,12 +2659,12 @@ OO.Ads.manager(function(_, $) {
             break;
           // case: hh:mm:ss.mmm | hh:mm:ss
           case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
-            adObject.time = _convertTimeStampToMilliseconds(adBreak.timeOffset);
+            adObject.time = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration);
             break;
           // case: [0, 100]%
           case /^\d{1,3}%$/.test(adBreak.timeOffset):
             // TODO: test percentage > 100
-            adObject.time = _convertPercentToMilliseconds(adBreak.timeOffset);
+            adObject.time = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset);
             break;
           default:
             OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");

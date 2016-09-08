@@ -14,7 +14,7 @@ require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/utils/environment.js");
 
-require("../utils/VastParser.js");
+require("../utils/vast_parser.js");
 
 OO.Ads.manager(function(_, $)
 {
