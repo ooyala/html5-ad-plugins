@@ -2645,7 +2645,7 @@ OO.Ads.manager(function(_, $) {
         }
       }
       if (adBreak.repeatAfter) {
-        adObject.repeatAfter = _convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
+        adObject.repeatAfter = adManagerUtils.convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
       }
       if (adBreak.timeOffset) {
         switch(true) {
@@ -2672,37 +2672,6 @@ OO.Ads.manager(function(_, $) {
         }
       }
       return adObject;
-    }, this);
-
-    /**
-     * Helper function to convert the HMS timestamp into milliseconds.
-     * @private
-     * @method Vast#_convertTimeStampToMilliseconds
-     * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
-     * @returns {number} The number of milliseconds the timestamp represents.
-     */
-    var _convertTimeStampToMilliseconds = _.bind(function(timeString) {
-      var hms = timeString.split(":");
-      // + unary operator converts string to number
-      var hoursInSeconds = +hms[0] * 60 * 60;
-      var minutesInSeconds = +hms[1] * 60;
-      var seconds = +hms[2];
-      var milliseconds = (hoursInSeconds + minutesInSeconds + seconds) * 1000;
-      return milliseconds;
-    }, this);
-
-    /**
-     * Helper function to convert a percentage representing time into milliseconds.
-     * @private
-     * @method Vast#_convertPercentToMilliseconds
-     * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
-     * @returns {number} The number of milliseconds the percentage represents.
-     */
-    var _convertPercentToMilliseconds = _.bind(function(timeString) {
-      var percent = timeString.replace("%", "");
-      // simplification of: (this.amc.movieDuration * percent / 100) * 1000
-      var result = +(this.amc.movieDuration) * percent * 10;
-      return result;
     }, this);
 
     /**
