@@ -221,6 +221,16 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
+     * <i>Optional.</i><br/>
+     * Called when the player focuses the ad video element.
+     * @method AdManager#adVideoFocused
+     * @public
+     */
+    this.adVideoFocused = function() {
+
+    };
+
+    /**
      * This is an example callback that interprets video stream tags.  The event is subscribed to in
      * the initialize function.
      * @public

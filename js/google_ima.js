@@ -56,8 +56,6 @@ require("../html5-common/js/utils/utils.js");
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
       var PLAYER_TYPE = "Ooyala";
       var PLUGIN_VERSION = "1.0";
-      //ad type for placeholder ad
-      var AD_REQUEST_TYPE = "adRequest";
 
       var VISIBLE_CSS = {left: OO.CSS.VISIBLE_POSITION, visibility: "visible"};
       var INVISIBLE_CSS = {left: OO.CSS.INVISIBLE_POSITION, visibility: "hidden"};
@@ -377,7 +375,7 @@ require("../html5-common/js/utils/utils.js");
                   "adManager": this.name,
                   "ad": ad,
                   "streams": streams,
-                  "adType": _amc.ADTYPE.LINEAR_VIDEO
+                  "adType": _amc.ADTYPE.UNKNOWN_AD_REQUEST
                 };
 
                 //percentage position types require a different calculation.
@@ -401,10 +399,10 @@ require("../html5-common/js/utils/utils.js");
             position: 0,
             duration: 0,
             adManager: this.name,
-            ad: { type: AD_REQUEST_TYPE },
+            ad: {},
             streams: streams,
             //use linear video so VTC can prepare the video element (does not disturb overlays)
-            adType: _amc.ADTYPE.LINEAR_VIDEO
+            adType: _amc.ADTYPE.UNKNOWN_AD_REQUEST
           })];
 
           return placeholder;
@@ -474,7 +472,7 @@ require("../html5-common/js/utils/utils.js");
           _throwError("playAd() called but amcAdPod.ad is null.");
         }
 
-        if(_usingAdRules && this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
+        if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
           //we started our placeholder ad
           _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
@@ -683,6 +681,15 @@ require("../html5-common/js/utils/utils.js");
         return duration;
       };
 
+      this.adVideoFocused = function()
+      {
+        // _tryStartAd();
+        // if (_usingAdRules)
+        // {
+          this.resumeAd();
+        // }
+      };
+
       /**
        * Callback for Ad Manager Controller EVENTS.REPLAY_REQUESTED.  Resets the IMA SDK to be able to
        * request ads again and then requests the ads if it's AdRules.
@@ -776,13 +783,13 @@ require("../html5-common/js/utils/utils.js");
             if(_usingAdRules &&
               !this.hasPreroll &&
               this.currentAMCAdPod &&
-              this.currentAMCAdPod.ad &&
-              this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
+              this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
             {
                 _endCurrentAd(true);
             }
             _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
             _IMAAdsManagerInitialized = true;
+
             if(this.vcPlayRequested)
             {
               this.resumeAd();
@@ -1405,6 +1412,12 @@ require("../html5-common/js/utils/utils.js");
         OO.log("IMA EVENT: ", adEvent.type, adEvent);
         switch (adEvent.type)
         {
+          case eventType.LOADED:
+            // if (!_usingAdRules)
+            // {
+              _amc.focusAdElement();
+            // }
+            break;
           case eventType.STARTED:
             if(ad.isLinear())
             {
@@ -1422,8 +1435,9 @@ require("../html5-common/js/utils/utils.js");
               this.currentNonLinearIMAAd = ad;
             }
             this.currentIMAAd = ad;
-            _onSizeChanged();
             _tryStartAd();
+            _onSizeChanged();
+
             if (this.videoControllerWrapper)
             {
               if (ad.isLinear())
