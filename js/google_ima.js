@@ -1413,10 +1413,14 @@ require("../html5-common/js/utils/utils.js");
         switch (adEvent.type)
         {
           case eventType.LOADED:
-            // if (!_usingAdRules)
-            // {
+            if (ad.isLinear())
+            {
               _amc.focusAdElement();
-            // }
+            }
+            else
+            {
+              this.resumeAd();
+            }
             break;
           case eventType.STARTED:
             if(ad.isLinear())
@@ -1733,7 +1737,9 @@ require("../html5-common/js/utils/utils.js");
           forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY
         };
         _checkCompanionAds(this.currentIMAAd);
-        _IMA_SDK_resumeMainContent();
+        // _IMA_SDK_resumeMainContent();
+        //end the request ad
+        _endCurrentAd();
         _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
       });
 
@@ -1825,7 +1831,7 @@ require("../html5-common/js/utils/utils.js");
               // If the currentIMAAd is non-linear but the currentAMCAdPod
               //is linear, that means we are trying to end the fake ad
               //that occurs before an overlay is forced to play
-              if (this.currentAMCAdPod.isLinear)
+              if (this.currentAMCAdPod.isLinear || this.currentAMCAdPod.isRequest)
               {
                 _endCurrentAdPod(true);
               }
