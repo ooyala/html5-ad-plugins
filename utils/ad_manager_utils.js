@@ -17,7 +17,7 @@ var AdManagerUtils = function()
   this.convertTimeStampToMilliseconds = function(timeString)
   {
     var milliseconds = null;
-    if (timeString && _.isString(timeString))
+    if (_isValidTimeString(timeString))
     {
       var hms = timeString.split(":");
       // + unary operator converts string to number
@@ -25,11 +25,6 @@ var AdManagerUtils = function()
       var minutesInSeconds = +hms[1] * 60;
       var seconds = +hms[2];
       milliseconds = (hoursInSeconds + minutesInSeconds + seconds) * 1000;
-    }
-    else
-    {
-      _logError("convertTimeStampToMilliseconds: malformed timeString received. Value was: "
-                    + timeString);
     }
     return milliseconds;
   };
@@ -67,7 +62,7 @@ var AdManagerUtils = function()
     if (!timeString || !_.isString(timeString))
     {
       _logError("convertPercentToMilliseconds: malformed timeString received. Value was: "
-               + timeString);
+                + timeString);
       result = false;
     }
     return result;
@@ -86,7 +81,7 @@ var AdManagerUtils = function()
     if (!movieDuration || !_.isNumber(movieDuration))
     {
       _logError("convertPercentToMilliseconds: malformed movieDuration received. Value was: "
-               + movieDuration);
+                + movieDuration);
       result = false;
     }
     return result;
