@@ -28,7 +28,7 @@ var AdManagerUtils = function()
     }
     else
     {
-      logError("convertTimeStampToMilliseconds: malformed timeString received. Value was: "
+      _logError("convertTimeStampToMilliseconds: malformed timeString received. Value was: "
                     + timeString);
     }
     return milliseconds;
@@ -66,7 +66,7 @@ var AdManagerUtils = function()
     var result = true;
     if (!timeString || !_.isString(timeString))
     {
-      logError("convertPercentToMilliseconds: malformed timeString received. Value was: "
+      _logError("convertPercentToMilliseconds: malformed timeString received. Value was: "
                + timeString);
       result = false;
     }
@@ -78,7 +78,6 @@ var AdManagerUtils = function()
    * @private
    * @method AdManagerUtils#_isValidMovieDuration
    * @param {number} movieDuration The duration of the video - represented in seconds
-   * @returns {number} The number of milliseconds the percentage represents.
    * @returns {boolean} true if the movie duration string is valid. Returns false if otherwise.
    */
   var _isValidMovieDuration = _.bind(function(movieDuration)
@@ -86,17 +85,24 @@ var AdManagerUtils = function()
     var result = true;
     if (!movieDuration || !_.isNumber(movieDuration))
     {
-      logError("convertPercentToMilliseconds: malformed movieDuration received. Value was: "
+      _logError("convertPercentToMilliseconds: malformed movieDuration received. Value was: "
                + movieDuration);
       result = false;
     }
     return result;
   }, this);
 
-  var logError = _.bind(function(errorMessage)
+  /**
+   * Helper function to log AdManagerUtils errors.
+   * @private
+   * @method AdManagerUtils#_logError
+   * @param {string} errorMessage The error message
+   */
+  var _logError = _.bind(function(errorMessage)
   {
     OO.log("AdManagerUtils: " + errorMessage);
   }, this);
 };
 
+// export as Singleton
 module.exports = new AdManagerUtils();
