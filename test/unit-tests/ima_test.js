@@ -288,7 +288,6 @@ describe('ad_manager_ima', function()
 
   it('Init, Ad Rules: fake ad ends properly when IMA ads manager is initialized and there is no preroll', function()
   {
-    debugger;
     var notified = false;
     amc.notifyPodEnded = function(adId)
     {
@@ -303,7 +302,6 @@ describe('ad_manager_ima', function()
     //This is a hack, will revisit in the future, but does properly test to see that the fake ad
     //ends when an ad request is successful
     ima.currentAMCAdPod = amc.timeline[0];
-    debugger;
     play();
     expect(notified).to.be(true);
   });
