@@ -1843,7 +1843,7 @@ require("../html5-common/js/utils/utils.js");
           }
           else
           {
-            _endCurrentAdPod(this.currentAMCAdPod.isLinear);
+            _endCurrentAdPod(this.currentAMCAdPod.isLinear || this.currentAMCAdPod.isRequest);
           }
         }
 
