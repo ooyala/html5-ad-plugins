@@ -2648,27 +2648,27 @@ OO.Ads.manager(function(_, $) {
         adObject.repeatAfter = adManagerUtils.convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
       }
       if (adBreak.timeOffset) {
-        switch(true) {
-          // case: "start"
-          case /^start$/.test(adBreak.timeOffset):
-            adObject.time = 0;
-            break;
-          // case: "end"
-          case /^end$/.test(adBreak.timeOffset):
-            adObject.time = (this.amc.movieDuration + 1) * 1000;
-            break;
-          // case: hh:mm:ss.mmm | hh:mm:ss
-          case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
-            adObject.time = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration);
-            break;
-          // case: [0, 100]%
-          case /^\d{1,3}%$/.test(adBreak.timeOffset):
-            // TODO: test percentage > 100
-            adObject.time = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset);
-            break;
-          default:
-            OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
-            adObject = null;
+        // case: "start"
+        if (/^start$/.test(adBreak.timeOffset)) {
+          adObject.time = 0;
+        }
+        // case: "end"
+        else if (/^end$/.test(adBreak.timeOffset)) {
+          adObject.time = (this.amc.movieDuration + 1) * 1000;
+
+        }
+        // case: hh:mm:ss.mmm | hh:mm:ss
+        else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
+          adObject.time = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration);
+        }
+        // case: [0, 100]%
+        else if (/^\d{1,3}%$/.test(adBreak.timeOffset)) {
+          // TODO: test percentage > 100
+          adObject.time = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset);
+        }
+        else {
+          OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
+          adObject = null;
         }
       }
       return adObject;
