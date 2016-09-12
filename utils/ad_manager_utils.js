@@ -11,7 +11,7 @@ var AdManagerUtils = function()
    * @public
    * @method AdManagerUtils#convertTimeStampToMilliseconds
    * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
-   * @returns {number||null} The number of milliseconds the timestamp represents. Returns null
+   * @returns {number|null} The number of milliseconds the timestamp represents. Returns null
    * if an error occurs.
    */
   this.convertTimeStampToMilliseconds = function(timeString)
