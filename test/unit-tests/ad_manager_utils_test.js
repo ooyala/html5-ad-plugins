@@ -43,6 +43,18 @@ describe('Ad Manager Utility Class:', function()
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds("10:01:01");
     expect(milliseconds).to.be(36061000);
 
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds("00:00");
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds(":00:00");
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds("banana:00:00");
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds(":");
+    expect(milliseconds).to.be(null);
+
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds(0);
     expect(milliseconds).to.be(null);
 

@@ -7,9 +7,9 @@ var AdManagerUtils = function()
 {
 
   /**
-   * Helper function to convert the HMS timestamp into milliseconds.
-   * @private
-   * @method AdManagerUtils#_convertTimeStampToMilliseconds
+   * Converts the hh:mm:ss timestamp into milliseconds.
+   * @public
+   * @method AdManagerUtils#convertTimeStampToMilliseconds
    * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
    * @returns {number||null} The number of milliseconds the timestamp represents. Returns null
    * if an error occurs.
@@ -17,7 +17,13 @@ var AdManagerUtils = function()
   this.convertTimeStampToMilliseconds = function(timeString)
   {
     var milliseconds = null;
-    if (_isValidTimeString(timeString))
+
+    if (!_.isString(timeString) || !_isValidHms(timeString))
+    {
+      _logError("convertTimeStampToMilliseconds: malformed timeString received. Value was: "
+                + timeString);
+    }
+    else
     {
       var hms = timeString.split(":");
       // + unary operator converts string to number
@@ -30,59 +36,66 @@ var AdManagerUtils = function()
   };
 
   /**
-   * Helper function to convert a percentage representing time into milliseconds.
-   * @private
-   * @method AdManagerUtils#_convertPercentToMilliseconds
+   * Takes the percentage of a number, the total video duration represented in seconds, and returns
+   * that percentage in milliseconds.
+   * @public
+   * @method AdManagerUtils#convertPercentToMilliseconds
    * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
-   * @param {number} movieDuration The duration of the video - represented in seconds
+   * @param {number} totalDuration The duration of the video - represented in seconds
    * @returns {number} The number of milliseconds the percentage represents.
    */
-  this.convertPercentToMilliseconds = function(timeString, movieDuration)
+  this.convertPercentToMilliseconds = function(timeString, totalDuration)
   {
     var milliseconds = null;
-    if (_isValidTimeString(timeString) && _isValidMovieDuration(movieDuration))
+    var validString = _.isString(timeString);
+    var validNumber = _.isNumber(totalDuration);
+
+    if (!validString)
+    {
+      _logError("convertPercentToMilliseconds: malformed timeString received. Value was: "
+                + timeString);
+    }
+    if (!validNumber)
+    {
+      _logError("convertPercentToMilliseconds: malformed totalDuration was received. Value was: "
+                + totalDuration);
+    }
+    if (validString && validNumber)
     {
       var percent = timeString.replace("%", "");
-      // simplification of: (movieDuration * percent / 100) * 1000
-      milliseconds = +(movieDuration) * percent * 10;
+      // simplification of: (totalDuration * percent / 100) * 1000
+      milliseconds = +(totalDuration) * percent * 10;
     }
     return milliseconds;
   };
 
   /**
-   * Helper function to determine if a time stamp string is valid.
+   * Helper function to validate that a string is (pseudo) valid hh:mm:ss format.
    * @private
-   * @method AdManagerUtils#_isValidTimeString
-   * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
-   * @returns {boolean} true if the time stamp string is valid. Returns false if otherwise.
+   * @method AdManagerUtils#_isValidHms
+   * @param {string} hms The hh:mm:ss string
+   * @returns {boolean} true if the hh:mm:ss string is valid. Returns false if otherwise.
    */
-  var _isValidTimeString = _.bind(function(timeString)
+  var _isValidHms = _.bind(function(hms)
   {
-    var result = true;
-    if (!timeString || !_.isString(timeString))
+    var result = false;
+    if (hms)
     {
-      _logError("convertPercentToMilliseconds: malformed timeString received. Value was: "
-                + timeString);
-      result = false;
-    }
-    return result;
-  }, this);
-
-  /**
-   * Helper function to determine if the movie duration is valid.
-   * @private
-   * @method AdManagerUtils#_isValidMovieDuration
-   * @param {number} movieDuration The duration of the video - represented in seconds
-   * @returns {boolean} true if the movie duration string is valid. Returns false if otherwise.
-   */
-  var _isValidMovieDuration = _.bind(function(movieDuration)
-  {
-    var result = true;
-    if (!movieDuration || !_.isNumber(movieDuration))
-    {
-      _logError("convertPercentToMilliseconds: malformed movieDuration received. Value was: "
-                + movieDuration);
-      result = false;
+      var hmsArray = hms.split(":");
+      if (hmsArray.length === 3)
+      {
+        var validHms = true;
+        for (var i = 0; i < hmsArray.length; i++)
+        {
+          var convertNum = parseInt(hmsArray[i]);
+          if (!_.isFinite(convertNum))
+          {
+            validHms = false;
+            break;
+          }
+        }
+        result = validHms;
+      }
     }
     return result;
   }, this);
