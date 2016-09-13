@@ -47,6 +47,7 @@ var AdManagerUtils = function()
   this.convertPercentToMilliseconds = function(timeString, totalDuration)
   {
     var milliseconds = null;
+    var percent = null;
     var validString = _.isString(timeString);
     var validNumber = _.isNumber(totalDuration);
 
@@ -55,14 +56,26 @@ var AdManagerUtils = function()
       _logError("convertPercentToMilliseconds: malformed timeString received. Value was: "
                 + timeString);
     }
+    else
+    {
+      percent = timeString.replace("%", "");
+      percent = parseFloat(percent);
+      if (!_.isFinite(percent) || (percent < 0))
+      {
+        validString = false;
+        _logError("convertPercentToMilliseconds: negative percentage was received. Value was: "
+                  + timeString);
+      }
+    }
+
     if (!validNumber)
     {
       _logError("convertPercentToMilliseconds: malformed totalDuration was received. Value was: "
                 + totalDuration);
     }
+
     if (validString && validNumber)
     {
-      var percent = timeString.replace("%", "");
       // simplification of: (totalDuration * percent / 100) * 1000
       milliseconds = +(totalDuration) * percent * 10;
     }
@@ -88,7 +101,7 @@ var AdManagerUtils = function()
         for (var i = 0; i < hmsArray.length; i++)
         {
           var convertNum = parseInt(hmsArray[i]);
-          if (!_.isFinite(convertNum))
+          if (!_.isFinite(convertNum) || (convertNum < 0))
           {
             validHms = false;
             break;

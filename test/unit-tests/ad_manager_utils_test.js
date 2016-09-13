@@ -43,6 +43,20 @@ describe('Ad Manager Utility Class:', function()
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds("10:01:01");
     expect(milliseconds).to.be(36061000);
 
+    // test negatives
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds("10:-01:00");
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds("-10:00:00");
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds("10:01:-01");
+    expect(milliseconds).to.be(null);
+
+    // -0 is valid
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds("00:01:-00");
+    expect(milliseconds).to.be(60000);
+
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds("00:00");
     expect(milliseconds).to.be(null);
 
@@ -59,6 +73,9 @@ describe('Ad Manager Utility Class:', function()
     expect(milliseconds).to.be(null);
 
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds(false);
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds({});
     expect(milliseconds).to.be(null);
 
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds(null);
@@ -84,10 +101,28 @@ describe('Ad Manager Utility Class:', function()
     milliseconds = adManagerUtils.convertPercentToMilliseconds("0%", 100);
     expect(milliseconds).to.be(0);
 
+    milliseconds = adManagerUtils.convertPercentToMilliseconds("75%", 100);
+    expect(milliseconds).to.be(75000);
+
     milliseconds = adManagerUtils.convertPercentToMilliseconds("0.25%", 100);
     expect(milliseconds).to.be(250);
 
+    milliseconds = adManagerUtils.convertPercentToMilliseconds("-75%", 100);
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertPercentToMilliseconds("-20%", 100);
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertPercentToMilliseconds("-0%", 100);
+    expect(milliseconds).to.be(0);
+
     milliseconds = adManagerUtils.convertPercentToMilliseconds(null, null);
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertPercentToMilliseconds("100%", undefined);
+    expect(milliseconds).to.be(null);
+
+    milliseconds = adManagerUtils.convertPercentToMilliseconds(undefined, 100);
     expect(milliseconds).to.be(null);
 
     milliseconds = adManagerUtils.convertPercentToMilliseconds(null, 100);
