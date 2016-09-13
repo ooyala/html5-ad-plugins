@@ -14,6 +14,8 @@ require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/utils/environment.js");
 
+var adManagerUtils = require("../utils/ad_manager_utils.js");
+
 OO.Ads.manager(function(_, $) {
   /**
    * @class Vast
@@ -2643,61 +2645,33 @@ OO.Ads.manager(function(_, $) {
         }
       }
       if (adBreak.repeatAfter) {
-        adObject.repeatAfter = _convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
+        adObject.repeatAfter = adManagerUtils.convertTimeStampToMilliseconds(adBreak.repeatAfter) / 1000;
       }
       if (adBreak.timeOffset) {
-        switch(true) {
-          // case: "start"
-          case /^start$/.test(adBreak.timeOffset):
-            adObject.time = 0;
-            break;
-          // case: "end"
-          case /^end$/.test(adBreak.timeOffset):
-            adObject.time = (this.amc.movieDuration + 1) * 1000;
-            break;
-          // case: hh:mm:ss.mmm | hh:mm:ss
-          case /^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset):
-            adObject.time = _convertTimeStampToMilliseconds(adBreak.timeOffset);
-            break;
-          // case: [0, 100]%
-          case /^\d{1,3}%$/.test(adBreak.timeOffset):
-            // TODO: test percentage > 100
-            adObject.time = _convertPercentToMilliseconds(adBreak.timeOffset);
-            break;
-          default:
-            OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
-            adObject = null;
+        // case: "start"
+        if (/^start$/.test(adBreak.timeOffset)) {
+          adObject.time = 0;
+        }
+        // case: "end"
+        else if (/^end$/.test(adBreak.timeOffset)) {
+          adObject.time = (this.amc.movieDuration + 1) * 1000;
+
+        }
+        // case: hh:mm:ss.mmm | hh:mm:ss
+        else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
+          adObject.time = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration);
+        }
+        // case: [0, 100]%
+        else if (/^\d{1,3}%$/.test(adBreak.timeOffset)) {
+          // TODO: test percentage > 100
+          adObject.time = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset);
+        }
+        else {
+          OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
+          adObject = null;
         }
       }
       return adObject;
-    }, this);
-
-    /**
-     * Helper function to convert the HMS timestamp into milliseconds.
-     * @private
-     * @method Vast#_convertTimeStampToMilliseconds
-     * @param {string} timeString The timestamp string (format: hh:mm:ss / hh:mm:ss.mmm)
-     * @returns {number} The number of milliseconds the timestamp represents.
-     */
-    var _convertTimeStampToMilliseconds = _.bind(function(timeString) {
-      var hms = timeString.split(":");
-      // + unary operator converts string to number
-      var seconds = (+hms[0]) * 60 * 60 + (+hms[1]) * 60 + (+hms[2]) * 1000;
-      return seconds;
-    }, this);
-
-    /**
-     * Helper function to convert a percentage representing time into milliseconds.
-     * @private
-     * @method Vast#_convertPercentToMilliseconds
-     * @param {string} timeString The string that represents a percentage (format: [0, 100]%)
-     * @returns {number} The number of milliseconds the percentage represents.
-     */
-    var _convertPercentToMilliseconds = _.bind(function(timeString) {
-      var percent = timeString.replace("%", "");
-      // simplification of: (this.amc.movieDuration * percent / 100) * 1000
-      var result = +(this.amc.movieDuration) * percent * 10;
-      return result;
     }, this);
 
     /**
