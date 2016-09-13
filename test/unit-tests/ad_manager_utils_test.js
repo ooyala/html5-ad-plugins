@@ -60,6 +60,9 @@ describe('Ad Manager Utility Class:', function()
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds("00:00");
     expect(milliseconds).to.be(null);
 
+    milliseconds = adManagerUtils.convertTimeStampToMilliseconds("00:00:00:00");
+    expect(milliseconds).to.be(null);
+
     milliseconds = adManagerUtils.convertTimeStampToMilliseconds(":00:00");
     expect(milliseconds).to.be(null);
 
