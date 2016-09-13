@@ -20,7 +20,7 @@ var AdManagerUtils = function()
 
     if (!_.isString(timeString) || !_isValidHms(timeString))
     {
-      _logError("convertTimeStampToMilliseconds: malformed timeString received. Value was: "
+      _logError("convertTimeStampToMilliseconds: invalid timeString received. Value was: "
                 + timeString);
     }
     else
@@ -51,26 +51,26 @@ var AdManagerUtils = function()
     var validString = _.isString(timeString);
     var validNumber = _.isNumber(totalDuration);
 
-    if (!validString)
-    {
-      _logError("convertPercentToMilliseconds: malformed timeString received. Value was: "
-                + timeString);
-    }
-    else
+    if (validString)
     {
       percent = timeString.replace("%", "");
       percent = parseFloat(percent);
       if (!_.isFinite(percent) || (percent < 0))
       {
         validString = false;
-        _logError("convertPercentToMilliseconds: negative percentage was received. Value was: "
+        _logError("convertPercentToMilliseconds: invalid percentage was received. Value was: "
                   + timeString);
       }
+    }
+    else
+    {
+      _logError("convertPercentToMilliseconds: invalid timeString received. Value was: "
+                + timeString);
     }
 
     if (!validNumber)
     {
-      _logError("convertPercentToMilliseconds: malformed totalDuration was received. Value was: "
+      _logError("convertPercentToMilliseconds: invalid totalDuration was received. Value was: "
                 + totalDuration);
     }
 

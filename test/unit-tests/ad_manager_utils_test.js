@@ -116,6 +116,9 @@ describe('Ad Manager Utility Class:', function()
     milliseconds = adManagerUtils.convertPercentToMilliseconds("-0%", 100);
     expect(milliseconds).to.be(0);
 
+    milliseconds = adManagerUtils.convertPercentToMilliseconds({}, 100);
+    expect(milliseconds).to.be(null);
+
     milliseconds = adManagerUtils.convertPercentToMilliseconds(null, null);
     expect(milliseconds).to.be(null);
 
