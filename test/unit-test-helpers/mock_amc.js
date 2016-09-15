@@ -45,7 +45,7 @@ fake_amc = function() {
   var adType = this.ADTYPE;
   this.Ad = function(adObj){
     adObj.isLinear = (adObj.adType == adType.LINEAR_VIDEO) || (adObj.adType == adType.LINEAR_OVERLAY);
-    adObj.isRequest = (adObj.adType == adType.REQUEST) || (adObj.adType == adType.UNKNOWN_AD_REQUEST);
+    adObj.isRequest = (adObj.adType == adType.AD_REQUEST) || (adObj.adType == adType.UNKNOWN_AD_REQUEST);
     return adObj
   };
   this.currentEmbedCode = "embed";
