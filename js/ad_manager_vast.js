@@ -80,7 +80,6 @@ OO.Ads.manager(function(_, $) {
 
     // ad settings
     var transitionFromNonLinearVideo    = false;
-    var AD_REQUEST_TYPE                 = 'adRequest';
 
     var vpaidIframeLoaded               = false;
     var vpaidAdLoaded                   = false;
@@ -914,13 +913,12 @@ OO.Ads.manager(function(_, $) {
         for (var i = 0; i < this.allAdInfo.length; i++)
         {
           var adMetadata = _.clone(this.allAdInfo[i]);
-          adMetadata.type = AD_REQUEST_TYPE;
           //use linear overlay as fake ad so we don't have to specify stream type.
           var adData = {
             adManager: this.name,
             ad: adMetadata,
             duration: 0,
-            adType: this.amc.ADTYPE.LINEAR_OVERLAY,
+            adType: this.amc.ADTYPE.AD_REQUEST
           };
 
           if (adMetadata.position_type == 't') {
@@ -1007,7 +1005,7 @@ OO.Ads.manager(function(_, $) {
       if (adWrapper) {
         currentAd = adWrapper;
         if (currentAd.ad) {
-          if (currentAd.ad.type === AD_REQUEST_TYPE) {
+          if (currentAd.adType === this.amc.ADTYPE.AD_REQUEST) {
             loadAd(currentAd);
           } else {
             _playLoadedAd(adWrapper);
@@ -2390,7 +2388,7 @@ OO.Ads.manager(function(_, $) {
         failedAd();
       }
 
-      if (currentAd && currentAd.ad && currentAd.ad.type === AD_REQUEST_TYPE)
+      if (currentAd && currentAd.adType === this.amc.ADTYPE.AD_REQUEST)
       {
         //notify the amc of the pod ending
         this.amc.notifyPodEnded(currentAd.id);

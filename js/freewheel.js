@@ -50,7 +50,6 @@ OO.Ads.manager(function(_, $) {
     var FRMSegment     = null;
     var slots          = [];
     var timeline       = [];
-    var adRequestType  = "adRequest";
 
     // ad session
     var slotEndedCallbacks   = {};
@@ -316,8 +315,8 @@ OO.Ads.manager(function(_, $) {
         OO.log("FW: freewheel ad request timeout");
         var error = "ad request timeout";
         fw_onError(null, error);
-        slotEndedCallbacks[adRequestType]();
-        delete slotEndedCallbacks[adRequestType];
+        slotEndedCallbacks[amc.ADTYPE.AD_REQUEST]();
+        delete slotEndedCallbacks[amc.ADTYPE.AD_REQUEST];
       }
     }, this);
 
@@ -359,8 +358,8 @@ OO.Ads.manager(function(_, $) {
       } else {
         OO.log("FW: freewheel metadata request failure");
       }
-      slotEndedCallbacks[adRequestType]();
-      delete slotEndedCallbacks[adRequestType];
+      slotEndedCallbacks[amc.ADTYPE.AD_REQUEST]();
+      delete slotEndedCallbacks[amc.ADTYPE.AD_REQUEST];
     };
 
     /**
@@ -378,8 +377,8 @@ OO.Ads.manager(function(_, $) {
         position: 0,
         duration: 0,
         adManager: this.name,
-        ad: { type: adRequestType },
-        adType: amc.ADTYPE.LINEAR_OVERLAY
+        ad: {},
+        adType: amc.ADTYPE.AD_REQUEST
       })];
     };
 
@@ -485,12 +484,12 @@ OO.Ads.manager(function(_, $) {
     this.playAd = function(ad) {
       _resetAdState();
       try {
-        if (ad.ad.type == adRequestType) {
+        if (ad.adType == amc.ADTYPE.AD_REQUEST) {
           if (shouldRequestAds) {
             // Trigger the request for the list of ads;
             indexInPod = 0;
             amc.notifyPodStarted(ad.id, 1);
-            slotEndedCallbacks[adRequestType] = _.bind(function(adId) { amc.notifyPodEnded(adId); }, this, ad.id);
+            slotEndedCallbacks[amc.ADTYPE.AD_REQUEST] = _.bind(function(adId) { amc.notifyPodEnded(adId); }, this, ad.id);
             _sendFreewheelRequest();
           } else {
             amc.notifyPodStarted(ad.id, 1);
@@ -613,15 +612,15 @@ OO.Ads.manager(function(_, $) {
     this.cancelAd = function(ad) {
       // Only cancel the ad if it's current
       if (ad && ad.ad && currentPlayingSlot &&
-          ((currentPlayingSlot["type"] == adRequestType)) ||
+          ((ad.adType === amc.ADTYPE.AD_REQUEST)) ||
            (currentPlayingSlot.getCustomId() === ad.ad.getCustomId())) {
         _cancelCurrentAd();
       }
     };
 
     var _cancelCurrentAd = _.bind(function() {
-      if (currentPlayingSlot == null) return;
-      if ((currentPlayingSlot["type"] == adRequestType) ||
+      if (currentAd === null) return;
+      if ((currentAd.adType === amc.ADTYPE.AD_REQUEST) ||
           (typeof(currentPlayingSlot.getCustomId) != "function")) {
         _resetAdState();
         return;
@@ -704,7 +703,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#playerClicked
      */
     this.playerClicked = function() {
-      if (currentPlayingSlot && (currentPlayingSlot["type"] != adRequestType)) {
+      if (currentAd && (currentAd.adType === amc.ADTYPE.AD_REQUEST)) {
         var instance = currentPlayingSlot.getCurrentAdInstance();
         // handlingClick makes sure the click is only triggered once, rather than repeatedly in a loop.
         if (!handlingClick) {

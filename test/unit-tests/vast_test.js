@@ -281,7 +281,7 @@ describe('ad_manager_vast', function() {
     var timeline = amc.timeline;
     expect(timeline.length).to.be(1);
     expect(timeline[0].position).to.be(0);
-    expect(timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+    expect(timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
 
   it('Init: test midroll return in buildTimeline', function(){
@@ -305,7 +305,7 @@ describe('ad_manager_vast', function() {
     var timeline = amc.timeline;
     expect(timeline.length).to.be(1);
     expect(timeline[0].position).to.be(10);
-        expect(timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+        expect(timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
 
   it('Init: test preroll and midroll appear in buildTimeline() and prerolls loads on initialPlay', function(){
@@ -339,8 +339,8 @@ describe('ad_manager_vast', function() {
     //vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
-    expect(amc.timeline[1].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
+    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
+    expect(amc.timeline[1].adType).to.be(amc.ADTYPE.AD_REQUEST);
 
     initialPlay();
     vastAdManager.initialPlay();
@@ -349,10 +349,8 @@ describe('ad_manager_vast', function() {
     //test that real ad gets added to timeline when it's loaded.
     expect(amc.timeline.length).to.be(3);
     //test assumes the timeline isn't being sorted by the amc. If that changes, this will need to change accordingly.
-    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
-    expect(amc.timeline[0].ad.type).to.be('adRequest');
-    expect(amc.timeline[1].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
-    expect(amc.timeline[1].ad.type).to.be('adRequest');
+    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
+    expect(amc.timeline[1].adType).to.be(amc.ADTYPE.AD_REQUEST);
     expect(amc.timeline[2].adType).to.be(amc.ADTYPE.LINEAR_VIDEO);
     expect(amc.timeline[2].ad.type).to.be(undefined);
   });
@@ -377,8 +375,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content);
     expect(amc.timeline.length).to.be(1);
-    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.LINEAR_OVERLAY);
-    expect(amc.timeline[0].ad.type).to.be('adRequest');
+    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
 
   it('should invalid vast', function(){

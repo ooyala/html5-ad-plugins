@@ -56,8 +56,6 @@ require("../html5-common/js/utils/utils.js");
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
       var PLAYER_TYPE = "Ooyala";
       var PLUGIN_VERSION = "1.0";
-      //ad type for placeholder ad
-      var AD_REQUEST_TYPE = "adRequest";
 
       var VISIBLE_CSS = {left: OO.CSS.VISIBLE_POSITION, visibility: "visible"};
       var INVISIBLE_CSS = {left: OO.CSS.INVISIBLE_POSITION, visibility: "hidden"};
@@ -377,7 +375,7 @@ require("../html5-common/js/utils/utils.js");
                   "adManager": this.name,
                   "ad": ad,
                   "streams": streams,
-                  "adType": _amc.ADTYPE.LINEAR_VIDEO
+                  "adType": _amc.ADTYPE.UNKNOWN_AD_REQUEST
                 };
 
                 //percentage position types require a different calculation.
@@ -401,10 +399,10 @@ require("../html5-common/js/utils/utils.js");
             position: 0,
             duration: 0,
             adManager: this.name,
-            ad: { type: AD_REQUEST_TYPE },
+            ad: {},
             streams: streams,
             //use linear video so VTC can prepare the video element (does not disturb overlays)
-            adType: _amc.ADTYPE.LINEAR_VIDEO
+            adType: _amc.ADTYPE.UNKNOWN_AD_REQUEST
           })];
 
           return placeholder;
@@ -474,7 +472,7 @@ require("../html5-common/js/utils/utils.js");
           _throwError("playAd() called but amcAdPod.ad is null.");
         }
 
-        if(_usingAdRules && this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
+        if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
           //we started our placeholder ad
           _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
@@ -683,6 +681,11 @@ require("../html5-common/js/utils/utils.js");
         return duration;
       };
 
+      this.adVideoFocused = function()
+      {
+        this.resumeAd();
+      };
+
       /**
        * Callback for Ad Manager Controller EVENTS.REPLAY_REQUESTED.  Resets the IMA SDK to be able to
        * request ads again and then requests the ads if it's AdRules.
@@ -776,8 +779,7 @@ require("../html5-common/js/utils/utils.js");
             if(_usingAdRules &&
               !this.hasPreroll &&
               this.currentAMCAdPod &&
-              this.currentAMCAdPod.ad &&
-              this.currentAMCAdPod.ad.type == AD_REQUEST_TYPE)
+              this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
             {
                 _endCurrentAd(true);
             }
@@ -1405,6 +1407,16 @@ require("../html5-common/js/utils/utils.js");
         OO.log("IMA EVENT: ", adEvent.type, adEvent);
         switch (adEvent.type)
         {
+          case eventType.LOADED:
+            if (ad.isLinear())
+            {
+              _amc.focusAdVideo();
+            }
+            else
+            {
+              this.resumeAd();
+            }
+            break;
           case eventType.STARTED:
             if(ad.isLinear())
             {
@@ -1719,7 +1731,8 @@ require("../html5-common/js/utils/utils.js");
           forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY
         };
         _checkCompanionAds(this.currentIMAAd);
-        _IMA_SDK_resumeMainContent();
+        //end the request ad
+        _endCurrentAd(true);
         _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
       });
 
@@ -1808,22 +1821,14 @@ require("../html5-common/js/utils/utils.js");
             }
             else
             {
-              // If the currentIMAAd is non-linear but the currentAMCAdPod
-              //is linear, that means we are trying to end the fake ad
-              //that occurs before an overlay is forced to play
-              if (this.currentAMCAdPod.isLinear)
-              {
-                _endCurrentAdPod(true);
-              }
-              else
-              {
-                _endCurrentAdPod(false);
-              }
+              //End the fake ad here
+              _endCurrentAdPod(this.currentAMCAdPod.isRequest);
             }
           }
           else
           {
-            _endCurrentAdPod(this.currentAMCAdPod.isLinear);
+            //End the fake ad here
+            _endCurrentAdPod(this.currentAMCAdPod.isRequest);
           }
         }
 

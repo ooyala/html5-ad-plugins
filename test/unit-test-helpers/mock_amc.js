@@ -32,7 +32,9 @@ fake_amc = function() {
     LINEAR_OVERLAY : "linearOverlay",
     NONLINEAR_OVERLAY : "nonlinearOverlay",
     LINEAR_VIDEO : "linearVideo",
-    COMPANION : "companion"
+    COMPANION : "companion",
+    AD_REQUEST : "adRequest",
+    UNKNOWN_AD_REQUEST : "unknownAdRequest"
   };
   this.AD_CANCEL_CODE = {
     SKIPPED : "skipped",
@@ -40,8 +42,10 @@ fake_amc = function() {
     ERROR : "error",
     STREAM_ENDED : "streamEnded"
   };
+  var adType = this.ADTYPE;
   this.Ad = function(adObj){
-    adObj.isLinear = (adObj.adType == "linearVideo") || (adObj.adType == "linearOverlay");
+    adObj.isLinear = (adObj.adType == adType.LINEAR_VIDEO) || (adObj.adType == adType.LINEAR_OVERLAY);
+    adObj.isRequest = (adObj.adType == adType.AD_REQUEST) || (adObj.adType == adType.UNKNOWN_AD_REQUEST);
     return adObj
   };
   this.currentEmbedCode = "embed";
