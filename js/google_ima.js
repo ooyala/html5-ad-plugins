@@ -1732,7 +1732,7 @@ require("../html5-common/js/utils/utils.js");
         };
         _checkCompanionAds(this.currentIMAAd);
         //end the request ad
-        _endCurrentAd();
+        _endCurrentAd(true);
         _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
       });
 
