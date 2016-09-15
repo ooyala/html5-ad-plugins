@@ -1410,7 +1410,7 @@ require("../html5-common/js/utils/utils.js");
           case eventType.LOADED:
             if (ad.isLinear())
             {
-              _amc.focusAdElement();
+              _amc.focusAdVideo();
             }
             else
             {
