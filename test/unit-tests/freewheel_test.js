@@ -276,7 +276,7 @@ describe('ad_manager_freewheel', function() {
   it('Init: fake ad is added to timeline', function(){
     initialize();
     expect(amc.timeline.length).to.be(1);
-    expect(amc.timeline[0].ad.type).to.be("adRequest");
+    expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
 
   it('Init: fw context is set up', function(){

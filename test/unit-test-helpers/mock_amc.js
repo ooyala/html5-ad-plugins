@@ -33,7 +33,7 @@ fake_amc = function() {
     NONLINEAR_OVERLAY : "nonlinearOverlay",
     LINEAR_VIDEO : "linearVideo",
     COMPANION : "companion",
-    REQUEST : "request",
+    AD_REQUEST : "adRequest",
     UNKNOWN_AD_REQUEST : "unknownAdRequest"
   };
   this.AD_CANCEL_CODE = {

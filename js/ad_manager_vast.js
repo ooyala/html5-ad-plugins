@@ -916,7 +916,7 @@ OO.Ads.manager(function(_, $) {
             adManager: this.name,
             ad: adMetadata,
             duration: 0,
-            adType: this.amc.ADTYPE.REQUEST
+            adType: this.amc.ADTYPE.AD_REQUEST
           };
 
           if (adMetadata.position_type == 't') {
@@ -1003,7 +1003,7 @@ OO.Ads.manager(function(_, $) {
       if (adWrapper) {
         currentAd = adWrapper;
         if (currentAd.ad) {
-          if (currentAd.adType === this.amc.ADTYPE.REQUEST) {
+          if (currentAd.adType === this.amc.ADTYPE.AD_REQUEST) {
             loadAd(currentAd);
           } else {
             _playLoadedAd(adWrapper);
@@ -2386,7 +2386,7 @@ OO.Ads.manager(function(_, $) {
         failedAd();
       }
 
-      if (currentAd && currentAd.adType === this.amc.ADTYPE.REQUEST)
+      if (currentAd && currentAd.adType === this.amc.ADTYPE.AD_REQUEST)
       {
         //notify the amc of the pod ending
         this.amc.notifyPodEnded(currentAd.id);
