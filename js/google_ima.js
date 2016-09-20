@@ -1197,14 +1197,16 @@ require("../html5-common/js/utils/utils.js");
         //make sure we are showing the video in case it was hidden for whatever reason.
         if (adError)
         {
+          var errorString = "ERROR Google IMA";
           if(adError.getError)
           {
-            OO.log("ERROR Google SDK: ", adError.getError());
+            errorString = "ERROR Google SDK: " + adError.getError();
           }
           else
           {
-            OO.log("ERROR Google IMA plugin: ", adError);
+            errorString = "ERROR Google IMA plugin: " + adError;
           }
+          _amc.raiseAdError(errorString);
         }
       });
 
