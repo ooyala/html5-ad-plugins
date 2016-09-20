@@ -1198,6 +1198,7 @@ require("../html5-common/js/utils/utils.js");
         if (adError)
         {
           var errorString = "ERROR Google IMA";
+
           if(adError.getError)
           {
             errorString = "ERROR Google SDK: " + adError.getError();
@@ -1206,7 +1207,15 @@ require("../html5-common/js/utils/utils.js");
           {
             errorString = "ERROR Google IMA plugin: " + adError;
           }
-          _amc.raiseAdError(errorString);
+
+          if (_amc)
+          {
+            _amc.raiseAdError(errorString);
+          }
+          else
+          {
+            OO.log(errorString);
+          }
         }
       });
 
