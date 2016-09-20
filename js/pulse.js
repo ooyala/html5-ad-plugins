@@ -412,7 +412,7 @@
 
             function makePlaceholderAd(type,position){
                 var streams = {};
-                streams[OO.VIDEO.ENCODING.IMA] = "";
+                streams[OO.VIDEO.ENCODING.PULSE] = "";
                 return new amc.Ad({
                     position: position,
                     duration: 42,
@@ -589,7 +589,7 @@
             }
             var playPlaceholder = _.bind(function () {
                 var streams = {};
-                streams[OO.VIDEO.ENCODING.IMA] = "";
+                streams[OO.VIDEO.ENCODING.PULSE] = "";
                 amc.forceAdToPlay(this.name,
                     {placeholder: true }
                     , amc.ADTYPE.LINEAR_VIDEO, streams)
@@ -765,7 +765,7 @@
     var PulsePlayerFactory = function() {
         this.adManager = {};
         this.name = "PulseVideoTech";
-        this.encodings = [OO.VIDEO.ENCODING.IMA];
+        this.encodings = [OO.VIDEO.ENCODING.PULSE];
         this.features = [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_TAKE];
         this.technology = OO.VIDEO.TECHNOLOGY.HTML5 ;
         this.ready = true;
