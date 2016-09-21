@@ -115,7 +115,6 @@ describe('ad_manager_ima', function()
         imaVideoPluginFactory = plugin;
       }
     };
-    amc = new fake_amc();
     delete require.cache[require.resolve(SRC_ROOT + "google_ima.js")];
     require(SRC_ROOT + "google_ima.js");
   }, this));
@@ -129,7 +128,7 @@ describe('ad_manager_ima', function()
 
   beforeEach(function()
   {
-    originalMockAmc = _.clone(amc);
+    amc = new fake_amc();
     adsClickthroughOpenedCalled = 0;
   });
 
@@ -148,7 +147,6 @@ describe('ad_manager_ima', function()
     google.ima.resetDefaultValues();
     notifyEventName = null;
     notifyParams = null;
-    amc = originalMockAmc;
   }, this));
 
   //   ------   TESTS   ------
@@ -565,6 +563,39 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED);
     expect(linearAdEndedNotified).to.be(true);
     expect(podEndedNotified).to.be(true);
+  });
+
+  it('AMC Integration, IMA Event, single element mode: IMA CONTENT_RESUME_REQUESTED ends the current ad pod', function()
+  {
+    var linearAdEndedNotified = 0;
+    var podEndedNotified = 0;
+    amc.ui.useSingleVideoElement = true;
+    initAndPlay(true, vci);
+    amc.notifyLinearAdEnded = function()
+    {
+      linearAdEndedNotified++;
+    };
+
+    amc.notifyPodEnded = function()
+    {
+      podEndedNotified++;
+    };
+
+    ima.playAd(
+      {
+        ad : {}
+      });
+    var am = google.ima.adManagerInstance;
+    //Wait until we receive content resume event from IMA before we end ad pod for
+    //single video element mode. This is to workaround an issue where the video controller
+    //and IMA are out of sync if we end ad pod too early for single video element mode
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    expect(linearAdEndedNotified).to.be(1);
+    expect(podEndedNotified).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED);
+    expect(linearAdEndedNotified).to.be(1);
+    expect(podEndedNotified).to.be(1);
   });
 
   it('AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element and notify IMA ad manager to start for a linear ad', function()

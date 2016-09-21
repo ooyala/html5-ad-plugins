@@ -1821,14 +1821,12 @@ require("../html5-common/js/utils/utils.js");
             }
             else
             {
-              //End the fake ad here
               _endCurrentAdPod(this.currentAMCAdPod.isRequest);
             }
           }
           else
           {
-            //End the fake ad here
-            _endCurrentAdPod(this.currentAMCAdPod.isRequest);
+            _endCurrentAdPod(true);
           }
         }
 

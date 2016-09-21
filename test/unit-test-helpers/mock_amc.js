@@ -60,7 +60,8 @@ fake_amc = function() {
     playerSkinPluginsElement : $("<div>", {}),
     adWrapper : $("<div>", {}),
     transitionToAd: function(){},
-    transitionToMainContent: function(){}
+    transitionToMainContent: function(){},
+    useSingleVideoElement: false
   };
   this.platform = {};
   this.pageSettings = {};
