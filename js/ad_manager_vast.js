@@ -1871,7 +1871,7 @@ OO.Ads.manager(function(_, $) {
      */
     var _handleLinearAd = _.bind(function(ad, adLoaded, params) {
       if (!ad || _.isEmpty(ad.linear.mediaFiles)) {
-        _tryRaiseAdError("VAST: General Linear Ads Error; No Mediafiles in Ad", ad);
+        _tryRaiseAdError("VAST: General Linear Ads Error; No Mediafiles in Ad ", ad);
         // Want to ping error URLs at current depth if there are any available
         this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, ad.id);
         return null;
@@ -1925,7 +1925,7 @@ OO.Ads.manager(function(_, $) {
     var _handleNonLinearAd = _.bind(function(ad, adLoaded, params) {
       // filter our playable stream:
       if (!ad || _.isEmpty(ad.nonLinear.url)) {
-        _tryRaiseAdError("VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Ad", ad);
+        _tryRaiseAdError("VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Ad ", ad);
         // Want to ping error URLs at current depth if there are any available
         this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, ad.id);
         return null;
@@ -3428,7 +3428,7 @@ OO.Ads.manager(function(_, $) {
           return vpaidAd[funcName].apply(vpaidAd, params);
         }
       } catch (err) {
-        _tryRaiseAdError("VPAID 2.0: ",
+        _tryRaiseAdError("VPAID 2.0: " +
           "function '" + funcName + "' threw exception -",
           err);
       }
@@ -3436,15 +3436,30 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Helper function to raise the ad error.
+     * Helper function to log and raise the ad error.
      * @private
      * @method Vast#_tryRaiseAdError
      * @param {string} errorMessage The error message
      */
     var _tryRaiseAdError = _.bind(function(errorMessage){
-      OO.log(errorMessage);
+      var _errorMessage = errorMessage;
+
+      // if arguments are comma separated we want to leverage console.log's ability to
+      // pretty print objects rather than printing an object's toStr representation.
+      if (arguments.length > 1) {
+        OO.log.apply(OO.log, arguments);
+
+        // converts the arguments keyword to an Array.
+        // arguments looks like an Array, but isn't.
+        var convertArgs = [].slice.call(arguments);
+        _errorMessage = convertArgs.join("");
+      }
+      else {
+        OO.log(_errorMessage);
+      }
+
       if (this.amc) {
-        this.amc.raiseAdError(errorMessage);
+        this.amc.raiseAdError(_errorMessage);
       }
       else {
         OO.log("VAST: Failed to raise ad error. amc undefined.");
