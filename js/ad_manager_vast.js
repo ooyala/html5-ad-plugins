@@ -367,7 +367,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.isValidRootTagName = function(vastXML) {
       if (!getVastRoot(vastXML)) {
-        OO.log("VAST: Invalid VAST XML");
+        _tryRaiseAdError("VAST: Invalid VAST XML");
         this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
         return false;
       }
@@ -384,7 +384,7 @@ OO.Ads.manager(function(_, $) {
     this.isValidVastVersion = function(vastXML) {
       var version = getVastVersion(vastXML);
       if (!supportsVersion(version)) {
-        OO.log("VAST: Invalid VAST Version: " + version);
+        _tryRaiseAdError("VAST: Invalid VAST Version: " + version);
         this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, this.wrapperParentId);
         return false;
       }
@@ -414,11 +414,11 @@ OO.Ads.manager(function(_, $) {
     var getVastRoot = _.bind(function(vastXML) {
       var vastRootElement = $(vastXML).find("VAST");
       if (vastRootElement.length === 0) {
-        OO.log("VAST: No VAST tags in XML");
+        _tryRaiseAdError("VAST: No VAST tags in XML");
         return null;
       }
       else if (vastRootElement.length > 1) {
-        OO.log("VAST: Multiple VAST tags in XML");
+        _tryRaiseAdError("VAST: Multiple VAST tags in XML");
         return null;
       }
       return vastRootElement[0];
@@ -500,7 +500,7 @@ OO.Ads.manager(function(_, $) {
     this.checkNoAds = function(vastXML, ads) {
       // if there are no ads in ad response then track error
       if (ads.length === 0) {
-        OO.log("VAST: No ads in XML");
+        _tryRaiseAdError("VAST: No ads in XML");
         // there could be an <Error> element in the vast response
         var noAdsErrorURL = $(vastXML).find("Error").text();
         if (noAdsErrorURL) {
@@ -596,14 +596,14 @@ OO.Ads.manager(function(_, $) {
         }
 
         if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
-          OO.log('VPAID 2.0: Required function getVPAIDAd() is not defined.');
+          _tryRaiseAdError('VPAID 2.0: Required function getVPAIDAd() is not defined.');
           return;
         }
 
         try{
           currentAd.vpaidAd = this.testMode ? global.vpaid.getVPAIDAd() : vpaidIframe.contentWindow.getVPAIDAd();
         } catch (e) {
-          OO.log("VPAID 2.0: error while getting vpaid creative - " + e)
+          _tryRaiseAdError("VPAID 2.0: error while getting vpaid creative - " + e)
         }
 
 
@@ -613,7 +613,7 @@ OO.Ads.manager(function(_, $) {
             currentAd.vpaidAd.subscribe(_.bind(_onVpaidAdEvent, this, VPAID_EVENTS[eventName]),
               VPAID_EVENTS[eventName], this);
           } catch (e) {
-            OO.log("VPAID 2.0: error while subscribing to creative events - " + e)
+            _tryRaiseAdError("VPAID 2.0: error while subscribing to creative events - " + e)
           }
         }
 
@@ -667,7 +667,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.initVpaidAd = function(width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
       if (!_isValidVPaid()) {
-        OO.log('VPaid Ad Unit is not valid.');
+        _tryRaiseAdError('VPaid Ad Unit is not valid.');
         return;
       }
 
@@ -692,28 +692,28 @@ OO.Ads.manager(function(_, $) {
 
     var _checkVpaidIframeLoaded = _.bind(function() {
       if (!vpaidIframeLoaded) {
-        OO.log('VPAID: iframe did not load');
+        _tryRaiseAdError('VPAID: iframe did not load');
         _endAd(currentAd, true);
       }
     }, this);
 
     var _checkVpaidAdLoaded = _.bind(function() {
       if (!vpaidAdLoaded) {
-        OO.log('VPAID: Did not receive AD_LOADED event from creative');
+        _tryRaiseAdError('VPAID: Did not receive AD_LOADED event from creative');
         _endAd(currentAd, true);
       }
     }, this);
 
     var _checkVpaidAdStarted = _.bind(function() {
       if (!vpaidAdStarted) {
-        OO.log('VPAID: Did not receive AD_STARTED event from creative');
+        _tryRaiseAdError('VPAID: Did not receive AD_STARTED event from creative');
         _stopVpaidAd();
       }
     }, this);
 
     var _checkVpaidAdStopped = _.bind(function() {
       if (!vpaidAdStopped) {
-        OO.log('VPAID: Did not receive AD_STOPPED event from creative');
+        _tryRaiseAdError('VPAID: Did not receive AD_STOPPED event from creative');
         _endAd(currentAd, true);
       }
     }, this);
@@ -985,7 +985,7 @@ OO.Ads.manager(function(_, $) {
     this.adVideoError = function(adWrapper, errorCode) {
       // VTC will pause the ad when the video element loses focus
       // TODO: add douglas error handling changes
-      OO.log('Ad failed to play with error code:' + errorCode);
+      _tryRaiseAdError('Ad failed to play with error code:' + errorCode);
       failedAd();
     };
 
@@ -1291,17 +1291,14 @@ OO.Ads.manager(function(_, $) {
             var urls = urlObject[trackingName];
             if (urls) {
               OO.pixelPings(urls);
-              OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged for VAST Ad Id: " + adId);
+              _tryRaiseAdError("VAST: \"" + trackingName + "\" tracking URLs pinged for VAST Ad Id: " + adId);
             }
             else {
-              OO.log("VAST: No \"" + trackingName + "\" tracking URLs provided to ping for VAST Ad Id: " + adId);
+              _tryRaiseAdError("VAST: No \"" + trackingName + "\" tracking URLs provided to ping for VAST Ad Id: " + adId);
             }
           }
           catch(e) {
-            OO.log("VAST: Failed to ping \"" + trackingName + "\" tracking URLs for VAST Ad Id: " + adId);
-            if (this.amc) {
-              this.amc.raiseAdError(e);
-            }
+            _tryRaiseAdError("VAST: Failed to ping \"" + trackingName + "\" tracking URLs for VAST Ad Id: " + adId);
           }
         }
       }
@@ -1762,7 +1759,7 @@ OO.Ads.manager(function(_, $) {
      *  @method Vast#onVastError
      */
     this.onVastError = function() {
-      OO.log("VAST: Ad failed to load");
+      _tryRaiseAdError("VAST: Ad failed to load");
       failedAd();
     };
 
@@ -1874,7 +1871,7 @@ OO.Ads.manager(function(_, $) {
      */
     var _handleLinearAd = _.bind(function(ad, adLoaded, params) {
       if (!ad || _.isEmpty(ad.linear.mediaFiles)) {
-        OO.log("VAST: General Linear Ads Error; No Mediafiles in Ad", ad);
+        _tryRaiseAdError("VAST: General Linear Ads Error; No Mediafiles in Ad ", ad);
         // Want to ping error URLs at current depth if there are any available
         this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, ad.id);
         return null;
@@ -1928,7 +1925,7 @@ OO.Ads.manager(function(_, $) {
     var _handleNonLinearAd = _.bind(function(ad, adLoaded, params) {
       // filter our playable stream:
       if (!ad || _.isEmpty(ad.nonLinear.url)) {
-        OO.log("VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Ad", ad);
+        _tryRaiseAdError("VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Ad ", ad);
         // Want to ping error URLs at current depth if there are any available
         this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, ad.id);
         return null;
@@ -2473,7 +2470,7 @@ OO.Ads.manager(function(_, $) {
       var vastAds = this.parser(xml, adLoaded);
       var vastVersion = getVastVersion(xml);
       if (!vastAds || !adLoaded || (_.isEmpty(vastAds.podded) && _.isEmpty(vastAds.standalone))) {
-        OO.log("VAST: XML Parsing Error");
+        _tryRaiseAdError("VAST: XML Parsing Error");
         this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
         failedAd();
       } else {
@@ -2558,7 +2555,7 @@ OO.Ads.manager(function(_, $) {
                 }
               }
               else {
-                OO.log("VAST, VMAP: Error creating Ad Object");
+                _tryRaiseAdError("VAST, VMAP: Error creating Ad Object");
               }
             }
           }
@@ -2665,7 +2662,7 @@ OO.Ads.manager(function(_, $) {
           adObject.time = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset);
         }
         else {
-          OO.log("VAST, VMAP: No Matching 'timeOffset' Attribute format");
+          _tryRaiseAdError("VAST, VMAP: No Matching 'timeOffset' Attribute format");
           adObject = null;
         }
       }
@@ -2734,7 +2731,7 @@ OO.Ads.manager(function(_, $) {
       var $validNode = isLinear ? $mediaNode : $node;
 
       if (!$mediaNode.length || !_isValidVpaidCreative($validNode, isLinear)) {
-        OO.log('VPaid: No valid media source, either is not a VPaid Ad or ad unit is not in javascript format.');
+        _tryRaiseAdError('VPaid: No valid media source, either is not a VPaid Ad or ad unit is not in javascript format.');
         return;
       }
 
@@ -3094,7 +3091,7 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_ERROR:
-          OO.log('VPaid: Ad unit error: ' + arguments[1]);
+          _tryRaiseAdError('VPaid: Ad unit error: ' + arguments[1]);
           this.sendVpaidTracking('error');
           this.sendVpaidError();
           failedAd();
@@ -3217,13 +3214,13 @@ OO.Ads.manager(function(_, $) {
         //TODO: Do we want int here? If so, consider var name vpaidMajorVersion
         vpaidVersion = parseInt(currentAd.vpaidAd.handshakeVersion('2.0'));
       } catch (e) {
-        OO.log("VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - " + e)
+        _tryRaiseAdError("VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - " + e)
       }
 
       var isValid = true;
 
       if (vpaidVersion !== 2) {
-        OO.log('VPaid Ad Unit version is not supported.');
+        _tryRaiseAdError('VPaid Ad Unit version is not supported.');
         isValid = false;
       }
 
@@ -3232,7 +3229,7 @@ OO.Ads.manager(function(_, $) {
       _.each(requiredFunctions, function(fn) {
         if (currentAd && currentAd.vpaidAd && typeof currentAd.vpaidAd[fn] !== 'function') {
           isValid = false;
-          OO.log('VPaid Ad Unit is missing function: ' + fn);
+          _tryRaiseAdError('VPaid Ad Unit is missing function: ' + fn);
         }
       });
 
@@ -3284,7 +3281,7 @@ OO.Ads.manager(function(_, $) {
       loader.onload = this.initializeAd;
       loader.onerror = _.bind(function(e) {
         _clearVpaidTimeouts();
-        OO.log('VPAID: iframe load threw an error: ' + e);
+        _tryRaiseAdError('VPAID: iframe load threw an error: ' + e);
         _endAd(currentAd, true);
       }, this);
       vpaidIframe.contentWindow.document.body.appendChild(loader);
@@ -3431,12 +3428,43 @@ OO.Ads.manager(function(_, $) {
           return vpaidAd[funcName].apply(vpaidAd, params);
         }
       } catch (err) {
-        OO.log("VPAID 2.0: ",
+        _tryRaiseAdError("VPAID 2.0: " +
           "function '" + funcName + "' threw exception -",
           err);
       }
       return null;
     };
+
+    /**
+     * Helper function to log and raise the ad error.
+     * @private
+     * @method Vast#_tryRaiseAdError
+     * @param {string} errorMessage The error message
+     */
+    var _tryRaiseAdError = _.bind(function(errorMessage){
+      var _errorMessage = errorMessage;
+
+      // if arguments are comma separated we want to leverage console.log's ability to
+      // pretty print objects rather than printing an object's toStr representation.
+      if (arguments.length > 1) {
+        OO.log.apply(OO.log, arguments);
+
+        // converts the arguments keyword to an Array.
+        // arguments looks like an Array, but isn't.
+        var convertArgs = [].slice.call(arguments);
+        _errorMessage = convertArgs.join("");
+      }
+      else {
+        OO.log(_errorMessage);
+      }
+
+      if (this.amc) {
+        this.amc.raiseAdError(_errorMessage);
+      }
+      else {
+        OO.log("VAST: Failed to raise ad error. amc undefined.");
+      }
+    }, this);
   };
   return new Vast();
 });
