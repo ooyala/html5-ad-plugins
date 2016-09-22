@@ -419,7 +419,7 @@
                     adManager: this.name,
                     ad: {type: type, placeholder : true},
                     streams: streams,
-                    adType: amc.ADTYPE.LINEAR_VIDEO
+                    adType: amc.ADTYPE.AD_REQUEST
                 })
             }
 
