@@ -985,7 +985,7 @@ OO.Ads.manager(function(_, $) {
     this.adVideoError = function(adWrapper, errorCode) {
       // VTC will pause the ad when the video element loses focus
       // TODO: add douglas error handling changes
-      _tryRaiseAdError('Ad failed to play with error code:' + errorCode);
+      _tryRaiseAdError('Ad failed to play with error code: ', errorCode);
       failedAd();
     };
 
@@ -1291,10 +1291,10 @@ OO.Ads.manager(function(_, $) {
             var urls = urlObject[trackingName];
             if (urls) {
               OO.pixelPings(urls);
-              _tryRaiseAdError("VAST: \"" + trackingName + "\" tracking URLs pinged for VAST Ad Id: " + adId);
+              OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged for VAST Ad Id: " + adId);
             }
             else {
-              _tryRaiseAdError("VAST: No \"" + trackingName + "\" tracking URLs provided to ping for VAST Ad Id: " + adId);
+              OO.log("VAST: No \"" + trackingName + "\" tracking URLs provided to ping for VAST Ad Id: " + adId);
             }
           }
           catch(e) {
@@ -2731,7 +2731,7 @@ OO.Ads.manager(function(_, $) {
       var $validNode = isLinear ? $mediaNode : $node;
 
       if (!$mediaNode.length || !_isValidVpaidCreative($validNode, isLinear)) {
-        _tryRaiseAdError('VPaid: No valid media source, either is not a VPaid Ad or ad unit is not in javascript format.');
+        OO.log('VPaid: No valid media source, either is not a VPaid Ad or ad unit is not in javascript format.');
         return;
       }
 
@@ -3202,7 +3202,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Check wether or not a vpaid ad is valid by checking the version and the minimum required functions
+     * Check whether or not a vpaid ad is valid by checking the version and the minimum required functions
      * This is only required for VPAID ads
      * @method Vast#_isValidVPaid
      * @private
@@ -3214,13 +3214,13 @@ OO.Ads.manager(function(_, $) {
         //TODO: Do we want int here? If so, consider var name vpaidMajorVersion
         vpaidVersion = parseInt(currentAd.vpaidAd.handshakeVersion('2.0'));
       } catch (e) {
-        _tryRaiseAdError("VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - " + e)
+        OO.log("VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - " + e)
       }
 
       var isValid = true;
 
       if (vpaidVersion !== 2) {
-        _tryRaiseAdError('VPaid Ad Unit version is not supported.');
+        OO.log('VPaid Ad Unit version is not supported.');
         isValid = false;
       }
 
@@ -3229,7 +3229,7 @@ OO.Ads.manager(function(_, $) {
       _.each(requiredFunctions, function(fn) {
         if (currentAd && currentAd.vpaidAd && typeof currentAd.vpaidAd[fn] !== 'function') {
           isValid = false;
-          _tryRaiseAdError('VPaid Ad Unit is missing function: ' + fn);
+          OO.log('VPaid Ad Unit is missing function: ' + fn);
         }
       });
 
