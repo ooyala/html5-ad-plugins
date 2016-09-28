@@ -132,7 +132,7 @@ global.vpaidAd = {
         tracking: { creativeView: [] }
       }],
       error: '',
-      impression: [ { url: 'impression' } ],
+      impression: [ { url: 'impressionUrl' } ],
       linear: {
         mediaFiles: {
           url: 'http://file.js',
@@ -161,10 +161,10 @@ global.vpaidAd = {
       },
       title: 'title',
       tracking: [
-        { event: 'start', url: 'start' },
-        { event: 'firstQuartile', url: 'first' },
-        { event: 'complete', url: 'complete' },
-        { event: 'mute', url: 'mute' }
+        { event: 'start', url: 'startUrl' },
+        { event: 'firstQuartile', url: 'firstQuartileUrl' },
+        { event: 'complete', url: 'completeUrl' },
+        { event: 'mute', url: 'muteUrl' }
       ],
       type: 'linearVideo',
       version: '2.0',
