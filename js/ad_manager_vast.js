@@ -1022,45 +1022,47 @@ OO.Ads.manager(function(_, $) {
      * @param {string[]} trackingEventNames The array of tracking event names
      */
     var _handleTrackingUrls = _.bind(function(amcAd, trackingEventNames) {
-      var adId = _getAdId(amcAd);
+      if (!_isVpaidAd(amcAd)) {
+        var adId = _getAdId(amcAd);
 
-      if (amcAd) {
-        _.each(trackingEventNames, function(trackingEventName) {
-          var urls;
-          switch (trackingEventName) {
-            case "impression":
-              urls = _getImpressionUrls(amcAd);
-              break;
-            case "linearClickTracking":
-              urls = _getLinearClickTrackingUrls(amcAd);
-              break;
-            case "nonLinearClickTracking":
-              urls = _getNonLinearClickTrackingUrls(amcAd);
-              break;
-            default:
-              urls = _getTrackingEventUrls(amcAd, trackingEventName);
+        if (amcAd) {
+          _.each(trackingEventNames, function(trackingEventName) {
+            var urls;
+            switch (trackingEventName) {
+              case "impression":
+                urls = _getImpressionUrls(amcAd);
+                break;
+              case "linearClickTracking":
+                urls = _getLinearClickTrackingUrls(amcAd);
+                break;
+              case "nonLinearClickTracking":
+                urls = _getNonLinearClickTrackingUrls(amcAd);
+                break;
+              default:
+                urls = _getTrackingEventUrls(amcAd, trackingEventName);
+            }
+            var urlObject = {};
+            urlObject[trackingEventName] = urls;
+            _pingTrackingUrls(urlObject, adId);
+          });
+        }
+        else {
+          console.log(
+              "VAST: Tried to ping URLs: [" + trackingEventNames +
+              "] but ad object passed in was: " + amcAd
+          );
+        }
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+            this.adTrackingInfo[adId] &&
+            this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+          if (parentAdTrackingObject) {
+            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            _handleTrackingUrls(parentAdObject, trackingEventNames);
           }
-          var urlObject = {};
-          urlObject[trackingEventName] = urls;
-          _pingTrackingUrls(urlObject, adId);
-        });
-      }
-      else {
-        console.log(
-            "VAST: Tried to ping URLs: [" + trackingEventNames +
-            "] but ad object passed in was: " + amcAd
-        );
-      }
-
-      // Try to ping parent tracking events as well
-      if (this.adTrackingInfo &&
-          this.adTrackingInfo[adId] &&
-          this.adTrackingInfo[adId].wrapperParentId) {
-        var parentId = this.adTrackingInfo[adId].wrapperParentId;
-        var parentAdTrackingObject = this.adTrackingInfo[parentId];
-        if (parentAdTrackingObject) {
-          var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
-          _handleTrackingUrls(parentAdObject, trackingEventNames);
         }
       }
     }, this);
@@ -3416,7 +3418,8 @@ OO.Ads.manager(function(_, $) {
      * @returns {boolean}
      */
     var _isVpaidAd = function(ad) {
-      return ad && ad.ad && ad.ad.data && ad.ad.data.adType === 'vpaid';
+      var vastAdObject = _getVastAdObject(ad);
+      return vastAdObject.adType === 'vpaid';
     };
 
     // Helpers
