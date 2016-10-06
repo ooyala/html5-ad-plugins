@@ -241,7 +241,7 @@ require("../html5-common/js/utils/utils.js");
         this.maxAdsRequestTimeout = DEFAULT_ADS_REQUEST_TIME_OUT;
         if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.AD_LOAD_TIMEOUT))
         {
-          this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] * 1000;
+          this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
         }
 
         this.additionalAdTagParameters = null;
