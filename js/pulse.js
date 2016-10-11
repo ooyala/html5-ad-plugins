@@ -419,7 +419,7 @@
                     adManager: this.name,
                     ad: {type: type, placeholder : true},
                     streams: streams,
-                    adType: amc.ADTYPE.AD_REQUEST
+                    adType: amc.ADTYPE.UNKNOWN_AD_REQUEST
                 })
             }
 
@@ -740,6 +740,8 @@
                 if(this._showAdTitle){
                     name = this._currentAd.getCoreAd().title;
                 }
+
+                amc.focusAdVideo();
 
                 amc.notifyLinearAdStarted(1,
                     {duration: this._currentAd.getCoreAd().creatives[0].duration,
