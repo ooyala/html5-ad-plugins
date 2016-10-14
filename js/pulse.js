@@ -9,6 +9,7 @@
 
     var pulseAdManagers = {};
 
+
     OO.Ads.manager(function(_, $) {
         /**
          * @class PulseAdManager
@@ -30,6 +31,12 @@
             var isInAdMode = false;
             var waitingForContentPause = false;
             var podStarted = null;
+            var contentPaused =false;
+            var currentOverlayAd = null;
+            var overlayTimer = null;
+            var lastOverlayAdStart = 0;
+            var currentPauseAd = null;
+            var overlayTimeLeftMillis = 0;
             var isFullscreen = false;
             var adPlayer = null; // pulse ad player
             var showAdTitle = false;
@@ -50,10 +57,17 @@
              */
             this.initialize = function(adManagerController, playerId) {
                 amc = adManagerController; // the AMC is how the code interacts with the player
+                //Enable overlay close button right away for Pulse
+                amc.adManagerSettings["showNonLinearCloseButton"] = true;
+
+
+
                 pulseAdManagers[playerId] = this;
 
                 // Add any player event listeners now
                 amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
+                amc.addPlayerListener(amc.EVENTS.PAUSED, _.bind(_onContentPause, this));
+                amc.addPlayerListener(amc.EVENTS.RESUME, _.bind(_onContentResume, this));
                 amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(_onInitialPlay, this));
                 amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(_onPlayStarted, this));
                 amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(_onContentFinished, this));
@@ -71,6 +85,18 @@
              */
             this.registerUi = function() {
                 this.ui = amc.ui;
+                //Set the CSS overlay so it's responsive
+
+                style = document.createElement('style');
+                var css = '.oo-ad-overlay-image { width:100% !important}';
+
+                style.type = 'text/css';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(document.createTextNode(css));
+                }
+                document.getElementsByTagName('head')[0].appendChild(style);
 
                 if (amc.ui.useSingleVideoElement && !this.sharedVideoElement && amc.ui.ooyalaVideoElement[0] &&
                     (amc.ui.ooyalaVideoElement[0].className === "video")) {
@@ -129,6 +155,10 @@
 
                 var pos = parseInt(position);
                 var insertPointFiler = [];
+
+                //Always add pause ads
+
+                insertPointFiler.push("onPause");
 
                 if(pos & PREROLL){
                     insertPointFiler.push("onBeforeContent");
@@ -431,6 +461,25 @@
             }
 
 
+            function onOverlayFinished(){
+                clearTimeout(overlayTimer);
+                amc.notifyNonlinearAdEnded(currentOverlayAd.id);
+                currentOverlayAd = null;
+            }
+
+            function startOverlayCountdown(){
+                lastOverlayAdStart = Date.now();
+                overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
+            }
+
+            function onOverlayShown(){
+                //if(currentOverlayAd){
+                //    overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
+                //    adPlayer.overlayAdShown(currentOverlayAd.ad);
+                //    startOverlayCountdown();
+                //}
+            }
+
             /**
              * Mandatory method. Called by the AMF when an ad play has been requested
              * @param v4ad
@@ -446,6 +495,25 @@
                 podStarted = v4ad.id;
                 isInAdMode = true;
                 this._isInPlayAd = true;
+
+                if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY){
+                    console.error("play overlay");
+                    if(contentPaused){
+                        currentPauseAd = v4ad;
+                    } else {
+                        currentOverlayAd = v4ad;
+                    }
+
+                    amc.sendURLToLoadAndPlayNonLinearAd(v4ad.ad, v4ad.id, v4ad.ad.getResourceURL());
+
+                    //Assume the ad was loaded FIXME
+                    if(!contentPaused){
+                        onOverlayShown();
+                    }
+
+
+                    return;
+                }
 
                 if(adPlayer){
                     adPlayer.contentPaused();
@@ -478,6 +546,12 @@
                 }
             };
 
+            this.cancelOverlay = function (v4ad) {
+                adPlayer.overlayAdClosed(v4ad.ad);
+                clearTimeout(overlayTimer);
+                currentOverlayAd = null;
+            };
+
             /**
              * Pause the ad player
              * @param ad v4 ad
@@ -497,7 +571,6 @@
                 if(adPlayer){
                     adPlayer.play();
                 }
-
             };
 
             /**
@@ -508,9 +581,17 @@
              * @public
              */
             this.playerClicked = function(amcAd, showPage) {
-                var clickThroughURL = this._currentAd.getClickthroughURL();
-                if(clickThroughURL){
-                    this.openClickThrough(clickThroughURL);
+                if(this._currentAd) {
+
+
+                    var clickThroughURL = this._currentAd.getClickthroughURL();
+                    if (clickThroughURL) {
+                        this.openClickThrough(clickThroughURL);
+                    }
+                } else if (this._currentOverlayAd){
+                    adPlayer.overlayAdClicked(this._currentOverlayAd);
+                } else if (this._currentPauseAd){
+                    console.error("Pause ad clicked");
                 }
             };
 
@@ -535,6 +616,48 @@
             var _onContentChanged = function() {
                 //Not needed rn
             };
+
+            var _onContentPause = function () {
+                contentPaused = true;
+                if(adPlayer){
+                    adPlayer.contentPaused();
+
+                    //CSS changes
+                    //oo-interactive container
+                    //pos absolute
+                    // left bottom 0
+                    //width 100
+                    //height 100
+                    //background black
+
+                    //oo-control-bar
+                    // absolute
+                    // bottom 0
+
+
+                    //oo-ad-overlay-image
+                    //margin left right auto
+                    // bottom 0
+                    //width auto
+                    //height 100
+                    //pos absolute
+
+                }
+            };
+
+
+            var _onContentResume = function () {
+                contentPaused = false;
+
+                if(currentPauseAd){
+                    amc.notifyNonlinearAdEnded(currentPauseAd.id);
+                    currentPauseAd = null;
+                }
+                if(adPlayer){
+                    adPlayer.contentStarted();
+                }
+            };
+
 
             this.notifyAdPodStarted = function(id, adCount){
                 if(!podStarted) {
@@ -587,6 +710,35 @@
                 return false;
             };
 
+            this.showOverlayAd = function (pulseOverlayAd) {
+                console.error("Showing overlay",pulseOverlayAd);
+                this._currentOverlayAd = pulseOverlayAd;
+
+                amc.forceAdToPlay(this.name,
+                    pulseOverlayAd,
+                    amc.ADTYPE.NONLINEAR_OVERLAY,
+                    [pulseOverlayAd.getResourceURL()]);
+            };
+
+            this.showPauseAd = function (pulsePauseAd) {
+                console.error("Showing pause ad",pulsePauseAd);
+                this._currentPauseAd = pulsePauseAd;
+
+                amc.forceAdToPlay(this.name, pulsePauseAd,amc.ADTYPE.NONLINEAR_OVERLAY, [pulsePauseAd.getResourceURL()]);
+            };
+
+            this.showOverlay = function () {
+                console.error("Resuming v4 overlay");
+                amc.sendURLToLoadAndPlayNonLinearAd(currentOverlayAd.ad, currentOverlayAd.id, currentOverlayAd.ad.getResourceURL());
+                startOverlayCountdown();
+            };
+
+            this.hideOverlay = function (ad) {
+                console.error("hide v4 overlay",ad);
+                overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
+                //hide overlay fixme
+            };
+
             this.illegalOperationOccurred = function(msg) {
                 //console.log(msg);
             };
@@ -616,6 +768,10 @@
             }, this);
 
             var _onPlayStarted = function() {
+                //Hide a pause ad is there was any
+                if(this._currentPauseAd){
+                    amc.notifyNonlinearAdEnded(this_)
+                }
                 if(adPlayer)
                     adPlayer.contentStarted();
             };
@@ -661,6 +817,13 @@
                                 VPAIDViewMode: OO.Pulse.AdPlayer.Settings.VPAIDViewMode.NORMAL,
                                 renderingMode: preferredRenderingMode || renderingMode
                             }, this.sharedVideoElement);
+                        //var overlayContainer = document.createElement('div');
+                        //overlayContainer.style.width = "100%";
+                        //overlayContainer.style.height = "100%";
+                        //var parent = amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0];
+                        //parent.appendChild(overlayContainer);
+                        //
+                        //adPlayer.setOverlayDiv(overlayContainer);
 
                         //We register all the event listeners we will need
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished,this));
@@ -673,6 +836,7 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused,this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying,this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted,this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown,this));
 
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
@@ -773,6 +937,17 @@
                 adPlayer.resize(-1,
                     -1, isFullscreen);
             };
+
+            var _onOverlayShown = function (event, metadata) {
+                //amc.notifyNonlinearAdStarted(1);
+                var adData = {
+                    //position_type: NON_AD_RULES_POSITION_TYPE,
+                    forced_ad_type: amc.ADTYPE.NONLINEAR_OVERLAY
+                };
+
+                amc.sendURLToLoadAndPlayNonLinearAd("test", "id",metadata.ad.getResourceURL());
+                //amc.forceAdToPlay(this.name, adData, amc.ADTYPE.NONLINEAR_OVERLAY);
+            }
         }
         return new PulseAdManager();
     });
