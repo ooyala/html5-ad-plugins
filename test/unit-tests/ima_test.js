@@ -219,6 +219,58 @@ describe('ad_manager_ima', function()
     }).to.not.throwException();
   });
 
+  it('Init: ad manager accepts valid finite number timeout values', function()
+  {
+    amc.adManagerSettings = {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = 7000;
+    initialize();
+    expect(ima.maxAdsRequestTimeout).to.be(7000);
+  });
+
+  it('Init: ad manager ignores null timeout values', function()
+  {
+    amc.adManagerSettings = {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = null;
+    initialize();
+    //Value of DEFAULT_ADS_REQUEST_TIME_OUT
+    expect(ima.maxAdsRequestTimeout).to.be(5000);
+  });
+
+  it('Init: ad manager ignores undefined timeout values', function()
+  {
+    amc.adManagerSettings = {};
+    initialize();
+    //Value of DEFAULT_ADS_REQUEST_TIME_OUT
+    expect(ima.maxAdsRequestTimeout).to.be(5000);
+  });
+
+  it('Init: ad manager ignores string timeout values', function()
+  {
+    amc.adManagerSettings = {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = "hello";
+    initialize();
+    //Value of DEFAULT_ADS_REQUEST_TIME_OUT
+    expect(ima.maxAdsRequestTimeout).to.be(5000);
+  });
+
+  it('Init: ad manager ignores object timeout values', function()
+  {
+    amc.adManagerSettings = {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = {};
+    initialize();
+    //Value of DEFAULT_ADS_REQUEST_TIME_OUT
+    expect(ima.maxAdsRequestTimeout).to.be(5000);
+  });
+
+  it('Init: ad manager ignores function timeout values', function()
+  {
+    amc.adManagerSettings = {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = function(){};
+    initialize();
+    //Value of DEFAULT_ADS_REQUEST_TIME_OUT
+    expect(ima.maxAdsRequestTimeout).to.be(5000);
+  });
+
   it('Init: ad manager is ready', function()
   {
     ima.initialize(amc, playerId);
