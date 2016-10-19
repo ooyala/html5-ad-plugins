@@ -27,7 +27,17 @@ fake_amc = function() {
     AD_VOLUME_CHANGED :         "adVolumeChanged",
     MAIN_CONTENT_IN_FOCUS :     "mainContentInFocus"
   };
-  this.AD_SETTINGS  = {};
+  this.AD_SETTINGS  = {
+    PAUSE_AD_ON_CLICK: "pauseAdOnClick",
+    AD_MANAGER_LOAD_TIMEOUT: "adManagerLoadTimeout",
+    AD_LOAD_TIMEOUT: "adLoadTimeout",
+    DISPLAY_CUE_POINTS: "displayCuePointMarkers",
+    REPLAY_ADS: "replayAds",
+    SHOW_NONLINEAR_CLOSE_BUTTON: "showNonLinearCloseButton",
+    SHOW_LINEAR_AD_SKIP_BUTTON: "showLinearAdSkipButton",
+    LINEAR_AD_SKIP_BUTTON_START_TIME: "linearAdSkipButtonStartTime",
+    ALLOW_AD_CLICK_THROUGH_ON_VIDEO: "allowAdClickThroughOnVideo"
+  };
   this.ADTYPE = {
     LINEAR_OVERLAY : "linearOverlay",
     NONLINEAR_OVERLAY : "nonlinearOverlay",
