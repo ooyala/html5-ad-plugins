@@ -239,7 +239,11 @@ require("../html5-common/js/utils/utils.js");
 
         //check for override on ad timeout
         this.maxAdsRequestTimeout = DEFAULT_ADS_REQUEST_TIME_OUT;
-        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.AD_LOAD_TIMEOUT))
+        //IMA does not like timeouts of 0, it still attempts to play the ad even though
+        //we have timed out
+        //This may be a fault of the plugin or SDK. More investigation is required
+        if (_.isFinite(_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT])
+            && _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0)
         {
           this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
         }
