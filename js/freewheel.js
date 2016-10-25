@@ -983,6 +983,13 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     // Getters
+    
+    /**
+     * Getter for handlingClick.
+     * @public
+     * @method Freewheel#getHandlingClick
+     * @returns {boolean} the value of handlingClick.
+     */
     this.getHandlingClick = function() {
       return handlingClick;
     };
