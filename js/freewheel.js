@@ -985,11 +985,10 @@ OO.Ads.manager(function(_, $) {
     // Getters
     
     /**
-     * Getter for handlingClick, which is a state variable that denotes whether or not the player is
-     * currently processing a click.
+     * Returns whether player is handling click.
      * @public
      * @method Freewheel#getHandlingClick
-     * @returns {boolean} true if handlingClick is true. Returns, if handlingClick is false.
+     * @returns {boolean} true if player is handling click. Returns false, if otherwise.
      */
     this.getHandlingClick = function() {
       return handlingClick;
