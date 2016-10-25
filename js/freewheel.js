@@ -703,7 +703,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#playerClicked
      */
     this.playerClicked = function() {
-      if (currentAd && (currentAd.adType === amc.ADTYPE.AD_REQUEST)) {
+      if (currentAd && (currentAd.adType !== amc.ADTYPE.AD_REQUEST)) {
         var instance = currentPlayingSlot.getCurrentAdInstance();
         // handlingClick makes sure the click is only triggered once, rather than repeatedly in a loop.
         if (!handlingClick) {
@@ -981,6 +981,11 @@ OO.Ads.manager(function(_, $) {
         adRequestTimeout = null;
       }
     }, this);
+
+    // Getters
+    this.getHandlingClick = function() {
+      return handlingClick;
+    };
 
     /**
      * Cancel the current ad, reset the state variables, dispose the remote Freewheel class.
