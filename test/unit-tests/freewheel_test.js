@@ -29,6 +29,15 @@ describe('ad_manager_freewheel', function() {
     this.getCustomId = function() {
       return customId;
     };
+    this.getCurrentAdInstance = function() {
+      return {
+        getRendererController: function() {
+          this.processEvent = function() {};
+        },
+        getEventCallback: function() {}
+      };
+    };
+    this.getAdCount = function() {};
     this.play = function() {};
   };
 
@@ -402,5 +411,25 @@ describe('ad_manager_freewheel', function() {
     fw.playAd(amc.timeline[0]);
     fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_CLICK]();
     expect(adsClickthroughOpenedCalled).to.be(1);
+  });
+
+  it('Ad Clickthrough: ad manager should handle player clicked logic for non ad requests', function() {
+    amc.adsClickthroughOpened = function() {
+      adsClickthroughOpenedCalled += 1;
+    };
+    getTemporalSlots = function(){
+      return [
+          new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+      ];
+    };
+    initialize();
+    expect(amc.timeline.length).to.be(1);
+    play();
+    fw.playAd(amc.timeline[0]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
+    expect(amc.timeline.length).to.be(2);
+    fw.playAd(amc.timeline[1]);
+    fw.playerClicked();
+    expect(fw.getHandlingClick()).to.be(true);
   });
 });
