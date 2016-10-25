@@ -111,7 +111,8 @@ describe('ad_manager_vast', function() {
           frequency: 2,
           ad_set_code: "ad_set_code",
           time:0,
-          position_type:"t"
+          position_type:"t",
+          position:0
         },
         content = {
           embed_code: embed_code,
@@ -1798,7 +1799,7 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(0);
   });
 
-  it('Vast 3.0: Should use ad tag url override', function() {
+  it('Vast Ad Manager: Should use page level settings with position_type t', function() {
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -1810,11 +1811,53 @@ describe('ad_manager_vast', function() {
     };
     var content = {
       embed_code: embed_code,
-      ads: [vast_ad]
+      ads: [vast_ad],
+      duration: 120000
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
+    debugger;
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": 10000
+        }
+      ]
+    }, {}, content);
     amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(10);
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Should use page level settings with position_type p', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": 50
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(60);
     vastAdManager.playAd(amc.timeline[0]);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });

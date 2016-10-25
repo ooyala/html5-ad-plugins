@@ -909,6 +909,8 @@ OO.Ads.manager(function(_, $) {
             //Movie metadata uses time, page level metadata uses position
             if (_.isFinite(+adMetadata.time)) {
               adData.position = adMetadata.time / 1000;
+            } else if (_.isFinite(+adMetadata.position)) {
+              adData.position = adMetadata.position / 1000;
             }
           } else if (adMetadata.position_type == 'p') {
             if (_.isFinite(+adMetadata.position)) {
