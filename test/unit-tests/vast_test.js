@@ -1944,7 +1944,6 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad],
       duration: 120000
     };
-    debugger;
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
       "all_ads": [
@@ -1978,7 +1977,6 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad],
       duration: 120000
     };
-    debugger;
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
       "all_ads": [
@@ -2010,7 +2008,6 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad],
       duration: 120000
     };
-    debugger;
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
       "all_ads": [
