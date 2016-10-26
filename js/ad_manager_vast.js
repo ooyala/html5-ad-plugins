@@ -34,8 +34,6 @@ OO.Ads.manager(function(_, $) {
    * @property {boolean} loaded Set to true once the ad has been loaded successfully
    * @property {string} embedCode Keeps track of the embed code of the movie that is currently playing
    * @property {string} loaderId Unique id name for the loader, which is required by the API
-   * @property {object} movieMd Contains the metadata of the main movie
-   * @property {string} adURLOverride If the page level params override the ad url then it is stored here
    * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
    * @property {object} adTrackingInfo The object that holds each individual ad id's tracking urls (including error reporting).
@@ -54,10 +52,8 @@ OO.Ads.manager(function(_, $) {
     this.ready  = false;
     this.currentDepth = 0;
     this.loaded = false;
-    this.embedCode = 'unkown';
+    this.embedCode = 'unknown';
     this.loaderId = 'OoVastAdsLoader' + _.uniqueId;
-    this.movieMd = null;
-    this.adURLOverride;
     this.lastOverlayAd;
     this.adTrackingInfo = {};
     this.VAST_AD_CONTAINER = '#vast_ad_container';
@@ -69,10 +65,9 @@ OO.Ads.manager(function(_, $) {
     // VPAID Variables
     var vpaidVideoRestrictions          = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
                                             features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] };
-    this.embedCode                      = 'unkown';
+    this.mainContentDuration            = -1;
     this.testMode                       = false;
 
-    this.adURLOverride                  = '';
     this.allAdInfo                      = null;
     this.showLinearAdSkipButton         = false;
     var vpaidIframe                          = null;
@@ -737,31 +732,26 @@ OO.Ads.manager(function(_, $) {
      * @param {object} movieMetadata Contains the movie metadata that is currently loaded
      */
     this.loadMetadata = function(pbMetadata, baseBacklotMetadata, movieMetadata) {
-      // Interpret the data from the page and backlot - possibly combine this function with initialize
+      this.mainContentDuration = movieMetadata.duration/1000;
       this.embedCode = this.amc.currentEmbedCode;
-      this.allAdInfo = movieMetadata.ads || pbMetadata.all_ads;
-      this.movieMd = movieMetadata;
-      if (pbMetadata) {
-        if (pbMetadata.tagUrl) {
-          this.adURLOverride = pbMetadata.tagUrl;
+      // We want to prioritize the page level setting over the movie metadata
+      this.allAdInfo = (pbMetadata ? pbMetadata.all_ads : null) || (movieMetadata ? movieMetadata.ads : {});
+
+      if (pbMetadata && pbMetadata.vpaidTimeout) {
+        if (_.isNumber(pbMetadata.vpaidTimeout.iframe) && pbMetadata.vpaidTimeout.iframe >= 0) {
+          this.VPAID_AD_IFRAME_TIMEOUT = pbMetadata.vpaidTimeout.iframe * 1000;
         }
 
-        if (pbMetadata.vpaidTimeout) {
-          if (_.isNumber(pbMetadata.vpaidTimeout.iframe) && pbMetadata.vpaidTimeout.iframe >= 0) {
-            this.VPAID_AD_IFRAME_TIMEOUT = pbMetadata.vpaidTimeout.iframe * 1000;
-          }
+        if (_.isNumber(pbMetadata.vpaidTimeout.loaded) && pbMetadata.vpaidTimeout.loaded >= 0) {
+          this.VPAID_AD_LOADED_TIMEOUT = pbMetadata.vpaidTimeout.loaded * 1000;
+        }
 
-          if (_.isNumber(pbMetadata.vpaidTimeout.loaded) && pbMetadata.vpaidTimeout.loaded >= 0) {
-            this.VPAID_AD_LOADED_TIMEOUT = pbMetadata.vpaidTimeout.loaded * 1000;
-          }
+        if (_.isNumber(pbMetadata.vpaidTimeout.started) && pbMetadata.vpaidTimeout.started >= 0) {
+          this.VPAID_AD_STARTED_TIMEOUT = pbMetadata.vpaidTimeout.started * 1000;
+        }
 
-          if (_.isNumber(pbMetadata.vpaidTimeout.started) && pbMetadata.vpaidTimeout.started >= 0) {
-            this.VPAID_AD_STARTED_TIMEOUT = pbMetadata.vpaidTimeout.started * 1000;
-          }
-
-          if (_.isNumber(pbMetadata.vpaidTimeout.stopped) && pbMetadata.vpaidTimeout.stopped >= 0) {
-            this.VPAID_AD_STOPPED_TIMEOUT = pbMetadata.vpaidTimeout.stopped * 1000;
-          }
+        if (_.isNumber(pbMetadata.vpaidTimeout.stopped) && pbMetadata.vpaidTimeout.stopped >= 0) {
+          this.VPAID_AD_STOPPED_TIMEOUT = pbMetadata.vpaidTimeout.stopped * 1000;
         }
       }
 
@@ -833,17 +823,11 @@ OO.Ads.manager(function(_, $) {
      */
     var loadAd = _.bind(function(amcAd) {
       var loadedAds = false;
-      var override = false;
       var ad = amcAd.ad;
       this.amc.notifyPodStarted(amcAd.id, 1);
-      if (this.adURLOverride) {
-        override = true;
-        ad.tag_url = this.adURLOverride;
-      }
 
       this.currentAdBeingLoaded = ad;
-      var url = typeof ad.url !== 'undefined' && !override ? ad.url : ad.tag_url;
-      this.loadUrl(url);
+      this.loadUrl(ad.tag_url);
       loadedAds = true;
       return loadedAds;
     }, this);
@@ -899,7 +883,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     *
+     * TODO: out of date
      * This is required by the Ad Manager Controller but for Vast ads nothing is done here.
      * @returns The array of the new timeline to merge into the controller timeline but Vast Manager doesn't use this
      * function since we add the Ads one by one, so we just return null so it is ignored by the AMC.
@@ -922,17 +906,46 @@ OO.Ads.manager(function(_, $) {
           };
 
           if (adMetadata.position_type == 't') {
-            adData.position = adMetadata.time/1000;
+            //Movie metadata uses time, page level metadata uses position
+            if (_isValidPosition(adMetadata.time)) {
+              adData.position = +adMetadata.time / 1000;
+            } else if (_isValidPosition(adMetadata.position)) {
+              adData.position = +adMetadata.position / 1000;
+            }
           } else if (adMetadata.position_type == 'p') {
-            //TODO
-            //adData.position =
+            if (_isValidPosition(adMetadata.position)) {
+              adData.position = +adMetadata.position / 100 * this.mainContentDuration;
+            }
           }
-          var amcAd = new this.amc.Ad(adData);
-          timeline.push(amcAd);
+          adMetadata.position = adData.position;
+
+          //Movie metadata uses url, page level metadata uses tag_url
+          if (!adMetadata.tag_url) {
+            adMetadata.tag_url = adMetadata.url;
+          }
+
+          //Only add to timeline if the tag url and position are valid
+          if (_.isString(adMetadata.tag_url) && _isValidPosition(adMetadata.position)) {
+            var amcAd = new this.amc.Ad(adData);
+            timeline.push(amcAd);
+          }
         }
       }
       return timeline;
     };
+
+    /**
+     * Checks to see if the provided position metadata is valid.
+     * @private
+     * @method Vast#_isValidPosition
+     * @param {*} position The position metadata to check
+     * @returns {boolean} True if the position is valid, false otherwise
+     */
+    var _isValidPosition = _.bind(function(position) {
+      //Unary + returns 1 for true and 0 for false and null
+      //To avoid this, we check to see if position is a number or a string
+      return (typeof position === 'string' || typeof position === 'number') && _.isFinite(+position);
+    }, this);
 
     /**
      * Called when the ad starts playback.
@@ -1890,7 +1903,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.data.type = this.amc.ADTYPE.LINEAR_VIDEO;
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
-      vastAdUnit.positionSeconds = adLoaded.time/1000;
+      vastAdUnit.positionSeconds = adLoaded.position;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
       // Save the stream data for use by VideoController
@@ -1941,7 +1954,7 @@ OO.Ads.manager(function(_, $) {
       vastAdUnit.data.type = this.amc.ADTYPE.NONLINEAR_OVERLAY;
       vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
       vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
-      vastAdUnit.positionSeconds = adLoaded.time/1000;
+      vastAdUnit.positionSeconds = adLoaded.position;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
       return vastAdUnit;
@@ -2647,21 +2660,21 @@ OO.Ads.manager(function(_, $) {
       if (adBreak.timeOffset) {
         // case: "start"
         if (/^start$/.test(adBreak.timeOffset)) {
-          adObject.time = 0;
+          adObject.position = 0;
         }
         // case: "end"
         else if (/^end$/.test(adBreak.timeOffset)) {
-          adObject.time = (this.amc.movieDuration + 1) * 1000;
+          adObject.position = (this.amc.movieDuration + 1);
 
         }
         // case: hh:mm:ss.mmm | hh:mm:ss
         else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
-          adObject.time = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration);
+          adObject.position = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration) / 1000;
         }
         // case: [0, 100]%
         else if (/^\d{1,3}%$/.test(adBreak.timeOffset)) {
           // TODO: test percentage > 100
-          adObject.time = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset);
+          adObject.position = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset) / 1000;
         }
         else {
           _tryRaiseAdError("VAST, VMAP: No Matching 'timeOffset' Attribute format");
@@ -2812,7 +2825,7 @@ OO.Ads.manager(function(_, $) {
         adPodLength: adPodLength ? adPodLength : 1,
         data: data,
         fallbackAd: null,
-        positionSeconds: adLoaded.time / 1000,
+        positionSeconds: adLoaded.position,
         adParams: adParams,
         streams: {'mp4': ''},
         type: AD_TYPE.INLINE,

@@ -92,7 +92,9 @@ describe('ad_manager_vast', function() {
       frequency: 2,
       ad_set_code: "ad_set_code",
       time:0,
-      position_type:"t"
+      position_type:"t",
+      position:0,
+      url: "http://blahurl"
     };
     var content = {
       embed_code: embed_code,
@@ -111,7 +113,9 @@ describe('ad_manager_vast', function() {
           frequency: 2,
           ad_set_code: "ad_set_code",
           time:0,
-          position_type:"t"
+          position_type:"t",
+          position:0,
+          url: "http://blahurl"
         },
         content = {
           embed_code: embed_code,
@@ -268,7 +272,8 @@ describe('ad_manager_vast', function() {
       frequency: 2,
       ad_set_code: "ad_set_code",
       time:0,
-      position_type:"t"
+      position_type:"t",
+      url:"http://blahurl"
     };
     var content = {
       embed_code: embed_code,
@@ -292,7 +297,8 @@ describe('ad_manager_vast', function() {
       frequency: 2,
       ad_set_code: "ad_set_code",
       time:10000,
-      position_type:"t"
+      position_type:"t",
+      url:"http://blahurl"
     };
     var content = {
       embed_code: embed_code,
@@ -316,7 +322,8 @@ describe('ad_manager_vast', function() {
       frequency: 2,
       ad_set_code: "ad_set_code",
       time:0,
-      position_type:"t"
+      position_type:"t",
+      url:"0.mp4"
     };
     var vast_ad_mid = {
       type: "vast",
@@ -1798,7 +1805,7 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(0);
   });
 
-  it('Vast 3.0: Should use ad tag url override', function() {
+  it('Vast Ad Manager: Should use page level settings with position_type t', function() {
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -1810,13 +1817,411 @@ describe('ad_manager_vast', function() {
     };
     var content = {
       embed_code: embed_code,
-      ads: [vast_ad]
+      ads: [vast_ad],
+      duration: 120000
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"tagUrl": "http://blahblah"}, {}, content);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": 10000
+        }
+      ]
+    }, {}, content);
     amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(10);
     vastAdManager.playAd(amc.timeline[0]);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Should use page level settings with position_type t with string position', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": "10000"
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(10);
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Should use page level settings with position_type p', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": 50
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(60);
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Should use page level settings with position_type p with string position', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": "50"
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(60);
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Can add multiple position type \'t\' ads with page level settings', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": 10000
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": 20000
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.position).to.be(10);
+    expect(amc.timeline[1].ad.position).to.be(20);
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Can add multiple position type \'p\' ads with page level settings', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": 25
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": 50
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.position).to.be(30);
+    expect(amc.timeline[1].ad.position).to.be(60);
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Can add multiple mixed position type ads with page level settings', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": 25
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": 50000
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": 0
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(3);
+    expect(amc.timeline[0].ad.position).to.be(30);
+    expect(amc.timeline[1].ad.position).to.be(50);
+    //Timeline is not sorted at this point
+    expect(amc.timeline[2].ad.position).to.be(0);
+    vastAdManager.playAd(amc.timeline[2]);
+    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+  });
+
+  it('Vast Ad Manager: Should ignore page level settings with non-string tag_urls', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": null,
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "position_type": "p",
+          "position": 0
+        },
+        {
+          "tag_url": {},
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": function(){},
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": true,
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": false,
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": 12345,
+          "position_type": "t",
+          "position": 0
+        }
+      ]
+    }, {}, content);
+    expect(amc.timeline.length).to.be(0);
+  });
+
+  it('Vast Ad Manager: Should ignore page level settings with null positions', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": null
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": null
+        }
+      ]
+    }, {}, content);
+    expect(amc.timeline.length).to.be(0);
+  });
+
+  it('Vast Ad Manager: Should ignore page level settings with undefined positions', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t"
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p"
+        }
+      ]
+    }, {}, content);
+    expect(amc.timeline.length).to.be(0);
+  });
+
+  it('Vast Ad Manager: Should ignore page level settings with non-string/non-number positions', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": {}
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": function(){}
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": true
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": false
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "t",
+          "position": NaN
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": "NaN"
+        }
+      ]
+    }, {}, content);
+    expect(amc.timeline.length).to.be(0);
   });
 
   it('VPAID 2.0: Should use VPAID recovery timeout overrides', function() {
