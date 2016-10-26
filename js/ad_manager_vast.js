@@ -907,13 +907,13 @@ OO.Ads.manager(function(_, $) {
 
           if (adMetadata.position_type == 't') {
             //Movie metadata uses time, page level metadata uses position
-            if (_.isFinite(+adMetadata.time)) {
-              adData.position = adMetadata.time / 1000;
-            } else if (_.isFinite(+adMetadata.position)) {
-              adData.position = adMetadata.position / 1000;
+            if (_isValidPosition(adMetadata.time)) {
+              adData.position = +adMetadata.time / 1000;
+            } else if (_isValidPosition(adMetadata.position)) {
+              adData.position = +adMetadata.position / 1000;
             }
           } else if (adMetadata.position_type == 'p') {
-            if (_.isFinite(+adMetadata.position)) {
+            if (_isValidPosition(adMetadata.position)) {
               adData.position = +adMetadata.position / 100 * this.mainContentDuration;
             }
           }
@@ -924,12 +924,28 @@ OO.Ads.manager(function(_, $) {
             adMetadata.tag_url = adMetadata.url;
           }
 
-          var amcAd = new this.amc.Ad(adData);
-          timeline.push(amcAd);
+          //Only add to timeline if the tag url and position are valid
+          if (adMetadata.tag_url && _.isFinite(adMetadata.position)) {
+            var amcAd = new this.amc.Ad(adData);
+            timeline.push(amcAd);
+          }
         }
       }
       return timeline;
     };
+
+    /**
+     * Checks to see if the provided position metadata is valid.
+     * @private
+     * @method Vast#_isValidPosition
+     * @param {*} position The position metadata to check
+     * @returns {boolean} True if the position is valid, false otherwise
+     */
+    var _isValidPosition = _.bind(function(position) {
+      //Unary + returns 1 for true and 0 for false and null
+      //To avoid this, we check to see if position is a number or a string
+      return (typeof position === 'string' || typeof position === 'number') && _.isFinite(+position);
+    }, this);
 
     /**
      * Called when the ad starts playback.
