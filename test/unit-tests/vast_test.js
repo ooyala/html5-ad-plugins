@@ -2050,6 +2050,63 @@ describe('ad_manager_vast', function() {
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });
 
+  it('Vast Ad Manager: Should ignore page level settings with non-string tag_urls', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "all_ads": [
+        {
+          "tag_url": null,
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "position_type": "p",
+          "position": 0
+        },
+        {
+          "tag_url": {},
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": function(){},
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": true,
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": false,
+          "position_type": "t",
+          "position": 0
+        },
+        {
+          "tag_url": 12345,
+          "position_type": "t",
+          "position": 0
+        }
+      ]
+    }, {}, content);
+    expect(amc.timeline.length).to.be(0);
+  });
+
   it('Vast Ad Manager: Should ignore page level settings with null positions', function() {
     var embed_code = "embed_code";
     var vast_ad = {

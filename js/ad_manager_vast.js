@@ -925,7 +925,7 @@ OO.Ads.manager(function(_, $) {
           }
 
           //Only add to timeline if the tag url and position are valid
-          if (adMetadata.tag_url && _.isFinite(adMetadata.position)) {
+          if (_.isString(adMetadata.tag_url) && _isValidPosition(adMetadata.position)) {
             var amcAd = new this.amc.Ad(adData);
             timeline.push(amcAd);
           }
