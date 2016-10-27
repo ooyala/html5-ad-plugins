@@ -69,6 +69,7 @@ OO.Ads.manager(function(_, $) {
     this.testMode                       = false;
 
     this.allAdInfo                      = null;
+    this.adTagUrlOverride               = null;
     this.showLinearAdSkipButton         = false;
     var vpaidIframe                          = null;
     var timeline                        = [];
@@ -755,6 +756,12 @@ OO.Ads.manager(function(_, $) {
         }
       }
 
+      if (pbMetadata && _.isString(pbMetadata.tagUrl)) {
+        this.adTagUrlOverride = pbMetadata.tagUrl;
+      } else {
+        this.adTagUrlOverride = null;
+      }
+
       this.ready = true;
       this.amc.onAdManagerReady();
     };
@@ -922,6 +929,11 @@ OO.Ads.manager(function(_, $) {
           //Movie metadata uses url, page level metadata uses tag_url
           if (!adMetadata.tag_url) {
             adMetadata.tag_url = adMetadata.url;
+          }
+
+          //Force usage of the ad tag url override if it is valid
+          if (_.isString(this.adTagUrlOverride)) {
+            adMetadata.tag_url = this.adTagUrlOverride;
           }
 
           //Only add to timeline if the tag url and position are valid

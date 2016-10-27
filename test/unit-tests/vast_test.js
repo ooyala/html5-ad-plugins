@@ -2224,6 +2224,177 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(0);
   });
 
+  it('Vast Ad Manager: Should use tag url override if provided in page level settings for content tree ads', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t",
+      url: "http://vastad1"
+    };
+    var vast_ad2 = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code2",
+      time:0,
+      position_type:"t",
+      url: "http://vastad2"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad, vast_ad2],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "tagUrl":"http://override"
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://override");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://override");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://override");
+  });
+
+  it('Vast Ad Manager: Should use tag url override if provided in page level settings for page level ads', function() {
+    var embed_code = "embed_code";
+    var content = {
+      embed_code: embed_code,
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "tagUrl":"http://override",
+      "all_ads":[
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": 25
+        },
+        {
+          "tag_url": "http://blahblah",
+          "position_type": "p",
+          "position": 50
+        }
+      ]
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://override");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://override");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://override");
+  });
+
+  it('Vast Ad Manager: Should ignore tag url override if is not a string', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:0,
+      position_type:"t",
+      url: "http://vastad1"
+    };
+    var vast_ad2 = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code2",
+      time:0,
+      position_type:"t",
+      url: "http://vastad2"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad, vast_ad2],
+      duration: 120000
+    };
+    vastAdManager.initialize(amc);
+
+    vastAdManager.loadMetadata({
+      "tagUrl":null
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+
+    amc.timeline = [];
+    vastAdManager.loadMetadata({
+      //undefined tag url
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+
+    amc.timeline = [];
+    vastAdManager.loadMetadata({
+      "tagUrl":{}
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+
+    amc.timeline = [];
+    vastAdManager.loadMetadata({
+      "tagUrl":function(){}
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+
+    amc.timeline = [];
+    vastAdManager.loadMetadata({
+      "tagUrl":12345
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+
+    amc.timeline = [];
+    vastAdManager.loadMetadata({
+      "tagUrl":true
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+
+    amc.timeline = [];
+    vastAdManager.loadMetadata({
+      "tagUrl":false
+    }, {}, content);
+    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline.length).to.be(2);
+    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
+    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    vastAdManager.playAd(amc.timeline[0]);
+    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+  });
+
   it('VPAID 2.0: Should use VPAID recovery timeout overrides', function() {
     var embed_code = "embed_code";
     var vast_ad = {
