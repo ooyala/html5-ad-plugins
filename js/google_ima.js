@@ -1473,7 +1473,7 @@ require("../html5-common/js/utils/utils.js");
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
-            if (this.videoControllerWrapper)
+            if (this.videoControllerWrapper && (ad && ad.isLinear()))
             {
               _stopTimeUpdater();
               //IMA provides values which can result in negative current times or current times which are greater than duration.
