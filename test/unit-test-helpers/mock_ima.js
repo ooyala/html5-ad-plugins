@@ -167,7 +167,7 @@ google =
       {
         ALL_ADS_COMPLETED : "allAdsCompleted",
         COMPLETE : "complete",
-        SKIPPED : "skipped",
+        SKIPPED : "skip",
         FIRST_QUARTILE : "firstQuartile",
         LOADED : "loaded",
         MIDPOINT : "midpoint",
