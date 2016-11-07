@@ -717,6 +717,7 @@ describe('ad_manager_ima', function()
 
   it('AMC Integration, IMA Event: IMA COMPLETE event notifies amc of linear ad end for a linear ad', function()
   {
+    var raiseTimeUpdateCalled = 0;
     var notified = false;
     var adId = -1;
     initAndPlay(true, vci);
@@ -730,11 +731,18 @@ describe('ad_manager_ima', function()
       id : "ad_1000",
       ad : {}
     });
+    ima.videoControllerWrapper.raiseTimeUpdate = function() {
+      raiseTimeUpdateCalled++;
+    };
+
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
     expect(notified).to.be(true);
     expect(adId).to.be("ad_1000");
+
+    // time update should only be raised twice: once for STARTED and and another COMPLETE
+    expect(raiseTimeUpdateCalled).to.be(2);
   });
 
   it('AMC Integration, IMA Event: IMA USER_CLOSE event notifies amc of linear ad end for a linear ad', function()
@@ -785,6 +793,7 @@ describe('ad_manager_ima', function()
     {
       ad : {}
     });
+
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     //mock ima has a default ad pod size of 1 (returned via getTotalAds)
@@ -831,6 +840,7 @@ describe('ad_manager_ima', function()
 
   it('AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) notifies amc of non-linear ad end', function()
   {
+    var raiseTimeUpdateCalled = 0;
     var notified = false;
     google.ima.linearAds = false;
     initAndPlay(true, vci);
@@ -842,9 +852,16 @@ describe('ad_manager_ima', function()
     {
       ad : {}
     });
+    ima.videoControllerWrapper.raiseTimeUpdate = function() {
+      raiseTimeUpdateCalled++;
+    };
+
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+
+    // time update should only be raised once for STARTED, but not COMPLETE
+    expect(raiseTimeUpdateCalled).to.be(1);
     expect(notified).to.be(true);
   });
 
