@@ -375,10 +375,42 @@ describe('ad_manager_ima', function()
   it('Play ad: Requests the AMC to hide the player UI', function()
   {
     var notified = false;
-    amc.hidePlayerUi = function() {
+    amc.hidePlayerUi = function(showAdControls, showAdMarquee) {
+      expect(showAdControls).to.be(false);
+      expect(showAdMarquee).to.be(false);
       notified = true;
     };
     initAndPlay(true, vci);
+    ima.playAd(amc.timeline[0]);
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(notified).to.be(true);
+  });
+
+  it('Play ad: Metadata setting can choose to show the ad controls while hiding player UI', function()
+  {
+    var notified = false;
+    amc.hidePlayerUi = function(showAdControls, showAdMarquee) {
+      expect(showAdControls).to.be(true);
+      expect(showAdMarquee).to.be(false);
+      notified = true;
+    };
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      showAdControls: true
+    };
+    ima.loadMetadata(content, {}, {});
+    amc.timeline = ima.buildTimeline();
+    createVideoWrapper(vci);
+    play();
     ima.playAd(amc.timeline[0]);
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);

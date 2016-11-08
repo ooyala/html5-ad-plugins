@@ -146,6 +146,7 @@ require("../html5-common/js/utils/utils.js");
         this.adPlaybackStarted = false;
         this.vcPlayRequested = false;
         this.savedVolume = -1;
+        this.showAdControls = false;
         this.useGoogleAdUI = false;
         this.useGoogleCountdown = false;
         this.useInsecureVpaidMode = false;
@@ -252,6 +253,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("additionalAdTagParameters"))
         {
           this.additionalAdTagParameters = metadata.additionalAdTagParameters;
+        }
+
+        this.showAdControls = false;
+        if (metadata.hasOwnProperty("showAdControls"))
+        {
+          this.showAdControls = metadata.showAdControls;
         }
 
         this.useGoogleAdUI = false;
@@ -1442,7 +1449,7 @@ require("../html5-common/js/utils/utils.js");
                 this.savedVolume = -1;
               }
               //Since IMA handles its own UI, we want the video player to hide its UI elements
-              _amc.hidePlayerUi();
+              _amc.hidePlayerUi(this.showAdControls, false);
             }
             else
             {
