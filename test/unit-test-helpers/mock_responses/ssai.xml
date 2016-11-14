@@ -124,6 +124,26 @@
             </VideoClicks>
           </Linear>
         </Creative>
+        <Creative sequence="1">
+          <CompanionAds>
+            <Companion id="GDFP" width="728" height="90" >
+              <StaticResource creativeType="image/jpeg">1.jpg</StaticResource>
+              <TrackingEvents>
+                <Tracking event="creativeView">companionCreativeViewUrl</Tracking>
+              </TrackingEvents>
+              <CompanionClickThrough>companionClickThrough</CompanionClickThrough>
+
+            </Companion>
+            <Companion id="GDFP" width="300" height="250" >
+              <StaticResource creativeType="image/jpeg">2.jpg</StaticResource>
+              <TrackingEvents>
+                <Tracking event="creativeView">companion2CreativeViewUrl</Tracking>
+              </TrackingEvents>
+              <CompanionClickThrough>companion2ClickThrough</CompanionClickThrough>
+
+            </Companion>
+          </CompanionAds>
+        </Creative>
       </Creatives>
       <Extensions>
         <Extension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="VPAdServerExtension_type" type="AdServer" name="Videoplaza">
