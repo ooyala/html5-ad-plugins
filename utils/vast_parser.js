@@ -528,6 +528,16 @@ var VastParser = function() {
       tracking[item] = filterEmpty(xml.find(sel).map(function(i, v) { return $(v).text(); }));
     }, {});
   }, this);
+
+  /**
+   * Remove any new lines, line breaks and spaces from string.
+   * @private
+   * @method VastParser#_cleanString
+   * @return {string} String with no spaces
+   */
+  var _cleanString = function(string) {
+    return string.replace(/\r?\n|\r/g, '').trim();
+  };
 };
 
 module.exports = new VastParser();
