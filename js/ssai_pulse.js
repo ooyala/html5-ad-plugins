@@ -446,7 +446,10 @@ OO.Ads.manager(function(_, $)
         {
           id3Object.duration = duration;
           _clearAdDurationTimeout();
-          adDurationTimeout = _.delay(_adEndedCallback, duration * 1000);
+          if (!this.testMode)
+          {
+            adDurationTimeout = _.delay(_adEndedCallback, duration * 1000);
+          }
         }
 
         this.adIdDictionary[id3Object.adId].vastData = adObject;
