@@ -998,7 +998,6 @@ OO.Ads.manager(function(_, $)
         duration = vastDuration;
       }
       return duration;
-
     }, this);
 
     /**
