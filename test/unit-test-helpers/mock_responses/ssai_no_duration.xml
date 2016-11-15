@@ -1,0 +1,154 @@
+<VAST version="3.0">
+  <Ad id="11de5230-ff5c-4d36-ad77-c0c7644d28e9" sequence="1">
+    <InLine>
+      <AdSystem>Videoplaza Karbon</AdSystem>
+      <AdTitle>FE_Sports</AdTitle>
+      <Error>errorUrl</Error>
+      <Impression>impressionUrl</Impression>
+      <Impression>impressionUrl2</Impression>
+      <Impression>impressionUrl3?rnd=%5BCACHEBUSTING%5D</Impression>
+      <Creatives>
+        <Creative id="video">
+          <Linear>
+            <TrackingEvents>
+              <Tracking event="start">startUrl</Tracking>
+              <Tracking event="start">startUrl2</Tracking>
+              <Tracking event="firstQuartile">firstQuartileUrl</Tracking>
+              <Tracking event="firstQuartile">firstQuartileUrl2</Tracking>
+              <Tracking event="midpoint">midpointUrl</Tracking>
+              <Tracking event="midpoint">midpointUrl2</Tracking>
+              <Tracking event="thirdQuartile">thirdQuartileUrl</Tracking>
+              <Tracking event="thirdQuartile">thirdQuartileUrl2</Tracking>
+              <Tracking event="complete">completeUrl</Tracking>
+              <Tracking event="complete">completeUrl2</Tracking>
+              <Tracking event="mute">muteUrl</Tracking>
+              <Tracking event="unmute">unmuteUrl</Tracking>
+              <Tracking event="fullscreen">fullscreenUrl</Tracking>
+            </TrackingEvents>
+            <MediaFiles>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="597" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/7393daba-b562-4f94-a6b3-db2dc478a43d.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="552" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/6e8205fd-a09d-4a72-bfd4-a86b1ad646f5.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="550" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/67c57287-cb37-4b04-a90b-443234f99920.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="550" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/c167d153-a4b9-4cd9-8c28-5091dd41a037.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="550" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/631ff826-78e7-4d98-8618-20c4ad66e4a0.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="547" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/4e61c4ce-15b1-48dd-93a4-b6bd41c97702.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="442" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/cf288119-e879-49bb-a183-edf5f9245b28.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="432" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/e17e2ae1-2be3-4e39-bf8f-ed948c40c824.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="432" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/b2d46765-20bb-446a-a484-ede1674b2166.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="281" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/cac55ab7-b88f-431b-a7e6-718ec2882641.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="278" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/7d8abf3e-8cf7-461c-af7c-829195562a11.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="278" width="512" height="288" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/75ee6522-0b08-4b76-bf2f-38f503093829.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="176" width="480" height="270" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/9beade48-97f0-4c69-991b-d60ad042e246.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="176" width="480" height="270" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/8856681d-a772-4de0-9843-139210ae3c83.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="174" width="480" height="270" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/df7135f7-e89e-4c98-b260-aa6a5293ef4b.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="145" width="320" height="180" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/64d04bff-9d0b-4af3-9d5a-38ca6eca7b5f.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="143" width="320" height="180" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/6d1e6726-dbbf-4d59-b22c-33e488e8dfac.mp4
+                ]]>
+              </MediaFile>
+              <MediaFile delivery="progressive" type="video/mp4" bitrate="143" width="320" height="180" scalable="true">
+                <![CDATA[
+                http://d2weccgdf287ps.cloudfront.net/creatives/assets/139e6858-1417-43ba-ad40-fa2b330c5af6/8d737203-ca10-466a-819b-6599cc81a5ff.mp4
+                ]]>
+              </MediaFile>
+            </MediaFiles>
+            <VideoClicks>
+              <ClickThrough>clickThroughUrl</ClickThrough>
+              <ClickTracking>linearClickTrackingUrl</ClickTracking>
+            </VideoClicks>
+          </Linear>
+        </Creative>
+        <Creative sequence="1">
+          <CompanionAds>
+            <Companion id="GDFP" width="728" height="90" >
+              <StaticResource creativeType="image/jpeg">1.jpg</StaticResource>
+              <TrackingEvents>
+                <Tracking event="creativeView">companionCreativeViewUrl</Tracking>
+              </TrackingEvents>
+              <CompanionClickThrough>companionClickThrough</CompanionClickThrough>
+
+            </Companion>
+            <Companion id="GDFP" width="300" height="250" >
+              <StaticResource creativeType="image/jpeg">2.jpg</StaticResource>
+              <TrackingEvents>
+                <Tracking event="creativeView">companion2CreativeViewUrl</Tracking>
+              </TrackingEvents>
+              <CompanionClickThrough>companion2ClickThrough</CompanionClickThrough>
+
+            </Companion>
+          </CompanionAds>
+        </Creative>
+      </Creatives>
+      <Extensions>
+        <Extension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="VPAdServerExtension_type" type="AdServer" name="Videoplaza">
+          <AdInfo showSkipButton="never" lastImpression="1467148272365" skipReset="24:00:00.0" requestType="lazy" gid="acb92938-be2a-4f82-96b2-d46f4a004819" cid="50261830-7fa4-43d8-9427-6d4db33502f2" format="spot_standard" variant="NORMAL" exclusive="false"/>
+        </Extension>
+      </Extensions>
+    </InLine>
+  </Ad>
+</VAST>
