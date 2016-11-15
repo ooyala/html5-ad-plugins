@@ -22,7 +22,9 @@ describe('ad_manager_ssai_pulse', function()
 
   // Vast XML
   var ssaiXmlString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/ssai.xml"), "utf8");
+  var ssaiNoDurationXmlString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/ssai_no_duration.xml"), "utf8");
   var ssaiXml = OO.$.parseXML(ssaiXmlString);
+  var ssaiNoDurationXml = OO.$.parseXML(ssaiNoDurationXmlString);
   var trackingUrlsPinged = {};
 
   // Helper functions
@@ -526,4 +528,90 @@ describe('ad_manager_ssai_pulse', function()
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
     expect(SsaiPulse.getBustTheCache()).to.be(false);
   });
+
+  it('Correct Ad Duration should be selected', function()
+  {
+    SsaiPulse.initialize(amc);
+
+    // ID3 Tag ad duration should be selected
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=100"
+    };
+    var expectedResult =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      time: 0,
+      duration: 100
+    };
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OO._.isEqual(SsaiPulse.currentId3Object, expectedResult)).to.be(true);
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
+    expect(SsaiPulse.currentId3Object.duration).to.be(100);
+
+    // ID3 ad duration should be selected
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=1"
+    };
+    expectedResult =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      time: 0,
+      duration: 1
+    };
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OO._.isEqual(SsaiPulse.currentId3Object, expectedResult)).to.be(true);
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
+    expect(SsaiPulse.currentId3Object.duration).to.be(1);
+
+    // Vast XML ad duration should be selected
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=0"
+    };
+    expectedResult =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      time: 0,
+      duration: 0
+    };
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OO._.isEqual(SsaiPulse.currentId3Object, expectedResult)).to.be(true);
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
+    expect(SsaiPulse.currentId3Object.duration).to.be(15);
+
+    // Vast XML ad duration should be selected
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=-1"
+    };
+    expectedResult =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      time: 0,
+      duration: -1
+    };
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OO._.isEqual(SsaiPulse.currentId3Object, expectedResult)).to.be(true);
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiXml);
+    expect(SsaiPulse.currentId3Object.duration).to.be(15);
+
+    // DEFAULT_AD_DURATION should be selected
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=0"
+    };
+    expectedResult =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      time: 0,
+      duration: 0
+    };
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OO._.isEqual(SsaiPulse.currentId3Object, expectedResult)).to.be(true);
+    SsaiPulse.onResponse(SsaiPulse.currentId3Object, ssaiNoDurationXml);
+    expect(SsaiPulse.currentId3Object.duration).to.be(20);
+  });
+
 });
