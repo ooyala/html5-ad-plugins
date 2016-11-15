@@ -429,6 +429,13 @@
              * @param v4ad
              */
             this.playAd = function(v4ad) {
+
+                //If the SDK is not loaded, tell the AMC our placeholder ad is finished
+                if(!adModuleJsReady){
+                    amc.notifyPodEnded(v4ad.id);
+                    return;
+                }
+
                 podStarted = v4ad.id;
                 isInAdMode = true;
                 this._isInPlayAd = true;
