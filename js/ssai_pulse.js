@@ -441,7 +441,7 @@ OO.Ads.manager(function(_, $)
 
         // If the id3object duration was a bad value, reapply the timeout to the new
         // duration
-        var duration = _normalizeDuration(id3Object, adObject);
+        var duration = _selectDuration(id3Object, adObject);
         if (duration !== id3Object.duration)
         {
           id3Object.duration = duration;
@@ -975,14 +975,14 @@ OO.Ads.manager(function(_, $)
      * Helper function adjust the duration to a proper value. The priority from which to grab the duration is:
      * 1. ID3 Tag ad duration - if the value is 0, fall through
      * 2. VAST XML Response ad duration - if the ad duration is not defined, fall through
-     * 3. DEFAULT_AD_DURATION
+     * 3. FALLBACK_AD_DURATION
      * @private
-     * @method SsaiPulse#_normalizeDuration
+     * @method SsaiPulse#_selectDuration
      * @param {object} id3Object The object containing the ID3 Tag information
      * @param {object} vastAdData The object containing the parsed Vast ad data
      * @returns {number} The duration of the ad (in seconds).
      */
-    var _normalizeDuration = _.bind(function(id3Object, vastAdData)
+    var _selectDuration = _.bind(function(id3Object, vastAdData)
     {
       var duration = FALLBACK_AD_DURATION;
 
@@ -993,7 +993,7 @@ OO.Ads.manager(function(_, $)
       {
         duration = id3Object.duration;
       }
-      else if (vastDuration)
+      else if (vastDuration > 0)
       {
         duration = vastDuration;
       }
