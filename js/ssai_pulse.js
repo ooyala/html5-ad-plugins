@@ -43,6 +43,7 @@ OO.Ads.manager(function(_, $)
     this.currentAd = null;
 
     var amc  = null;
+    var currentOffset = 0;
 
     // Tracking Event states
     var adMode = false;
@@ -88,7 +89,10 @@ OO.Ads.manager(function(_, $)
       WAITING: "waiting",
 
       // Denotes that a response has returned for an ad request and the ad is "playing"
-      PLAYING: "playing"
+      PLAYING: "playing",
+
+      // Denotes that an error occurred when making the ad request
+      ERROR: "error"
     };
 
     // variable to store the timeout used to keep track of how long an SSAI ad plays
@@ -116,6 +120,7 @@ OO.Ads.manager(function(_, $)
       amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
       // Stream URL
       amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
+      amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
 
       // Listeners for tracking events
       amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
@@ -190,6 +195,24 @@ OO.Ads.manager(function(_, $)
       //If the element is not created due to lack of support from the available video plugins,
       //the ad will be skipped
       return null;
+    };
+
+    /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the the play head updates
+     * during playback.
+     * @public
+     * @method SsaiPulse#onPlayheadTimeChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {number} playhead The total amount main video playback time (seconds)
+     * @param {number} duration Duration of the live video (seconds)
+     * @param {number} livePlayhead The current playhead within the DVR/live window (seconds)
+     */
+    this.onPlayheadTimeChanged = function(eventName, playhead, duration, livePlayhead) {
+      var offset = duration - livePlayhead;
+      if (_.isFinite(offset) && offset >= 0)
+      {
+        currentOffset = offset;
+      }
     };
 
     /**
@@ -472,6 +495,11 @@ OO.Ads.manager(function(_, $)
     this.onRequestError = function()
     {
       OO.log("SSAI Pulse: Error");
+      if (_.has(this.adIdDictionary, this.currentId3Object.adId))
+      {
+        this.adIdDictionary[this.currentId3Object.adId] = STATE.ERROR;
+        this.currentAd = null;
+      }
     };
 
     /**
@@ -593,7 +621,7 @@ OO.Ads.manager(function(_, $)
      */
     var _appendAdsProxyQueryParameters = _.bind(function(url, adId)
     {
-      var offset = OFFSET_PARAM + OFFSET_VALUE;
+      var offset = OFFSET_PARAM + currentOffset;
       var newUrl = _appendParamToUrl(url, offset);
 
       var adIdParam = AD_ID_PARAM + adId;
@@ -969,6 +997,17 @@ OO.Ads.manager(function(_, $)
         duration = vastAdData.linear.duration;
       }
       return duration;
+    }, this);
+
+    /**
+     * Helper function to return how far (in seconds) the current playhead is from Live.
+     * @public
+     * @method SsaiPulse#getCurrentOffset
+     * @returns {number} The value of the current offset from Live.
+     */
+    this.getCurrentOffset = _.bind(function()
+    {
+      return currentOffset;
     }, this);
 
     /**
