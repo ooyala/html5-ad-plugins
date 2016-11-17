@@ -599,6 +599,8 @@ OO.Ads.manager(function(_, $)
     var _onContentChanged = function()
     {
       currentOffset = 0;
+      this.currentAd = null;
+      this.currentId3Object = null;
     };
 
     // Helper Functions
