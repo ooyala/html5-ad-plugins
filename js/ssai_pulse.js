@@ -56,7 +56,6 @@ OO.Ads.manager(function(_, $)
     // will be the first (will not need a prefixed "?").
     var SMART_PLAYER = "oosm=1";
     var OFFSET_PARAM = "offset=";
-    var OFFSET_VALUE = "5"; // seconds
     var AD_ID_PARAM = "aid=";
 
     // In the event that the ID3 tag has an ad duration of 0 and the VAST XML response does not specify an
@@ -121,6 +120,9 @@ OO.Ads.manager(function(_, $)
       // Stream URL
       amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
       amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
+
+      // Replay for Live streams should not be available, but add this for precaution
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
 
       // Listeners for tracking events
       amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
@@ -416,6 +418,19 @@ OO.Ads.manager(function(_, $)
     };
 
     /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
+     * clicked. Here it will try to load the rest of the vast ads at this point if there any.
+     * @public
+     * @method SsaiPulse#onReplay
+     */
+    this.onReplay = function()
+    {
+      currentOffset = 0;
+      this.currentAd = null;
+      this.currentId3Object = null;
+    };
+
+    /**
      * Helper function to handle the ID3 Ad timeout and request.
      * @private
      * @method SsaiPulse#_handleId3Ad
@@ -495,7 +510,7 @@ OO.Ads.manager(function(_, $)
     this.onRequestError = function()
     {
       OO.log("SSAI Pulse: Error");
-      if (_.has(this.adIdDictionary, this.currentId3Object.adId))
+      if (_.isObject(this.currentId3Object) && _.has(this.adIdDictionary, this.currentId3Object.adId))
       {
         this.adIdDictionary[this.currentId3Object.adId] = STATE.ERROR;
         this.currentAd = null;
@@ -583,7 +598,7 @@ OO.Ads.manager(function(_, $)
 
     var _onContentChanged = function()
     {
-      // Callback for example listener registered in this.initialize
+      currentOffset = 0;
     };
 
     // Helper Functions
