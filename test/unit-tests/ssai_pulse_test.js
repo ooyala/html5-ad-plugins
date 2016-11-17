@@ -614,4 +614,99 @@ describe('ad_manager_ssai_pulse', function()
     expect(SsaiPulse.currentId3Object.duration).to.be(20);
   });
 
+  it('Ad Id should be marked with the error state if the ad request fails', function()
+  {
+    SsaiPulse.initialize(amc);
+
+    // ID3 Tag ad duration should be selected
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=100"
+    };
+    var expectedResult =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      time: 0,
+      duration: 100
+    };
+    SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OO._.isEqual(SsaiPulse.currentId3Object, expectedResult)).to.be(true);
+    SsaiPulse.onRequestError();
+
+    var adId = expectedResult.adId;
+    expect(SsaiPulse.adIdDictionary[adId]).to.be("error");
+  });
+
+  it('Correct live offset value should be calculated onPlayheadTimeChanged', function()
+  {
+    SsaiPulse.initialize(amc);
+    var eventName = "";
+    var playhead = 0;
+    var duration = 100;
+    var livePlayhead = 100;
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, livePlayhead);
+    var offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 50);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(50);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 99.0);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(1);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, -1);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(101);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 100);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    // We should not have an offset that is greater 0 (aka greater than "Live")
+    // Keep the previous offset value if an error occurs while calculating new offset
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 101);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    // Test bad input
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, "banana", 1);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, "banana", "apple");
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, undefined, undefined);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null, null);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null, undefined);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, undefined, null);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, {}, null);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null, {});
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, {}, {});
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+  });
+
 });
