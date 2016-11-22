@@ -1047,47 +1047,45 @@ OO.Ads.manager(function(_, $) {
      * @param {string[]} trackingEventNames The array of tracking event names
      */
     var _handleTrackingUrls = _.bind(function(amcAd, trackingEventNames) {
-      if (!_isVpaidAd(amcAd)) {
-        var adId = _getAdId(amcAd);
+      var adId = _getAdId(amcAd);
 
-        if (amcAd) {
-          _.each(trackingEventNames, function(trackingEventName) {
-            var urls;
-            switch (trackingEventName) {
-              case "impression":
-                urls = _getImpressionUrls(amcAd);
-                break;
-              case "linearClickTracking":
-                urls = _getLinearClickTrackingUrls(amcAd);
-                break;
-              case "nonLinearClickTracking":
-                urls = _getNonLinearClickTrackingUrls(amcAd);
-                break;
-              default:
-                urls = _getTrackingEventUrls(amcAd, trackingEventName);
-            }
-            var urlObject = {};
-            urlObject[trackingEventName] = urls;
-            _pingTrackingUrls(urlObject, adId);
-          });
-        }
-        else {
-          console.log(
-              "VAST: Tried to ping URLs: [" + trackingEventNames +
-              "] but ad object passed in was: " + amcAd
-          );
-        }
-
-        // Try to ping parent tracking events as well
-        if (this.adTrackingInfo &&
-            this.adTrackingInfo[adId] &&
-            this.adTrackingInfo[adId].wrapperParentId) {
-          var parentId = this.adTrackingInfo[adId].wrapperParentId;
-          var parentAdTrackingObject = this.adTrackingInfo[parentId];
-          if (parentAdTrackingObject) {
-            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
-            _handleTrackingUrls(parentAdObject, trackingEventNames);
+      if (amcAd) {
+        _.each(trackingEventNames, function(trackingEventName) {
+          var urls;
+          switch (trackingEventName) {
+            case "impression":
+              urls = _getImpressionUrls(amcAd);
+              break;
+            case "linearClickTracking":
+              urls = _getLinearClickTrackingUrls(amcAd);
+              break;
+            case "nonLinearClickTracking":
+              urls = _getNonLinearClickTrackingUrls(amcAd);
+              break;
+            default:
+              urls = _getTrackingEventUrls(amcAd, trackingEventName);
           }
+          var urlObject = {};
+          urlObject[trackingEventName] = urls;
+          _pingTrackingUrls(urlObject, adId);
+        });
+      }
+      else {
+        console.log(
+            "VAST: Tried to ping URLs: [" + trackingEventNames +
+            "] but ad object passed in was: " + amcAd
+            );
+      }
+
+      // Try to ping parent tracking events as well
+      if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+        var parentId = this.adTrackingInfo[adId].wrapperParentId;
+        var parentAdTrackingObject = this.adTrackingInfo[parentId];
+        if (parentAdTrackingObject) {
+          var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+          _handleTrackingUrls(parentAdObject, trackingEventNames);
         }
       }
     }, this);
@@ -2822,14 +2820,19 @@ OO.Ads.manager(function(_, $) {
         companion: companionAds,
         error: errorTracking,
         impression: impressions,
-        linear: ad,
-        nonLinear: ad,
         title: _cleanString(this.$_node.find('AdTitle').text()),
         tracking: tracking,
         type: isLinear ? this.amc.ADTYPE.LINEAR_VIDEO : this.amc.ADTYPE.NONLINEAR_OVERLAY,
         version: version,
         videoClickTracking: videoClickTracking
       };
+
+      if (isLinear) {
+        data.linear = ad;
+      }
+      else {
+        data.nonLinear = ad;
+      }
 
       var result = {
         adPodIndex: parseInt(sequence) || 1,
@@ -2942,7 +2945,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.getVpaidTracking = function(parent) {
       var node, nodes, tracking, _i, _len;
-      tracking = [];
+      tracking = {};
       nodes = parent.getElementsByTagName('Tracking');
       if (!nodes) {
         //TODO: Would returning an empty array here be better?
@@ -2950,10 +2953,22 @@ OO.Ads.manager(function(_, $) {
       }
       for (_i = 0, _len = nodes.length; _i < _len; _i++) {
         node = nodes[_i];
-        tracking.push({
-          event: node.getAttribute('event'),
-          url: node.textContent
-        });
+        var eventName = node.getAttribute('event');
+        var eventUrl = $.trim(node.textContent);
+        if (tracking.hasOwnProperty(eventName)) {
+          tracking[eventName].push(eventUrl);
+        }
+        else {
+          tracking[eventName] = [eventUrl];
+        }
+
+        // TODO: Delete this
+        /*
+         *tracking.push({
+         *  event: node.getAttribute('event'),
+         *  url: node.textContent
+         *});
+         */
       }
       return tracking;
     };
@@ -3057,7 +3072,7 @@ OO.Ads.manager(function(_, $) {
           vpaidAdStarted = true;
           _onSizeChanged();
           prevAd = currentAd ? currentAd : null;
-          this.sendVpaidTracking('creativeView');
+          _handleTrackingUrls(currentAd, 'creativeView');
 
           // If a timing issue with VTC causes the VPAID ad to not load, force load and play once the ad is started
           var isLinear = _safeFunctionCall(currentAd.vpaidAd, "getAdLinear");
@@ -3086,23 +3101,23 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_VIDEO_START:
-          this.sendVpaidTracking('start');
+          _handleTrackingUrls(currentAd, 'start');
           break;
 
         case VPAID_EVENTS.AD_VIDEO_FIRST_QUARTILE:
-          this.sendVpaidTracking('firstQuartile');
+          _handleTrackingUrls(currentAd, 'firstQuartile');
           break;
 
         case VPAID_EVENTS.AD_VIDEO_MIDPOINT:
-          this.sendVpaidTracking('midpoint');
+          _handleTrackingUrls(currentAd, 'midpoint');
           break;
 
         case VPAID_EVENTS.AD_VIDEO_THIRD_QUARTILE:
-          this.sendVpaidTracking('thirdQuartile');
+          _handleTrackingUrls(currentAd, 'thirdQuartile');
           break;
 
         case VPAID_EVENTS.AD_VIDEO_COMPLETE:
-          this.sendVpaidTracking('complete');
+          _handleTrackingUrls(currentAd, 'complete');
           _stopVpaidAd();
           break;
 
@@ -3114,12 +3129,12 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_INTERACTION:
-          this.sendVpaidTracking('interaction');
+          _handleTrackingUrls(currentAd, 'interaction');
           break;
 
         case VPAID_EVENTS.AD_ERROR:
           _tryRaiseAdError('VPaid: Ad unit error: ' + arguments[1]);
-          this.sendVpaidTracking('error');
+          _handleTrackingUrls(currentAd, 'error');
           this.sendVpaidError();
           failedAd();
           break;
@@ -3132,7 +3147,7 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_SKIPPED:
-          this.sendVpaidTracking('skip');
+          _handleTrackingUrls(currentAd, 'skip');
           if (currentAd) {
             _endAd(currentAd, false);
           }
@@ -3155,31 +3170,31 @@ OO.Ads.manager(function(_, $) {
         case VPAID_EVENTS.AD_VOLUME_CHANGE:
           var volume = _safeFunctionCall(currentAd.vpaidAd, "getAdVolume");
           if (volume) {
-            this.sendVpaidTracking('unmute');
+            _handleTrackingUrls(currentAd, 'unmute');
           } else {
-            this.sendVpaidTracking('mute');
+            _handleTrackingUrls(currentAd, 'mute');
           }
           break;
 
         case VPAID_EVENTS.AD_USER_ACCEPT_INVITATION:
-          this.sendVpaidTracking('acceptInvitation');
+          _handleTrackingUrls(currentAd, 'acceptInvitation');
           break;
 
         case VPAID_EVENTS.AD_USER_MINIMIZE:
-          this.sendVpaidTracking('collapse');
+          _handleTrackingUrls(currentAd, 'collapse');
           break;
 
         case VPAID_EVENTS.AD_USER_CLOSE:
-          this.sendVpaidTracking('close');
+          _handleTrackingUrls(currentAd, 'close');
           break;
 
         case VPAID_EVENTS.AD_PAUSED:
-          this.sendVpaidTracking('pause');
+          _handleTrackingUrls(currentAd, 'pause');
           fromPause = true;
           break;
 
         case VPAID_EVENTS.AD_PLAYING:
-          this.sendVpaidTracking('resume');
+          _handleTrackingUrls(currentAd, 'resume');
           break;
       }
     }, this);
