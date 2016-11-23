@@ -2754,6 +2754,7 @@ OO.Ads.manager(function(_, $) {
       var $mediaNode = isLinear ? $node.find('MediaFile').first() : $node.find('StaticResource');
       var $companionsNode = this.$_node.find('CompanionAds');
       var $validNode = isLinear ? $mediaNode : $node;
+      var adId = this.$_node.attr('id');
 
       if (!$mediaNode.length || !_isValidVpaidCreative($validNode, isLinear)) {
         OO.log('VPaid: No valid media source, either is not a VPaid Ad or ad unit is not in javascript format.');
@@ -2816,6 +2817,7 @@ OO.Ads.manager(function(_, $) {
       _.extend(ad, videoClickTracking);
 
       var data = {
+        id: adId,
         adType: 'vpaid',
         companion: companionAds,
         error: errorTracking,
@@ -3072,7 +3074,7 @@ OO.Ads.manager(function(_, $) {
           vpaidAdStarted = true;
           _onSizeChanged();
           prevAd = currentAd ? currentAd : null;
-          _handleTrackingUrls(currentAd, 'creativeView');
+          _handleTrackingUrls(currentAd, ['creativeView']);
 
           // If a timing issue with VTC causes the VPAID ad to not load, force load and play once the ad is started
           var isLinear = _safeFunctionCall(currentAd.vpaidAd, "getAdLinear");
@@ -3101,23 +3103,23 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_VIDEO_START:
-          _handleTrackingUrls(currentAd, 'start');
+          _handleTrackingUrls(currentAd, ['start']);
           break;
 
         case VPAID_EVENTS.AD_VIDEO_FIRST_QUARTILE:
-          _handleTrackingUrls(currentAd, 'firstQuartile');
+          _handleTrackingUrls(currentAd, ['firstQuartile']);
           break;
 
         case VPAID_EVENTS.AD_VIDEO_MIDPOINT:
-          _handleTrackingUrls(currentAd, 'midpoint');
+          _handleTrackingUrls(currentAd, ['midpoint']);
           break;
 
         case VPAID_EVENTS.AD_VIDEO_THIRD_QUARTILE:
-          _handleTrackingUrls(currentAd, 'thirdQuartile');
+          _handleTrackingUrls(currentAd, ['thirdQuartile']);
           break;
 
         case VPAID_EVENTS.AD_VIDEO_COMPLETE:
-          _handleTrackingUrls(currentAd, 'complete');
+          _handleTrackingUrls(currentAd, ['complete']);
           _stopVpaidAd();
           break;
 
@@ -3129,13 +3131,13 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_INTERACTION:
-          _handleTrackingUrls(currentAd, 'interaction');
+          _handleTrackingUrls(currentAd, ['interaction']);
           break;
 
         case VPAID_EVENTS.AD_ERROR:
           _tryRaiseAdError('VPaid: Ad unit error: ' + arguments[1]);
-          _handleTrackingUrls(currentAd, 'error');
-          this.sendVpaidError();
+          var adId = _getAdId(currentAd);
+          this.trackError(this.ERROR_CODES.GENERAL_VPAID, adId);
           failedAd();
           break;
 
@@ -3147,7 +3149,7 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_SKIPPED:
-          _handleTrackingUrls(currentAd, 'skip');
+          _handleTrackingUrls(currentAd, ['skip']);
           if (currentAd) {
             _endAd(currentAd, false);
           }
@@ -3170,31 +3172,31 @@ OO.Ads.manager(function(_, $) {
         case VPAID_EVENTS.AD_VOLUME_CHANGE:
           var volume = _safeFunctionCall(currentAd.vpaidAd, "getAdVolume");
           if (volume) {
-            _handleTrackingUrls(currentAd, 'unmute');
+            _handleTrackingUrls(currentAd, ['unmute']);
           } else {
-            _handleTrackingUrls(currentAd, 'mute');
+            _handleTrackingUrls(currentAd, ['mute']);
           }
           break;
 
         case VPAID_EVENTS.AD_USER_ACCEPT_INVITATION:
-          _handleTrackingUrls(currentAd, 'acceptInvitation');
+          _handleTrackingUrls(currentAd, ['acceptInvitation']);
           break;
 
         case VPAID_EVENTS.AD_USER_MINIMIZE:
-          _handleTrackingUrls(currentAd, 'collapse');
+          _handleTrackingUrls(currentAd, ['collapse']);
           break;
 
         case VPAID_EVENTS.AD_USER_CLOSE:
-          _handleTrackingUrls(currentAd, 'close');
+          _handleTrackingUrls(currentAd, ['close']);
           break;
 
         case VPAID_EVENTS.AD_PAUSED:
-          _handleTrackingUrls(currentAd, 'pause');
+          _handleTrackingUrls(currentAd, ['pause']);
           fromPause = true;
           break;
 
         case VPAID_EVENTS.AD_PLAYING:
-          _handleTrackingUrls(currentAd, 'resume');
+          _handleTrackingUrls(currentAd, ['resume']);
           break;
       }
     }, this);
