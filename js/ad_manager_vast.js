@@ -2930,9 +2930,7 @@ OO.Ads.manager(function(_, $) {
       nodes = this.$_node[0].getElementsByTagName('Impression');
       for (_i = 0, _len = nodes.length; _i < _len; _i++) {
         node = nodes[_i];
-        impressions.push({
-          url: node.textContent
-        });
+        impressions.push(node.textContent);
       }
       return impressions;
     };
@@ -3085,7 +3083,7 @@ OO.Ads.manager(function(_, $) {
           break;
 
         case VPAID_EVENTS.AD_IMPRESSION:
-          this.sendVpaidImpressions();
+          _handleTrackingUrls(currentAd, ["impression"]);
           break;
 
         case VPAID_EVENTS.AD_CLICK_THRU:
@@ -3099,7 +3097,12 @@ OO.Ads.manager(function(_, $) {
               this.amc.adsClicked();
             }
           }
-          this.sendVpaidClickTracking();
+          if (currentAd.isLinear) {
+            _handleTrackingUrls(currentAd, ["linearClickTracking"]);
+          }
+          else {
+            _handleTrackingUrls(currentAd, ["nonLinearClickTracking"]);
+          }
           break;
 
         case VPAID_EVENTS.AD_VIDEO_START:
