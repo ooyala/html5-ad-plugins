@@ -348,6 +348,13 @@
 
                 this._requestSettings.vptpTicketData =  adManagerMetadata.pulse_vptp_data;
 
+                this._requestSettings.maxLinearBreakDuration = parseInt(adManagerMetadata.pulse_max_linear_break_duration ||
+                    backlotBaseMetadata.pulse_max_linear_break_duration);
+
+                if(isNaN(this._requestSettings.maxLinearBreakDuration)){
+                    this._requestSettings.maxLinearBreakDuration = null;
+                }
+
                 this._requestSettings.linearPlaybackPositions =
                     safeMap(safeSplit(getByPriority(adManagerMetadata.pulse_linear_cuepoints,
                         backlotBaseMetadata.pulse_linear_cuepoints,
