@@ -2854,61 +2854,6 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.skipUrl).to.be            (1);
   });
 
-  it('Vast: Normal VAST Tracking Events should not be pinged if ad is VPAID', function() {
-    vpaidInitialize();
-    var ad = amc.timeline[1];
-
-    // creativeView, impression, and start tracking events
-    vastAdManager.playAd(ad);
-    vastAdManager.initializeAd();
-
-    var duration = 52;
-    var firstQuartileTime = duration / 4;
-    var midpointTime = duration / 2;
-    var thirdQuartileTime = (3 * duration) / 4;
-
-    // "firstQuartile", "midpoint" and "thirdQuartile" tracking events
-    amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, firstQuartileTime, duration);
-    amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, midpointTime, duration);
-    amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, thirdQuartileTime, duration);
-
-    // ClickTracking event
-    vastAdManager.playerClicked(ad, true);
-
-    // "pause" and "resume" tracking events
-    vastAdManager.pauseAd(ad);
-    vastAdManager.resumeAd(ad);
-    vastAdManager.pauseAd(ad);
-    vastAdManager.resumeAd(ad);
-
-    // "mute" and "unmute" tracking events
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 1);
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.5);
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0);
-    amc.publishPlayerEvent(amc.EVENTS.AD_VOLUME_CHANGED, 0.01);
-
-    // "fullscreen" and "exitFullscreen" tracking events
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true);
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false);
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, true);
-    amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED, false);
-
-    // "complete" tracking event
-    vastAdManager.adVideoEnded();
-
-    // play ad again to test "skip" tracking
-    vastAdManager.playAd(ad);
-
-    // "skip" tracking event
-    vastAdManager.cancelAd(ad, {
-      code : amc.AD_CANCEL_CODE.SKIPPED
-    });
-
-    expect(trackingUrlsPinged).to.eql({});
-  });
-
   it('Vast: NonLinear Creative Tracking Events URLs should be pinged', function() {
     var embed_code = "embed_code";
     var vast_ad = {

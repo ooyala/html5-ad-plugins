@@ -2824,17 +2824,12 @@ OO.Ads.manager(function(_, $) {
         impression: impressions,
         title: _cleanString(this.$_node.find('AdTitle').text()),
         tracking: tracking,
+        linear: isLinear ? ad : {},
+        nonLinear: isLinear ? {} : ad,
         type: isLinear ? this.amc.ADTYPE.LINEAR_VIDEO : this.amc.ADTYPE.NONLINEAR_OVERLAY,
         version: version,
         videoClickTracking: videoClickTracking
       };
-
-      if (isLinear) {
-        data.linear = ad;
-      }
-      else {
-        data.nonLinear = ad;
-      }
 
       var result = {
         adPodIndex: parseInt(sequence) || 1,
