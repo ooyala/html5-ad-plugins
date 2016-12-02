@@ -481,12 +481,18 @@
                 }
             }
 
+            function overlayPause(){
+                if(currentOverlayAd){
+                    overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
+                    clearTimeout(overlayTimer);
+                }
+            }
+
             /**
              * Mandatory method. Called by the AMF when an ad play has been requested
              * @param v4ad
              */
             this.playAd = function(v4ad) {
-
 
                 console.error("play ad", v4ad);
                 //If the SDK is not loaded, tell the AMC our placeholder ad is finished
@@ -494,10 +500,6 @@
                     amc.notifyPodEnded(v4ad.id);
                     return;
                 }
-
-
-
-
 
                 if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY){
                     console.error("play overlay");
@@ -521,6 +523,7 @@
                 isInAdMode = true;
                 podStarted = v4ad.id;
                 this._isInPlayAd = true;
+                overlayPause();
 
                 if(adPlayer){
                     adPlayer.contentPaused();
@@ -626,27 +629,6 @@
                 contentPaused = true;
                 if(adPlayer){
                     adPlayer.contentPaused();
-
-                    //CSS changes
-                    //oo-interactive container
-                    //pos absolute
-                    // left bottom 0
-                    //width 100
-                    //height 100
-                    //background black
-
-                    //oo-control-bar
-                    // absolute
-                    // bottom 0
-
-
-                    //oo-ad-overlay-image
-                    //margin left right auto
-                    // bottom 0
-                    //width auto
-                    //height 100
-                    //pos absolute
-
                 }
             };
 
@@ -670,13 +652,13 @@
                     podStarted = id;
                 }
                 amc.notifyPodStarted(podStarted, adCount);
-            }
+            };
 
             this.notifyAdPodEnded = function(){
                 var podEndedId = podStarted;
                 podStarted = null;
                 amc.notifyPodEnded(podEndedId);
-            }
+            };
 
             this.startContentPlayback = function() {
                 isWaitingForPrerolls = false;
