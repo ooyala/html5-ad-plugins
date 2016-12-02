@@ -105,7 +105,8 @@
                 //Set the CSS overlay so it's responsive
 
                 style = document.createElement('style');
-                var css = '.oo-ad-overlay-image { width:100% !important}';
+                var css = '.oo-ad-overlay-image { width:100% !important}' +
+                    ' .oo-ad-overlay {  margin:auto !important}';
 
                 style.type = 'text/css';
                 if (style.styleSheet) {
@@ -521,11 +522,11 @@
             }
 
             function onOverlayShown(){
-                //if(currentOverlayAd){
-                //    overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
-                //    adPlayer.overlayAdShown(currentOverlayAd.ad);
-                //    startOverlayCountdown();
-                //}
+                if(currentOverlayAd){
+                    overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
+                    adPlayer.overlayAdShown(currentOverlayAd.ad);
+                    startOverlayCountdown();
+                }
             }
 
             /**
@@ -533,29 +534,18 @@
              * @param v4ad
              */
             this.playAd = function(v4ad) {
-                switch(adModuleState) {
-                    case AD_MODULE_STATE.Uninitialized:
-                        log('Ooyala plugin: playAd() called with unexpected state Uninitialized');
-                        break;
-                    case AD_MODULE_STATE.Loading:
-                        // Waiting for SDK load to finish; do nothing
-                        break;
-                    case AD_MODULE_STATE.Ready:
-                        // All good, do nothing here
-                        break;
-                    case AD_MODULE_STATE.Failed:
-                        // SDK failed to load due to timeout or other issues; stop placeholder ad pod                
-                        amc.notifyPodEnded(v4ad.id);
-                        return;
-                    default:
-                        // ??
-                        log('Ooyala plugin: playAd() called with unexpected state ' + adModuleState);
-                        return;
+
+
+                console.error("play ad", v4ad);
+                //If the SDK is not loaded, tell the AMC our placeholder ad is finished
+                if(!adModuleJsReady){
+                    amc.notifyPodEnded(v4ad.id);
+                    return;
                 }
 
-                podStarted = v4ad.id;
-                isInAdMode = true;
-                this._isInPlayAd = true;
+
+
+
 
                 if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY){
                     console.error("play overlay");
@@ -575,6 +565,10 @@
 
                     return;
                 }
+
+                isInAdMode = true;
+                podStarted = v4ad.id;
+                this._isInPlayAd = true;
 
                 if(adPlayer){
                     adPlayer.contentPaused();
@@ -644,8 +638,6 @@
              */
             this.playerClicked = function(amcAd, showPage) {
                 if(this._currentAd) {
-
-
                     var clickThroughURL = this._currentAd.getClickthroughURL();
                     if (clickThroughURL) {
                         this.openClickThrough(clickThroughURL);
@@ -722,6 +714,7 @@
 
 
             this.notifyAdPodStarted = function(id, adCount){
+                console.error("ad pod started",id,podStarted);
                 if(!podStarted) {
                     podStarted = id;
                 }
@@ -783,16 +776,18 @@
             };
 
             this.showPauseAd = function (pulsePauseAd) {
-                console.error("Showing pause ad",pulsePauseAd);
+                console.error("Showing pause ad", pulsePauseAd);
                 this._currentPauseAd = pulsePauseAd;
 
-                amc.forceAdToPlay(this.name, pulsePauseAd,amc.ADTYPE.NONLINEAR_OVERLAY, [pulsePauseAd.getResourceURL()]);
+                amc.forceAdToPlay(this.name, pulsePauseAd, amc.ADTYPE.NONLINEAR_OVERLAY, [pulsePauseAd.getResourceURL()]);
             };
 
             this.showOverlay = function () {
                 console.error("Resuming v4 overlay");
-                amc.sendURLToLoadAndPlayNonLinearAd(currentOverlayAd.ad, currentOverlayAd.id, currentOverlayAd.ad.getResourceURL());
-                startOverlayCountdown();
+                if (currentOverlayAd){
+                    amc.sendURLToLoadAndPlayNonLinearAd(currentOverlayAd.ad, currentOverlayAd.id, currentOverlayAd.ad.getResourceURL());
+                    startOverlayCountdown();
+                }
             };
 
             this.hideOverlay = function (ad) {
@@ -815,7 +810,8 @@
                     adPlayer.adClickThroughOpened();
                 }
 
-            }
+            };
+
             var playPlaceholder = _.bind(function () {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
@@ -883,13 +879,6 @@
                                 VPAIDViewMode: OO.Pulse.AdPlayer.Settings.VPAIDViewMode.NORMAL,
                                 renderingMode: preferredRenderingMode || renderingMode
                             }, this.sharedVideoElement);
-                        //var overlayContainer = document.createElement('div');
-                        //overlayContainer.style.width = "100%";
-                        //overlayContainer.style.height = "100%";
-                        //var parent = amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0];
-                        //parent.appendChild(overlayContainer);
-                        //
-                        //adPlayer.setOverlayDiv(overlayContainer);
 
                         //We register all the event listeners we will need
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished,this));
@@ -948,7 +937,6 @@
                     -1, isFullscreen);
                 this._currentAdBreak = eventData.adBreak;
                 this.notifyAdPodStarted(this._adBreakId,this._currentAdBreak.getPlayableAdsTotal());
-
             };
 
             var _onAdClicked = function (event,eventData) {
@@ -956,17 +944,17 @@
             };
             var _onAdPaused = function(event,metadata){
                 this.videoControllerWrapper.raisePauseEvent();
-            }
+            };
 
             var _onAdPlaying = function(event,metadata){
                 this.videoControllerWrapper.raisePlayingEvent();
-            }
+            };
 
             var _onSessionStarted = function(event, metadata) {
                 if(pluginCallbacks && pluginCallbacks.onSessionCreated) {
                     pluginCallbacks.onSessionCreated(session);
                 }
-            }
+            };
 
             var _onAdTimeUpdate = function(event, eventData) {
 
@@ -1013,8 +1001,8 @@
 
                 amc.sendURLToLoadAndPlayNonLinearAd("test", "id",metadata.ad.getResourceURL());
                 //amc.forceAdToPlay(this.name, adData, amc.ADTYPE.NONLINEAR_OVERLAY);
-            }
-        }
+            };
+        };
         return new PulseAdManager();
     });
 
