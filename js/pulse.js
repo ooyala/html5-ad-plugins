@@ -40,6 +40,8 @@
             var pluginCallbacks = {
 
             };
+            var forcedSiteId = undefined;
+            var previewAdId = undefined;
 
             /**
              * Ad manager init
@@ -299,6 +301,18 @@
                     }
                 }
 
+                // Allow setting explicit site id
+                forcedSiteId = undefined;
+                if(adManagerMetadata.pulse_force_site_id) {
+                    forcedSiteId = adManagerMetadata.pulse_force_site_id;
+                }
+
+                previewAdId = undefined;
+                if(adManagerMetadata.pulse_preview) {
+                    previewAdId = adManagerMetadata.pulse_preview;
+                }
+
+
                 //The request settings and content metadata are going to be assembled progressively here
 
                 //First we fill the integration-only metadata
@@ -308,6 +322,14 @@
                     maxBitRate:   adManagerMetadata.pulse_max_bitrate
                 };
 
+                if(forcedSiteId) {
+                    this._requestSettings.forceSiteId = forcedSiteId;
+                }
+
+                if(previewAdId) {
+                    this._requestSettings.pulse_preview = previewAdId;
+                }
+                
                 //Then the parameters that always overriden by the custom metadata or the integration metadata are set
                 this._contentMetadata.category = getByPriority(
                     adManagerMetadata.pulse_category ,
