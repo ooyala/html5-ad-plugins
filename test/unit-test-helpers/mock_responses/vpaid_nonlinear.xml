@@ -4,21 +4,22 @@
       <AdSystem/>
       <AdTitle>NonLinear VPAID JS</AdTitle>
       <Description>Vpaid Linear Video Ad</Description>
-      <Error>error</Error>
-      <Impression>impression</Impression>
+      <Error>errorUrl</Error>
+      <Impression>impressionUrl</Impression>
       <Creatives>
         <Creative sequence="1">
           <NonLinearAds>
             <TrackingEvents>
-              <Tracking event="start">start</Tracking>
-              <Tracking event="firstQuartile">first</Tracking>
-              <Tracking event="complete">complete</Tracking>
-              <Tracking event="mute">mute</Tracking>
+              <Tracking event="start">startUrl</Tracking>
+              <Tracking event="firstQuartile">firstUrl</Tracking>
+              <Tracking event="complete">completeUrl</Tracking>
+              <Tracking event="mute">muteUrl</Tracking>
             </TrackingEvents>
             <NonLinear apiFramework="VPAID" width="300" height="60" id="overlay-1">
               <StaticResource creativeType="application/javascript">http://file.js</StaticResource>
-              <NonLinearClickThrough id="GDFP">http://link</NonLinearClickThrough>
-              <NonLinearClickTracking id="GDFP">http://link</NonLinearClickTracking>
+              <NonLinearClickThrough id="GDFP">nonLinearClickthroughUrl</NonLinearClickThrough>
+              <NonLinearClickTracking id="GDFP">nonLinearClickTrackingUrl1</NonLinearClickTracking>
+              <NonLinearClickTracking id="GDFP">nonLinearClickTrackingUrl2</NonLinearClickTracking>
             </NonLinear>
           </NonLinearAds>
         </Creative>

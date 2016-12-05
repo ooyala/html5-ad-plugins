@@ -17,7 +17,8 @@
                       </TrackingEvents>
                       <VideoClicks>
                         <ClickThrough>clickThroughUrl</ClickThrough>
-                        <ClickTracking>clickTrackingUrl</ClickTracking>
+                        <ClickTracking>clickTrackingUrl1</ClickTracking>
+                        <ClickTracking>clickTrackingUrl2</ClickTracking>
                       </VideoClicks>
                       <AdParameters>{"tag" : "ad"}</AdParameters>
                       <MediaFiles>

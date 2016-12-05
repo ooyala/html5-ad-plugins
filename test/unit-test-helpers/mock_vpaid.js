@@ -142,9 +142,9 @@ global.vpaidAd = {
           tracking: []
         },
         skipOffset: null,
-        clickTracking: '',
-        clickThrough: '',
-        customClick: ''
+        clickTracking: ['clickTrackingUrl1', 'clickTrackingUrl2'],
+        clickThrough: 'clickThroughUrl',
+        customClick: 'customClickUrl'
       },
       nonLinear: {
         mediaFiles: {
@@ -155,9 +155,9 @@ global.vpaidAd = {
           tracking: []
         },
         skipOffset: null,
-        clickTracking: '',
-        clickThrough: '',
-        customClick: ''
+        clickTracking: ['nonLinearClickTrackingUrl1', 'nonLinearClickTrackingUrl2'],
+        clickThrough: 'clickThroughUrl',
+        customClick: 'customClickUrl'
       },
       title: 'title',
       tracking: {

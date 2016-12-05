@@ -2782,9 +2782,9 @@ OO.Ads.manager(function(_, $) {
       var errorTracking = _cleanString(this.$_node.find('Error').text());
       var clickTracking;
       if (isLinear) {
-        clickTracking = _cleanString(this.$_node.find('ClickTracking').text());
+        clickTracking = _.map(this.$_node.find('ClickTracking'), function(obj) { return _cleanString($(obj).text()); });
       } else {
-        clickTracking = _cleanString(this.$_node.find('NonLinearClickTracking').text());
+        clickTracking = _.map(this.$_node.find('NonLinearClickTracking'), function(obj) { return _cleanString($(obj).text()); });
       }
 
       var sequence = this.$_node.attr('sequence');

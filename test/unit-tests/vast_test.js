@@ -2449,7 +2449,7 @@ describe('ad_manager_vast', function() {
     expect(ad.ad.data.tracking).to.eql(parsedAd.tracking);
     expect(ad.ad.data.type).to.eql(parsedAd.type);
     expect(ad.ad.data.version).to.eql(parsedAd.version);
-    expect(ad.ad.data.videoClickTracking).to.eql(parsedAd.videoClickTracking);
+    expect(ad.ad.data.linear.clickTracking).to.eql(parsedAd.linear.clickTracking);
     expect(ad.ad.data.adParams).to.eql(parsedAd.adParams);
   });
 
