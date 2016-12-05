@@ -15,6 +15,10 @@
                         <Tracking event="complete">completeUrl</Tracking>
                         <Tracking event="mute">muteUrl</Tracking>
                       </TrackingEvents>
+                      <VideoClicks>
+                        <ClickThrough>clickThroughUrl</ClickThrough>
+                        <ClickTracking>clickTrackingUrl</ClickTracking>
+                      </VideoClicks>
                       <AdParameters>{"tag" : "ad"}</AdParameters>
                       <MediaFiles>
                           <MediaFile delivery="progressive" width="16" height="9" type="application/javascript" apiFramework="VPAID">http://file.js</MediaFile>

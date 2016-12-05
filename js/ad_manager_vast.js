@@ -301,7 +301,6 @@ OO.Ads.manager(function(_, $) {
       UNDEFINED:                          900,
 
       /**
-       * TODO: Add support
        * General VPAID error.
        */
       GENERAL_VPAID:                      901
@@ -1351,11 +1350,11 @@ OO.Ads.manager(function(_, $) {
           }
         }
 
-        var hasClickUrl = adWrapper.ad.data.linear.clickThrough.length > 0;
+        var clickUrl = _getLinearClickThroughUrl(adWrapper) || _getNonLinearClickThroughUrl(adWrapper);
         this.amc.notifyLinearAdStarted(adWrapper.id, {
           name: adWrapper.ad.data.title,
           duration: adWrapper.ad.durationInMilliseconds/1000,
-          hasClickUrl: hasClickUrl,
+          clickUrl: clickUrl,
           indexInPod: adWrapper.ad.adPodIndex,
           skippable: false
         });
@@ -2781,17 +2780,11 @@ OO.Ads.manager(function(_, $) {
       var impressions = this.getVpaidImpressions();
       var tracking = this.getVpaidTracking(isLinear ? $node[0] : $node.parent()[0]);
       var errorTracking = _cleanString(this.$_node.find('Error').text());
-      var videoClickTracking;
+      var clickTracking;
       if (isLinear) {
-        videoClickTracking = {
-          clickTracking: _cleanString(this.$_node.find('ClickTracking').text()),
-          clickThrough: _cleanString(this.$_node.find('ClickThrough').text()),
-          customClick: _cleanString(this.$_node.find('CustomClick').text())
-        };
+        clickTracking = _cleanString(this.$_node.find('ClickTracking').text());
       } else {
-        videoClickTracking = {
-          nonLinearClickThrough: _cleanString(this.$_node.find('NonLinearClickThrough').text())
-        }
+        clickTracking = _cleanString(this.$_node.find('NonLinearClickTracking').text());
       }
 
       var sequence = this.$_node.attr('sequence');
@@ -2812,9 +2805,10 @@ OO.Ads.manager(function(_, $) {
         mediaFiles: mediaFile,
         tracking: tracking,
         duration: isLinear ? this.$_node.find('Duration').text() : 0,
-        skipOffset: $node.attr('skipoffset') || null
+        skipOffset: $node.attr('skipoffset') || null,
+        clickTracking: clickTracking
       };
-      _.extend(ad, videoClickTracking);
+      _.extend(ad, clickTracking);
 
       var data = {
         id: adId,
@@ -2828,7 +2822,6 @@ OO.Ads.manager(function(_, $) {
         nonLinear: isLinear ? {} : ad,
         type: isLinear ? this.amc.ADTYPE.LINEAR_VIDEO : this.amc.ADTYPE.NONLINEAR_OVERLAY,
         version: version,
-        videoClickTracking: videoClickTracking
       };
 
       var result = {
@@ -2858,7 +2851,7 @@ OO.Ads.manager(function(_, $) {
     var _beginVpaidAd = _.bind(function() {
       if (_isVpaidAd(currentAd)) {
         var ad = currentAd.vpaidAd;
-        var clickthru = currentAd.ad.data.nonLinear ? currentAd.ad.data.nonLinear.nonLinearClickThrough : '';
+        var nonLinearClickThroughUrl = _getNonLinearClickThroughUrl(currentAd);
         //TODO: Is this used for anything?
         var adLinear = _safeFunctionCall(ad, "getAdLinear");
 
@@ -2870,7 +2863,7 @@ OO.Ads.manager(function(_, $) {
         this.amc.notifyLinearAdStarted(currentAd.id, {
           name: currentAd.data.title,
           duration : _safeFunctionCall(ad, "getAdDuration"),
-          clickUrl: clickthru.length > 0,
+          clickUrl: nonLinearClickThroughUrl,
           indexInPod: currentAd.ad.sequence,
           skippable : _safeFunctionCall(ad, "getAdSkippableState")
         });
@@ -2956,14 +2949,6 @@ OO.Ads.manager(function(_, $) {
         else {
           tracking[eventName] = [eventUrl];
         }
-
-        // TODO: Delete this
-        /*
-         *tracking.push({
-         *  event: node.getAttribute('event'),
-         *  url: node.textContent
-         *});
-         */
       }
       return tracking;
     };
@@ -3092,7 +3077,7 @@ OO.Ads.manager(function(_, $) {
               this.amc.adsClicked();
             }
           }
-          if (currentAd.isLinear) {
+          if (_.isObject(currentAd) && currentAd.isLinear) {
             _handleTrackingUrls(currentAd, ["linearClickTracking"]);
           }
           else {
@@ -3225,22 +3210,6 @@ OO.Ads.manager(function(_, $) {
      */
     var _cleanString = function(string) {
       return string.replace(/\r?\n|\r/g, '').trim();
-    };
-
-    /**
-     * Check for clickthrough url
-     * @private
-     * @method Vast#_hasClickUrl
-     * @return {object} Ad to look for the clickthrough
-     */
-    var _hasClickUrl = function(ad) {
-      if (ad && ad.data) {
-        var  videoClickTracking = ad.data.videoClickTracking;
-        if (videoClickTracking.clickThrough) {
-          return videoClickTracking.clickThrough.length > 0;
-        }
-      }
-      return false;
     };
 
     /**

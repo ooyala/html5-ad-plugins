@@ -18,6 +18,7 @@
             <NonLinear apiFramework="VPAID" width="300" height="60" id="overlay-1">
               <StaticResource creativeType="application/javascript">http://file.js</StaticResource>
               <NonLinearClickThrough id="GDFP">http://link</NonLinearClickThrough>
+              <NonLinearClickTracking id="GDFP">http://link</NonLinearClickTracking>
             </NonLinear>
           </NonLinearAds>
         </Creative>
