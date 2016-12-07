@@ -493,8 +493,6 @@
              * @param v4ad
              */
             this.playAd = function(v4ad) {
-
-                console.error("play ad", v4ad);
                 //If the SDK is not loaded, tell the AMC our placeholder ad is finished
                 if(!adModuleJsReady){
                     amc.notifyPodEnded(v4ad.id);
@@ -502,7 +500,6 @@
                 }
 
                 if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY){
-                    console.error("play overlay");
                     if(contentPaused){
                         currentPauseAd = v4ad;
                     } else {
@@ -511,12 +508,10 @@
 
                     amc.sendURLToLoadAndPlayNonLinearAd(v4ad.ad, v4ad.id, v4ad.ad.getResourceURL());
 
-                    //Assume the ad was loaded FIXME
+                    //Assume the ad was loaded
                     if(!contentPaused){
                         onOverlayShown();
                     }
-
-
                     return;
                 }
 
@@ -599,7 +594,7 @@
                 } else if (this._currentOverlayAd){
                     adPlayer.overlayAdClicked(this._currentOverlayAd);
                 } else if (this._currentPauseAd){
-                    console.error("Pause ad clicked");
+                    //TODO
                 }
             };
 
@@ -647,7 +642,6 @@
 
 
             this.notifyAdPodStarted = function(id, adCount){
-                console.error("ad pod started",id,podStarted);
                 if(!podStarted) {
                     podStarted = id;
                 }
@@ -699,7 +693,10 @@
             };
 
             this.showOverlayAd = function (pulseOverlayAd) {
-                console.error("Showing overlay",pulseOverlayAd);
+                if (currentOverlayAd){
+                    onOverlayFinished();
+                }
+
                 this._currentOverlayAd = pulseOverlayAd;
 
                 amc.forceAdToPlay(this.name,
@@ -709,14 +706,14 @@
             };
 
             this.showPauseAd = function (pulsePauseAd) {
-                console.error("Showing pause ad", pulsePauseAd);
-                this._currentPauseAd = pulsePauseAd;
-
-                amc.forceAdToPlay(this.name, pulsePauseAd, amc.ADTYPE.NONLINEAR_OVERLAY, [pulsePauseAd.getResourceURL()]);
+                //console.error("Showing pause ad", pulsePauseAd);
+                //this._currentPauseAd = pulsePauseAd;
+                //
+                //amc.forceAdToPlay(this.name, pulsePauseAd, amc.ADTYPE.NONLINEAR_OVERLAY, [pulsePauseAd.getResourceURL()]);
             };
 
+            //This method is called by the V4 AMF
             this.showOverlay = function () {
-                console.error("Resuming v4 overlay");
                 if (currentOverlayAd){
                     amc.sendURLToLoadAndPlayNonLinearAd(currentOverlayAd.ad, currentOverlayAd.id, currentOverlayAd.ad.getResourceURL());
                     startOverlayCountdown();
@@ -724,7 +721,6 @@
             };
 
             this.hideOverlay = function (ad) {
-                console.error("hide v4 overlay",ad);
                 overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
                 //hide overlay fixme
             };
