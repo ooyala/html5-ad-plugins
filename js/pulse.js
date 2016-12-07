@@ -966,15 +966,9 @@
                     -1, isFullscreen);
             };
 
+            //Will be used when overlay events are added
             var _onOverlayShown = function (event, metadata) {
-                //amc.notifyNonlinearAdStarted(1);
-                var adData = {
-                    //position_type: NON_AD_RULES_POSITION_TYPE,
-                    forced_ad_type: amc.ADTYPE.NONLINEAR_OVERLAY
-                };
-
-                amc.sendURLToLoadAndPlayNonLinearAd("test", "id",metadata.ad.getResourceURL());
-                //amc.forceAdToPlay(this.name, adData, amc.ADTYPE.NONLINEAR_OVERLAY);
+                //amc.sendURLToLoadAndPlayNonLinearAd("test", "id",metadata.ad.getResourceURL());
             };
         };
         return new PulseAdManager();
