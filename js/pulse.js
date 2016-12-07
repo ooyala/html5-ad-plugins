@@ -76,9 +76,6 @@
                 amc = adManagerController; // the AMC is how the code interacts with the player
                 //Enable overlay close button right away for Pulse
                 amc.adManagerSettings["showNonLinearCloseButton"] = true;
-
-
-
                 pulseAdManagers[playerId] = this;
 
                 // Add any player event listeners now
@@ -95,7 +92,7 @@
 
             this.getAdPlayer = function() {
                 return adPlayer;
-            }
+            };
 
             /**
              * Called by the AMF when the UI is ready.
@@ -120,7 +117,7 @@
                     (amc.ui.ooyalaVideoElement[0].className === "video")) {
                     this.sharedVideoElement = this.ui.ooyalaVideoElement[0];
                 }
-            }
+            };
 
 
             function mergeCommaSeparatedListsBase(a, b){
@@ -136,7 +133,7 @@
             }
 
             function removeUndefinedElements(args){
-                var retArray = []
+                var retArray = [];
                 for(var i = 0, n = args.length; i < n; i++){
                     if(args[i]){
                         retArray.push(args[i]);
@@ -663,7 +660,7 @@
             this.registerVideoControllerWrapper = function(videoPlugin)
             {
                 this.videoControllerWrapper = videoPlugin;
-            }
+            };
 
             var _onContentChanged = function() {
                 //Not needed rn
@@ -787,7 +784,6 @@
                 if(adPlayer){
                     adPlayer.adClickThroughOpened();
                 }
-
             };
 
             var playPlaceholder = _.bind(function () {
