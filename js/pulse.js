@@ -507,17 +507,20 @@
             }
 
 
+            //When the overlay shoule be removed
             function onOverlayFinished(){
                 clearTimeout(overlayTimer);
                 amc.notifyNonlinearAdEnded(currentOverlayAd.id);
                 currentOverlayAd = null;
             }
 
+            //
             function startOverlayCountdown(){
                 lastOverlayAdStart = Date.now();
                 overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
             }
 
+            //Called when the overlay is displayed
             function onOverlayShown(){
                 if(currentOverlayAd){
                     overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
@@ -526,6 +529,7 @@
                 }
             }
 
+            //Save the current display time of the overlay so it can be resumed later
             function overlayPause(){
                 if(currentOverlayAd){
                     overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
@@ -538,6 +542,10 @@
              * @param v4ad
              */
             this.playAd = function(v4ad) {
+
+                if (v4ad === null){
+                    return;
+                }
                 //If the SDK is not loaded, tell the AMC our placeholder ad is finished
                 if(!adModuleJsReady){
                     amc.notifyPodEnded(v4ad.id);
@@ -738,6 +746,10 @@
                 return false;
             };
 
+            /**
+             * Called by the Pulse SDK when an overlay should shown
+             * @param pulseOverlayAd
+             */
             this.showOverlayAd = function (pulseOverlayAd) {
                 if (currentOverlayAd){
                     onOverlayFinished();
@@ -751,6 +763,10 @@
                     [pulseOverlayAd.getResourceURL()]);
             };
 
+            /**
+             * Called by the Pulse SDK to show a pause ad.
+             * @param pulsePauseAd
+             */
             this.showPauseAd = function (pulsePauseAd) {
                 //console.error("Showing pause ad", pulsePauseAd);
                 //this._currentPauseAd = pulsePauseAd;
@@ -768,7 +784,6 @@
 
             this.hideOverlay = function (ad) {
                 overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
-                //hide overlay fixme
             };
 
             this.illegalOperationOccurred = function(msg) {
@@ -802,9 +817,9 @@
 
             var _onPlayStarted = function() {
                 //Hide a pause ad is there was any
-                if(this._currentPauseAd){
-                    amc.notifyNonlinearAdEnded(this_)
-                }
+                //if(this._currentPauseAd){
+                //    amc.notifyNonlinearAdEnded(this_)
+                //}
                 if(adPlayer)
                     adPlayer.contentStarted();
             };
