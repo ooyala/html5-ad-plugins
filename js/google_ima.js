@@ -50,7 +50,7 @@ require("../html5-common/js/utils/utils.js");
 
       //Constants
       var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
-      var DEFAULT_ADS_REQUEST_TIME_OUT = 5000;
+      var DEFAULT_ADS_REQUEST_TIME_OUT = 15000;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
