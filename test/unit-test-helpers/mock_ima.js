@@ -74,7 +74,9 @@ google =
     },
     AdErrorEvent :
     {
-      Type : {}
+      Type : {
+        AD_ERROR : "adError"
+      }
     },
     AdsLoader : function(container)
     {
