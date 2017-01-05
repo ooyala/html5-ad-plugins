@@ -576,7 +576,7 @@ describe('ad_manager_ima', function()
     });
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
-    am.publishEvent(google.ima.AdEvent.Type.AD_ERROR);
+    am.publishEvent(google.ima.AdErrorEvent.Type.AD_ERROR);
     expect(linearAdEndedNotified).to.be(true);
     expect(podEndedNotified).to.be(true);
     expect(doneControllingAdsNotified).to.be(true);
