@@ -251,6 +251,41 @@
                 }
             }
 
+            var updateAdScreenPointerEventsEnabled = (function() {
+                var adScreens = document.getElementsByClassName('oo-ad-screen');
+                if(adScreens.length === 0) {
+                    if(!this.adScreenPointerEventsEnabled && !this.adScreenIntervalId) {
+                        this.adScreenIntervalId = setInterval((function() {
+                            // Ad screen may disappear before we hit this, so clear if we are not in an ad break anymore
+                            if(this._currentAdBreak === null) {
+                                clearInterval(this.adScreenIntervalId);
+                                this.adScreenIntervalId = undefined;
+                            } else {
+                                updateAdScreenPointerEventsEnabled();
+                            }
+                        }).bind(this), 100);
+                    }
+                } else {
+                    if(this.adScreenIntervalId) {
+                        clearInterval(this.adScreenIntervalId);
+                        this.adScreenIntervalId = undefined;
+                    }
+
+                    adScreens[0].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
+                }
+            }).bind(this);
+
+            var enableAdScreenPointerEvents = (function() {
+                this.adScreenPointerEventsEnabled = true;
+                updateAdScreenPointerEventsEnabled();
+            }).bind(this);
+
+            var disableAdScreenPointerEvents = (function() {
+                this.adScreenPointerEventsEnabled = false;
+                updateAdScreenPointerEventsEnabled();
+            }).bind(this);
+
+
             /**
              * Called by Ad Manager Controller.  When this function is called, all movie and server metadata are
              * ready to be parsed.
@@ -610,8 +645,9 @@
             };
 
             this.illegalOperationOccurred = function(msg) {
-                //console.log(msg);
+
             };
+
             this.sessionEnded = function () {
                 amc.adManagerDoneControllingAds();
             };
@@ -732,6 +768,7 @@
 
             var _onAdBreakFinished = function(){
                 this._currentAdBreak = null;
+                enableAdScreenPointerEvents();
                 this.notifyAdPodEnded();
             };
 
@@ -739,8 +776,8 @@
                 adPlayer.resize(-1,
                     -1, isFullscreen);
                 this._currentAdBreak = eventData.adBreak;
+                disableAdScreenPointerEvents();
                 this.notifyAdPodStarted(this._adBreakId,this._currentAdBreak.getPlayableAdsTotal());
-
             };
 
             var _onAdClicked = function (event,eventData) {
