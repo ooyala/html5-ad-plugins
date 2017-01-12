@@ -15,6 +15,7 @@ require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/utils/environment.js");
 
 var vastParser = require("../utils/vast_parser.js");
+var adManagerUtils = require("../utils/ad_manager_utils.js");
 
 OO.Ads.manager(function(_, $)
 {
@@ -42,6 +43,7 @@ OO.Ads.manager(function(_, $)
     this.currentAd = null;
 
     var amc  = null;
+    var currentOffset = 0;
 
     // Tracking Event states
     var adMode = false;
@@ -54,8 +56,11 @@ OO.Ads.manager(function(_, $)
     // will be the first (will not need a prefixed "?").
     var SMART_PLAYER = "oosm=1";
     var OFFSET_PARAM = "offset=";
-    var OFFSET_VALUE = "5"; // seconds
     var AD_ID_PARAM = "aid=";
+
+    // In the event that the ID3 tag has an ad duration of 0 and the VAST XML response does not specify an
+    // ad duration, use this constant. Live team said the average SSAI ad was 20 seconds long.
+    var FALLBACK_AD_DURATION = 20 // seconds
 
     var baseRequestUrl = "";
     var requestUrl = "";
@@ -83,7 +88,10 @@ OO.Ads.manager(function(_, $)
       WAITING: "waiting",
 
       // Denotes that a response has returned for an ad request and the ad is "playing"
-      PLAYING: "playing"
+      PLAYING: "playing",
+
+      // Denotes that an error occurred when making the ad request
+      ERROR: "error"
     };
 
     // variable to store the timeout used to keep track of how long an SSAI ad plays
@@ -111,6 +119,10 @@ OO.Ads.manager(function(_, $)
       amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
       // Stream URL
       amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
+      amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
+
+      // Replay for Live streams should not be available, but add this for precaution
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
 
       // Listeners for tracking events
       amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
@@ -185,6 +197,24 @@ OO.Ads.manager(function(_, $)
       //If the element is not created due to lack of support from the available video plugins,
       //the ad will be skipped
       return null;
+    };
+
+    /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the the play head updates
+     * during playback.
+     * @public
+     * @method SsaiPulse#onPlayheadTimeChanged
+     * @param {string} eventname The name of the event for which this callback is called
+     * @param {number} playhead The total amount main video playback time (seconds)
+     * @param {number} duration Duration of the live video (seconds)
+     * @param {number} livePlayhead The current playhead within the DVR/live window (seconds)
+     */
+    this.onPlayheadTimeChanged = function(eventName, playhead, duration, livePlayhead) {
+      var offset = duration - livePlayhead;
+      if (_.isFinite(offset) && offset >= 0)
+      {
+        currentOffset = offset;
+      }
     };
 
     /**
@@ -388,6 +418,19 @@ OO.Ads.manager(function(_, $)
     };
 
     /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
+     * clicked. Here it will try to load the rest of the vast ads at this point if there any.
+     * @public
+     * @method SsaiPulse#onReplay
+     */
+    this.onReplay = function()
+    {
+      currentOffset = 0;
+      this.currentAd = null;
+      this.currentId3Object = null;
+    };
+
+    /**
      * Helper function to handle the ID3 Ad timeout and request.
      * @private
      * @method SsaiPulse#_handleId3Ad
@@ -433,6 +476,20 @@ OO.Ads.manager(function(_, $)
       if (_.has(adIdVastData, id3Object.adId))
       {
         var adObject = adIdVastData[id3Object.adId];
+
+        // If the id3object duration was a bad value, reapply the timeout to the new
+        // duration
+        var duration = _selectDuration(id3Object, adObject);
+        if (duration !== id3Object.duration)
+        {
+          id3Object.duration = duration;
+          _clearAdDurationTimeout();
+          if (!this.testMode)
+          {
+            adDurationTimeout = _.delay(_adEndedCallback, duration * 1000);
+          }
+        }
+
         this.adIdDictionary[id3Object.adId].vastData = adObject;
         ssaiAd.data = adObject;
         ssaiAd.clickthrough = _getLinearClickThroughUrl(adObject);
@@ -453,6 +510,11 @@ OO.Ads.manager(function(_, $)
     this.onRequestError = function()
     {
       OO.log("SSAI Pulse: Error");
+      if (_.isObject(this.currentId3Object) && _.has(this.adIdDictionary, this.currentId3Object.adId))
+      {
+        this.adIdDictionary[this.currentId3Object.adId] = STATE.ERROR;
+        this.currentAd = null;
+      }
     };
 
     /**
@@ -536,7 +598,9 @@ OO.Ads.manager(function(_, $)
 
     var _onContentChanged = function()
     {
-      // Callback for example listener registered in this.initialize
+      currentOffset = 0;
+      this.currentAd = null;
+      this.currentId3Object = null;
     };
 
     // Helper Functions
@@ -574,7 +638,7 @@ OO.Ads.manager(function(_, $)
      */
     var _appendAdsProxyQueryParameters = _.bind(function(url, adId)
     {
-      var offset = OFFSET_PARAM + OFFSET_VALUE;
+      var offset = OFFSET_PARAM + currentOffset;
       var newUrl = _appendParamToUrl(url, offset);
 
       var adIdParam = AD_ID_PARAM + adId;
@@ -931,6 +995,65 @@ OO.Ads.manager(function(_, $)
         }
       }
       return _adIdVastData;
+    }, this);
+
+    /**
+     * Helper function to get the duration property within the Vast ad object.
+     * @private
+     * @method SsaiPulse#_getDuration
+     * @param {object} vastAdData The Vast ad object
+     * @returns {string} The Vast ad duration time stamp.
+     */
+    var _getDuration = _.bind(function(vastAdData)
+    {
+      var duration = null;
+      if (vastAdData &&
+          vastAdData.linear &&
+          vastAdData.linear.duration)
+      {
+        duration = vastAdData.linear.duration;
+      }
+      return duration;
+    }, this);
+
+    /**
+     * Helper function to return how far (in seconds) the current playhead is from Live.
+     * @public
+     * @method SsaiPulse#getCurrentOffset
+     * @returns {number} The value of the current offset from Live.
+     */
+    this.getCurrentOffset = _.bind(function()
+    {
+      return currentOffset;
+    }, this);
+
+    /**
+     * Helper function adjust the duration to a proper value. The priority from which to grab the duration is:
+     * 1. ID3 Tag ad duration - if the value is 0, fall through
+     * 2. VAST XML Response ad duration - if the ad duration is not defined, fall through
+     * 3. FALLBACK_AD_DURATION
+     * @private
+     * @method SsaiPulse#_selectDuration
+     * @param {object} id3Object The object containing the ID3 Tag information
+     * @param {object} vastAdData The object containing the parsed Vast ad data
+     * @returns {number} The duration of the ad (in seconds).
+     */
+    var _selectDuration = _.bind(function(id3Object, vastAdData)
+    {
+      var duration = FALLBACK_AD_DURATION;
+
+      var vastDuration = _getDuration(vastAdData);
+      vastDuration = adManagerUtils.convertTimeStampToMilliseconds(vastDuration) / 1000;
+
+      if (id3Object && id3Object.duration > 0)
+      {
+        duration = id3Object.duration;
+      }
+      else if (vastDuration > 0)
+      {
+        duration = vastDuration;
+      }
+      return duration;
     }, this);
 
     /**

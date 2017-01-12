@@ -233,7 +233,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = null;
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores undefined timeout values', function()
@@ -241,7 +241,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings = {};
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores string timeout values', function()
@@ -250,7 +250,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = "hello";
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores object timeout values', function()
@@ -259,7 +259,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = {};
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores function timeout values', function()
@@ -268,7 +268,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = function(){};
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager is ready', function()
@@ -375,10 +375,42 @@ describe('ad_manager_ima', function()
   it('Play ad: Requests the AMC to hide the player UI', function()
   {
     var notified = false;
-    amc.hidePlayerUi = function() {
+    amc.hidePlayerUi = function(showAdControls, showAdMarquee) {
+      expect(showAdControls).to.be(false);
+      expect(showAdMarquee).to.be(false);
       notified = true;
     };
     initAndPlay(true, vci);
+    ima.playAd(amc.timeline[0]);
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(notified).to.be(true);
+  });
+
+  it('Play ad: Metadata setting can choose to show the ad controls while hiding player UI', function()
+  {
+    var notified = false;
+    amc.hidePlayerUi = function(showAdControls, showAdMarquee) {
+      expect(showAdControls).to.be(true);
+      expect(showAdMarquee).to.be(false);
+      notified = true;
+    };
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      showAdControls: true
+    };
+    ima.loadMetadata(content, {}, {});
+    amc.timeline = ima.buildTimeline();
+    createVideoWrapper(vci);
+    play();
     ima.playAd(amc.timeline[0]);
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
@@ -544,7 +576,7 @@ describe('ad_manager_ima', function()
     });
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
-    am.publishEvent(google.ima.AdEvent.Type.AD_ERROR);
+    am.publishEvent(google.ima.AdErrorEvent.Type.AD_ERROR);
     expect(linearAdEndedNotified).to.be(true);
     expect(podEndedNotified).to.be(true);
     expect(doneControllingAdsNotified).to.be(true);
@@ -717,6 +749,7 @@ describe('ad_manager_ima', function()
 
   it('AMC Integration, IMA Event: IMA COMPLETE event notifies amc of linear ad end for a linear ad', function()
   {
+    var raiseTimeUpdateCalled = 0;
     var notified = false;
     var adId = -1;
     initAndPlay(true, vci);
@@ -730,11 +763,18 @@ describe('ad_manager_ima', function()
       id : "ad_1000",
       ad : {}
     });
+    ima.videoControllerWrapper.raiseTimeUpdate = function() {
+      raiseTimeUpdateCalled++;
+    };
+
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
     expect(notified).to.be(true);
     expect(adId).to.be("ad_1000");
+
+    // time update should only be raised twice: once for STARTED and and another COMPLETE
+    expect(raiseTimeUpdateCalled).to.be(2);
   });
 
   it('AMC Integration, IMA Event: IMA USER_CLOSE event notifies amc of linear ad end for a linear ad', function()
@@ -785,6 +825,7 @@ describe('ad_manager_ima', function()
     {
       ad : {}
     });
+
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     //mock ima has a default ad pod size of 1 (returned via getTotalAds)
@@ -831,6 +872,7 @@ describe('ad_manager_ima', function()
 
   it('AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) notifies amc of non-linear ad end', function()
   {
+    var raiseTimeUpdateCalled = 0;
     var notified = false;
     google.ima.linearAds = false;
     initAndPlay(true, vci);
@@ -842,9 +884,16 @@ describe('ad_manager_ima', function()
     {
       ad : {}
     });
+    ima.videoControllerWrapper.raiseTimeUpdate = function() {
+      raiseTimeUpdateCalled++;
+    };
+
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+
+    // time update should only be raised once for STARTED, but not COMPLETE
+    expect(raiseTimeUpdateCalled).to.be(1);
     expect(notified).to.be(true);
   });
 

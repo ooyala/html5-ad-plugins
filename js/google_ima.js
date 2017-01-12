@@ -50,7 +50,7 @@ require("../html5-common/js/utils/utils.js");
 
       //Constants
       var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
-      var DEFAULT_ADS_REQUEST_TIME_OUT = 5000;
+      var DEFAULT_ADS_REQUEST_TIME_OUT = 15000;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
@@ -146,6 +146,7 @@ require("../html5-common/js/utils/utils.js");
         this.adPlaybackStarted = false;
         this.vcPlayRequested = false;
         this.savedVolume = -1;
+        this.showAdControls = false;
         this.useGoogleAdUI = false;
         this.useGoogleCountdown = false;
         this.useInsecureVpaidMode = false;
@@ -252,6 +253,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("additionalAdTagParameters"))
         {
           this.additionalAdTagParameters = metadata.additionalAdTagParameters;
+        }
+
+        this.showAdControls = false;
+        if (metadata.hasOwnProperty("showAdControls"))
+        {
+          this.showAdControls = metadata.showAdControls;
         }
 
         this.useGoogleAdUI = false;
@@ -1270,7 +1277,7 @@ require("../html5-common/js/utils/utils.js");
         var eventType = google.ima.AdEvent.Type;
         // Add listeners to the required events.
         _IMAAdsManager.addEventListener(eventType.CLICK, _IMA_SDK_onAdClicked, false, this);
-        _IMAAdsManager.addEventListener(eventType.AD_ERROR, _onImaAdError, false, this);
+        _IMAAdsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, _onImaAdError, false, this);
         _IMAAdsManager.addEventListener(eventType.CONTENT_PAUSE_REQUESTED, _IMA_SDK_pauseMainContent, false, this);
         _IMAAdsManager.addEventListener(eventType.CONTENT_RESUME_REQUESTED, _IMA_SDK_resumeMainContent, false, this);
 
@@ -1442,7 +1449,7 @@ require("../html5-common/js/utils/utils.js");
                 this.savedVolume = -1;
               }
               //Since IMA handles its own UI, we want the video player to hide its UI elements
-              _amc.hidePlayerUi();
+              _amc.hidePlayerUi(this.showAdControls, false);
             }
             else
             {
@@ -1473,7 +1480,7 @@ require("../html5-common/js/utils/utils.js");
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
-            if (this.videoControllerWrapper)
+            if (this.videoControllerWrapper && (ad && ad.isLinear()))
             {
               _stopTimeUpdater();
               //IMA provides values which can result in negative current times or current times which are greater than duration.
