@@ -1041,7 +1041,10 @@ require("../html5-common/js/utils/utils.js");
         video ads not showing.
         */
         var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
-        IMAiframe.style.zIndex = this.imaIframeZIndex;
+        if (IMAiframe && IMAiframe.style)
+        {
+          IMAiframe.style.zIndex = this.imaIframeZIndex;
+        }
       });
 
       /**
