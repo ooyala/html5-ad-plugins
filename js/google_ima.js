@@ -483,6 +483,18 @@ require("../html5-common/js/utils/utils.js");
           _throwError("playAd() called but amcAdPod.ad is null.");
         }
 
+        /*
+        Set the z-index of IMA's iframe, where IMA ads are displayed, to 10004.
+        This puts IMA ads in front of the main content element, but under the control bar.
+        This fixes issues where overlays appear behind the video and for iOS it fixes
+        video ads not showing.
+        */
+        var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
+        if (IMAiframe && IMAiframe.style)
+        {
+          IMAiframe.style.zIndex = this.imaIframeZIndex;
+        }
+
         if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
           //we started our placeholder ad
@@ -1033,15 +1045,6 @@ require("../html5-common/js/utils/utils.js");
 
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
-
-        /*
-        Set the z-index of IMA's iframe, where IMA ads are displayed, to 10004.
-        This puts IMA ads in front of the main content element, but under the control bar.
-        This fixes issues where overlays appear behind the video and for iOS it fixes
-        video ads not showing.
-        */
-        var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
-        IMAiframe.style.zIndex = this.imaIframeZIndex;
       });
 
       /**
