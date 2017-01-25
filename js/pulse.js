@@ -57,8 +57,6 @@
              */
             this.initialize = function(adManagerController, playerId) {
                 amc = adManagerController; // the AMC is how the code interacts with the player
-                //Enable overlay close button right away for Pulse
-                amc.adManagerSettings["showNonLinearCloseButton"] = true;
                 pulseAdManagers[playerId] = this;
 
                 // Add any player event listeners now
@@ -474,7 +472,7 @@
 
             //Called when the overlay is displayed
             function onOverlayShown(){
-                if(currentOverlayAd){
+                if(currentOverlayAd) {
                     overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
                     adPlayer.overlayAdShown(currentOverlayAd.ad);
                     startOverlayCountdown();
@@ -512,8 +510,9 @@
                     }
 
                     amc.sendURLToLoadAndPlayNonLinearAd(v4ad.ad, v4ad.id, v4ad.ad.getResourceURL());
+                    amc.showNonlinearAdCloseButton();
 
-                    //Assume the ad was loaded
+                    // Assume the ad was loaded
                     if(!contentPaused){
                         onOverlayShown();
                     }
@@ -719,16 +718,12 @@
              * @param pulsePauseAd
              */
             this.showPauseAd = function (pulsePauseAd) {
-                //console.error("Showing pause ad", pulsePauseAd);
-                //this._currentPauseAd = pulsePauseAd;
-                //
-                //amc.forceAdToPlay(this.name, pulsePauseAd, amc.ADTYPE.NONLINEAR_OVERLAY, [pulsePauseAd.getResourceURL()]);
+                /* not implemented */
             };
 
             //This method is called by the V4 AMF
             this.showOverlay = function () {
-                if (currentOverlayAd){
-                    amc.sendURLToLoadAndPlayNonLinearAd(currentOverlayAd.ad, currentOverlayAd.id, currentOverlayAd.ad.getResourceURL());
+                if (currentOverlayAd) {
                     startOverlayCountdown();
                 }
             };
@@ -817,17 +812,17 @@
                             }, this.sharedVideoElement);
 
                         //We register all the event listeners we will need
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _.bind(_onAdBreakStarted,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _.bind(_onAdFinished,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _.bind(_onAdSkipped,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _.bind(_onAdStarted,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _.bind(_onAdTimeUpdate,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown,this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _.bind(_onAdBreakStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _.bind(_onAdFinished, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _.bind(_onAdSkipped, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _.bind(_onAdStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _.bind(_onAdTimeUpdate, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
 
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
@@ -928,9 +923,9 @@
                     -1, isFullscreen);
             };
 
-            //Will be used when overlay events are added
-            var _onOverlayShown = function (event, metadata) {
-                //amc.sendURLToLoadAndPlayNonLinearAd("test", "id",metadata.ad.getResourceURL());
+            var _onOverlayShown = function(event, metadata) {
+                /* Impression is tracked by the SDK before this 
+                   handler is triggered, so nothing needs to be done here */
             };
         };
         return new PulseAdManager();
