@@ -50,7 +50,7 @@ require("../html5-common/js/utils/utils.js");
 
       //Constants
       var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
-      var DEFAULT_ADS_REQUEST_TIME_OUT = 5000;
+      var DEFAULT_ADS_REQUEST_TIME_OUT = 15000;
       var AD_RULES_POSITION_TYPE = 'r';
       var NON_AD_RULES_POSITION_TYPE = 't';
       var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
@@ -481,6 +481,18 @@ require("../html5-common/js/utils/utils.js");
         else if (!this.currentAMCAdPod.ad)
         {
           _throwError("playAd() called but amcAdPod.ad is null.");
+        }
+
+        /*
+        Set the z-index of IMA's iframe, where IMA ads are displayed, to 10004.
+        This puts IMA ads in front of the main content element, but under the control bar.
+        This fixes issues where overlays appear behind the video and for iOS it fixes
+        video ads not showing.
+        */
+        var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
+        if (IMAiframe && IMAiframe.style)
+        {
+          IMAiframe.style.zIndex = this.imaIframeZIndex;
         }
 
         if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
@@ -1033,15 +1045,6 @@ require("../html5-common/js/utils/utils.js");
 
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
-
-        /*
-        Set the z-index of IMA's iframe, where IMA ads are displayed, to 10004.
-        This puts IMA ads in front of the main content element, but under the control bar.
-        This fixes issues where overlays appear behind the video and for iOS it fixes
-        video ads not showing.
-        */
-        var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
-        IMAiframe.style.zIndex = this.imaIframeZIndex;
       });
 
       /**
@@ -1277,7 +1280,7 @@ require("../html5-common/js/utils/utils.js");
         var eventType = google.ima.AdEvent.Type;
         // Add listeners to the required events.
         _IMAAdsManager.addEventListener(eventType.CLICK, _IMA_SDK_onAdClicked, false, this);
-        _IMAAdsManager.addEventListener(eventType.AD_ERROR, _onImaAdError, false, this);
+        _IMAAdsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, _onImaAdError, false, this);
         _IMAAdsManager.addEventListener(eventType.CONTENT_PAUSE_REQUESTED, _IMA_SDK_pauseMainContent, false, this);
         _IMAAdsManager.addEventListener(eventType.CONTENT_RESUME_REQUESTED, _IMA_SDK_resumeMainContent, false, this);
 

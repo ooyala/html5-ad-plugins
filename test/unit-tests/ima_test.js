@@ -233,7 +233,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = null;
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores undefined timeout values', function()
@@ -241,7 +241,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings = {};
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores string timeout values', function()
@@ -250,7 +250,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = "hello";
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores object timeout values', function()
@@ -259,7 +259,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = {};
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager ignores function timeout values', function()
@@ -268,7 +268,7 @@ describe('ad_manager_ima', function()
     amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = function(){};
     initialize();
     //Value of DEFAULT_ADS_REQUEST_TIME_OUT
-    expect(ima.maxAdsRequestTimeout).to.be(5000);
+    expect(ima.maxAdsRequestTimeout).to.be(15000);
   });
 
   it('Init: ad manager is ready', function()
@@ -576,7 +576,7 @@ describe('ad_manager_ima', function()
     });
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
-    am.publishEvent(google.ima.AdEvent.Type.AD_ERROR);
+    am.publishEvent(google.ima.AdErrorEvent.Type.AD_ERROR);
     expect(linearAdEndedNotified).to.be(true);
     expect(podEndedNotified).to.be(true);
     expect(doneControllingAdsNotified).to.be(true);

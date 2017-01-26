@@ -74,7 +74,9 @@ google =
     },
     AdErrorEvent :
     {
-      Type : {}
+      Type : {
+        AD_ERROR : "adError"
+      }
     },
     AdsLoader : function(container)
     {
@@ -180,7 +182,6 @@ google =
         USER_CLOSE : "userClose",
         DURATION_CHANGE : "durationChange",
         CLICK : "click",
-        AD_ERROR : "adError",
         CONTENT_PAUSE_REQUESTED : "contentPauseRequested",
         CONTENT_RESUME_REQUESTED : "contentResumeRequested"
       }
