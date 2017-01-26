@@ -1280,7 +1280,7 @@ require("../html5-common/js/utils/utils.js");
         var eventType = google.ima.AdEvent.Type;
         // Add listeners to the required events.
         _IMAAdsManager.addEventListener(eventType.CLICK, _IMA_SDK_onAdClicked, false, this);
-        _IMAAdsManager.addEventListener(eventType.AD_ERROR, _onImaAdError, false, this);
+        _IMAAdsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, _onImaAdError, false, this);
         _IMAAdsManager.addEventListener(eventType.CONTENT_PAUSE_REQUESTED, _IMA_SDK_pauseMainContent, false, this);
         _IMAAdsManager.addEventListener(eventType.CONTENT_RESUME_REQUESTED, _IMA_SDK_resumeMainContent, false, this);
 

@@ -544,10 +544,25 @@
                 if (v4ad === null){
                     return;
                 }
-                //If the SDK is not loaded, tell the AMC our placeholder ad is finished
-                if(!adModuleJsReady){
-                    amc.notifyPodEnded(v4ad.id);
-                    return;
+
+                switch(adModuleState) {
+                    case AD_MODULE_STATE.Uninitialized:
+                        log('Ooyala plugin: playAd() called with unexpected state Uninitialized');
+                        break;
+                    case AD_MODULE_STATE.Loading:
+                        // Waiting for SDK load to finish; do nothing
+                        break;
+                    case AD_MODULE_STATE.Ready:
+                        // All good, do nothing here
+                        break;
+                    case AD_MODULE_STATE.Failed:
+                        // SDK failed to load due to timeout or other issues; stop placeholder ad pod                
+                        amc.notifyPodEnded(v4ad.id);
+                        return;
+                    default:
+                        // ??
+                        log('Ooyala plugin: playAd() called with unexpected state ' + adModuleState);
+                        return;
                 }
 
                 if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY){
