@@ -19,10 +19,10 @@
         }
 
         var AD_MODULE_STATE = {
-            Uninitialized: 'uninitialized',
-            Loading: 'loading',
-            Ready: 'ready',
-            Failed: 'failed'
+            UNINITIALIZED: 'uninitialized',
+            LOADING: 'loading',
+            READY: 'ready',
+            FAILED: 'failed'
         };
 
         /**
@@ -57,7 +57,7 @@
             var preferredRenderingMode = null;
             var amc  = null;
             var pulseSDKUrl = "/proxy/pulse-sdk-html5/2.1/latest.min.js";
-            var adModuleState = AD_MODULE_STATE.Uninitialized;
+            var adModuleState = AD_MODULE_STATE.UNINITIALIZED;
             var enableDebugMode = false;
             var pluginCallbacks = {
 
@@ -315,11 +315,9 @@
 
                 // Load the Pulse SDK if not already included
                 if(!OO.Pulse){
-                    adModuleState = AD_MODULE_STATE.Loading;
+                    adModuleState = AD_MODULE_STATE.LOADING;
                     amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, _.bind(function(success) {
-                        adModuleState = success ? AD_MODULE_STATE.Ready : AD_MODULE_STATE.Failed;
-                        if(OO.Pulse)
-                            OO.Pulse.debug = true;
+                        adModuleState = success ? AD_MODULE_STATE.READY : AD_MODULE_STATE.FAILED;
                         if(!success && podStarted) {
                             // Stop the ad pod previously started by playAd()
                             amc.notifyPodEnded(podStarted);
@@ -328,7 +326,7 @@
                         }
                     }, this));
                 } else {
-                    adModuleState = AD_MODULE_STATE.Ready;
+                    adModuleState = AD_MODULE_STATE.READY;
                     if(isWaitingForPrerolls){
                         _onInitialPlay.call(this);
                     }
@@ -546,16 +544,16 @@
                 }
 
                 switch(adModuleState) {
-                    case AD_MODULE_STATE.Uninitialized:
-                        log('Ooyala plugin: playAd() called with unexpected state Uninitialized');
+                    case AD_MODULE_STATE.UNINITIALIZED:
+                        log('Ooyala plugin: playAd() called with unexpected state UNINITIALIZED');
                         break;
-                    case AD_MODULE_STATE.Loading:
+                    case AD_MODULE_STATE.LOADING:
                         // Waiting for SDK load to finish; do nothing
                         break;
-                    case AD_MODULE_STATE.Ready:
+                    case AD_MODULE_STATE.READY:
                         // All good, do nothing here
                         break;
-                    case AD_MODULE_STATE.Failed:
+                    case AD_MODULE_STATE.FAILED:
                         // SDK failed to load due to timeout or other issues; stop placeholder ad pod                
                         amc.notifyPodEnded(v4ad.id);
                         return;
@@ -865,7 +863,7 @@
             this.tryInitAdPlayer = function(){
                 var flashVersion = getFlashVersion().split(',').shift();
 
-                if(this.ui && adModuleState == AD_MODULE_STATE.Ready) {
+                if(this.ui && adModuleState === AD_MODULE_STATE.READY) {
                     if (!adPlayer) {
                         var renderingMode = flashVersion >=11 ? OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_FIRST : OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_ONLY;
                         // If debug is already enabled, we don't want to disable it
@@ -903,7 +901,7 @@
             var _onInitialPlay = function() {
                 isWaitingForPrerolls = true;
                 amc.adManagerWillControlAds();
-                if(adModuleState == AD_MODULE_STATE.Ready) {
+                if(adModuleState === AD_MODULE_STATE.READY) {
                     if(!adPlayer){
                         this.tryInitAdPlayer();
                     }
