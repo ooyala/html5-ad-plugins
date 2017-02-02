@@ -1034,6 +1034,7 @@ require("../html5-common/js/utils/utils.js");
         //These are required by Google for tracking purposes.
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
+        google.ima.settings.setLocale(OO.getLocale());
         if (this.useInsecureVpaidMode)
         {
           google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
