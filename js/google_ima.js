@@ -1095,11 +1095,8 @@ require("../html5-common/js/utils/utils.js");
         _IMA_SDK_destroyAdsLoader();
         _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
         // This will enable notifications whenever ad rules or VMAP ads are scheduled
-        // for playback. Only needed on ad rules mode
-        if (_usingAdRules)
-        {
-          _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(false);
-        }
+        // for playback, it has no effect on regular ads
+        _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(false);
         _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
         _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
       });
