@@ -2316,6 +2316,7 @@ OO.Ads.manager(function(_, $) {
       }, this));
 
       var handled = false;
+      var handlingWrapperAd = false;
 
       var adUnits = [];
       var wrapperAds = {};
@@ -2362,6 +2363,8 @@ OO.Ads.manager(function(_, $) {
         } else if (ad.type === AD_TYPE.WRAPPER) {
           //TODO: Add wrapper ad depth limit
           _handleWrapperAd(ad, adLoaded);
+          handlingWrapperAd = true;
+          handled = true;
         }
       }, this));
 
@@ -2388,6 +2391,8 @@ OO.Ads.manager(function(_, $) {
         }
         else if (ad.type === AD_TYPE.WRAPPER) {
           _handleWrapperAd(ad, adLoaded);
+          handlingWrapperAd = true;
+          handled = true;
         }
       }
 
@@ -2412,7 +2417,7 @@ OO.Ads.manager(function(_, $) {
         failedAd();
       }
 
-      if (currentAd && currentAd.adType === this.amc.ADTYPE.AD_REQUEST)
+      if (currentAd && currentAd.adType === this.amc.ADTYPE.AD_REQUEST && !handlingWrapperAd)
       {
         //notify the amc of the pod ending
         this.amc.notifyPodEnded(currentAd.id);
