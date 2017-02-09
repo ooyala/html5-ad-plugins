@@ -129,7 +129,7 @@ OO.Ads.manager(function(_, $) {
         }
         profileId = metadata['html5_player_profile'];
         siteSectionId = metadata['fw_site_section_id'];
-        videoAssetId = metadata['fw_video_asset_id'] || videoAssetId;
+        videoAssetId = metadata['fw_video_asset_id'] || metadata['fw_video_asset_network_id'] || videoAssetId;
         FRMSegment = metadata['FRMSegment'];
         freeWheelCompanionAdsWrapperId = metadata['companion_ad_wrapper_id'];
         adServerURL = (amc.platform.isSSL ? metadata['html5_ssl_ad_server'] : metadata['html5_ad_server']);
@@ -146,12 +146,15 @@ OO.Ads.manager(function(_, $) {
       // [PBW-449] To maintain parity with Flash, we allow 'fw_video_asset_id'
       // to be set on the page-level (see 'onPlayerCreated') or fallback to
       // movie metadata, then externalId, and then embed_code.
-      if (baseMetadata && baseMetadata["fw_video_asset_id"]) {
-        videoAssetId = videoAssetId || baseMetadata["fw_video_asset_id"];
-      } else if (amc.pageSettings && amc.pageSettings["originalId"]) {
-        videoAssetId = videoAssetId || amc.pageSettings["originalId"];
-      } else {
-        videoAssetId = videoAssetId || amc.currentEmbedCode;
+      if (!videoAssetId)
+      {
+        if (baseMetadata && baseMetadata["fw_video_asset_id"]) {
+          videoAssetId = baseMetadata["fw_video_asset_id"];
+        } else if (amc.pageSettings && amc.pageSettings["originalId"]) {
+          videoAssetId = amc.pageSettings["originalId"];
+        } else {
+          videoAssetId = amc.currentEmbedCode;
+        }
       }
 
       // To help reduce load time this could be done in initialize but we won't know whether or not the url is
