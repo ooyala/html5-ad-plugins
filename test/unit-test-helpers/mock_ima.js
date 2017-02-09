@@ -63,7 +63,8 @@ google =
     {
       setPlayerVersion : function() {},
       setPlayerType : function() {},
-      setVpaidMode : function() {}
+      setVpaidMode : function() {},
+      setLocale : function() {}
     },
     AdsManagerLoadedEvent :
     {
