@@ -115,6 +115,10 @@ describe('ad_manager_ima', function()
         imaVideoPluginFactory = plugin;
       }
     };
+
+    OO.getLocale = function() {
+      return "en";
+    }
     delete require.cache[require.resolve(SRC_ROOT + "google_ima.js")];
     require(SRC_ROOT + "google_ima.js");
   }, this));
