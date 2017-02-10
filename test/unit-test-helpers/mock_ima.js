@@ -147,6 +147,11 @@ google =
           return google.ima.adManagerInstance;
         }
       };
+      this.getSettings = function() {
+        return {
+          setAutoPlayAdBreaks: function() {}
+        };
+      };
       this.addEventListener = function(event, callback)
       {
         callbacks[event] = callback;
