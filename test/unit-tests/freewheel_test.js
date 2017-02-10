@@ -128,7 +128,7 @@ describe('ad_manager_freewheel', function() {
                                         {}); }).to.not.throwException();
   });
 
-  it('Init: ', function(){
+  it('Init: test video asset override part 1', function(){
     fw.initialize(amc);
     fw.registerUi();
     var videoAssetId = null;
@@ -149,7 +149,7 @@ describe('ad_manager_freewheel', function() {
     expect(videoAssetId).to.be("testVideoAsset");
   });
 
-  it('Init: ', function(){
+  it('Init: test video asset override part 2', function(){
     fw.initialize(amc);
     fw.registerUi();
     var videoAssetId = null;
@@ -170,7 +170,7 @@ describe('ad_manager_freewheel', function() {
     expect(videoAssetId).to.be("testVideoAssetNetwork");
   });
 
-  it('Init: ', function(){
+  it('Init: test video asset override part 3', function(){
     fw.initialize(amc);
     fw.registerUi();
     var videoAssetId = null;
@@ -212,6 +212,30 @@ describe('ad_manager_freewheel', function() {
     play();
     fw.playAd(amc.timeline[0]);
     expect(videoAssetId).to.be("myEmbedCode");
+  });
+
+  it('Init: test video asset override part 4', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var videoAssetId = null;
+    setVideoAsset = function(id) {
+      videoAssetId = id;
+    };
+    fw.loadMetadata({
+      "fw_video_asset_id":"testVideoAsset",
+      "fw_video_asset_network_id":"testVideoAssetNetwork",
+      "fw_mrm_network_id":"100",
+      "html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah",
+      "use_external_id":false,
+      "embedCode":"myEmbedCode"},
+      {},
+      {});
+
+    amc.timeline = fw.buildTimeline();
+    play();
+    fw.playAd(amc.timeline[0]);
+    expect(videoAssetId).to.be("testVideoAsset");
   });
 
   it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is false', function(){
