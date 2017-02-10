@@ -279,6 +279,12 @@ require("../html5-common/js/utils/utils.js");
           this.useInsecureVpaidMode = metadata.vpaidMode === "insecure";
         }
 
+        this.disableFlashAds = false;
+        if (metadata.hasOwnProperty("disableFlashAds"))
+        {
+          this.disableFlashAds = true;
+        }
+
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
         if (metadata.hasOwnProperty("iframeZIndex"))
         {
@@ -961,6 +967,14 @@ require("../html5-common/js/utils/utils.js");
           return;
         }
 
+        //at this point we are guaranteed that metadata has been received and the sdk is loaded.
+        //so now we can set whether to disable flash ads or not.
+        if (google && google.ima && google.ima.settings)
+        {
+          google.ima.settings.setDisableFlashAds(this.disableFlashAds);
+          console.log("Flash disabled: " + google.ima.settings.getDisableFlashAds());
+        }
+
         var adsRequest = new google.ima.AdsRequest();
         if (this.additionalAdTagParameters)
         {
@@ -1035,6 +1049,7 @@ require("../html5-common/js/utils/utils.js");
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
         google.ima.settings.setLocale(OO.getLocale());
+      //  google.ima.settings.setDisableFlashAds(this.disableFlashAds);
         if (this.useInsecureVpaidMode)
         {
           google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
