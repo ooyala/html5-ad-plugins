@@ -1202,7 +1202,6 @@ require("../html5-common/js/utils/utils.js");
       {
         if(_usingAdRules)
         {
-          _resetUIContainerStyle();
           //if ads are not ready yet, ima failed to load
           if(!this.adsReady)
           {
@@ -1942,6 +1941,7 @@ require("../html5-common/js/utils/utils.js");
           }
         }
 
+        _resetUIContainerStyle();
         this.currentIMAAd = null;
         this.adPlaybackStarted = false;
       });
