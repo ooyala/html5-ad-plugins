@@ -128,7 +128,7 @@ describe('ad_manager_freewheel', function() {
                                         {}); }).to.not.throwException();
   });
 
-  it('Init: test video asset override part 1', function(){
+  it('Init: test video asset override fw_video_asset_id vs video embedcode', function(){
     fw.initialize(amc);
     fw.registerUi();
     var videoAssetId = null;
@@ -149,7 +149,7 @@ describe('ad_manager_freewheel', function() {
     expect(videoAssetId).to.be("testVideoAsset");
   });
 
-  it('Init: test video asset override part 2', function(){
+  it('Init: test video asset override fw_video_asset_network_id vs video embedcode', function(){
     fw.initialize(amc);
     fw.registerUi();
     var videoAssetId = null;
@@ -170,7 +170,7 @@ describe('ad_manager_freewheel', function() {
     expect(videoAssetId).to.be("testVideoAssetNetwork");
   });
 
-  it('Init: test video asset override part 3', function(){
+  it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs video embedcode', function(){
     fw.initialize(amc);
     fw.registerUi();
     var videoAssetId = null;
@@ -214,7 +214,7 @@ describe('ad_manager_freewheel', function() {
     expect(videoAssetId).to.be("myEmbedCode");
   });
 
-  it('Init: test video asset override part 4', function(){
+  it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs pagelevel embedCode vs video embedcode', function(){
     fw.initialize(amc);
     fw.registerUi();
     var videoAssetId = null;
