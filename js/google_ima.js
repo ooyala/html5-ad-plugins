@@ -1048,7 +1048,6 @@ require("../html5-common/js/utils/utils.js");
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
         google.ima.settings.setLocale(OO.getLocale());
-      //  google.ima.settings.setDisableFlashAds(this.disableFlashAds);
         if (this.useInsecureVpaidMode)
         {
           google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
