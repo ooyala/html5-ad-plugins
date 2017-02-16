@@ -972,7 +972,6 @@ require("../html5-common/js/utils/utils.js");
         if (google && google.ima && google.ima.settings)
         {
           google.ima.settings.setDisableFlashAds(this.disableFlashAds);
-          console.log("Flash disabled: " + google.ima.settings.getDisableFlashAds());
         }
 
         var adsRequest = new google.ima.AdsRequest();
