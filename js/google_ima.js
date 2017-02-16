@@ -282,7 +282,7 @@ require("../html5-common/js/utils/utils.js");
         this.disableFlashAds = false;
         if (metadata.hasOwnProperty("disableFlashAds"))
         {
-          this.disableFlashAds = true;
+          this.disableFlashAds = metadata.disableFlashAds;
         }
 
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
