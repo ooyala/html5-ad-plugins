@@ -1561,4 +1561,24 @@ describe('ad_manager_ima', function()
     videoWrapper.destroy();
     expect(ima.sharedVideoElement).to.be(null);
   });
+
+  it('Test disabling flash ads flag', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+
+    ima.loadMetadata({}, {}, {});
+    expect(ima.disableFlashAds).to.be(false);
+
+    var content =
+    {
+      disableFlashAds:true
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.disableFlashAds).to.be(true);
+
+    content.disableFlashAds = false;
+    ima.loadMetadata(content, {}, {});
+    expect(ima.disableFlashAds).to.be(false);
+  });
 });

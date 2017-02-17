@@ -128,6 +128,7 @@ require("../html5-common/js/utils/utils.js");
         this.additionalAdTagParameters = null;
         this.adsRequested = false;
         this.adsRequestTimeoutRef = null;
+        this.disableFlashAds = false;
         this.contentEnded = false;
         this.pauseAdOnClick = null;
         this.isFullscreen = false;
@@ -278,6 +279,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("vpaidMode"))
         {
           this.useInsecureVpaidMode = metadata.vpaidMode === "insecure";
+        }
+
+        this.disableFlashAds = false;
+        if (metadata.hasOwnProperty("disableFlashAds"))
+        {
+          this.disableFlashAds = metadata.disableFlashAds;
         }
 
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
@@ -960,6 +967,13 @@ require("../html5-common/js/utils/utils.js");
             !_checkRequestAdsOnReplay())
         {
           return;
+        }
+
+        //at this point we are guaranteed that metadata has been received and the sdk is loaded.
+        //so now we can set whether to disable flash ads or not.
+        if (google && google.ima && google.ima.settings)
+        {
+          google.ima.settings.setDisableFlashAds(this.disableFlashAds);
         }
 
         var adsRequest = new google.ima.AdsRequest();
