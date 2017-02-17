@@ -127,6 +127,7 @@ require("../html5-common/js/utils/utils.js");
         this.additionalAdTagParameters = null;
         this.adsRequested = false;
         this.adsRequestTimeoutRef = null;
+        this.disableFlashAds = false;
         this.contentEnded = false;
         this.pauseAdOnClick = null;
         this.isFullscreen = false;
