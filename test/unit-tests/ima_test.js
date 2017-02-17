@@ -1515,8 +1515,6 @@ describe('ad_manager_ima', function()
 
   it('Test disabling flash ads flag', function()
   {
-    var flag;
-    google.ima.settings.setDisableFlashAds = function(value) {flag = value};
     ima.initialize(amc, playerId);
     ima.registerUi();
 
@@ -1533,7 +1531,5 @@ describe('ad_manager_ima', function()
     content.disableFlashAds = false;
     ima.loadMetadata(content, {}, {});
     expect(ima.disableFlashAds).to.be(false);
-
-    google.ima.settings.setDisableFlashAds = function(){};
   });
 });
