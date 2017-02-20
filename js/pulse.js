@@ -11,7 +11,12 @@
         function log() {
             var args = Array.prototype.slice.call(arguments);
             if(OO.Pulse) {
-                OO.Pulse.Utils.log.apply(null, args);
+                if(OO.Pulse.Utils.logTagged) {
+                    args.unshift([{ tag: 'v4', color: '#69388E' }]);
+                    OO.Pulse.Utils.logTagged.apply(null, args);
+                } else {
+                    OO.Pulse.Utils.log.apply(null, args);
+                }
             } else {
                 args.unshift('OO.Pulse: ');
                 console.log.apply(window.console, args);
@@ -118,9 +123,9 @@
             };
 
 
-            function mergeCommaSeparatedListsBase(a, b){
-                if(a){
-                    if(b){
+            function mergeCommaSeparatedListsBase(a, b) {
+                if(a) {
+                    if(b) {
                         return a +"," + b;
                     }    else{
                         return a;
@@ -130,22 +135,22 @@
                 }
             }
 
-            function removeUndefinedElements(args){
+            function removeUndefinedElements(args) {
                 var retArray = [];
-                for(var i = 0, n = args.length; i < n; i++){
-                    if(args[i]){
+                for(var i = 0, n = args.length; i < n; i++) {
+                    if(args[i]) {
                         retArray.push(args[i]);
                     }
                 }
                 return retArray;
             }
 
-            function mergeCommaSeparatedStrings(){
+            function mergeCommaSeparatedStrings() {
                 //Remove the undefined element first
                 var params = removeUndefinedElements(arguments);
                 var argsLentgh = params.length;
 
-                switch (argsLentgh){
+                switch (argsLentgh) {
                     case 0:
                         return undefined;
                         break;
@@ -161,7 +166,7 @@
                 }
             }
 
-            function getInsertionPointTypeFromAdPosition(position){
+            function getInsertionPointTypeFromAdPosition(position) {
                 var PREROLL = 1;
                 var INSTREAM = 2;
                 var POSTROLL = 4;
@@ -173,47 +178,47 @@
 
                 insertPointFiler.push("onPause");
 
-                if(pos & PREROLL){
+                if(pos & PREROLL) {
                     insertPointFiler.push("onBeforeContent");
                 }
-                if(pos & INSTREAM){
+                if(pos & INSTREAM) {
                     insertPointFiler.push("playbackPosition");
                     insertPointFiler.push("playbackTime");
                 }
-                if(pos & POSTROLL){
+                if(pos & POSTROLL) {
                     insertPointFiler.push("onContentEnd");
                 }
 
                 return (insertPointFiler.length !== 0 ? insertPointFiler.join(",") : null);
             }
 
-            function safeSplit(array, char){
-                if(array){
+            function safeSplit(array, char) {
+                if(array) {
                     return array.split(char)
                 } else {
                     return null;
                 }
             }
 
-            function safeMap(array, func){
-                if(array){
+            function safeMap(array, func) {
+                if(array) {
                     return array.map(func);
                 } else {
                     return null;
                 }
             }
 
-            function cleanObject(obj){
-                for (var prop in obj){
-                    if(obj[prop] === null || obj[prop] === undefined){
+            function cleanObject(obj) {
+                for (var prop in obj) {
+                    if(obj[prop] === null || obj[prop] === undefined) {
                         delete  obj[prop];
                     }
                 }
             }
 
-            function safeParseInt(string){
+            function safeParseInt(string) {
                 var val = parseInt(string);
-                if(!val || isNaN(val)){
+                if(!val || isNaN(val)) {
                     return null;
                 } else {
                     return val;
@@ -252,9 +257,9 @@
                 return '0,0,0';
             }
 
-            function getByPriority(){
-                for (var i = 0,n = arguments.length; i < n; i++){
-                    if(arguments[i] || arguments[i] === ""){
+            function getByPriority() {
+                for (var i = 0,n = arguments.length; i < n; i++) {
+                    if(arguments[i] || arguments[i] === "") {
                         return arguments[i];
                     }
                 }
@@ -262,32 +267,32 @@
                 return null;
             }
 
-            function getProtocolFromPulseHost(host){
-                if(host.indexOf("https") === 0){ //Then it starts with https
+            function getProtocolFromPulseHost(host) {
+                if(host.indexOf("https") === 0) { //Then it starts with https
                     return "https://"
                 } else {
                     return "http://"
                 }
             }
 
-            function getPulseAccount(host){
+            function getPulseAccount(host) {
                 var regEx = /(?:https?:\/\/)?(.*)\/?/;
                 return host.match(regEx)[1];
 
             }
 
-            function getCategoryFromPlayerLevelShares(shares){
+            function getCategoryFromPlayerLevelShares(shares) {
                 //Category is the first element
                 var values = safeSplit(shares,",");
-                if(values && values.length !== 0){
+                if(values && values.length !== 0) {
                     return values[0];
                 }
             }
 
-            function getContentPartnerFromPlayerLevelShares(shares){
+            function getContentPartnerFromPlayerLevelShares(shares) {
                 //Category is the first element
                 var values = safeSplit(shares,",");
-                if(values && values.length === 2){
+                if(values && values.length === 2) {
                     return values[1];
                 }
             }
@@ -349,20 +354,24 @@
                 pulse_account_name = getPulseAccount(this._pulseHost);
 
                 // Load the Pulse SDK if not already included
-                if(!OO.Pulse){
+                if(!OO.Pulse) {
+                    log('Pulse SDK not present; loading latest ..');
                     adModuleState = AD_MODULE_STATE.LOADING;
                     amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, _.bind(function(success) {
                         adModuleState = success ? AD_MODULE_STATE.READY : AD_MODULE_STATE.FAILED;
                         if(!success && podStarted) {
+                            log('Failed to load Pulse SDK');
                             // Stop the ad pod previously started by playAd()
                             amc.notifyPodEnded(podStarted);
                         } else if(isWaitingForPrerolls) {
+                            log('Pulse SDK loaded, trying to play prerolls ..');
                             _onInitialPlay.call(this);
                         }
                     }, this));
                 } else {
+                    log('Using Pulse SDK present on page');
                     adModuleState = AD_MODULE_STATE.READY;
-                    if(isWaitingForPrerolls){
+                    if(isWaitingForPrerolls) {
                         _onInitialPlay.call(this);
                     }
                 }
@@ -385,11 +394,13 @@
                 forcedSiteId = undefined;
                 if(adManagerMetadata.pulse_force_site_id) {
                     forcedSiteId = adManagerMetadata.pulse_force_site_id;
+                    log('Forcing site id: ', forcedSiteId);
                 }
 
                 previewAdId = undefined;
                 if(adManagerMetadata.pulse_preview) {
                     previewAdId = adManagerMetadata.pulse_preview;
+                    log('Ad preview for id ', previewAdId);
                 }
 
 
@@ -453,7 +464,7 @@
                 this._requestSettings.maxLinearBreakDuration = parseInt(adManagerMetadata.pulse_max_linear_break_duration ||
                     backlotBaseMetadata.pulse_max_linear_break_duration);
 
-                if(isNaN(this._requestSettings.maxLinearBreakDuration)){
+                if(isNaN(this._requestSettings.maxLinearBreakDuration)) {
                     this._requestSettings.maxLinearBreakDuration = null;
                 }
 
@@ -479,7 +490,8 @@
                             backlotBaseMetadata.pulse_insertion_point_filter), ",");
                 }
                 //If pulse_override_metadata is true, the integration metadata will be given priority over the backlot ad set and custom metadata
-                if(adManagerMetadata.pulse_override_metadata){
+                if(adManagerMetadata.pulse_override_metadata) {
+                    log('Overriding Backlot metadata with page-level parameters');
                     this._contentMetadata.flags =
                         safeSplit(getByPriority(adManagerMetadata.pulse_flags,
                             backlotBaseMetadata.pulse_flags,
@@ -504,10 +516,8 @@
                         adManagerMetadata.playerLevelTags), ",");
                 }
 
-                enableDebugMode = false;
-                if(adManagerMetadata.pulse_debug === true) {
-                    enableDebugMode = true;
-                }
+                // Don't disable debug if it's already enabled but pulse_debug parameter is not present
+                enableDebugMode = adManagerMetadata.pulse_debug || OO.Pulse.debug;
 
                 //Due to some SDK bugs?, remove all the undefined or null properties from the request objects
                 cleanObject(this._contentMetadata);
@@ -524,7 +534,7 @@
                 //return [ ];
             };
 
-            function makePlaceholderAd(type,position){
+            function makePlaceholderAd(type,position) {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
                 return new amc.Ad({
@@ -539,20 +549,20 @@
 
 
             //When the overlay shoule be removed
-            function onOverlayFinished(){
+            function onOverlayFinished() {
                 clearTimeout(overlayTimer);
                 amc.notifyNonlinearAdEnded(currentOverlayAd.id);
                 currentOverlayAd = null;
             }
 
             //
-            function startOverlayCountdown(){
+            function startOverlayCountdown() {
                 lastOverlayAdStart = Date.now();
                 overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
             }
 
             //Called when the overlay is displayed
-            function onOverlayShown(){
+            function onOverlayShown() {
                 if(currentOverlayAd) {
                     overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
                     adPlayer.overlayAdShown(currentOverlayAd.ad);
@@ -561,8 +571,8 @@
             }
 
             //Save the current display time of the overlay so it can be resumed later
-            function overlayPause(){
-                if(currentOverlayAd){
+            function overlayPause() {
+                if(currentOverlayAd) {
                     overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
                     clearTimeout(overlayTimer);
                 }
@@ -573,14 +583,13 @@
              * @param v4ad
              */
             this.playAd = function(v4ad) {
-
-                if (v4ad === null){
+                if (v4ad === null) {
                     return;
                 }
 
                 switch(adModuleState) {
                     case AD_MODULE_STATE.UNINITIALIZED:
-                        log('Ooyala plugin: playAd() called with unexpected state UNINITIALIZED');
+                        log('playAd() called with unexpected state UNINITIALIZED');
                         break;
                     case AD_MODULE_STATE.LOADING:
                         // Waiting for SDK load to finish; do nothing
@@ -589,17 +598,18 @@
                         // All good, do nothing here
                         break;
                     case AD_MODULE_STATE.FAILED:
+                        log('Aborting ad break as SDK failed to load');
                         // SDK failed to load due to timeout or other issues; stop placeholder ad pod                
                         amc.notifyPodEnded(v4ad.id);
                         return;
                     default:
                         // ??
-                        log('Ooyala plugin: playAd() called with unexpected state ' + adModuleState);
+                        log('playAd() called with unexpected state ' + adModuleState);
                         return;
                 }
 
-                if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY){
-                    if(contentPaused){
+                if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY) {
+                    if(contentPaused) {
                         currentPauseAd = v4ad;
                     } else {
                         currentOverlayAd = v4ad;
@@ -609,7 +619,7 @@
                     amc.showNonlinearAdCloseButton();
 
                     // Assume the ad was loaded
-                    if(!contentPaused){
+                    if(!contentPaused) {
                         onOverlayShown();
                     }
                     return;
@@ -620,7 +630,7 @@
                 this._isInPlayAd = true;
                 overlayPause();
 
-                if(adPlayer){
+                if(adPlayer) {
                     adPlayer.contentPaused();
                 }
 
@@ -628,7 +638,7 @@
                     this._mustExitAdMode = false;
                     this.notifyAdPodEnded();
 
-                    if(adPlayer){
+                    if(adPlayer) {
                         adPlayer.contentStarted();
                     }
 
@@ -646,7 +656,7 @@
                 if(params.code === "skipped") {
                     adPlayer.skipButtonClicked();
                 } else {
-                    if(session){
+                    if(session) {
                         session.stopAdBreak();
                     }
                 }
@@ -663,7 +673,7 @@
              * @param ad v4 ad
              */
             this.pauseAd = function(ad) {
-                if(adPlayer){
+                if(adPlayer) {
                     adPlayer.pause();
                 }
 
@@ -674,7 +684,7 @@
              * @param ad
              */
             this.resumeAd = function(ad) {
-                if(adPlayer){
+                if(adPlayer) {
                     adPlayer.play();
                 }
             };
@@ -692,9 +702,9 @@
                     if (clickThroughURL) {
                         this.openClickThrough(clickThroughURL);
                     }
-                } else if (this._currentOverlayAd){
+                } else if (this._currentOverlayAd) {
                     adPlayer.overlayAdClicked(this._currentOverlayAd);
-                } else if (this._currentPauseAd){
+                } else if (this._currentPauseAd) {
                     //TODO
                 }
             };
@@ -707,7 +717,7 @@
              */
             this.destroy = function() {
                 // Stop any running ads
-                if(adPlayer){
+                if(adPlayer) {
                     adPlayer.destroy();
                 }
             };
@@ -723,7 +733,7 @@
 
             var _onContentPause = function () {
                 contentPaused = true;
-                if(adPlayer){
+                if(adPlayer) {
                     adPlayer.contentPaused();
                 }
             };
@@ -732,24 +742,24 @@
             var _onContentResume = function () {
                 contentPaused = false;
 
-                if(currentPauseAd){
+                if(currentPauseAd) {
                     amc.notifyNonlinearAdEnded(currentPauseAd.id);
                     currentPauseAd = null;
                 }
-                if(adPlayer){
+                if(adPlayer) {
                     adPlayer.contentStarted();
                 }
             };
 
 
-            this.notifyAdPodStarted = function(id, adCount){
+            this.notifyAdPodStarted = function(id, adCount) {
                 if(!podStarted) {
                     podStarted = id;
                 }
                 amc.notifyPodStarted(podStarted, adCount);
             };
 
-            this.notifyAdPodEnded = function(){
+            this.notifyAdPodEnded = function() {
                 var podEndedId = podStarted;
                 podStarted = null;
                 amc.notifyPodEnded(podEndedId);
@@ -758,9 +768,9 @@
             this.startContentPlayback = function() {
                 isWaitingForPrerolls = false;
 
-                if(isInAdMode){
+                if(isInAdMode) {
                     this.notifyAdPodEnded();
-                    if(adPlayer){
+                    if(adPlayer) {
                         adPlayer.contentStarted();
                     }
 
@@ -782,12 +792,12 @@
                     setTimeout(playPlaceholder,1);
                 }
 
-                if(this.ui.useSingleVideoElement && !this._isControllingVideo){
+                if(this.ui.useSingleVideoElement && !this._isControllingVideo) {
                     waitingForContentPause = true;
 
                 }
 
-                if(isInAdMode || (isWaitingForPrerolls && ! this.ui.useSingleVideoElement)){
+                if(isInAdMode || (isWaitingForPrerolls && ! this.ui.useSingleVideoElement)) {
                     return true;
                 }
                 return false;
@@ -798,7 +808,7 @@
              * @param pulseOverlayAd
              */
             this.showOverlayAd = function (pulseOverlayAd) {
-                if (currentOverlayAd){
+                if (currentOverlayAd) {
                     onOverlayFinished();
                 }
 
@@ -837,9 +847,9 @@
                 amc.adManagerDoneControllingAds();
             };
 
-            this.openClickThrough = function(url){
+            this.openClickThrough = function(url) {
                 window.open(url);
-                if(adPlayer){
+                if(adPlayer) {
                     adPlayer.adClickThroughOpened();
                 }
             };
@@ -847,27 +857,26 @@
             var playPlaceholder = _.bind(function () {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
-                amc.forceAdToPlay(this.name,
-                    {placeholder: true }
-                    , amc.ADTYPE.LINEAR_VIDEO, streams)
+                amc.forceAdToPlay(
+                    this.name,
+                    { placeholder: true },
+                    amc.ADTYPE.LINEAR_VIDEO,
+                    streams
+                );
             }, this);
 
 
-            var _onMainVideoTimeUpdate = _.bind(function (event,playheadTime, duration){
+            var _onMainVideoTimeUpdate = _.bind(function (event,playheadTime, duration) {
                 if(adPlayer)
                     adPlayer.contentPositionChanged(playheadTime);
             }, this);
 
             var _onPlayStarted = function() {
-                //Hide a pause ad is there was any
-                //if(this._currentPauseAd){
-                //    amc.notifyNonlinearAdEnded(this_)
-                //}
                 if(adPlayer)
                     adPlayer.contentStarted();
             };
 
-            var _onContentFinished = function(){
+            var _onContentFinished = function() {
                 this._contentFinished = true;
                 if(adPlayer)
                     adPlayer.contentFinished();
@@ -879,7 +888,7 @@
                 _onSizeChanged();
             };
 
-            var _onReplay = function(){
+            var _onReplay = function() {
                 this._contentFinished = false;
                 _onInitialPlay.call(this);
             };
@@ -888,23 +897,20 @@
                 if(adPlayer) {
                     adPlayer.resize(-1,
                         -1, isFullscreen);
-                    setTimeout(function(){
+                    setTimeout(function() {
                         adPlayer.resize(-1,
                             -1, isFullscreen);
                     },500);
                 }
             };
 
-            this.tryInitAdPlayer = function(){
+            this.tryInitAdPlayer = function() {
                 var flashVersion = getFlashVersion().split(',').shift();
 
                 if(this.ui && adModuleState === AD_MODULE_STATE.READY) {
                     if (!adPlayer) {
                         var renderingMode = flashVersion >=11 ? OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_FIRST : OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_ONLY;
-                        // If debug is already enabled, we don't want to disable it
-                        if(!OO.Pulse.debug && enableDebugMode) {
-                            OO.Pulse.debug = true;
-                        }
+                        OO.Pulse.debug = enableDebugMode;
                         OO.Pulse.setPulseHost(this._pulseHost, this._deviceContainer, this._persistentId);
                         adPlayer = OO.Pulse.createAdPlayer(amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0],
                             {
@@ -937,7 +943,7 @@
                 isWaitingForPrerolls = true;
                 amc.adManagerWillControlAds();
                 if(adModuleState === AD_MODULE_STATE.READY) {
-                    if(!adPlayer){
+                    if(!adPlayer) {
                         this.tryInitAdPlayer();
                     }
 
@@ -951,17 +957,17 @@
                 }
             };
 
-            var _onAdFinished = function(){
+            var _onAdFinished = function() {
                 amc.notifyLinearAdEnded(1);
                 enableAdScreenPointerEvents();
             };
 
-            var _onAdSkipped = function(){
+            var _onAdSkipped = function() {
                 amc.notifyLinearAdEnded(1);
                 enableAdScreenPointerEvents();
             };
 
-            var _onAdBreakFinished = function(){
+            var _onAdBreakFinished = function() {
                 this._currentAdBreak = null;
                 this.notifyAdPodEnded();
             };
@@ -976,11 +982,11 @@
             var _onAdClicked = function (event,eventData) {
                 this.videoControllerWrapper.togglePlayPause();
             };
-            var _onAdPaused = function(event,metadata){
+            var _onAdPaused = function(event,metadata) {
                 this.videoControllerWrapper.raisePauseEvent();
             };
 
-            var _onAdPlaying = function(event,metadata){
+            var _onAdPlaying = function(event,metadata) {
                 this.videoControllerWrapper.raisePlayingEvent();
             };
 
@@ -999,9 +1005,10 @@
             var _onAdStarted = function(event, eventData) {
                 this._currentAd = eventData.ad;
 
-                //
+                // If we're playing a VPAID, don't let the player eat the pointer events
                 var selectedMediaFile = this._currentAd.getMediaFiles()[0];
                 if(selectedMediaFile.apiFramework && selectedMediaFile.apiFramework === 'VPAID') {
+                    log('Playing VPAID ad; disabling pointer events on player');
                     disableAdScreenPointerEvents();
                 }
 
@@ -1009,7 +1016,7 @@
                 var skipOffset = this._currentAd.getSkipOffset();
                 var name = null;
 
-                if(this._showAdTitle){
+                if(this._showAdTitle) {
                     name = this._currentAd.getCoreAd().title;
                 }
 
@@ -1118,7 +1125,7 @@
          * @method PulseVideoWrapper#sharedElementGive
          */
         this.sharedElementGive = function() {
-            setTimeout(function(){
+            setTimeout(function() {
                 _adManager.sharedVideoElement.style.display = "block";
                 _adManager.sharedVideoElement.play();
             }, 100);
@@ -1198,7 +1205,7 @@
         };
 
 
-        this.togglePlayPause = function(){
+        this.togglePlayPause = function() {
             if(this.isPlaying)
                 this.pause();
             else
@@ -1272,7 +1279,7 @@
          * @param {object} css The css to apply in key value pairs
          */
         this.applyCss = function(css) {
-            if(_adManager.sharedVideoElement){
+            if(_adManager.sharedVideoElement) {
                 $(_adManager.sharedVideoElement).css(css);
             }
         };
