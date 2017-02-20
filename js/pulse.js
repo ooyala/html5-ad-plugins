@@ -299,6 +299,8 @@
 
             var updateAdScreenPointerEventsEnabled = (function() {
                 var adScreens = document.getElementsByClassName('oo-ad-screen');
+                var skinClickLayers = document.getElementsByClassName('oo-player-skin-plugins-click-layer');
+
                 if(adScreens.length === 0) {
                     if(!this.adScreenPointerEventsEnabled && !this.adScreenIntervalId) {
                         this.adScreenIntervalId = setInterval((function() {
@@ -317,7 +319,13 @@
                         this.adScreenIntervalId = undefined;
                     }
 
-                    adScreens[0].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
+                    for(var i = 0; i < adScreens.length; ++i) {
+                        adScreens[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';                        
+                    }
+                    
+                    for(var i = 0; i < skinClickLayers.length; ++i) {
+                        skinClickLayers[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
+                    }
                 }
             }).bind(this);
 
