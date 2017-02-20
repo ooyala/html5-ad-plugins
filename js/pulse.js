@@ -760,15 +760,16 @@
 
             var _onAdFinished = function(){
                 amc.notifyLinearAdEnded(1);
+                enableAdScreenPointerEvents();
             };
 
             var _onAdSkipped = function(){
                 amc.notifyLinearAdEnded(1);
+                enableAdScreenPointerEvents();
             };
 
             var _onAdBreakFinished = function(){
                 this._currentAdBreak = null;
-                enableAdScreenPointerEvents();
                 this.notifyAdPodEnded();
             };
 
@@ -776,7 +777,6 @@
                 adPlayer.resize(-1,
                     -1, isFullscreen);
                 this._currentAdBreak = eventData.adBreak;
-                disableAdScreenPointerEvents();
                 this.notifyAdPodStarted(this._adBreakId,this._currentAdBreak.getPlayableAdsTotal());
             };
 
@@ -806,6 +806,12 @@
             var _onAdStarted = function(event, eventData) {
                 this._currentAd = eventData.ad;
 
+                //
+                var selectedMediaFile = this._currentAd.getMediaFiles()[0];
+                if(selectedMediaFile.apiFramework && selectedMediaFile.apiFramework === 'VPAID') {
+                    disableAdScreenPointerEvents();
+                }
+
                 var clickThroughURL =  this._currentAd.getClickthroughURL();
                 var skipOffset = this._currentAd.getSkipOffset();
                 var name = null;
@@ -816,17 +822,17 @@
 
                 amc.focusAdVideo();
 
-                amc.notifyLinearAdStarted(1,
-                    {duration: this._currentAd.getCoreAd().creatives[0].duration,
-                        name: name,
-                        indexInPod: eventData.adPosition,
-                        skippable:this._currentAd.isSkippable(),
-                        hasClickUrl: clickThroughURL ? true : false});
+                amc.notifyLinearAdStarted(1, {
+                    duration: this._currentAd.getCoreAd().creatives[0].duration,
+                    name: name,
+                    indexInPod: eventData.adPosition,
+                    skippable:this._currentAd.isSkippable(),
+                    hasClickUrl: clickThroughURL ? true : false
+                });
 
                 if(this._currentAd.isSkippable()) {
                     amc.showSkipVideoAdButton(true, skipOffset.toString());
-                }
-                else {
+                } else {
                     amc.showSkipVideoAdButton(false);
                 }
                 adPlayer.resize(-1,
