@@ -63,7 +63,9 @@ google =
     {
       setPlayerVersion : function() {},
       setPlayerType : function() {},
-      setVpaidMode : function() {}
+      setVpaidMode : function() {},
+      setLocale : function() {},
+      setDisableFlashAds : function() {},
     },
     AdsManagerLoadedEvent :
     {
@@ -145,6 +147,11 @@ google =
           }
           return google.ima.adManagerInstance;
         }
+      };
+      this.getSettings = function() {
+        return {
+          setAutoPlayAdBreaks: function() {}
+        };
       };
       this.addEventListener = function(event, callback)
       {

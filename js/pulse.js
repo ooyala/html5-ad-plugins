@@ -1,15 +1,30 @@
 /*
  * Pulse ad player ad manager
- *
- * version 1.0
  */
 
 (function(_, $)
 {
-
     var pulseAdManagers = {};
 
+
     OO.Ads.manager(function(_, $) {
+        function log() {
+            var args = Array.prototype.slice.call(arguments);
+            if(OO.Pulse) {
+                OO.Pulse.Utils.log.apply(null, args);
+            } else {
+                args.unshift('OO.Pulse: ');
+                console.log.apply(window.console, args);
+            }
+        }
+
+        var AD_MODULE_STATE = {
+            UNINITIALIZED: 'uninitialized',
+            LOADING: 'loading',
+            READY: 'ready',
+            FAILED: 'failed'
+        };
+
         /**
          * @class PulseAdManager
          * @classDesc The Pulse Ad Manager class.
@@ -30,13 +45,20 @@
             var isInAdMode = false;
             var waitingForContentPause = false;
             var podStarted = null;
+            var contentPaused =false;
+            var currentOverlayAd = null;
+            var overlayTimer = null;
+            var lastOverlayAdStart = 0;
+            var currentPauseAd = null;
+            var overlayTimeLeftMillis = 0;
             var isFullscreen = false;
             var adPlayer = null; // pulse ad player
             var showAdTitle = false;
             var preferredRenderingMode = null;
             var amc  = null;
             var pulseSDKUrl = "/proxy/pulse-sdk-html5/2.1/latest.min.js";
-            var adModuleJsReady = false;
+            var adModuleState = AD_MODULE_STATE.UNINITIALIZED;
+            var enableDebugMode = false;
             var pluginCallbacks = {
 
             };
@@ -56,6 +78,8 @@
 
                 // Add any player event listeners now
                 amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
+                amc.addPlayerListener(amc.EVENTS.PAUSED, _.bind(_onContentPause, this));
+                amc.addPlayerListener(amc.EVENTS.RESUME, _.bind(_onContentResume, this));
                 amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(_onInitialPlay, this));
                 amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(_onPlayStarted, this));
                 amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(_onContentFinished, this));
@@ -66,19 +90,32 @@
 
             this.getAdPlayer = function() {
                 return adPlayer;
-            }
+            };
 
             /**
              * Called by the AMF when the UI is ready.
              */
             this.registerUi = function() {
                 this.ui = amc.ui;
+                //Set the CSS overlay so it's responsive
+
+                style = document.createElement('style');
+                var css = '.oo-ad-overlay-image { width:100% !important}' +
+                    ' .oo-ad-overlay {  margin:auto !important}';
+
+                style.type = 'text/css';
+                if (style.styleSheet) {
+                    style.styleSheet.cssText = css;
+                } else {
+                    style.appendChild(document.createTextNode(css));
+                }
+                document.getElementsByTagName('head')[0].appendChild(style);
 
                 if (amc.ui.useSingleVideoElement && !this.sharedVideoElement && amc.ui.ooyalaVideoElement[0] &&
                     (amc.ui.ooyalaVideoElement[0].className === "video")) {
                     this.sharedVideoElement = this.ui.ooyalaVideoElement[0];
                 }
-            }
+            };
 
 
             function mergeCommaSeparatedListsBase(a, b){
@@ -94,7 +131,7 @@
             }
 
             function removeUndefinedElements(args){
-                var retArray = []
+                var retArray = [];
                 for(var i = 0, n = args.length; i < n; i++){
                     if(args[i]){
                         retArray.push(args[i]);
@@ -131,6 +168,10 @@
 
                 var pos = parseInt(position);
                 var insertPointFiler = [];
+
+                //Always add pause ads
+
+                insertPointFiler.push("onPause");
 
                 if(pos & PREROLL){
                     insertPointFiler.push("onBeforeContent");
@@ -307,16 +348,20 @@
                 protocol = getProtocolFromPulseHost(this._pulseHost);
                 pulse_account_name = getPulseAccount(this._pulseHost);
 
-                //Load the Pulse SDK if not already included
+                // Load the Pulse SDK if not already included
                 if(!OO.Pulse){
+                    adModuleState = AD_MODULE_STATE.LOADING;
                     amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, _.bind(function(success) {
-                        adModuleJsReady = success;
-                        if(isWaitingForPrerolls){
+                        adModuleState = success ? AD_MODULE_STATE.READY : AD_MODULE_STATE.FAILED;
+                        if(!success && podStarted) {
+                            // Stop the ad pod previously started by playAd()
+                            amc.notifyPodEnded(podStarted);
+                        } else if(isWaitingForPrerolls) {
                             _onInitialPlay.call(this);
                         }
                     }, this));
                 } else {
-                    adModuleJsReady = true;
+                    adModuleState = AD_MODULE_STATE.READY;
                     if(isWaitingForPrerolls){
                         _onInitialPlay.call(this);
                     }
@@ -459,6 +504,11 @@
                         adManagerMetadata.playerLevelTags), ",");
                 }
 
+                enableDebugMode = false;
+                if(adManagerMetadata.pulse_debug === true) {
+                    enableDebugMode = true;
+                }
+
                 //Due to some SDK bugs?, remove all the undefined or null properties from the request objects
                 cleanObject(this._contentMetadata);
                 cleanObject(this._requestSettings);
@@ -488,39 +538,106 @@
             }
 
 
+            //When the overlay shoule be removed
+            function onOverlayFinished(){
+                clearTimeout(overlayTimer);
+                amc.notifyNonlinearAdEnded(currentOverlayAd.id);
+                currentOverlayAd = null;
+            }
+
+            //
+            function startOverlayCountdown(){
+                lastOverlayAdStart = Date.now();
+                overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
+            }
+
+            //Called when the overlay is displayed
+            function onOverlayShown(){
+                if(currentOverlayAd) {
+                    overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
+                    adPlayer.overlayAdShown(currentOverlayAd.ad);
+                    startOverlayCountdown();
+                }
+            }
+
+            //Save the current display time of the overlay so it can be resumed later
+            function overlayPause(){
+                if(currentOverlayAd){
+                    overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
+                    clearTimeout(overlayTimer);
+                }
+            }
+
             /**
              * Mandatory method. Called by the AMF when an ad play has been requested
              * @param v4ad
              */
             this.playAd = function(v4ad) {
 
-                //If the SDK is not loaded, tell the AMC our placeholder ad is finished
-                if(!adModuleJsReady){
-                    amc.notifyPodEnded(v4ad.id);
+                if (v4ad === null){
                     return;
                 }
 
-                podStarted = v4ad.id;
+                switch(adModuleState) {
+                    case AD_MODULE_STATE.UNINITIALIZED:
+                        log('Ooyala plugin: playAd() called with unexpected state UNINITIALIZED');
+                        break;
+                    case AD_MODULE_STATE.LOADING:
+                        // Waiting for SDK load to finish; do nothing
+                        break;
+                    case AD_MODULE_STATE.READY:
+                        // All good, do nothing here
+                        break;
+                    case AD_MODULE_STATE.FAILED:
+                        // SDK failed to load due to timeout or other issues; stop placeholder ad pod                
+                        amc.notifyPodEnded(v4ad.id);
+                        return;
+                    default:
+                        // ??
+                        log('Ooyala plugin: playAd() called with unexpected state ' + adModuleState);
+                        return;
+                }
+
+                if(v4ad.adType === amc.ADTYPE.NONLINEAR_OVERLAY){
+                    if(contentPaused){
+                        currentPauseAd = v4ad;
+                    } else {
+                        currentOverlayAd = v4ad;
+                    }
+
+                    amc.sendURLToLoadAndPlayNonLinearAd(v4ad.ad, v4ad.id, v4ad.ad.getResourceURL());
+                    amc.showNonlinearAdCloseButton();
+
+                    // Assume the ad was loaded
+                    if(!contentPaused){
+                        onOverlayShown();
+                    }
+                    return;
+                }
+
                 isInAdMode = true;
+                podStarted = v4ad.id;
                 this._isInPlayAd = true;
+                overlayPause();
 
                 if(adPlayer){
                     adPlayer.contentPaused();
                 }
 
-                if(this._mustExitAdMode){
+                if(this._mustExitAdMode) {
                     this._mustExitAdMode = false;
                     this.notifyAdPodEnded();
 
                     if(adPlayer){
                         adPlayer.contentStarted();
                     }
+
                     amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED, _onMainVideoTimeUpdate);
                 }
             };
 
             /**
-             * When an ad is camceled
+             * When an ad is canceled
              * @param ad v4ad
              * @param params error code
              */
@@ -533,6 +650,12 @@
                         session.stopAdBreak();
                     }
                 }
+            };
+
+            this.cancelOverlay = function (v4ad) {
+                adPlayer.overlayAdClosed(v4ad.ad);
+                clearTimeout(overlayTimer);
+                currentOverlayAd = null;
             };
 
             /**
@@ -554,7 +677,6 @@
                 if(adPlayer){
                     adPlayer.play();
                 }
-
             };
 
             /**
@@ -565,9 +687,15 @@
              * @public
              */
             this.playerClicked = function(amcAd, showPage) {
-                var clickThroughURL = this._currentAd.getClickthroughURL();
-                if(clickThroughURL){
-                    this.openClickThrough(clickThroughURL);
+                if(this._currentAd) {
+                    var clickThroughURL = this._currentAd.getClickthroughURL();
+                    if (clickThroughURL) {
+                        this.openClickThrough(clickThroughURL);
+                    }
+                } else if (this._currentOverlayAd){
+                    adPlayer.overlayAdClicked(this._currentOverlayAd);
+                } else if (this._currentPauseAd){
+                    //TODO
                 }
             };
 
@@ -587,24 +715,45 @@
             this.registerVideoControllerWrapper = function(videoPlugin)
             {
                 this.videoControllerWrapper = videoPlugin;
-            }
+            };
 
             var _onContentChanged = function() {
                 //Not needed rn
             };
+
+            var _onContentPause = function () {
+                contentPaused = true;
+                if(adPlayer){
+                    adPlayer.contentPaused();
+                }
+            };
+
+
+            var _onContentResume = function () {
+                contentPaused = false;
+
+                if(currentPauseAd){
+                    amc.notifyNonlinearAdEnded(currentPauseAd.id);
+                    currentPauseAd = null;
+                }
+                if(adPlayer){
+                    adPlayer.contentStarted();
+                }
+            };
+
 
             this.notifyAdPodStarted = function(id, adCount){
                 if(!podStarted) {
                     podStarted = id;
                 }
                 amc.notifyPodStarted(podStarted, adCount);
-            }
+            };
 
             this.notifyAdPodEnded = function(){
                 var podEndedId = podStarted;
                 podStarted = null;
                 amc.notifyPodEnded(podEndedId);
-            }
+            };
 
             this.startContentPlayback = function() {
                 isWaitingForPrerolls = false;
@@ -644,6 +793,42 @@
                 return false;
             };
 
+            /**
+             * Called by the Pulse SDK when an overlay should shown
+             * @param pulseOverlayAd
+             */
+            this.showOverlayAd = function (pulseOverlayAd) {
+                if (currentOverlayAd){
+                    onOverlayFinished();
+                }
+
+                this._currentOverlayAd = pulseOverlayAd;
+
+                amc.forceAdToPlay(this.name,
+                    pulseOverlayAd,
+                    amc.ADTYPE.NONLINEAR_OVERLAY,
+                    [pulseOverlayAd.getResourceURL()]);
+            };
+
+            /**
+             * Called by the Pulse SDK to show a pause ad.
+             * @param pulsePauseAd
+             */
+            this.showPauseAd = function (pulsePauseAd) {
+                /* not implemented */
+            };
+
+            //This method is called by the V4 AMF
+            this.showOverlay = function () {
+                if (currentOverlayAd) {
+                    startOverlayCountdown();
+                }
+            };
+
+            this.hideOverlay = function (ad) {
+                overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
+            };
+
             this.illegalOperationOccurred = function(msg) {
 
             };
@@ -657,8 +842,8 @@
                 if(adPlayer){
                     adPlayer.adClickThroughOpened();
                 }
+            };
 
-            }
             var playPlaceholder = _.bind(function () {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
@@ -674,6 +859,10 @@
             }, this);
 
             var _onPlayStarted = function() {
+                //Hide a pause ad is there was any
+                //if(this._currentPauseAd){
+                //    amc.notifyNonlinearAdEnded(this_)
+                //}
                 if(adPlayer)
                     adPlayer.contentStarted();
             };
@@ -709,10 +898,13 @@
             this.tryInitAdPlayer = function(){
                 var flashVersion = getFlashVersion().split(',').shift();
 
-                if(this.ui && adModuleJsReady) {
-
+                if(this.ui && adModuleState === AD_MODULE_STATE.READY) {
                     if (!adPlayer) {
                         var renderingMode = flashVersion >=11 ? OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_FIRST : OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_ONLY;
+                        // If debug is already enabled, we don't want to disable it
+                        if(!OO.Pulse.debug && enableDebugMode) {
+                            OO.Pulse.debug = true;
+                        }
                         OO.Pulse.setPulseHost(this._pulseHost, this._deviceContainer, this._persistentId);
                         adPlayer = OO.Pulse.createAdPlayer(amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0],
                             {
@@ -721,16 +913,17 @@
                             }, this.sharedVideoElement);
 
                         //We register all the event listeners we will need
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _.bind(_onAdBreakStarted,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _.bind(_onAdFinished,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _.bind(_onAdSkipped,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _.bind(_onAdStarted,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _.bind(_onAdTimeUpdate,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying,this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted,this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _.bind(_onAdBreakStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _.bind(_onAdFinished, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _.bind(_onAdSkipped, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _.bind(_onAdStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _.bind(_onAdTimeUpdate, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
 
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
@@ -743,15 +936,15 @@
             var _onInitialPlay = function() {
                 isWaitingForPrerolls = true;
                 amc.adManagerWillControlAds();
-                if(adModuleJsReady){
+                if(adModuleState === AD_MODULE_STATE.READY) {
                     if(!adPlayer){
                         this.tryInitAdPlayer();
                     }
 
                     session = OO.Pulse.createSession(this._contentMetadata, this._requestSettings);
 
-                    //We start the Pulse session
-                    if(adPlayer){
+                    // We start the Pulse session
+                    if(adPlayer) {
                         adPlayer.startSession(session, this);
                     }
 
@@ -785,17 +978,17 @@
             };
             var _onAdPaused = function(event,metadata){
                 this.videoControllerWrapper.raisePauseEvent();
-            }
+            };
 
             var _onAdPlaying = function(event,metadata){
                 this.videoControllerWrapper.raisePlayingEvent();
-            }
+            };
 
             var _onSessionStarted = function(event, metadata) {
                 if(pluginCallbacks && pluginCallbacks.onSessionCreated) {
                     pluginCallbacks.onSessionCreated(session);
                 }
-            }
+            };
 
             var _onAdTimeUpdate = function(event, eventData) {
 
@@ -838,7 +1031,12 @@
                 adPlayer.resize(-1,
                     -1, isFullscreen);
             };
-        }
+
+            var _onOverlayShown = function(event, metadata) {
+                /* Impression is tracked by the SDK before this 
+                   handler is triggered, so nothing needs to be done here */
+            };
+        };
         return new PulseAdManager();
     });
 

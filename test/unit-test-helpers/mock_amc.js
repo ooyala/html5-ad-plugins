@@ -92,6 +92,7 @@ fake_amc = function() {
   this.notifyNonlinearAdStarted = function() {};
   this.notifyNonlinearAdEnded = function() {};
   this.hidePlayerUi = function() {};
+  this.focusAdVideo = function() {};
 
   this.adManagerWillControlAds = function() {};
   this.adManagerDoneControllingAds = function() {};

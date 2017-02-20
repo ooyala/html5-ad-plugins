@@ -115,6 +115,10 @@ describe('ad_manager_ima', function()
         imaVideoPluginFactory = plugin;
       }
     };
+
+    OO.getLocale = function() {
+      return "en";
+    }
     delete require.cache[require.resolve(SRC_ROOT + "google_ima.js")];
     require(SRC_ROOT + "google_ima.js");
   }, this));
@@ -415,6 +419,55 @@ describe('ad_manager_ima', function()
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     expect(notified).to.be(true);
+  });
+
+  it('AMC Integration, Ad Rules: Non-linear ad should trigger forceAdToPlay on AMC', function()
+  {
+    var triggered = 0;
+    google.ima.linearAds = false;
+    amc.forceAdToPlay = function(name, metadata, type)
+    {
+      triggered += 1;
+    };
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.AD_BREAK_READY);
+    am.publishEvent(google.ima.AdEvent.Type.LOADED);
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(triggered).to.be(1);
+  });
+
+  it('AMC Integration, Ad Rules: Existing non-linear ad should be cancelled when next ad break is ready', function()
+  {
+    google.ima.linearAds = false;
+    amc.playAd = function (ad) {
+      ima.playAd(ad);
+    };
+    amc.forceAdToPlay = function(name, metadata, type) {
+      var adData = {
+        "adManager": name,
+        "adType": type,
+        "ad": metadata,
+        "streams": {},
+        "position": -1 // play immediately
+      };
+      var adPod = new amc.Ad(adData);
+      adPod.id = "adId";
+      amc.timeline.push(adPod);
+      amc.playAd(amc.timeline.shift());
+    };
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.AD_BREAK_READY);
+    am.publishEvent(google.ima.AdEvent.Type.LOADED);
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    // These should exist when overlay is being displayed
+    expect(ima.currentAMCAdPod).to.be.ok();
+    expect(ima.currentIMAAd).to.be.ok();
+    am.publishEvent(google.ima.AdEvent.Type.AD_BREAK_READY);
+    // These should be removed when next ad break is ready
+    expect(ima.currentAMCAdPod).to.not.be.ok();
+    expect(ima.currentIMAAd).to.not.be.ok();
   });
 
   // AMC integration/IMA Event tests
@@ -1507,5 +1560,25 @@ describe('ad_manager_ima', function()
     expect(ima.sharedVideoElement).to.not.be(null);
     videoWrapper.destroy();
     expect(ima.sharedVideoElement).to.be(null);
+  });
+
+  it('Test disabling flash ads flag', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+
+    ima.loadMetadata({}, {}, {});
+    expect(ima.disableFlashAds).to.be(false);
+
+    var content =
+    {
+      disableFlashAds:true
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.disableFlashAds).to.be(true);
+
+    content.disableFlashAds = false;
+    ima.loadMetadata(content, {}, {});
+    expect(ima.disableFlashAds).to.be(false);
   });
 });

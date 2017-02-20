@@ -3061,4 +3061,95 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
     expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
   });
+
+  it('VAST: Wrapper ad requests should not end ad pod until non-wrapper ad is found', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    var podEnded = false;
+    amc.notifyPodEnded = function(id) {
+      podEnded = true;
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+
+    // Wrapper ads could be visualized as a tree with parents and children,
+    // but in this case, it looks more like a linked list:
+    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
+    var parentDepthOneId = "wrapper-parent-1";
+    var parentDepthTwoId = "wrapper-parent-2";
+    var leafId = "6654644"; // Ad ID from linearXML file
+
+    var adRequestAd = amc.timeline[0];
+    expect(adRequestAd.adType).to.be(amc.ADTYPE.AD_REQUEST);
+    vastAdManager.playAd(adRequestAd);
+
+    // need to fake wrapper ajax calls
+    expect(podEnded).to.be(false);
+    vastAdManager.onVastResponse(vast_ad, wrapper1XML);
+    expect(podEnded).to.be(false);
+    vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
+    expect(podEnded).to.be(false);
+    vastAdManager.onVastResponse(vast_ad, linearXML, parentDepthTwoId);
+    expect(podEnded).to.be(true);
+  });
+
+  it('VAST: Wrapper ad requests should end ad pod on vast error', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    var podEnded = false;
+    amc.notifyPodEnded = function(id) {
+      podEnded = true;
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+
+    // Wrapper ads could be visualized as a tree with parents and children,
+    // but in this case, it looks more like a linked list:
+    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
+    var parentDepthOneId = "wrapper-parent-1";
+    var parentDepthTwoId = "wrapper-parent-2";
+    var leafId = "6654644"; // Ad ID from linearXML file
+
+    var adRequestAd = amc.timeline[0];
+    expect(adRequestAd.adType).to.be(amc.ADTYPE.AD_REQUEST);
+    vastAdManager.playAd(adRequestAd);
+
+    // need to fake wrapper ajax calls
+    expect(podEnded).to.be(false);
+    vastAdManager.onVastResponse(vast_ad, wrapper1XML);
+    expect(podEnded).to.be(false);
+    vastAdManager.onVastResponse(vast_ad,'asdf');
+    expect(errorType.length > 0).to.be(true);
+    expect(podEnded).to.be(true);
+  });
 });
