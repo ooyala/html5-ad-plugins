@@ -930,6 +930,7 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _.bind(_onAdBreakStarted, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _.bind(_onAdFinished, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_ERROR, _.bind(_onAdError, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _.bind(_onAdSkipped, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _.bind(_onAdStarted, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _.bind(_onAdTimeUpdate, this));
@@ -967,6 +968,10 @@
 
             var _onAdFinished = function() {
                 amc.notifyLinearAdEnded(1);
+                enableAdScreenPointerEvents();
+            };
+
+            var _onAdError = function() {
                 enableAdScreenPointerEvents();
             };
 
