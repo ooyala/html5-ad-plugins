@@ -355,7 +355,7 @@
                 var protocol, pulse_account_name;
                 this._pulseHost = adManagerMetadata.pulse_host || backlotBaseMetadata.pulse_host || backlotBaseMetadata.vpHost || adManagerMetadata.vpDomain;
 
-                if(!!this._pulseHost === false) {
+                if(!this._pulseHost) {
                     log('No Pulse hostname found in plugin parameters or media metadata; will not attempt to show Pulse ads');
                     return;
                 }
@@ -887,14 +887,16 @@
             }, this);
 
             var _onPlayStarted = function() {
-                if(adPlayer)
+                if(adPlayer) {
                     adPlayer.contentStarted();
+                }
             };
 
             var _onContentFinished = function() {
                 this._contentFinished = true;
-                if(adPlayer)
+                if(adPlayer) {
                     adPlayer.contentFinished();
+                }
             };
 
             var _onFullscreenChanged = function(event, shouldEnterFullscreen)
