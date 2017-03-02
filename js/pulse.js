@@ -351,15 +351,22 @@
              * @param {object} movieMetadata Metadata for the main video
              */
             this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata) {
-                this.ready = true;
-                preferredRenderingMode = adManagerMetadata.pulse_rendering_mode || "HTML5_FIRST" ;
+                preferredRenderingMode = adManagerMetadata.pulse_rendering_mode || "HTML5_FIRST";
                 var protocol, pulse_account_name;
-                this._pulseHost = adManagerMetadata.pulse_host ||backlotBaseMetadata.pulse_host || backlotBaseMetadata.vpHost|| adManagerMetadata.vpDomain;
+                this._pulseHost = adManagerMetadata.pulse_host || backlotBaseMetadata.pulse_host || backlotBaseMetadata.vpHost || adManagerMetadata.vpDomain;
+
+                if(!this._pulseHost) {
+                    log('No Pulse hostname found in plugin parameters or media metadata; will not attempt to show Pulse ads');
+                    return;
+                }
+
+                this.ready = true;
                 this._deviceContainer = adManagerMetadata.pulse_device_container;
                 this._persistentId = adManagerMetadata.pulse_persistent_id;
                 showAdTitle = adManagerMetadata.pulse_show_ad_title || false;
                 protocol = getProtocolFromPulseHost(this._pulseHost);
                 pulse_account_name = getPulseAccount(this._pulseHost);
+
 
                 // Load the Pulse SDK if not already included
                 if(!OO.Pulse) {
@@ -377,7 +384,7 @@
                         }
                     }, this));
                 } else {
-                    log('Using Pulse SDK present on page');
+                    log('Using Pulse SDK already present on page');
                     adModuleState = AD_MODULE_STATE.READY;
                     if(isWaitingForPrerolls) {
                         _onInitialPlay.call(this);
@@ -880,14 +887,16 @@
             }, this);
 
             var _onPlayStarted = function() {
-                if(adPlayer)
+                if(adPlayer) {
                     adPlayer.contentStarted();
+                }
             };
 
             var _onContentFinished = function() {
                 this._contentFinished = true;
-                if(adPlayer)
+                if(adPlayer) {
                     adPlayer.contentFinished();
+                }
             };
 
             var _onFullscreenChanged = function(event, shouldEnterFullscreen)
@@ -949,6 +958,11 @@
 
 
             var _onInitialPlay = function() {
+                if(!this.ready) {
+                    // Do not wait for prerolls, do not control ads
+                    return;
+                }
+
                 isWaitingForPrerolls = true;
                 amc.adManagerWillControlAds();
                 if(adModuleState === AD_MODULE_STATE.READY) {
