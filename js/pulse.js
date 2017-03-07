@@ -467,6 +467,11 @@
 
                 this._contentMetadata.customParameters = adManagerMetadata.pulse_custom_parameters;
 
+                this._contentMetadata.contentProviderInformation = {
+                    embedCode: movieMetadata.embed_code,
+                    pcode: movieMetadata.asset_pcode                    
+                };
+
                 this._requestSettings.vptpTicketData =  adManagerMetadata.pulse_vptp_data;
 
                 this._requestSettings.maxLinearBreakDuration = parseInt(adManagerMetadata.pulse_max_linear_break_duration ||
