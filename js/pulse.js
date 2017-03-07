@@ -536,8 +536,7 @@
                         adManagerMetadata.playerLevelTags), ",");
                 }
 
-                // Don't disable debug if it's already enabled but pulse_debug parameter is not present
-                enableDebugMode = adManagerMetadata.pulse_debug || OO.Pulse.debug;
+                enableDebugMode = adManagerMetadata.pulse_debug;
 
                 //Due to some SDK bugs?, remove all the undefined or null properties from the request objects
                 cleanObject(this._contentMetadata);
@@ -932,7 +931,7 @@
                 if(this.ui && adModuleState === AD_MODULE_STATE.READY) {
                     if (!adPlayer) {
                         var renderingMode = flashVersion >=11 ? OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_FIRST : OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_ONLY;
-                        OO.Pulse.debug = enableDebugMode;
+                        OO.Pulse.debug = enableDebugMode || OO.Pulse.debug;
                         OO.Pulse.setPulseHost(this._pulseHost, this._deviceContainer, this._persistentId);
                         adPlayer = OO.Pulse.createAdPlayer(amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0],
                             {
