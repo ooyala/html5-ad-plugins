@@ -172,24 +172,25 @@
                 var POSTROLL = 4;
 
                 var pos = parseInt(position);
-                var insertPointFiler = [];
-
-                //Always add pause ads
-
-                insertPointFiler.push("onPause");
+                var insertionPointFilter = [ ];
 
                 if(pos & PREROLL) {
-                    insertPointFiler.push("onBeforeContent");
+                    insertionPointFilter.push("onBeforeContent");
                 }
                 if(pos & INSTREAM) {
-                    insertPointFiler.push("playbackPosition");
-                    insertPointFiler.push("playbackTime");
+                    insertionPointFilter.push("playbackPosition");
+                    insertionPointFilter.push("playbackTime");
                 }
                 if(pos & POSTROLL) {
-                    insertPointFiler.push("onContentEnd");
+                    insertionPointFilter.push("onContentEnd");
                 }
 
-                return (insertPointFiler.length !== 0 ? insertPointFiler.join(",") : null);
+                if(insertionPointFilter.length > 0) {
+                    // Always add pause ads
+                    insertionPointFilter.push("onPause");
+                }
+
+                return (insertionPointFilter.length !== 0 ? insertionPointFilter.join(",") : null);
             }
 
             function safeSplit(array, char) {
