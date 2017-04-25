@@ -908,7 +908,9 @@
             };
 
             var _onDeviceIdSet = function(event, deviceId) {
-                this._persistentId = deviceId
+                if (!this._persistentId) {
+                  this._persistentId = deviceId;
+                }
             };
 
             var _onFullscreenChanged = function(event, shouldEnterFullscreen)
