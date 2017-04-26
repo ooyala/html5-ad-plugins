@@ -91,6 +91,7 @@
                 amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _.bind(_onSizeChanged, this));
                 amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
                 amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(_onReplay, this));
+                amc.addPlayerListener(amc.EVENTS.DEVICE_ID_SET, _.bind(_onDeviceIdSet, this));
             };
 
             this.getAdPlayer = function() {
@@ -363,7 +364,9 @@
 
                 this.ready = true;
                 this._deviceContainer = adManagerMetadata.pulse_device_container;
-                this._persistentId = adManagerMetadata.pulse_persistent_id;
+                if (adManagerMetadata.pulse_persistent_id) {
+                  this._persistentId = adManagerMetadata.pulse_persistent_id;
+                }
                 showAdTitle = adManagerMetadata.pulse_show_ad_title || false;
                 protocol = getProtocolFromPulseHost(this._pulseHost);
                 pulse_account_name = getPulseAccount(this._pulseHost);
@@ -901,6 +904,12 @@
                 this._contentFinished = true;
                 if(adPlayer) {
                     adPlayer.contentFinished();
+                }
+            };
+
+            var _onDeviceIdSet = function(event, deviceId) {
+                if (!this._persistentId) {
+                  this._persistentId = deviceId;
                 }
             };
 
