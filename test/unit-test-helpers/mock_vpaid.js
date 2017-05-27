@@ -132,7 +132,7 @@ global.vpaidAd = {
         tracking: { creativeView: [] }
       }],
       error: '',
-      impression: [ { url: 'impressionUrl' } ],
+      impression: ['impressionUrl'],
       linear: {
         mediaFiles: {
           url: 'http://file.js',
@@ -142,9 +142,9 @@ global.vpaidAd = {
           tracking: []
         },
         skipOffset: null,
-        clickTracking: '',
-        clickThrough: '',
-        customClick: ''
+        clickTracking: ['clickTrackingUrl1', 'clickTrackingUrl2'],
+        clickThrough: 'clickThroughUrl',
+        customClick: 'customClickUrl'
       },
       nonLinear: {
         mediaFiles: {
@@ -155,20 +155,19 @@ global.vpaidAd = {
           tracking: []
         },
         skipOffset: null,
-        clickTracking: '',
-        clickThrough: '',
-        customClick: ''
+        clickTracking: ['nonLinearClickTrackingUrl1', 'nonLinearClickTrackingUrl2'],
+        clickThrough: 'clickThroughUrl',
+        customClick: 'customClickUrl'
       },
       title: 'title',
-      tracking: [
-        { event: 'start', url: 'startUrl' },
-        { event: 'firstQuartile', url: 'firstQuartileUrl' },
-        { event: 'complete', url: 'completeUrl' },
-        { event: 'mute', url: 'muteUrl' }
-      ],
+      tracking: {
+        start: ['startUrl'],
+        firstQuartile: ['firstQuartileUrl'],
+        complete: ['completeUrl'],
+        mute: ['muteUrl']
+      },
       type: 'linearVideo',
       version: '2.0',
-      videoClickTracking: { clickTracking: '', clickThrough: '', customClick: '' } 
     },
     fallbackAd: null,
     positionSeconds: 0,
