@@ -248,7 +248,7 @@ require("../html5-common/js/utils/utils.js");
         //we have timed out
         //This may be a fault of the plugin or SDK. More investigation is required
         if (_.isFinite(_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT])
-            && _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0)
+            && (_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0 || this.runningUnitTests))
         {
           this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
         }
@@ -592,11 +592,12 @@ require("../html5-common/js/utils/utils.js");
           _throwError("AMC canceling ad that is not the current one playing.");
         }
         OO.log("GOOGLE IMA: ad got canceled by AMC");
-        _endCurrentAd(true);
+
         if (!_usingAdRules)
         {
           _IMA_SDK_destroyAdsManager();
         }
+        _endCurrentAd(true);
       };
 
       /**
@@ -770,6 +771,8 @@ require("../html5-common/js/utils/utils.js");
         {
           _IMAAdsLoader.contentComplete();
         }
+        this.currentIMAAd = null;
+        this.currentNonLinearIMAAd = null;
 
         this.adsRequested = false;
       });
@@ -1017,7 +1020,16 @@ require("../html5-common/js/utils/utils.js");
         _resetAdsState();
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
-        this.adsRequestTimeoutRef = _.delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
+
+        if (this.runningUnitTests && this.maxAdsRequestTimeout === 0)
+        {
+          _adsRequestTimeout();
+        }
+        else
+        {
+          this.adsRequestTimeoutRef = _.delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
+        }
+
         OO.log("adsRequestTimeout: " + this.maxAdsRequestTimeout);
         this.adsRequested = true;
       });
@@ -1166,8 +1178,6 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_destroyAdsManager = privateMember(function()
       {
-        this.currentIMAAd = null;
-        this.currentNonLinearIMAAd = null;
         if (_IMAAdsManager)
         {
           _IMAAdsManager.stop();
@@ -1287,6 +1297,8 @@ require("../html5-common/js/utils/utils.js");
         {
           //destroy the current ad manager is there is one
           _IMA_SDK_destroyAdsManager();
+          this.currentIMAAd = null;
+          this.currentNonLinearIMAAd = null;
         }
         // https://developers.google.com/interactive-media-ads/docs/sdks/googlehtml5_apis_v3#ima.AdsRenderingSettings
         var adsSettings = new google.ima.AdsRenderingSettings();

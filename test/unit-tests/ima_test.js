@@ -118,7 +118,7 @@ describe('ad_manager_ima', function()
 
     OO.getLocale = function() {
       return "en";
-    }
+    };
     delete require.cache[require.resolve(SRC_ROOT + "google_ima.js")];
     require(SRC_ROOT + "google_ima.js");
   }, this));
@@ -147,6 +147,10 @@ describe('ad_manager_ima', function()
     if(google.ima.adManagerInstance)
     {
       google.ima.adManagerInstance.destroy();
+    }
+    if(google.ima.adLoaderInstance)
+    {
+      google.ima.adLoaderInstance.destroy();
     }
     google.ima.resetDefaultValues();
     notifyEventName = null;
@@ -605,7 +609,6 @@ describe('ad_manager_ima', function()
     var doneControllingAdsNotified = false;
     var linearAdEndedNotified = false;
     var podEndedNotified = false;
-    initAndPlay(true, vci);
     amc.notifyLinearAdEnded = function()
     {
       linearAdEndedNotified = true;
@@ -623,6 +626,10 @@ describe('ad_manager_ima', function()
         doneControllingAdsNotified = true;
       }
     };
+
+    initAndPlay(true, vci);
+    expect(_.isObject(google.ima.adLoaderInstance)).to.be(true);
+
     ima.playAd(
     {
       ad : {}
@@ -630,9 +637,47 @@ describe('ad_manager_ima', function()
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdErrorEvent.Type.AD_ERROR);
+    //Errors from IMA SDK should not destroy the ad loader
+    expect(_.isObject(google.ima.adLoaderInstance)).to.be(true);
     expect(linearAdEndedNotified).to.be(true);
     expect(podEndedNotified).to.be(true);
     expect(doneControllingAdsNotified).to.be(true);
+  });
+
+  it('IMA plugin destroys ad loader if plugin times out loading ad rules ad', function()
+  {
+    google.ima.delayAdRequest = true;
+    amc.adManagerSettings = {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = 0;
+    initAndPlay(true, vci);
+    expect(ima.maxAdsRequestTimeout).to.be(0);
+    expect(_.isObject(google.ima.adLoaderInstance)).to.be(false);
+  });
+
+  it('IMA plugin ends current ad pod and destroys ad loader if plugin times out loading non-ad rules ad', function()
+  {
+    google.ima.delayAdRequest = true;
+
+    var podEndedNotified = false;
+
+    amc.notifyPodEnded = function()
+    {
+      podEndedNotified = true;
+    };
+
+    amc.adManagerSettings = {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = 0;
+    initAndPlay(false, vci);
+    ima.playAd(
+    {
+      ad : {
+        tag_url : "https://blah",
+        position_type : NON_AD_RULES_POSITION_TYPE
+      }
+    });
+    expect(ima.maxAdsRequestTimeout).to.be(0);
+    expect(_.isObject(google.ima.adLoaderInstance)).to.be(false);
+    expect(podEndedNotified).to.be(true);
   });
 
   it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc of a forced ad playback with streams set if a preroll', function()
