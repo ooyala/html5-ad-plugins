@@ -25,7 +25,8 @@ fake_amc = function() {
     FULLSCREEN_CHANGED :        "fullscreenChanged",
     VOLUME_CHANGED :            "volumeChanged",
     AD_VOLUME_CHANGED :         "adVolumeChanged",
-    MAIN_CONTENT_IN_FOCUS :     "mainContentInFocus"
+    MAIN_CONTENT_IN_FOCUS :     "mainContentInFocus",
+    REPLAY_REQUESTED :          "replayRequested"
   };
   this.AD_SETTINGS  = {
     PAUSE_AD_ON_CLICK: "pauseAdOnClick",
