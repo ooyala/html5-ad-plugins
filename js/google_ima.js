@@ -742,6 +742,7 @@ require("../html5-common/js/utils/utils.js");
         _resetAdsState();
         _resetPlayheadTracker();
         this.contentEnded = false;
+        this.adRulesLoadError = false;
         //In the case of ad rules, non of the ads are in the timeline
         //and we won't call initialPlayRequested again. So we manually call
         //to load the ads again. We don't care about preloading at this point.
@@ -749,7 +750,6 @@ require("../html5-common/js/utils/utils.js");
         {
           _trySetupAdsRequest();
         }
-        this.adRulesLoadError = false;
       });
 
       /**
@@ -1225,7 +1225,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _adsRequestTimeout = privateMember(function()
       {
-        OO.log("IMA Ad request timeout");
+        OO.log("IMA Ad request timed out");
         if (!this.adsReady)
         {
           _onImaAdError(OOYALA_IMA_PLUGIN_TIMEOUT);
