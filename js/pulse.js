@@ -997,6 +997,7 @@
             var _onAdFinished = function() {
                 amc.notifyLinearAdEnded(1);
                 enableAdScreenPointerEvents();
+                this._currentAd = null;
             };
 
             var _onAdError = function() {
@@ -1006,6 +1007,7 @@
             var _onAdSkipped = function() {
                 amc.notifyLinearAdEnded(1);
                 enableAdScreenPointerEvents();
+                this._currentAd = null;
             };
 
             var _onAdBreakFinished = function() {
