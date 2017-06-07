@@ -65,6 +65,7 @@ require("../html5-common/js/utils/utils.js");
       var OVERLAY_HEIGHT_PADDING = 50;
 
       var TIME_UPDATER_INTERVAL = 500;
+      var OOYALA_IMA_PLUGIN_TIMEOUT = "ooyalaImaPluginTimeout";
 
       /**
        * Helper function to make functions private to GoogleIMA variable for consistency
@@ -222,6 +223,7 @@ require("../html5-common/js/utils/utils.js");
           };
         var adRulesAd = _.find(metadata.all_ads, usesAdRulesCheck);
         _usingAdRules = !!adRulesAd;
+        this.adRulesLoadError = false;
 
         //only fill in the adTagUrl if it's ad rules. Otherwise wait till AMC gives the correct one.
         this.adTagUrl = null;
@@ -246,7 +248,7 @@ require("../html5-common/js/utils/utils.js");
         //we have timed out
         //This may be a fault of the plugin or SDK. More investigation is required
         if (_.isFinite(_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT])
-            && _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0)
+            && (_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0 || this.runningUnitTests))
         {
           this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
         }
@@ -298,6 +300,11 @@ require("../html5-common/js/utils/utils.js");
         if (!_IMAAdDisplayContainer)
         {
           _IMA_SDK_tryInitAdContainer();
+        }
+        else if (!_IMAAdsLoader)
+        {
+          //The Ads Loader might have been destroyed if we had timed out.
+          IMA_SDK_tryCreateAdsLoader();
         }
 
         this.metadataReady = true;
@@ -585,11 +592,12 @@ require("../html5-common/js/utils/utils.js");
           _throwError("AMC canceling ad that is not the current one playing.");
         }
         OO.log("GOOGLE IMA: ad got canceled by AMC");
-        _endCurrentAd(true);
+
         if (!_usingAdRules)
         {
           _IMA_SDK_destroyAdsManager();
         }
+        _endCurrentAd(true);
       };
 
       /**
@@ -725,10 +733,16 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onReplayRequested = privateMember(function()
       {
+        if (!_IMAAdsLoader)
+        {
+          //The Ads Loader might have been destroyed if we had timed out.
+          IMA_SDK_tryCreateAdsLoader();
+        }
         this.isReplay = true;
         _resetAdsState();
         _resetPlayheadTracker();
         this.contentEnded = false;
+        this.adRulesLoadError = false;
         //In the case of ad rules, non of the ads are in the timeline
         //and we won't call initialPlayRequested again. So we manually call
         //to load the ads again. We don't care about preloading at this point.
@@ -757,6 +771,8 @@ require("../html5-common/js/utils/utils.js");
         {
           _IMAAdsLoader.contentComplete();
         }
+        this.currentIMAAd = null;
+        this.currentNonLinearIMAAd = null;
 
         this.adsRequested = false;
       });
@@ -1004,7 +1020,16 @@ require("../html5-common/js/utils/utils.js");
         _resetAdsState();
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
-        this.adsRequestTimeoutRef = _.delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
+
+        if (this.runningUnitTests && this.maxAdsRequestTimeout === 0)
+        {
+          _adsRequestTimeout();
+        }
+        else
+        {
+          this.adsRequestTimeoutRef = _.delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
+        }
+
         OO.log("adsRequestTimeout: " + this.maxAdsRequestTimeout);
         this.adsRequested = true;
       });
@@ -1091,28 +1116,31 @@ require("../html5-common/js/utils/utils.js");
           _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
                                                                      this.sharedVideoElement);
 
-          _trySetAdManagerToReady();
+          IMA_SDK_tryCreateAdsLoader();
 
-          _IMA_SDK_createAdsLoader();
+          _trySetAdManagerToReady();
         }
       });
 
       /**
        * Tries to create an IMA SDK AdsLoader.  The AdsLoader notifies this ad manager when ad requests are completed.
        * @private
-       * @method GoogleIMA#_IMA_SDK_createAdsLoader
+       * @method GoogleIMA#IMA_SDK_tryCreateAdsLoader
        */
-      var _IMA_SDK_createAdsLoader = privateMember(function()
+      var IMA_SDK_tryCreateAdsLoader = privateMember(function()
       {
-        var adsManagerEvents = google.ima.AdsManagerLoadedEvent.Type;
-        var adErrorEvent = google.ima.AdErrorEvent.Type;
-        _IMA_SDK_destroyAdsLoader();
-        _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
-        // This will enable notifications whenever ad rules or VMAP ads are scheduled
-        // for playback, it has no effect on regular ads
-        _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(false);
-        _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
-        _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
+        if (_IMAAdDisplayContainer)
+        {
+          var adsManagerEvents = google.ima.AdsManagerLoadedEvent.Type;
+          var adErrorEvent = google.ima.AdErrorEvent.Type;
+          _IMA_SDK_destroyAdsLoader();
+          _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
+          // This will enable notifications whenever ad rules or VMAP ads are scheduled
+          // for playback, it has no effect on regular ads
+          _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(false);
+          _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
+          _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
+        }
       });
 
       /**
@@ -1150,8 +1178,6 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_destroyAdsManager = privateMember(function()
       {
-        this.currentIMAAd = null;
-        this.currentNonLinearIMAAd = null;
         if (_IMAAdsManager)
         {
           _IMAAdsManager.stop();
@@ -1199,9 +1225,10 @@ require("../html5-common/js/utils/utils.js");
        */
       var _adsRequestTimeout = privateMember(function()
       {
+        OO.log("IMA Ad request timed out");
         if (!this.adsReady)
         {
-          _onImaAdError(google.ima.AdEvent.Type.FAILED_TO_REQUEST_ADS);
+          _onImaAdError(OOYALA_IMA_PLUGIN_TIMEOUT);
         }
       });
 
@@ -1225,8 +1252,14 @@ require("../html5-common/js/utils/utils.js");
           _tryUndoSetupForAdRules();
         }
 
-        _endCurrentAd(true);
         _IMA_SDK_destroyAdsManager();
+
+        if (adError === OOYALA_IMA_PLUGIN_TIMEOUT) {
+          _IMA_SDK_destroyAdsLoader();
+        }
+
+        _endCurrentAd(true);
+
         //make sure we are showing the video in case it was hidden for whatever reason.
         if (adError)
         {
@@ -1264,6 +1297,8 @@ require("../html5-common/js/utils/utils.js");
         {
           //destroy the current ad manager is there is one
           _IMA_SDK_destroyAdsManager();
+          this.currentIMAAd = null;
+          this.currentNonLinearIMAAd = null;
         }
         // https://developers.google.com/interactive-media-ads/docs/sdks/googlehtml5_apis_v3#ima.AdsRenderingSettings
         var adsSettings = new google.ima.AdsRenderingSettings();

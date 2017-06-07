@@ -2,10 +2,14 @@ google =
 {
   ima :
   {
+    delayAdRequest: false,      //for unit test convenience,
+                                //normally a call to requestAds calls its callback immediately in this mock
     adManagerInstance : null,   //for unit test convenience
+    adLoaderInstance : null,    //for unit test convenience
     resetDefaultValues : function()
     {
       google.ima.linearAds = true;
+      google.ima.delayAdRequest = false;
     },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
@@ -82,6 +86,7 @@ google =
     },
     AdsLoader : function(container)
     {
+      google.ima.adLoaderInstance = this;
       var callbacks = {};
       var adsManagerLoadedEvent =
       {
@@ -161,12 +166,16 @@ google =
       this.requestAds = function()
       {
         //mock executes this callback immediately. Typically this does not occur in real world situations
-        if (typeof callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED] === "function")
+        if (typeof callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED] === "function" &&
+            !google.ima.delayAdRequest)
         {
           callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED](adsManagerLoadedEvent);
         }
       };
-      this.destroy = function() {};
+      this.destroy = function()
+      {
+        google.ima.adLoaderInstance = null;
+      };
     },
     AdsRequest : function() {},
     AdsRenderingSettings : function() {},
