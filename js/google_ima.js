@@ -147,7 +147,6 @@ require("../html5-common/js/utils/utils.js");
         this.hasPreroll = false;
 
         this.adPlaybackStarted = false;
-        this.vcPlayRequested = false;
         this.savedVolume = -1;
         this.showAdControls = false;
         this.useGoogleAdUI = false;
@@ -608,7 +607,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.pauseAd = function(ad)
       {
-        if (_IMAAdsManager)
+        if (_IMAAdsManager && this.adPlaybackStarted)
         {
           _IMAAdsManager.pause();
         }
@@ -622,52 +621,18 @@ require("../html5-common/js/utils/utils.js");
        */
       this.resumeAd = function(ad)
       {
-        if (_IMAAdsManager)
+        if (_IMAAdsManager && this.adPlaybackStarted)
         {
-          if(this.adPlaybackStarted)
+          //On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
+          //We want to force the video to reenter fullscreen and play
+          if (OO.isIphone && this.sharedVideoElement)
           {
-            //On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
-            //We want to force the video to reenter fullscreen and play
-            if (OO.isIphone && this.sharedVideoElement)
-            {
-              //resumeAd will only be called if we have exited fullscreen
-              //so this is safe to call
-              this.sharedVideoElement.webkitEnterFullscreen();
-              this.sharedVideoElement.play();
-            }
-            _IMAAdsManager.resume();
+            //resumeAd will only be called if we have exited fullscreen
+            //so this is safe to call
+            this.sharedVideoElement.webkitEnterFullscreen();
+            this.sharedVideoElement.play();
           }
-          else
-          {
-            _IMAAdsManager.start();
-            this.adPlaybackStarted = true;
-          }
-        }
-      };
-
-      this.requestPause = function()
-      {
-        if (this.adPlaybackStarted)
-        {
-          this.pauseAd();
-        }
-        else
-        {
-          //remove any play requests
-          this.vcPlayRequested = false;
-        }
-      };
-
-      this.requestPlay = function()
-      {
-        if (_IMAAdsManagerInitialized)
-        {
-          this.resumeAd();
-        }
-        else
-        {
-          //store the play command
-          this.vcPlayRequested = true;
+          _IMAAdsManager.resume();
         }
       };
 
@@ -722,7 +687,7 @@ require("../html5-common/js/utils/utils.js");
 
       this.adVideoFocused = function()
       {
-        this.resumeAd();
+        //Required for plugin
       };
 
       /**
@@ -831,11 +796,14 @@ require("../html5-common/js/utils/utils.js");
                 _endCurrentAd(true);
             }
             _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
+            // PBW-6610
+            // Traditionally we have relied on the LOADED ad event before calling adsManager.start.
+            // This may have worked accidentally.
+            // IMA Guides and the video suite inspector both call adsManager.start immediately after
+            // adsManager.init
+            // Furthermore, some VPAID ads do not fire LOADED event until adsManager.start is called
+            _IMAAdsManager.start();
             _IMAAdsManagerInitialized = true;
-            if(this.vcPlayRequested)
-            {
-              this.resumeAd();
-            }
             OO.log("tryInitadsManager successful: adsManager started")
           }
           catch (adError)
@@ -1529,12 +1497,9 @@ require("../html5-common/js/utils/utils.js");
             {
               _amc.focusAdVideo();
             }
-            else
-            {
-              this.resumeAd();
-            }
             break;
           case eventType.STARTED:
+            this.adPlaybackStarted = true;
             if(ad.isLinear())
             {
               _linearAdIsPlaying = true;
@@ -1582,6 +1547,7 @@ require("../html5-common/js/utils/utils.js");
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
+            this.adPlaybackStarted = false;
             if (this.videoControllerWrapper && (ad && ad.isLinear()))
             {
               _stopTimeUpdater();
@@ -2190,7 +2156,7 @@ require("../html5-common/js/utils/utils.js");
      */
     this.play = function()
     {
-      _ima.requestPlay();
+      _ima.resumeAd();
     };
 
     /**
@@ -2200,7 +2166,7 @@ require("../html5-common/js/utils/utils.js");
      */
     this.pause = function()
     {
-      _ima.requestPause();
+      _ima.pauseAd();
     };
 
     /**
