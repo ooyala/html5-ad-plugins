@@ -825,16 +825,11 @@ describe('ad_manager_ima', function()
     expect(podEndedNotified).to.be(1);
   });
 
-  it('AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element and notify IMA ad manager to start for a linear ad', function()
+  it('AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element for a linear ad', function()
   {
     var notified = false;
     initAndPlay(true, vci);
     var am = google.ima.adManagerInstance;
-    var started = false;
-    am.start = function()
-    {
-      started = true;
-    };
     amc.focusAdVideo = function()
     {
       notified = true;
@@ -847,26 +842,6 @@ describe('ad_manager_ima', function()
       });
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
     expect(notified).to.be(true);
-    expect(started).to.be(true);
-  });
-
-  it('AMC Integration, IMA Event: IMA LOADED event notifies IMA ad manager instance to start for a non-linear ad', function()
-  {
-    google.ima.linearAds = false;
-    initAndPlay(true, vci);
-    var am = google.ima.adManagerInstance;
-    var started = false;
-    am.start = function()
-    {
-      started = true;
-    };
-    ima.playAd(
-      {
-        id : "ad_1000",
-        ad : {}
-      });
-    am.publishEvent(google.ima.AdEvent.Type.LOADED);
-    expect(started).to.be(true);
   });
 
   it('AMC Integration, IMA Event: IMA STARTED event notifies amc of linear ad start for a linear ad', function()
@@ -1118,81 +1093,6 @@ describe('ad_manager_ima', function()
   });
 
   // Wrapper functionality tests
-  it('VTC Integration: Video wrapper play stores a play request if IMA is not initialized', function()
-  {
-    initialize(true);
-    createVideoWrapper(vci);
-    videoWrapper.play();
-    expect(ima.vcPlayRequested).to.be(true);
-  });
-
-  it('VTC Integration: Video wrapper pause removes a previous play request if IMA is not initialized', function()
-  {
-    initialize(true);
-    createVideoWrapper(vci);
-    videoWrapper.play();
-    expect(ima.vcPlayRequested).to.be(true);
-    videoWrapper.pause();
-    expect(ima.vcPlayRequested).to.be(false);
-  });
-
-  it('VTC Integration: Video wrapper play starts playback if IMA is initialized', function()
-  {
-    initAndPlay(true, vci);
-    var am = google.ima.adManagerInstance;
-    var started = false;
-    am.start = function()
-    {
-      started = true;
-    };
-    videoWrapper.play();
-    expect(ima.adPlaybackStarted).to.be(true);
-    expect(started).to.be(true);
-  });
-
-  it('VTC Integration: Playback starts immediately after IMA initialization if playback was requested by video wrapper before IMA is initialized', function()
-  {
-    initialize(true);
-    createVideoWrapper();
-    videoWrapper.play();
-    expect(ima.adPlaybackStarted).to.be(false);
-    play();
-    expect(ima.adPlaybackStarted).to.be(true);
-  });
-
-  it('VTC Integration: Video wrapper pause pauses playback, a play after will resume playback', function()
-  {
-    initAndPlay(true, vci);
-    var am = google.ima.adManagerInstance;
-    var started = false;
-    var playing = false;
-    var startCount = 0;
-    am.start = function()
-    {
-      started = true;
-      playing = true;
-      startCount++;
-    };
-    am.pause = function()
-    {
-      playing = false;
-    };
-    am.resume = function()
-    {
-      playing = true;
-    };
-    videoWrapper.play();
-    expect(ima.adPlaybackStarted).to.be(true);
-    expect(started).to.be(true);
-    expect(playing).to.be(true);
-    expect(startCount).to.be(1);
-    videoWrapper.pause();
-    expect(playing).to.be(false);
-    videoWrapper.play();
-    expect(playing).to.be(true);
-    //we want to make sure that IMA's resume is called and not another start
-    expect(startCount).to.be(1);
-  });
 
   it('VTC Integration: Video wrapper setVolume updates IMA with volume if ad started', function()
   {
@@ -1670,5 +1570,42 @@ describe('ad_manager_ima', function()
     content.disableFlashAds = false;
     ima.loadMetadata(content, {}, {});
     expect(ima.disableFlashAds).to.be(false);
+  });
+
+  it('IMA plugin ignores video wrapper play and pause events before ad is ready and after ad is complete', function()
+  {
+    var resumedCount = 0, pausedCount = 0;
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    am.resume = function() {
+      resumedCount++;
+    };
+    am.pause = function() {
+      pausedCount++;
+    };
+    ima.playAd(
+      {
+        id : "ad_1000",
+        ad : {}
+      });
+    expect(ima.adPlaybackStarted).to.be(false);
+    expect(pausedCount).to.be(0);
+    expect(resumedCount).to.be(0);
+    videoWrapper.play();
+    expect(resumedCount).to.be(0);
+    videoWrapper.pause();
+    expect(pausedCount).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(ima.adPlaybackStarted).to.be(true);
+    videoWrapper.pause();
+    expect(pausedCount).to.be(1);
+    videoWrapper.play();
+    expect(resumedCount).to.be(1);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    expect(ima.adPlaybackStarted).to.be(false);
+    videoWrapper.pause();
+    expect(pausedCount).to.be(1);
+    videoWrapper.play();
+    expect(resumedCount).to.be(1);
   });
 });
