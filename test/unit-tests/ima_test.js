@@ -1481,4 +1481,41 @@ describe('ad_manager_ima', function()
     ima.loadMetadata(content, {}, {});
     expect(ima.disableFlashAds).to.be(false);
   });
+
+  it('IMA plugin ignores video wrapper play and pause events before ad is ready and after ad is complete', function()
+  {
+    var resumedCount = 0, pausedCount = 0;
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    am.resume = function() {
+      resumedCount++;
+    };
+    am.pause = function() {
+      pausedCount++;
+    };
+    ima.playAd(
+      {
+        id : "ad_1000",
+        ad : {}
+      });
+    expect(ima.adPlaybackStarted).to.be(false);
+    expect(pausedCount).to.be(0);
+    expect(resumedCount).to.be(0);
+    videoWrapper.play();
+    expect(resumedCount).to.be(0);
+    videoWrapper.pause();
+    expect(pausedCount).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(ima.adPlaybackStarted).to.be(true);
+    videoWrapper.pause();
+    expect(pausedCount).to.be(1);
+    videoWrapper.play();
+    expect(resumedCount).to.be(1);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    expect(ima.adPlaybackStarted).to.be(false);
+    videoWrapper.pause();
+    expect(pausedCount).to.be(1);
+    videoWrapper.play();
+    expect(resumedCount).to.be(1);
+  });
 });

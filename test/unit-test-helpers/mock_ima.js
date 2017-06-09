@@ -91,6 +91,7 @@ google =
           {
             var mockAdManager = function()
             {
+              var canPublishEvents = false;
               var amCallbacks = {};
               var currentAd = null;
               this.init = function()
@@ -108,7 +109,12 @@ google =
               {
                 amCallbacks[event] = callback;
               };
-              this.start = function() {};
+              this.start = function() {
+                //Use the canPublishEvents flag to ensure that start
+                //gets called, otherwise publish events will fail,
+                //failing unit tests
+                canPublishEvents = true;
+              };
               this.stop = function() {};
               this.resume = function() {};
               this.pause = function() {};
@@ -122,7 +128,7 @@ google =
               };
               this.publishEvent = function(event)
               {      //convenience function for unit tests
-                if (typeof amCallbacks[event] === "function")
+                if (typeof amCallbacks[event] === "function" && canPublishEvents)
                 {
                   amCallbacks[event](
                   {
