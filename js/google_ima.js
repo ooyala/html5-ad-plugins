@@ -5,6 +5,7 @@
  */
 
 //TODO make amc ignore ad request timeout.
+require("./ima3.js");
 require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
@@ -101,7 +102,16 @@ require("../html5-common/js/utils/utils.js");
         _createAMCListeners();
         if (!this.runningUnitTests)
         {
-          _amc.loadAdModule(this.name, remoteModuleJs, _onSdkLoaded);
+          //if the ima sdk isn't bundled with the plugin then get the latest version.
+          if (!_isGoogleSDKValid())
+          {
+            _amc.loadAdModule(this.name, remoteModuleJs, _onSdkLoaded);
+          }
+          else
+          {
+            _amc.onAdManagerReady();
+            _onSdkLoaded(true);
+          }
         }
         else
         {
