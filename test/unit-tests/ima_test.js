@@ -1301,11 +1301,17 @@ describe('ad_manager_ima', function()
         if (eventName === vci.EVENTS.PLAYING)
         {
           playing = true;
+        } else if (eventName === vci.EVENTS.PAUSED) {
+          playing = false;
         }
       },
       EVENTS : vci.EVENTS
     });
     var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(playing).to.be(true);
+    am.publishEvent(google.ima.AdEvent.Type.PAUSED);
+    expect(playing).to.be(false);
     am.publishEvent(google.ima.AdEvent.Type.RESUMED);
     expect(playing).to.be(true);
   });
@@ -1324,6 +1330,7 @@ describe('ad_manager_ima', function()
       EVENTS : vci.EVENTS
     });
     var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
     expect(ended).to.be(true);
   });
@@ -1342,6 +1349,7 @@ describe('ad_manager_ima', function()
       EVENTS : vci.EVENTS
     });
     var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.SKIPPED);
     expect(ended).to.be(true);
   });
@@ -1360,6 +1368,7 @@ describe('ad_manager_ima', function()
       EVENTS : vci.EVENTS
     });
     var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.USER_CLOSE);
     expect(ended).to.be(true);
   });
@@ -1378,6 +1387,7 @@ describe('ad_manager_ima', function()
       EVENTS : vci.EVENTS
     });
     var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     am.publishEvent(google.ima.AdEvent.Type.PAUSED);
     expect(paused).to.be(true);
   });
@@ -1607,5 +1617,78 @@ describe('ad_manager_ima', function()
     expect(pausedCount).to.be(1);
     videoWrapper.play();
     expect(resumedCount).to.be(1);
+  });
+
+  it('IMA plugin ignores PAUSED and RESUMED IMA events before ad is ready and after ad is complete', function()
+  {
+    var resumedCount = 0, pausedCount = 0;
+    initAndPlay(true, {
+      notify : function(eventName, params)
+      {
+        switch(eventName) {
+          case vci.EVENTS.PAUSED:
+            pausedCount++;
+            break;
+          case vci.EVENTS.PLAYING:
+            resumedCount++;
+            break;
+        }
+      },
+      EVENTS : vci.EVENTS
+    });
+    var am = google.ima.adManagerInstance;
+    ima.playAd(
+      {
+        id : "ad_1000",
+        ad : {}
+      });
+    expect(ima.adPlaybackStarted).to.be(false);
+    expect(pausedCount).to.be(0);
+    expect(resumedCount).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.RESUMED);
+    expect(resumedCount).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.PAUSED);
+    expect(pausedCount).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    expect(resumedCount).to.be(1);
+    expect(ima.adPlaybackStarted).to.be(true);
+    am.publishEvent(google.ima.AdEvent.Type.PAUSED);
+    expect(pausedCount).to.be(1);
+    am.publishEvent(google.ima.AdEvent.Type.RESUMED);
+    expect(resumedCount).to.be(2);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    expect(ima.adPlaybackStarted).to.be(false);
+    am.publishEvent(google.ima.AdEvent.Type.PAUSED);
+    expect(pausedCount).to.be(1);
+    am.publishEvent(google.ima.AdEvent.Type.RESUMED);
+    expect(resumedCount).to.be(2);
+  });
+
+  it('IMA plugin ignores COMPLETE, USER_CLOSE and SKIPPED IMA events before ad is ready and after ad is complete', function()
+  {
+    var endedCount = 0;
+    initAndPlay(true, {
+      notify : function(eventName, params)
+      {
+        if (eventName === vci.EVENTS.ENDED)
+        {
+          endedCount++;
+        }
+      },
+      EVENTS : vci.EVENTS
+    });
+    var am = google.ima.adManagerInstance;
+    expect(endedCount).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    am.publishEvent(google.ima.AdEvent.Type.USER_CLOSE);
+    am.publishEvent(google.ima.AdEvent.Type.SKIPPED);
+    expect(endedCount).to.be(0);
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    expect(endedCount).to.be(1);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    am.publishEvent(google.ima.AdEvent.Type.USER_CLOSE);
+    am.publishEvent(google.ima.AdEvent.Type.SKIPPED);
+    expect(endedCount).to.be(1);
   });
 });
