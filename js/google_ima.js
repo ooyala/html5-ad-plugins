@@ -1480,9 +1480,15 @@ require("../html5-common/js/utils/utils.js");
        * Callback from IMA SDK for ad tracking events.
        * @private
        * @method GoogleIMA#_IMA_SDK_onAdEvent
+       * @param {object} adEvent The IMA ad event
        */
       var _IMA_SDK_onAdEvent = privateMember(function(adEvent)
       {
+        if (_ignoreWhenAdNotPlaying(adEvent))
+        {
+          OO.log("Ignoring IMA EVENT: ", adEvent.type, adEvent);
+          return;
+        }
         // Retrieve the ad from the event. Some events (e.g. ALL_ADS_COMPLETED)
         // don't have ad object associated.
         var eventType = google.ima.AdEvent.Type;
@@ -1619,6 +1625,36 @@ require("../html5-common/js/utils/utils.js");
           default:
             break;
         }
+      });
+
+      /**
+       * Checks to see if we should ignore certain IMA ad events if the ad
+       * is not currently playing (either completed or has not started).
+       * @private
+       * @method GoogleIMA#_ignoreWhenAdNotPlaying
+       * @param {object} adEvent The IMA ad event
+       */
+      var _ignoreWhenAdNotPlaying = privateMember(function(adEvent)
+      {
+        var eventType = google.ima.AdEvent.Type;
+        var ignoredEvents = [
+          // eventType.ALL_ADS_COMPLETED,
+          eventType.COMPLETE,
+          eventType.SKIPPED,
+          eventType.FIRST_QUARTILE,
+          // eventType.LOADED,
+          eventType.MIDPOINT,
+          eventType.PAUSED,
+          eventType.RESUMED,
+          // eventType.STARTED,
+          eventType.THIRD_QUARTILE,
+          // eventType.VOLUME_CHANGED,
+          // eventType.VOLUME_MUTED,
+          eventType.USER_CLOSE
+          // eventType.DURATION_CHANGE
+        ];
+
+        return !adEvent || (!this.adPlaybackStarted && _.contains(ignoredEvents, adEvent.type));
       });
 
       /**
