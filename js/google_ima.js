@@ -1226,19 +1226,21 @@ require("../html5-common/js/utils/utils.js");
           _IMA_SDK_destroyAdsLoader();
         }
 
-        _endCurrentAd(true);
-
         //make sure we are showing the video in case it was hidden for whatever reason.
         if (adError)
         {
           var errorString = "ERROR Google IMA";
 
+          //if this error came from the SDK
           if(adError.getError)
           {
+            _amc.onSdkAdEvent(this.name, google.ima.AdErrorEvent.Type,
+              adError.type, [adError]);
             errorString = "ERROR Google SDK: " + adError.getError();
           }
           else
           {
+            //else the error came from the plugin
             errorString = "ERROR Google IMA plugin: " + adError;
           }
 
@@ -1251,6 +1253,8 @@ require("../html5-common/js/utils/utils.js");
             OO.log(errorString);
           }
         }
+
+        _endCurrentAd(true);
       });
 
       /**
@@ -1261,6 +1265,10 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onAdRequestSuccess = privateMember(function(adsManagerLoadedEvent)
       {
+
+        _amc.onSdkAdEvent(this.name, google.ima.AdsManagerLoadedEvent.Type,
+          adsManagerLoadedEvent.type, [adsManagerLoadedEvent]);
+
         if (!_usingAdRules && _IMAAdsManager)
         {
           //destroy the current ad manager is there is one
@@ -1301,28 +1309,36 @@ require("../html5-common/js/utils/utils.js");
 
         var eventType = google.ima.AdEvent.Type;
         // Add listeners to the required events.
-        _IMAAdsManager.addEventListener(eventType.CLICK, _IMA_SDK_onAdClicked, false, this);
         _IMAAdsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, _onImaAdError, false, this);
-        _IMAAdsManager.addEventListener(google.ima.AdEvent.Type.AD_BREAK_READY, _IMA_SDK_onAdBreakReady);
-        _IMAAdsManager.addEventListener(eventType.CONTENT_PAUSE_REQUESTED, _IMA_SDK_pauseMainContent, false, this);
-        _IMAAdsManager.addEventListener(eventType.CONTENT_RESUME_REQUESTED, _IMA_SDK_resumeMainContent, false, this);
 
-        // Listen to any additional events, if necessary.
+        //Following is gathered from:
+        //https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdEvent.Type
         var imaAdEvents = [
+          eventType.AD_BREAK_READY,
+          eventType.AD_METADATA,
           eventType.ALL_ADS_COMPLETED,
+          eventType.CLICK,
           eventType.COMPLETE,
-          eventType.SKIPPED,
+          eventType.CONTENT_PAUSE_REQUESTED,
+          eventType.CONTENT_RESUME_REQUESTED,
+          eventType.DURATION_CHANGE,
           eventType.FIRST_QUARTILE,
+          eventType.IMPRESSION,
+          eventType.INTERACTION,
+          eventType.LINEAR_CHANGED,
           eventType.LOADED,
+          eventType.LOG,
           eventType.MIDPOINT,
           eventType.PAUSED,
           eventType.RESUMED,
+          eventType.SKIPPABLE_STATE_CHANGED,
+          eventType.SKIPPED,
           eventType.STARTED,
           eventType.THIRD_QUARTILE,
-          eventType.VOLUME_CHANGED,
-          eventType.VOLUME_MUTED,
           eventType.USER_CLOSE,
-          eventType.DURATION_CHANGE];
+          eventType.VOLUME_CHANGED,
+          eventType.VOLUME_MUTED
+        ];
 
         var addIMAEventListener =
           function(e)
@@ -1489,6 +1505,7 @@ require("../html5-common/js/utils/utils.js");
           OO.log("Ignoring IMA EVENT: ", adEvent.type, adEvent);
           return;
         }
+        _amc.onSdkAdEvent(this.name, google.ima.AdEvent.Type, adEvent.type, [adEvent]);
         // Retrieve the ad from the event. Some events (e.g. ALL_ADS_COMPLETED)
         // don't have ad object associated.
         var eventType = google.ima.AdEvent.Type;
@@ -1621,6 +1638,18 @@ require("../html5-common/js/utils/utils.js");
             {
               this.videoControllerWrapper.raiseDurationChange(this.getCurrentTime(), this.getDuration());
             }
+            break;
+          case eventType.AD_BREAK_READY:
+            _IMA_SDK_onAdBreakReady(adEvent);
+            break;
+          case eventType.CLICK:
+            _IMA_SDK_onAdClicked(adEvent);
+            break;
+          case eventType.CONTENT_PAUSE_REQUESTED:
+            _IMA_SDK_pauseMainContent(adEvent);
+            break;
+          case eventType.CONTENT_RESUME_REQUESTED:
+            _IMA_SDK_resumeMainContent(adEvent);
             break;
           default:
             break;
