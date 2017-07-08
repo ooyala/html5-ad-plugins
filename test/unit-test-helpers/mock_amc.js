@@ -103,5 +103,6 @@ fake_amc = function() {
   this.sendURLToLoadAndPlayNonLinearAd = function() {};
   this.showSkipVideoAdButton = function() {};
   this.showCompanion = function() {};
+  this.onSdkAdEvent = function() {};
   this.adManagerSettings = {};
 };

@@ -1691,4 +1691,152 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.SKIPPED);
     expect(endedCount).to.be(1);
   });
+
+  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad', function()
+  {
+    var called = 0;
+    var adPluginName = null;
+    var sdkAdEvent = null;
+    amc.onSdkAdEvent = function(name, adEvent) {
+      called++;
+      adPluginName = name;
+      sdkAdEvent = adEvent;
+    };
+
+    initialize(false);
+    play();
+    ima.playAd(amc.timeline[0]);
+    expect(ima.adsRequested).to.be(true);
+    expect(called).to.be(1);
+    expect(adPluginName).to.be(ima.name);
+    expect(_.isEmpty(sdkAdEvent)).to.be(false);
+  });
+
+  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad', function()
+  {
+    var called = 0;
+    var adPluginName = null;
+    var sdkAdEventType = null;
+    var sdkAdEvent = null;
+    var sdkAdEventParams = null;
+    amc.onSdkAdEvent = function(name, eventType, event, params) {
+      called++;
+      adPluginName = name;
+      sdkAdEventType = eventType;
+      sdkAdEvent = event;
+      sdkAdEventParams = params;
+    };
+
+    initialize(false);
+    play();
+    ima.playAd(amc.timeline[0]);
+    expect(ima.adsRequested).to.be(true);
+    expect(called).to.be(1);
+    expect(adPluginName).to.be(ima.name);
+    expect(sdkAdEventType).to.be(google.ima.AdsManagerLoadedEvent.Type);
+    expect(sdkAdEvent).to.be(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED);
+    expect(_.isEmpty(sdkAdEventParams)).to.be(false);
+  });
+
+  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for an ad rules ad', function()
+  {
+    var called = 0;
+    var adPluginName = null;
+    var sdkAdEventType = null;
+    var sdkAdEvent = null;
+    var sdkAdEventParams = null;
+    amc.onSdkAdEvent = function(name, eventType, event, params) {
+      called++;
+      adPluginName = name;
+      sdkAdEventType = eventType;
+      sdkAdEvent = event;
+      sdkAdEventParams = params;
+    };
+
+    initialize(true);
+    play();
+    expect(ima.adsRequested).to.be(true);
+    expect(called).to.be(1);
+    expect(adPluginName).to.be(ima.name);
+    expect(sdkAdEventType).to.be(google.ima.AdsManagerLoadedEvent.Type);
+    expect(sdkAdEvent).to.be(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED);
+    expect(_.isEmpty(sdkAdEventParams)).to.be(false);
+  });
+
+  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving an ad error from IMA SDK', function()
+  {
+    initAndPlay(true, vci);
+    var adPluginName = null;
+    var sdkAdEventType = null;
+    var sdkAdEvent = null;
+    var sdkAdEventParams = null;
+    amc.onSdkAdEvent = function(name, eventType, event, params) {
+      adPluginName = name;
+      sdkAdEventType = eventType;
+      sdkAdEvent = event;
+      sdkAdEventParams = params;
+    };
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(google.ima.AdErrorEvent.Type.AD_ERROR);
+    expect(adPluginName).to.be(ima.name);
+    expect(sdkAdEventType).to.be(google.ima.AdErrorEvent.Type);
+    expect(sdkAdEvent).to.be(google.ima.AdErrorEvent.Type.AD_ERROR);
+    expect(_.isEmpty(sdkAdEventParams)).to.be(false);
+  });
+
+  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving an ad event from IMA SDK', function()
+  {
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    var eventType = google.ima.AdEvent.Type;
+    var imaAdEvents = [
+      eventType.CONTENT_PAUSE_REQUESTED,
+      eventType.AD_BREAK_READY,
+      eventType.AD_METADATA,
+      eventType.LOADED,
+      eventType.STARTED,  //started required for some of the following events
+      eventType.CLICK,
+      eventType.DURATION_CHANGE,
+      eventType.FIRST_QUARTILE,
+      eventType.IMPRESSION,
+      eventType.INTERACTION,
+      eventType.LINEAR_CHANGED,
+      eventType.LOG,
+      eventType.MIDPOINT,
+      eventType.PAUSED,
+      eventType.RESUMED,
+      eventType.SKIPPABLE_STATE_CHANGED,
+      eventType.THIRD_QUARTILE,
+      eventType.VOLUME_CHANGED,
+      eventType.VOLUME_MUTED,
+      eventType.USER_CLOSE,
+      eventType.STARTED,  //need started event for SKIPPED
+      eventType.SKIPPED,
+      eventType.STARTED,  //need started event for COMPLETE
+      eventType.COMPLETE,
+      eventType.STARTED,  //need started event for ALL_ADS_COMPLETED
+      eventType.ALL_ADS_COMPLETED,
+      eventType.CONTENT_RESUME_REQUESTED
+    ];
+    var adPluginName = null;
+    var sdkAdEventType = null;
+    var sdkAdEvent = null;
+    var sdkAdEventParams = null;
+    amc.onSdkAdEvent = function(name, eventType, event, params) {
+      adPluginName = name;
+      sdkAdEventType = eventType;
+      sdkAdEvent = event;
+      sdkAdEventParams = params;
+    };
+    var event;
+    for(var i in imaAdEvents) {
+      event = imaAdEvents[i];
+      am.publishEvent(event);
+      expect(adPluginName).to.be(ima.name);
+      expect(sdkAdEventType).to.be(eventType);
+      expect(sdkAdEvent).to.be(event);
+      expect(_.isEmpty(sdkAdEventParams)).to.be(false);
+    }
+  });
 });
