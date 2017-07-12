@@ -359,10 +359,14 @@
 
                 if(!this._pulseHost) {
                     log('No Pulse hostname found in plugin parameters or media metadata; will not attempt to show Pulse ads');
+                    this.ready = true;
+                    amc.onAdManagerReady();
                     return;
                 }
 
                 this.ready = true;
+                amc.onAdManagerReady();
+
                 this._deviceContainer = adManagerMetadata.pulse_device_container;
                 if (adManagerMetadata.pulse_persistent_id) {
                   this._persistentId = adManagerMetadata.pulse_persistent_id;

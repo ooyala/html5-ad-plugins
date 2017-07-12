@@ -74,6 +74,9 @@ OO.Ads.manager(function(_, $) {
      */
     this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata) {
       this.ready = true;
+      //Call the onAdManagerReady API after setting this.ready to true
+      //to notify the Ad Manager Controller that this ad plugin is ready
+      amc.onAdManagerReady();
     };
 
     /**
