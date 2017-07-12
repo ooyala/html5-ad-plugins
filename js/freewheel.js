@@ -11,8 +11,6 @@
  *     http://hub.freewheel.tv/display/techdocs/How+to+Get+Ad+Level+Information+from+Events
  */
 
-require("../html5-common/js/utils/constants.js");
-
 OO.Ads.manager(function(_, $) {
   /**
    * @class Freewheel
@@ -267,7 +265,7 @@ OO.Ads.manager(function(_, $) {
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_DISPLAY_CONTROLS_WHEN_PAUSE, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
 
-      if (OO.requiresSingleVideoElement) {
+      if (OO.ENVIRONMENT.requiresSingleVideoElement) {
         // NOTE: If we set renderer.html.coadScriptName we can probably render overlays on our own
         //       (coad stands for customer owned ad renderer)
         var controlHeight = amc.ui.rootElement.find(".controlBar");
@@ -452,7 +450,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#_registerDisplayForNonlinearAd
      */
     var _registerDisplayForNonlinearAd = _.bind(function() {
-      if (OO.requiresSingleVideoElement) {
+      if (OO.ENVIRONMENT.requiresSingleVideoElement) {
         //on iOS and Android, FW expects the following to be our legit video element when
         //playing back video ads. If we attempt to use the fake video and then switch to
         //the real video later, FW places the overlays in unexpected locations.

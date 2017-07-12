@@ -4,16 +4,6 @@
  * version 0.1
  */
 
-require("../html5-common/js/utils/InitModules/InitOO.js");
-require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
-require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
-require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
-require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
-
-require("../html5-common/js/utils/constants.js");
-require("../html5-common/js/utils/utils.js");
-require("../html5-common/js/utils/environment.js");
-
 var vastParser = require("../utils/vast_parser.js");
 var adManagerUtils = require("../utils/ad_manager_utils.js");
 
@@ -1078,7 +1068,7 @@ OO.Ads.manager(function(_, $)
               {
                 urls = _cacheBuster(urls);
               }
-              OO.pixelPings(urls);
+              OO.UTILS.pixelPings(urls);
               OO.log("SSAI Pulse: \"" + trackingName + "\" tracking URLs pinged");
             }
             else
@@ -1114,7 +1104,7 @@ OO.Ads.manager(function(_, $)
         var searchString = "[CACHEBUSTING]";
         var encodedSearchString = encodeURIComponent(searchString);
         var regex = new RegExp(encodedSearchString, "i");
-        var randString = OO.getRandomString();
+        var randString = OO.UTILS.getRandomString();
         urls[i] = urls[i].replace(regex, randString);
       }
       return urls;

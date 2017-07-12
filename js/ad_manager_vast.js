@@ -3,17 +3,6 @@
  * Originally Created by Greg Frank Based on Existing Vast Ad Code
  */
 
-
-require("../html5-common/js/utils/InitModules/InitOO.js");
-require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
-require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
-require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
-require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
-
-require("../html5-common/js/utils/constants.js");
-require("../html5-common/js/utils/utils.js");
-require("../html5-common/js/utils/environment.js");
-
 var adManagerUtils = require("../utils/ad_manager_utils.js");
 
 OO.Ads.manager(function(_, $) {
@@ -622,7 +611,7 @@ OO.Ads.manager(function(_, $) {
 
         //Setting preload to auto seems to address this issue with our player
         //TODO: Find the root cause behind this issue and address it
-        if (!OO.requiresSingleVideoElement && OO.isSafari) {
+        if (!OO.ENVIRONMENT.requiresSingleVideoElement && OO.ENVIRONMENT.isSafari) {
           this._videoSlot.preload = "auto";
         }
 
@@ -1317,7 +1306,7 @@ OO.Ads.manager(function(_, $) {
           try {
             var urls = urlObject[trackingName];
             if (urls) {
-              OO.pixelPings(urls);
+              OO.UTILS.pixelPings(urls);
               OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged for VAST Ad Id: " + adId);
             }
             else {
@@ -1571,11 +1560,11 @@ OO.Ads.manager(function(_, $) {
       var duration;
 
       if (!_.isEmpty(metadata.data.linear.mediaFiles)) {
-        duration = OO.timeStringToSeconds(metadata.data.linear.duration);
+        duration = OO.UTILS.timeStringToSeconds(metadata.data.linear.duration);
       }
       else
       {
-        duration = metadata.data.nonLinear.duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
+        duration = metadata.data.nonLinear.duration ?  OO.UTILS.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
       }
 
       var ad = new this.amc.Ad({
@@ -1632,7 +1621,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.ajax = function(url, errorCallback, dataType, loadingAd, wrapperParentId) {
       $.ajax({
-        url: OO.getNormalizedTagUrl(url, this.embedCode),
+        url: OO.UTILS.getNormalizedTagUrl(url, this.embedCode),
         type: 'GET',
         beforeSend: function(xhr) {
           xhr.withCredentials = true;
@@ -1820,7 +1809,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.pingURL = function(code, url) {
       url = url.replace(/\[ERRORCODE\]/, code);
-      OO.pixelPing(url);
+      OO.UTILS.pixelPing(url);
     };
 
     /**
@@ -1909,7 +1898,7 @@ OO.Ads.manager(function(_, $) {
       var maxMedia = _.max(mediaFiles, function(v) { return parseInt(v.bitrate, 10); });
       var vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.maxBitrateStream = maxMedia && maxMedia.url;
-      vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(ad.linear.duration) * 1000;
+      vastAdUnit.durationInMilliseconds = OO.UTILS.timeStringToSeconds(ad.linear.duration) * 1000;
       _.extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.linear.tracking;
       vastAdUnit.data.type = this.amc.ADTYPE.LINEAR_VIDEO;
@@ -2848,7 +2837,7 @@ OO.Ads.manager(function(_, $) {
         type: AD_TYPE.INLINE,
         mediaFile: mediaFile,
         version: version,
-        durationInMilliseconds: OO.timeStringToSeconds(ad.duration) * 1000
+        durationInMilliseconds: OO.UTILS.timeStringToSeconds(ad.duration) * 1000
       };
 
       return result;
@@ -2973,7 +2962,7 @@ OO.Ads.manager(function(_, $) {
       if (currentAd && currentAd.data) {
         var error = currentAd.data.error;
         if (error) {
-          OO.pixelPing(error);
+          OO.UTILS.pixelPing(error);
         }
       }
     };
@@ -2989,7 +2978,7 @@ OO.Ads.manager(function(_, $) {
         var impressions = currentAd.data.impressions;
         _.each(impressions, function(impression) {
           if (impression && impression.url) {
-            OO.pixelPing(impression.url);
+            OO.UTILS.pixelPing(impression.url);
           }
         });
       }
@@ -3013,7 +3002,7 @@ OO.Ads.manager(function(_, $) {
           });
 
           if (currentEvent && currentEvent.url) {
-            OO.pixelPing(currentEvent.url);
+            OO.UTILS.pixelPing(currentEvent.url);
           }
         }
       }
@@ -3030,7 +3019,7 @@ OO.Ads.manager(function(_, $) {
       if (ad && ad.data && ad.data.videoClickTracking) {
         var clickTracking = ad.data.videoClickTracking.clickTracking;
         if (clickTracking){
-          OO.pixelPing(clickTracking);
+          OO.UTILS.pixelPing(clickTracking);
         }
       }
     };

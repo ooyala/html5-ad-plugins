@@ -8,6 +8,9 @@ OO.log = function() {};
 
 describe('ad_manager_ima', function()
 {
+  require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+  require("../html5-common/js/utils/constants.js");
+  require("../html5-common/js/utils/utils.js");
   var amc, ima;
   var imaVideoPluginFactory;
   var videoWrapper;

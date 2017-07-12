@@ -7,6 +7,7 @@
 OO.log = function() {};
 
 describe('ad_manager_freewheel', function() {
+  require("../html5-common/js/utils/constants.js");
   var amc,fw;
   var name = "freewheel-ads-manager";
   var originalOoAds = _.clone(OO.Ads);

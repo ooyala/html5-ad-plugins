@@ -13,6 +13,15 @@ var fs = require("fs");
 
 describe('ad_manager_ssai_pulse', function()
 {
+  require("../html5-common/js/utils/InitModules/InitOO.js");
+  require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
+  require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+  require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
+  require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
+
+  require("../html5-common/js/utils/constants.js");
+  require("../html5-common/js/utils/utils.js");
+  require("../html5-common/js/utils/environment.js");
   var amc, SsaiPulse;
   var name = "ssai-pulse-ads-manager";
   var originalOoAds = _.clone(OO.Ads);

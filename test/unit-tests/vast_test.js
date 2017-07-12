@@ -12,6 +12,17 @@ require(COMMON_SRC_ROOT + "classes/emitter.js");
 var fs = require("fs");
 
 describe('ad_manager_vast', function() {
+
+  require("../html5-common/js/utils/InitModules/InitOO.js");
+  require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
+  require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
+  require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
+  require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
+
+  require("../html5-common/js/utils/constants.js");
+  require("../html5-common/js/utils/utils.js");
+  require("../html5-common/js/utils/environment.js");
+
   var amc, vastAdManager;
   var name = "vast";
   var originalOoAds = _.clone(OO.Ads);

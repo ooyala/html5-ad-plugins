@@ -5,11 +5,6 @@
  */
 
 //TODO make amc ignore ad request timeout.
-require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
-require("../html5-common/js/utils/constants.js");
-require("../html5-common/js/utils/utils.js");
-
-
 
 (function(_, $)
 {
@@ -95,7 +90,7 @@ require("../html5-common/js/utils/utils.js");
 
         _amc = amcIn;
 
-        var ext = OO.DEBUG ? '_debug.js' : '.js';
+        var ext = OO.publicApi.DEBUG ? '_debug.js' : '.js';
         var remoteModuleJs = "//imasdk.googleapis.com/js/sdkloader/ima3" + ext;
         _resetVars();
         _createAMCListeners();
@@ -357,7 +352,7 @@ require("../html5-common/js/utils/utils.js");
       this.setupSharedVideoElement = function(element)
       {
         //Remove any listeners we added on the previous shared video element
-        if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.removeEventListener === "function")
+        if (this.sharedVideoElement && OO.ENVIRONMENT.isIphone && typeof this.sharedVideoElement.removeEventListener === "function")
         {
           this.sharedVideoElement.removeEventListener('webkitendfullscreen', _raisePauseEvent);
         }
@@ -365,7 +360,7 @@ require("../html5-common/js/utils/utils.js");
         //On iPhone, there is a limitation in the IMA SDK where we do not receive a pause event when
         //we leave the native player
         //This is a workaround to listen for the webkitendfullscreen event ourselves
-        if(this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.addEventListener === "function"){
+        if(this.sharedVideoElement && OO.ENVIRONMENT.isIphone && typeof this.sharedVideoElement.addEventListener === "function"){
           this.sharedVideoElement.addEventListener('webkitendfullscreen', _raisePauseEvent);
         }
       };
@@ -625,7 +620,7 @@ require("../html5-common/js/utils/utils.js");
         {
           //On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
           //We want to force the video to reenter fullscreen and play
-          if (OO.isIphone && this.sharedVideoElement)
+          if (OO.ENVIRONMENT.isIphone && this.sharedVideoElement)
           {
             //resumeAd will only be called if we have exited fullscreen
             //so this is safe to call
@@ -974,7 +969,7 @@ require("../html5-common/js/utils/utils.js");
           }
           this.adTagUrl += connector + paramArray.join("&");
         }
-        adsRequest.adTagUrl = OO.getNormalizedTagUrl(this.adTagUrl, _amc.currentEmbedCode);
+        adsRequest.adTagUrl = OO.UTILS.getNormalizedTagUrl(this.adTagUrl, _amc.currentEmbedCode);
         // Specify the linear and nonlinear slot sizes. This helps the SDK to
         // select the correct creative if multiple are returned.
         var w = _amc.ui.width;
@@ -1042,7 +1037,7 @@ require("../html5-common/js/utils/utils.js");
         //These are required by Google for tracking purposes.
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
-        google.ima.settings.setLocale(OO.getLocale());
+        google.ima.settings.setLocale(OO.ENVIRONMENT.getLocale());
         if (this.useInsecureVpaidMode)
         {
           google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
@@ -1598,7 +1593,7 @@ require("../html5-common/js/utils/utils.js");
             both adrules and non-adrules. For non-adrules, this event is triggered after every ad,
             so we must check that it is the last postroll before calling _IMA_SDK_resumeMainContent().
             */
-            if (OO.isIos && this.contentEnded && _amc.isLastAdPlayed())
+            if (OO.ENVIRONMENT.isIos && this.contentEnded && _amc.isLastAdPlayed())
             {
               _IMA_SDK_resumeMainContent();
             }
