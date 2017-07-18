@@ -90,6 +90,7 @@ google =
       var callbacks = {};
       var adsManagerLoadedEvent =
       {
+        type : google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
         getAdsManager : function()
         {
           if (!google.ima.adManagerInstance)
@@ -135,14 +136,28 @@ google =
               {      //convenience function for unit tests
                 if (typeof amCallbacks[event] === "function" && canPublishEvents)
                 {
-                  amCallbacks[event](
+                  if (event === google.ima.AdErrorEvent.Type.AD_ERROR)
                   {
-                    type : event,
-                    getAd : function()
+                    amCallbacks[event](
                     {
-                      return currentAd;
-                    }
-                  });
+                      type : event,
+                      getError : function()
+                      {
+                        return "Ad Error";
+                      }
+                    });
+                  }
+                  else
+                  {
+                    amCallbacks[event](
+                    {
+                      type : event,
+                      getAd : function()
+                      {
+                        return currentAd;
+                      }
+                    });
+                  }
                 }
               };
               this.getCurrentAd = function()
@@ -189,23 +204,30 @@ google =
     {
       Type :
       {
+        AD_BREAK_READY : "adBreakReady",
+        AD_METADATA : "adMetadata",
         ALL_ADS_COMPLETED : "allAdsCompleted",
+        CLICK : "click",
         COMPLETE : "complete",
-        SKIPPED : "skip",
+        CONTENT_PAUSE_REQUESTED : "contentPauseRequested",
+        CONTENT_RESUME_REQUESTED: "contentResumeRequested",
+        DURATION_CHANGE : "durationChange",
         FIRST_QUARTILE : "firstQuartile",
+        IMPRESSION : "impression",
+        INTERACTION : "interaction",
+        LINEAR_CHANGED : "linearChanged",
         LOADED : "loaded",
+        LOG : "log",
         MIDPOINT : "midpoint",
         PAUSED : "paused",
         RESUMED : "resumed",
+        SKIPPABLE_STATE_CHANGED : "skippableStateChanged",
+        SKIPPED : "skipped",
         STARTED : "started",
         THIRD_QUARTILE : "thirdQuartile",
-        VOLUME_CHANGED : "volumeChanged",
-        VOLUME_MUTED : "volumeMuted",
         USER_CLOSE : "userClose",
-        DURATION_CHANGE : "durationChange",
-        CLICK : "click",
-        CONTENT_PAUSE_REQUESTED : "contentPauseRequested",
-        CONTENT_RESUME_REQUESTED : "contentResumeRequested"
+        VOLUME_CHANGED : "volumeChanged",
+        VOLUME_MUTED : "volumeMuted"
       }
     },
     ViewMode : {},
