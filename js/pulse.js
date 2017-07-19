@@ -69,6 +69,7 @@
             };
             var forcedSiteId = undefined;
             var previewAdId = undefined;
+            var noPulseConfiguration = false;
 
             /**
              * Ad manager init
@@ -359,6 +360,7 @@
 
                 if(!this._pulseHost) {
                     log('No Pulse hostname found in plugin parameters or media metadata; will not attempt to show Pulse ads');
+                    noPulseConfiguration = true;
                     this.ready = true;
                     amc.onAdManagerReady();
                     return;
@@ -557,8 +559,7 @@
              * @returns {array}
              */
             this.buildTimeline = function() {
-                return [ makePlaceholderAd.call(this,"adRequest", 0)];
-                //return [ ];
+                return noPulseConfiguration ? [] : [ makePlaceholderAd.call(this,"adRequest", 0)];
             };
 
             function makePlaceholderAd(type,position) {
