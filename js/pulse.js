@@ -977,7 +977,7 @@
 
 
             var _onInitialPlay = function() {
-                if(!this.ready) {
+                if(!this.ready || noPulseConfiguration) {
                     // Do not wait for prerolls, do not control ads
                     return;
                 }
