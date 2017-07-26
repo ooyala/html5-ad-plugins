@@ -1283,7 +1283,7 @@ require("../html5-common/js/utils/utils.js");
         adsSettings.useStyledNonLinearAds = true;
         if(this.preloadAds)
         {
-          adsRenderingSettings.enablePreloading = true;
+          adsSettings.enablePreloading = true;
         }
 
         if (this.useGoogleCountdown)
