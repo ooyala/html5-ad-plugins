@@ -117,7 +117,6 @@ require("../html5-common/js/utils/utils.js");
       var _resetVars = privateMember(function()
       {
         this.ready = false;
-        this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
         this.mainContentDuration = 0;
@@ -231,9 +230,6 @@ require("../html5-common/js/utils/utils.js");
           this.adTagUrl = adRulesAd.tag_url;
         }
 
-        //the preload feature works, but has been disabled due to product, so setting to false here
-        this.preloadAdRulesAds = false;
-
         //check if ads should play on replays
         this.requestAdsOnReplay = true;
         if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.REPLAY_ADS))
@@ -274,6 +270,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("useGoogleCountdown"))
         {
           this.useGoogleCountdown = metadata.useGoogleCountdown;
+        }
+
+        this.preloadAds = true;
+        if (metadata.hasOwnProperty("preloadAds"))
+        {
+          this.preloadAds = metadata.preloadAds;
         }
 
         this.useInsecureVpaidMode = false;
@@ -317,7 +319,7 @@ require("../html5-common/js/utils/utils.js");
         {
           if (_usingAdRules)
           {
-            if (this.preloadAdRulesAds)
+            if (this.preloadAds)
             {
               this.canSetupAdsRequest = true;
               _trySetupAdsRequest();
@@ -514,7 +516,7 @@ require("../html5-common/js/utils/utils.js");
           //we started our placeholder ad
           _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
           //if the sdk ad request failed when trying to preload, we should end the placeholder ad
-          if(this.preloadAdRulesAds && this.adRulesLoadError)
+          if(this.preloadAds && this.adRulesLoadError)
           {
             _amc.notifyPodEnded(this.currentAMCAdPod.id, 1);
           }
@@ -766,7 +768,7 @@ require("../html5-common/js/utils/utils.js");
 
         //if we aren't preloading the ads, then it's safe to make the ad request now.
         //so we don't mess up analytics and request ads that may not be shown.
-        if (!this.preloadAdRulesAds)
+        if (!this.preloadAds)
         {
           this.canSetupAdsRequest = true;
           _trySetupAdsRequest();
@@ -1265,7 +1267,6 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onAdRequestSuccess = privateMember(function(adsManagerLoadedEvent)
       {
-
         _amc.onSdkAdEvent(this.name, google.ima.AdsManagerLoadedEvent.Type,
           adsManagerLoadedEvent.type, [adsManagerLoadedEvent]);
 
@@ -1280,6 +1281,11 @@ require("../html5-common/js/utils/utils.js");
         var adsSettings = new google.ima.AdsRenderingSettings();
         adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
+        if(this.preloadAds)
+        {
+          adsRenderingSettings.enablePreloading = true;
+        }
+
         if (this.useGoogleCountdown)
         {
           //both COUNTDOWN and AD_ATTRIBUTION are required as per
