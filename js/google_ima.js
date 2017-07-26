@@ -317,7 +317,7 @@ require("../html5-common/js/utils/utils.js");
         var validAdTags = _getValidAdTagUrls();
         if (validAdTags && validAdTags.length > 0)
         {
-          if (_usingAdRules)
+          if (_usingAdRules || setNonAdRulesPreroll(validAdTags))
           {
             if (this.preloadAds)
             {
@@ -331,6 +331,22 @@ require("../html5-common/js/utils/utils.js");
           }
         }
       };
+
+      var setNonAdRulesPreroll = privateMember(function(validAdTags)
+      {
+        if (!_usingAdRules)
+        {
+          for (var index = 0; index < validAdTags.length; index++)
+          {
+            if (validAdTags[index].position == 0)
+            {
+              this.adTagUrl = validAdTags[index].tag_url;
+              return true;
+            }
+          }
+        }
+        return false;
+      });
 
       /**
        * Called when the UI has been set up.  Sets up the native element listeners and style for the overlay.
