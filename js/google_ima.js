@@ -9,8 +9,6 @@ require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 
-
-
 (function(_, $)
 {
   var registeredGoogleIMAManagers = {};
@@ -153,6 +151,8 @@ require("../html5-common/js/utils/utils.js");
         this.useInsecureVpaidMode = false;
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
 
+        this.numAdsPlayed = 0;
+
         //flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
 
@@ -272,11 +272,15 @@ require("../html5-common/js/utils/utils.js");
           this.useGoogleCountdown = metadata.useGoogleCountdown;
         }
 
-        this.preloadAds = true;
-        if (metadata.hasOwnProperty("preloadAds"))
+        this.preloadAdsOnAutoplay = true;
+        if (metadata.hasOwnProperty("preloadAdsOnAutoplay"))
         {
-          this.preloadAds = metadata.preloadAds;
+          this.preloadAdsOnAutoplay = metadata.preloadAdsOnAutoplay;
         }
+
+        //if we aren't autoplaying or we can't autoplay (because of the platform)
+        //then we shouldn't preload ads.
+        this.preloadAds = this.preloadAdsOnAutoplay && !!_amc.pageSettings.autoplay && OO.allowAutoPlay;
 
         this.useInsecureVpaidMode = false;
         if (metadata.hasOwnProperty("vpaidMode"))
@@ -317,7 +321,7 @@ require("../html5-common/js/utils/utils.js");
         var validAdTags = _getValidAdTagUrls();
         if (validAdTags && validAdTags.length > 0)
         {
-          if (_usingAdRules || setNonAdRulesPreroll(validAdTags))
+          if (_usingAdRules || (this.preloadAds && _setNonAdRulesPreroll(validAdTags)))
           {
             if (this.preloadAds)
             {
@@ -332,7 +336,7 @@ require("../html5-common/js/utils/utils.js");
         }
       };
 
-      var setNonAdRulesPreroll = privateMember(function(validAdTags)
+      var _setNonAdRulesPreroll = privateMember(function(validAdTags)
       {
         if (!_usingAdRules)
         {
@@ -500,6 +504,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.playAd = function(amcAdPod)
       {
+        this.numAdsPlayed++;
         if(this.currentAMCAdPod)
         {
           _endCurrentAd(true);
@@ -554,10 +559,14 @@ require("../html5-common/js/utils/utils.js");
           //if we are trying to play an linear ad then we need to request the ad now.
           if (this.currentAMCAdPod.ad.forced_ad_type != _amc.ADTYPE.NONLINEAR_OVERLAY)
           {
-            //reset adRequested and adTagUrl so we can request another ad
-            _resetAdsState();
-            this.adTagUrl = this.currentAMCAdPod.ad.tag_url;
-            _trySetupAdsRequest();
+            //if this is the preroll we preloaded then don't try to request it again.
+            if (!(this.preloadAds && this.numAdsPlayed === 1 && this.currentAMCAdPod.position === 0))
+            {
+              //reset adRequested and adTagUrl so we can request another ad
+              _resetAdsState();
+              this.adTagUrl = this.currentAMCAdPod.ad.tag_url;
+              _trySetupAdsRequest();
+            }
           }
           //Otherwise we are trying to play an overlay, at this point IMA is already
           //displaying it, so just notify AMC that we are showing an overlay.
@@ -1297,10 +1306,6 @@ require("../html5-common/js/utils/utils.js");
         var adsSettings = new google.ima.AdsRenderingSettings();
         adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
-        if(this.preloadAds)
-        {
-          adsSettings.enablePreloading = true;
-        }
 
         if (this.useGoogleCountdown)
         {
@@ -1808,6 +1813,7 @@ require("../html5-common/js/utils/utils.js");
         _tryUndoSetupForAdRules();
         _resetAdsState();
         _resetPlayheadTracker();
+        this.numAdsPlayed = 0;
       });
 
       /**
