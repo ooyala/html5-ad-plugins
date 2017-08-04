@@ -1843,16 +1843,16 @@ describe('ad_manager_ima', function()
   it('IMA ad preloading: testing page level param', function()
   {
     ima.loadMetadata({}, {}, {});
-    expect(ima.preloadAds).to.be(true);
+    expect(ima.preloadAdsOnAutoplay).to.be(true);
     var content =
     {
-      preloadAds: false
+      preloadAdsOnAutoplay: false
     };
     ima.loadMetadata(content, {}, {});
-    expect(ima.preloadAds).to.be(false);
-    content.preloadAds = true;
+    expect(ima.preloadAdsOnAutoplay).to.be(false);
+    content.preloadAdsOnAutoplay = true;
     ima.loadMetadata(content, {}, {});
-    expect(ima.preloadAds).to.be(true);
+    expect(ima.preloadAdsOnAutoplay).to.be(true);
   });
 
 });
