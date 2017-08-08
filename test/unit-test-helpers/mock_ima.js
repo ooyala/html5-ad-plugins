@@ -6,10 +6,12 @@ google =
                                 //normally a call to requestAds calls its callback immediately in this mock
     adManagerInstance : null,   //for unit test convenience
     adLoaderInstance : null,    //for unit test convenience
+    vpaidMode : null,           //for unit test convenience
     resetDefaultValues : function()
     {
       google.ima.linearAds = true;
       google.ima.delayAdRequest = false;
+      google.ima.vpaidMode = null;
     },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
@@ -67,7 +69,10 @@ google =
     {
       setPlayerVersion : function() {},
       setPlayerType : function() {},
-      setVpaidMode : function() {},
+      setVpaidMode : function(mode)
+      {
+        google.ima.vpaidMode = mode;
+      },
       setLocale : function() {},
       setDisableFlashAds : function() {},
     },
@@ -235,7 +240,9 @@ google =
     {
       VpaidMode :
       {
-        ENABLED : "enabled"
+        ENABLED : "enabled",
+        DISABLED : "disabled",
+        INSECURE : "insecure"
       }
     }
   }

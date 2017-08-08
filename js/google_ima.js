@@ -151,7 +151,7 @@ require("../html5-common/js/utils/utils.js");
         this.showAdControls = false;
         this.useGoogleAdUI = false;
         this.useGoogleCountdown = false;
-        this.useInsecureVpaidMode = false;
+        this.desiredVpaidMode = null;
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
 
         //flag to track whether ad rules failed to load
@@ -276,10 +276,10 @@ require("../html5-common/js/utils/utils.js");
           this.useGoogleCountdown = metadata.useGoogleCountdown;
         }
 
-        this.useInsecureVpaidMode = false;
+        this.desiredVpaidMode = null;
         if (metadata.hasOwnProperty("vpaidMode"))
         {
-          this.useInsecureVpaidMode = metadata.vpaidMode === "insecure";
+          this.desiredVpaidMode = metadata.vpaidMode;
         }
 
         this.disableFlashAds = false;
@@ -293,6 +293,30 @@ require("../html5-common/js/utils/utils.js");
         {
           this.imaIframeZIndex = metadata.iframeZIndex;
         }
+
+        //These are required by Google for tracking purposes.
+        google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
+        google.ima.settings.setPlayerType(PLAYER_TYPE);
+        google.ima.settings.setLocale(OO.getLocale());
+
+        var vpaidMode = google.ima.ImaSdkSettings.VpaidMode.INSECURE;
+        if (this.desiredVpaidMode)
+        {
+          switch (this.desiredVpaidMode)
+          {
+            case "secure":
+            case "enabled":
+              vpaidMode = google.ima.ImaSdkSettings.VpaidMode.ENABLED;
+              break;
+            case "disabled":
+              vpaidMode = google.ima.ImaSdkSettings.VpaidMode.DISABLED;
+              break;
+            default:
+              break;
+          }
+        }
+
+        google.ima.settings.setVpaidMode(vpaidMode);
 
         //On second video playthroughs, we will not be initializing the ad manager again.
         //Attempt to create the ad display container here instead of after the sdk has loaded
@@ -1037,19 +1061,6 @@ require("../html5-common/js/utils/utils.js");
           _onImaAdError();
           _amc.unregisterAdManager(this.name);
           return;
-        }
-
-        //These are required by Google for tracking purposes.
-        google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
-        google.ima.settings.setPlayerType(PLAYER_TYPE);
-        google.ima.settings.setLocale(OO.getLocale());
-        if (this.useInsecureVpaidMode)
-        {
-          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
-        }
-        else
-        {
-          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
         }
 
         _IMA_SDK_tryInitAdContainer();

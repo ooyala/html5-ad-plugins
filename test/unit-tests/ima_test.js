@@ -1839,4 +1839,74 @@ describe('ad_manager_ima', function()
       expect(_.isEmpty(sdkAdEventParams)).to.be(false);
     }
   });
+
+  it('IMA SDK Integration: Default vpaidMode is set to INSECURE', function()
+  {
+    initialize(false);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+  });
+
+  it('IMA SDK Integration: Able to set vpaidMode to ENABLED with page level setting \'enabled\'', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    expect(ima.ready).to.be(false);
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : NON_AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      vpaidMode : "enabled"
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.ready).to.be(true);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+  });
+
+  it('IMA SDK Integration: Able to set vpaidMode to ENABLED with page level setting \'secure\'', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    expect(ima.ready).to.be(false);
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : NON_AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      vpaidMode : "secure"
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.ready).to.be(true);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+  });
+
+  it('IMA SDK Integration: Able to set vpaidMode to DISABLED with page level setting \'disabled\'', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    expect(ima.ready).to.be(false);
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : NON_AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      vpaidMode : "disabled"
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.ready).to.be(true);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.DISABLED);
+  });
 });
