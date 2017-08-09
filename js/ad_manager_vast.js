@@ -2986,7 +2986,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.sendVpaidImpressions = function() {
       if (currentAd && currentAd.data) {
-        var impressions = currentAd.data.impressions;
+        var impressions = currentAd.data.impression;
         _.each(impressions, function(impression) {
           if (impression && impression.url) {
             OO.pixelPing(impression.url);

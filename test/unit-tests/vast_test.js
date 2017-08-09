@@ -2709,6 +2709,16 @@ describe('ad_manager_vast', function() {
     expect(global.vpaid.adStarted).to.be(false);
   });
 
+  //TODO: Add unit tests for other tracking events
+  it('VPAID 2.0: Impression tracking URLs should be pinged', function() {
+    vpaidInitialize();
+    var ad = amc.timeline[1];
+    vastAdManager.playAd(ad);
+    vastAdManager.initializeAd();
+    ad.vpaidAd.callEvent('AdImpression');
+    expect(trackingUrlsPinged.impressionUrl).to.be(1);
+  });
+
   it('Vast Content Type Filtering: Parser should catch content types for HLS', function() {
     vastAdManager.initialize(amc);
     var vast_ad = {
