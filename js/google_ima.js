@@ -1038,7 +1038,7 @@ require("../html5-common/js/utils/utils.js");
           _amc.unregisterAdManager(this.name);
           return;
         }
-        _amc.adSdkLoaded(this.name);
+        _amc.onAdSdkLoaded(this.name);
         //These are required by Google for tracking purposes.
         google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
         google.ima.settings.setPlayerType(PLAYER_TYPE);
