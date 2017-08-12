@@ -1072,7 +1072,7 @@ OO.Ads.manager(function(_, $) {
           });
         }
         else {
-          console.log(
+          OO.log(
               "VAST: Tried to ping URLs: [" + trackingEventNames +
               "] but ad object passed in was: " + amcAd
           );
@@ -3028,7 +3028,9 @@ OO.Ads.manager(function(_, $) {
      * @param {string} type Event name to be send
      */
     this.sendVpaidTracking = function(type) {
-      var ad = prevAd ? prevAd : currentAd;
+      //TODO: Why was this fetching previous ad if it existed?
+      //var ad = prevAd ? prevAd : currentAd;
+      var ad = currentAd;
       if (ad && ad.data) {
         var tracking = ad.data.tracking,
             currentEvent;

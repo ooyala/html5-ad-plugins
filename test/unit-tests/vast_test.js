@@ -3072,6 +3072,57 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
   });
 
+  it('VAST: Wrapper ads\' tracking events should be pinged if VPAID child\'s events are pinged', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vpaid",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+
+    // Wrapper ads could be visualized as a tree with parents and children,
+    // but in this case, it looks more like a linked list:
+    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
+    var parentDepthOneId = "wrapper-parent-1";
+    var parentDepthTwoId = "wrapper-parent-2";
+    var leafId = "6654644"; // Ad ID from linearXML file
+
+    // need to fake wrapper ajax calls
+    vastAdManager.onVastResponse(vast_ad, wrapper1XML);
+    vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
+    vastAdManager.onVastResponse(vast_ad, vpaidLinearXML, parentDepthTwoId);
+
+    var ad = amc.timeline[1];
+    vastAdManager.playAd(ad);
+
+    vastAdManager.initializeAd();
+    ad.vpaidAd.callEvent('AdImpression');
+    ad.vpaidAd.callEvent('AdVideoStart');
+
+    // leaf and parent level ad events should be pinged
+    expect(trackingUrlsPinged.impressionUrl).to.be(1);
+    expect(trackingUrlsPinged.startUrl).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper2Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper2Url).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
+  });
+
   it('VAST: Wrapper ad requests should not end ad pod until non-wrapper ad is found', function() {
     var embed_code = "embed_code";
     var vast_ad = {
