@@ -2823,6 +2823,7 @@ OO.Ads.manager(function(_, $) {
       _.extend(ad, videoClickTracking);
 
       var data = {
+        id: this.$_node.attr('id'),
         adType: 'vpaid',
         companion: companionAds,
         error: errorTracking,
@@ -2975,6 +2976,16 @@ OO.Ads.manager(function(_, $) {
         if (error) {
           OO.pixelPing(error);
         }
+
+        var adId = _getAdId(currentAd);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          this.trackError(this.ERROR_CODES.GENERAL_VPAID, parentId);
+        }
       }
     };
 
@@ -2992,6 +3003,20 @@ OO.Ads.manager(function(_, $) {
             OO.pixelPing(impression.url);
           }
         });
+
+        var adId = _getAdId(currentAd);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+          if (parentAdTrackingObject) {
+            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            _handleTrackingUrls(parentAdObject, ["impression"]);
+          }
+        }
       }
     };
 
@@ -3016,6 +3041,20 @@ OO.Ads.manager(function(_, $) {
             OO.pixelPing(currentEvent.url);
           }
         }
+
+        var adId = _getAdId(ad);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+          if (parentAdTrackingObject) {
+            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            _handleTrackingUrls(parentAdObject, [type]);
+          }
+        }
       }
     };
 
@@ -3024,13 +3063,48 @@ OO.Ads.manager(function(_, $) {
      * This is only required for VPAID ads
      * @public
      * @method Vast#sendVpaidClickTracking
-     * @param {object} ad Ad to look for the tracking url
      */
-    this.sendVpaidClickTracking = function(ad) {
-      if (ad && ad.data && ad.data.videoClickTracking) {
-        var clickTracking = ad.data.videoClickTracking.clickTracking;
-        if (clickTracking){
-          OO.pixelPing(clickTracking);
+    this.sendVpaidClickTracking = function() {
+      var ad = currentAd;
+      if (ad && ad.data) {
+        if (ad.data.videoClickTracking) {
+          var clickTracking = ad.data.videoClickTracking.clickTracking;
+          if (clickTracking){
+            OO.pixelPing(clickTracking);
+          }
+
+          var clickThrough = ad.data.videoClickTracking.clickThrough;
+          if (clickThrough){
+            OO.pixelPing(clickThrough);
+          }
+
+          var customClick = ad.data.videoClickTracking.customClick;
+          if (customClick){
+            OO.pixelPing(customClick);
+          }
+
+          var nonLinearClickThrough = ad.data.videoClickTracking.nonLinearClickThrough;
+          if (nonLinearClickThrough){
+            OO.pixelPing(nonLinearClickThrough);
+          }
+        }
+
+        var adId = _getAdId(ad);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+          if (parentAdTrackingObject) {
+            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            if (ad.data.type === this.amc.ADTYPE.NONLINEAR_OVERLAY) {
+              _handleTrackingUrls(parentAdObject, ["nonLinearClickTracking"]);
+            } else {
+              _handleTrackingUrls(parentAdObject, ["linearClickTracking"]);
+            }
+          }
         }
       }
     };
