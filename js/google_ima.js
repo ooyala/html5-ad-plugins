@@ -1035,6 +1035,12 @@ require("../html5-common/js/utils/utils.js");
         if (!success || !_isGoogleSDKValid())
         {
           _onImaAdError();
+          errorString = "ERROR Google SDK failed to load"
+          if (success && !_isGoogleSDKValid())
+          {
+            errorString = "ERROR Google SDK loaded but could not be validated"
+          }
+          _amc.onAdSdkLoadFailure(this.name, errorString)
           _amc.unregisterAdManager(this.name);
           return;
         }
