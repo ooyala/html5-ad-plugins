@@ -3142,7 +3142,7 @@ describe('ad_manager_vast', function() {
 
     expect(trackingUrlsPinged.errorWrapper1Url).to.be(1);
 
-    expect(trackingUrlsPinged.errorWrapper2Url).to.be(1);4
+    expect(trackingUrlsPinged.errorWrapper2Url).to.be(1);
   });
 
   it('VAST: Wrapper ad requests should not end ad pod until non-wrapper ad is found', function() {
