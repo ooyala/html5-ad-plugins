@@ -16,8 +16,9 @@
                   <Tracking event="complete">completeWrapper2Url</Tracking>
 				</TrackingEvents>
                 <VideoClicks>
-                    <ClickThrough id="123">clickThroughWrapper2Url</ClickThrough>
-                    <ClickTracking id="123">clickTrackingWrapper2Url</ClickTracking>
+                    <ClickThrough id="GDFP">clickThroughWrapper2Url</ClickThrough>
+                    <ClickTracking id="GDFP">clickTrackingWrapper2Url</ClickTracking>
+                    <CustomClick id="GDFP">customClickWrapper2Url</CustomClick>
                 </VideoClicks>
 			</Linear>
 		</Creative>

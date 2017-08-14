@@ -2854,6 +2854,8 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.midpointUrl).to.be        (1);
     expect(trackingUrlsPinged.thirdQuartileUrl).to.be   (1);
     expect(trackingUrlsPinged.clickTrackingUrl).to.be   (1);
+    expect(trackingUrlsPinged.clickThroughUrl).to.be    (1);
+    expect(trackingUrlsPinged.customClickUrl).to.be     (1);
     expect(trackingUrlsPinged.pauseUrl).to.be           (2);
     expect(trackingUrlsPinged.resumeUrl).to.be          (2);
     expect(trackingUrlsPinged.muteUrl).to.be            (2);
@@ -3125,12 +3127,15 @@ describe('ad_manager_vast', function() {
     ad.vpaidAd.callEvent('AdClickThru');
     expect(trackingUrlsPinged.clickTracking).to.be(1);
     expect(trackingUrlsPinged.clickThrough).to.be(1);
+    expect(trackingUrlsPinged.customClick).to.be(1);
 
     expect(trackingUrlsPinged.clickTrackingWrapper1Url).to.be(1);
     expect(trackingUrlsPinged.clickThroughWrapper1Url).to.be(1);
+    expect(trackingUrlsPinged.customClickWrapper1Url).to.be(1);
 
     expect(trackingUrlsPinged.clickTrackingWrapper2Url).to.be(1);
     expect(trackingUrlsPinged.clickThroughWrapper2Url).to.be(1);
+    expect(trackingUrlsPinged.customClickWrapper2Url).to.be(1);
 
     ad.vpaidAd.callEvent('AdError');
     expect(trackingUrlsPinged.errorUrl).to.be(1);
