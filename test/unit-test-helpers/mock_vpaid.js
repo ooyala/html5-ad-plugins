@@ -144,7 +144,7 @@ global.vpaidAd = {
         skipOffset: null,
         clickTracking: 'clickTracking',
         clickThrough: 'clickThrough',
-        customClick: ''
+        customClick: 'customClick'
       },
       nonLinear: {
         mediaFiles: {
@@ -168,7 +168,7 @@ global.vpaidAd = {
       ],
       type: 'linearVideo',
       version: '2.0',
-      videoClickTracking: { clickTracking: 'clickTracking', clickThrough: 'clickThrough', customClick: '' }
+      videoClickTracking: { clickTracking: 'clickTracking', clickThrough: 'clickThrough', customClick: 'customClick' }
     },
     fallbackAd: null,
     positionSeconds: 0,
