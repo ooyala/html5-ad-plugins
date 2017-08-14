@@ -3,6 +3,7 @@
     		<AdSystem version="4.6.0-5">LiveRail</AdSystem>
     		<AdTitle>TV Overlay PNG</AdTitle>
     		<Description>fake test</Description>
+			<Error>errorurl</Error>
     		<Impression id="LR">impressionOverlayUrl</Impression>
             <Impression id="QC">impressionOverlay2Url</Impression>
 			<Impression>impressionOverlay3Url</Impression>

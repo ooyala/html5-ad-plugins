@@ -1145,13 +1145,31 @@ OO.Ads.manager(function(_, $) {
      */
     var _getLinearClickTrackingUrls = function(amcAd) {
       var vastAdObject = _getVastAdObject(amcAd);
-      var linearClickTrackingUrls = null;
-      if (vastAdObject &&
-          vastAdObject.linear &&
-          vastAdObject.linear.clickTracking &&
-          vastAdObject.linear.clickTracking.length > 0) {
-        linearClickTrackingUrls = vastAdObject.linear.clickTracking;
+      var linearClickTrackingUrls = [];
+      if (vastAdObject){
+        if (vastAdObject.linear &&
+            vastAdObject.linear.clickTracking &&
+            vastAdObject.linear.clickTracking.length > 0) {
+          linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.clickTracking);
+        }
+
+        if (vastAdObject.linear &&
+          vastAdObject.linear.clickThrough &&
+          vastAdObject.linear.clickThrough.length > 0) {
+          linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.clickThrough);
+        }
+
+        if (vastAdObject.linear &&
+          vastAdObject.linear.customClick &&
+          vastAdObject.linear.customClick.length > 0) {
+          linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.customClick);
+        }
       }
+
+      if (_.isEmpty(linearClickTrackingUrls)) {
+        linearClickTrackingUrls = null;
+      }
+
       return linearClickTrackingUrls;
     };
 
@@ -1801,7 +1819,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.trackError = function(code, currentAdId) {
       if (currentAdId && currentAdId in this.adTrackingInfo) {
-        this.pingURLs(this.adTrackingInfo[currentAdId].errorURLs);
+        this.pingURLs(code, this.adTrackingInfo[currentAdId].errorURLs);
         var parentId = this.adTrackingInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
@@ -1831,8 +1849,8 @@ OO.Ads.manager(function(_, $) {
      * @param {string[]} urls URLs to ping
      */
     this.pingURLs = function(code, urls) {
-      _.each(urls, function() {
-        pingURL(code, url);
+      _.each(urls, function(url) {
+        this.pingURL(code, url);
       }, this);
     };
 
