@@ -9,12 +9,17 @@
 		<Creative AdID="wrapper-parent-creative-id-2">
 			<Linear>
 				<TrackingEvents>
-          <Tracking event="start">startWrapper2Url</Tracking>
-          <Tracking event="firstQuartile">firstQuartileWrapper2Url</Tracking>
-          <Tracking event="midpoint">midpointWrapper2Url</Tracking>
-          <Tracking event="thirdQuartile">thirdQuartileWrapper2Url</Tracking>
-          <Tracking event="complete">completeWrapper2Url</Tracking>
+                  <Tracking event="start">startWrapper2Url</Tracking>
+                  <Tracking event="firstQuartile">firstQuartileWrapper2Url</Tracking>
+                  <Tracking event="midpoint">midpointWrapper2Url</Tracking>
+                  <Tracking event="thirdQuartile">thirdQuartileWrapper2Url</Tracking>
+                  <Tracking event="complete">completeWrapper2Url</Tracking>
 				</TrackingEvents>
+                <VideoClicks>
+                    <ClickThrough id="GDFP">clickThroughWrapper2Url</ClickThrough>
+                    <ClickTracking id="GDFP">clickTrackingWrapper2Url</ClickTracking>
+                    <CustomClick id="GDFP">customClickWrapper2Url</CustomClick>
+                </VideoClicks>
 			</Linear>
 		</Creative>
 	</Creatives>

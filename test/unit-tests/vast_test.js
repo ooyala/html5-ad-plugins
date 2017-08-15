@@ -161,15 +161,13 @@ describe('ad_manager_vast', function() {
       }
     };
 
+    var originalTrackError = _.bind(vastAdManager.trackError, vastAdManager);
+
     // mock trackError function to test error tracking
     vastAdManager.trackError = function (code, currentAdId) {
       errorType.push(code);
-      if (currentAdId) {
-        if (currentAdId && currentAdId in this.adTrackingInfo) {
-
-          //directly ping url
-          OO.pixelPing();
-        }
+      if (typeof originalTrackError === "function") {
+        originalTrackError(code, currentAdId);
       }
     };
 
@@ -1490,6 +1488,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0MissingMediaFiles);
     expect(_.contains(errorType, vastAdManager.ERROR_CODES.GENERAL_LINEAR_ADS)).to.be(true);
     expect(pixelPingCalled).to.be(true);
+    expect(trackingUrlsPinged.errorurl).to.be(1);
   });
 
   it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', function(){
@@ -1518,6 +1517,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXMLMissingURL);
     expect(_.contains(errorType, vastAdManager.ERROR_CODES.GENERAL_NONLINEAR_ADS)).to.be(true);
     expect(pixelPingCalled).to.be(true);
+    expect(trackingUrlsPinged.errorurl).to.be(1);
   });
 
   it('Vast 3.0, VMAP: Should call onVMAPResponse if there is a VMAP XML response', function() {
@@ -2854,6 +2854,8 @@ describe('ad_manager_vast', function() {
     expect(trackingUrlsPinged.midpointUrl).to.be        (1);
     expect(trackingUrlsPinged.thirdQuartileUrl).to.be   (1);
     expect(trackingUrlsPinged.clickTrackingUrl).to.be   (1);
+    expect(trackingUrlsPinged.clickThroughUrl).to.be    (1);
+    expect(trackingUrlsPinged.customClickUrl).to.be     (1);
     expect(trackingUrlsPinged.pauseUrl).to.be           (2);
     expect(trackingUrlsPinged.resumeUrl).to.be          (2);
     expect(trackingUrlsPinged.muteUrl).to.be            (2);
@@ -3070,6 +3072,77 @@ describe('ad_manager_vast', function() {
 
     expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
     expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
+  });
+
+  it('VAST: Wrapper ads\' tracking events should be pinged if VPAID child\'s events are pinged', function() {
+    var embed_code = "embed_code";
+    var vast_ad = {
+      type: "vpaid",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time:10,
+      position_type:"t",
+      url:"1.jpg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad]
+    };
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+
+    // Wrapper ads could be visualized as a tree with parents and children,
+    // but in this case, it looks more like a linked list:
+    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
+    var parentDepthOneId = "wrapper-parent-1";
+    var parentDepthTwoId = "wrapper-parent-2";
+    var leafId = "6654644"; // Ad ID from linearXML file
+
+    // need to fake wrapper ajax calls
+    vastAdManager.onVastResponse(vast_ad, wrapper1XML);
+    vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
+    vastAdManager.onVastResponse(vast_ad, vpaidLinearXML, parentDepthTwoId);
+
+    var ad = amc.timeline[1];
+    vastAdManager.playAd(ad);
+
+    vastAdManager.initializeAd();
+    ad.vpaidAd.callEvent('AdImpression');
+    ad.vpaidAd.callEvent('AdVideoStart');
+
+    // leaf and parent level ad events should be pinged
+    expect(trackingUrlsPinged.impressionUrl).to.be(1);
+    expect(trackingUrlsPinged.startUrl).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper2Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper2Url).to.be(1);
+
+    expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
+    expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
+
+    ad.vpaidAd.callEvent('AdClickThru');
+    expect(trackingUrlsPinged.clickTracking).to.be(1);
+    expect(trackingUrlsPinged.clickThrough).to.be(1);
+    expect(trackingUrlsPinged.customClick).to.be(1);
+
+    expect(trackingUrlsPinged.clickTrackingWrapper1Url).to.be(1);
+    expect(trackingUrlsPinged.clickThroughWrapper1Url).to.be(1);
+    expect(trackingUrlsPinged.customClickWrapper1Url).to.be(1);
+
+    expect(trackingUrlsPinged.clickTrackingWrapper2Url).to.be(1);
+    expect(trackingUrlsPinged.clickThroughWrapper2Url).to.be(1);
+    expect(trackingUrlsPinged.customClickWrapper2Url).to.be(1);
+
+    ad.vpaidAd.callEvent('AdError');
+    expect(trackingUrlsPinged.errorUrl).to.be(1);
+
+    expect(trackingUrlsPinged.errorWrapper1Url).to.be(1);
+
+    expect(trackingUrlsPinged.errorWrapper2Url).to.be(1);
   });
 
   it('VAST: Wrapper ad requests should not end ad pod until non-wrapper ad is found', function() {
