@@ -1839,4 +1839,20 @@ describe('ad_manager_ima', function()
       expect(_.isEmpty(sdkAdEventParams)).to.be(false);
     }
   });
+
+  it('IMA ad preloading: testing page level param', function()
+  {
+    ima.loadMetadata({}, {}, {});
+    expect(ima.preloadAdsOnAutoplay).to.be(true);
+    var content =
+    {
+      preloadAdsOnAutoplay: false
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.preloadAdsOnAutoplay).to.be(false);
+    content.preloadAdsOnAutoplay = true;
+    ima.loadMetadata(content, {}, {});
+    expect(ima.preloadAdsOnAutoplay).to.be(true);
+  });
+
 });
