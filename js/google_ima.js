@@ -124,6 +124,7 @@ require("../html5-common/js/utils/utils.js");
         this.initialPlayRequested = false;
         this.canSetupAdsRequest = true;
         this.adTagUrl = null;
+        this.adPosition = -1;
         this.showInAdControlBar = false;
         this.adsReady = false;
         this.additionalAdTagParameters = null;
@@ -229,6 +230,7 @@ require("../html5-common/js/utils/utils.js");
         if (_usingAdRules)
         {
           this.adTagUrl = adRulesAd.tag_url;
+          this.adPosition = 0;
         }
 
         //the preload feature works, but has been disabled due to product, so setting to false here
@@ -539,6 +541,7 @@ require("../html5-common/js/utils/utils.js");
             //reset adRequested and adTagUrl so we can request another ad
             _resetAdsState();
             this.adTagUrl = this.currentAMCAdPod.ad.tag_url;
+            this.adPosition = this.currentAMCAdPod.ad.position / 1000;
             _trySetupAdsRequest();
           }
           //Otherwise we are trying to play an overlay, at this point IMA is already
@@ -989,6 +992,7 @@ require("../html5-common/js/utils/utils.js");
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
 
+        _amc.onAdsRequest(this.name, this.adPosition);
         if (this.runningUnitTests && this.maxAdsRequestTimeout === 0)
         {
           _adsRequestTimeout();
