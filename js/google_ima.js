@@ -120,6 +120,7 @@ require("../html5-common/js/utils/utils.js");
         this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
+        this.timestamp = -1;
         this.mainContentDuration = 0;
         this.initialPlayRequested = false;
         this.canSetupAdsRequest = true;
@@ -992,6 +993,7 @@ require("../html5-common/js/utils/utils.js");
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
 
+        this.timestamp = new Date().valueOf();
         _amc.onAdsRequest(this.name, this.adPosition);
         if (this.runningUnitTests && this.maxAdsRequestTimeout === 0)
         {
@@ -1002,7 +1004,6 @@ require("../html5-common/js/utils/utils.js");
           this.adsRequestTimeoutRef = _.delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
         }
 
-        OO.log("adsRequestTimeout: " + this.maxAdsRequestTimeout);
         this.adsRequested = true;
       });
 
@@ -1044,7 +1045,7 @@ require("../html5-common/js/utils/utils.js");
           {
             errorString = "ERROR Google SDK loaded but could not be validated"
           }
-          _amc.onAdSdkLoadFailure(this.name, errorString)
+          _amc.onAdSdkLoadFailure(this.name, errorString, false)
           _amc.unregisterAdManager(this.name);
           return;
         }
@@ -1244,8 +1245,7 @@ require("../html5-common/js/utils/utils.js");
           //if this error came from the SDK
           if(adError.getError)
           {
-            _amc.onSdkAdEvent(this.name, google.ima.AdErrorEvent.Type,
-              adError.type, [adError]);
+            _amc.onSdkAdEvent(this.name, adError.type, {adData: adError});
             errorString = "ERROR Google SDK: " + adError.getError();
           }
           else
@@ -1275,9 +1275,19 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onAdRequestSuccess = privateMember(function(adsManagerLoadedEvent)
       {
-
-        _amc.onSdkAdEvent(this.name, google.ima.AdsManagerLoadedEvent.Type,
-          adsManagerLoadedEvent.type, [adsManagerLoadedEvent]);
+        responseTime = new Date().valueOf() - this.timestamp;
+        /*
+          adType = "VAST";
+          if (adsManagerLoadedEvent.vpaid == true){
+            adType = "VPAID";
+          }
+          isPlaylist = false;
+          if (adsManagerLoadedEvent.getAdPodInfo().totalAds > 1 || this._usingAdRules ==true){
+            isPlaylist = true;
+          }
+          _amc.onSdkAdEventonAdsRequestSuccess(this.name, this.adPosition, 3, adType, responseTime, isPlaylist);
+        */
+        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {adData : adsManagerLoadedEvent});
 
         if (!_usingAdRules && _IMAAdsManager)
         {
@@ -1515,12 +1525,12 @@ require("../html5-common/js/utils/utils.js");
           OO.log("Ignoring IMA EVENT: ", adEvent.type, adEvent);
           return;
         }
-        _amc.onSdkAdEvent(this.name, google.ima.AdEvent.Type, adEvent.type, [adEvent]);
+        _amc.onSdkAdEvent(this.name, adEvent.type, {adData : adEvent.getAdData()});
         // Retrieve the ad from the event. Some events (e.g. ALL_ADS_COMPLETED)
         // don't have ad object associated.
         var eventType = google.ima.AdEvent.Type;
         var ad = adEvent.getAd();
-        OO.log("IMA EVENT: ", adEvent.type, adEvent);
+
         switch (adEvent.type)
         {
           case eventType.LOADED:
