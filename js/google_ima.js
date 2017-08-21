@@ -979,6 +979,8 @@ require("../html5-common/js/utils/utils.js");
           this.adTagUrl += connector + paramArray.join("&");
         }
         adsRequest.adTagUrl = OO.getNormalizedTagUrl(this.adTagUrl, _amc.currentEmbedCode);
+        OO.log("IMA: Ad request Tag: " + adsRequest.adTagUrl);
+        OO.log("IMA: Using Ad rules: " + _usingAdRules);
         // Specify the linear and nonlinear slot sizes. This helps the SDK to
         // select the correct creative if multiple are returned.
         var w = _amc.ui.width;
@@ -1286,8 +1288,8 @@ require("../html5-common/js/utils/utils.js");
             isPlaylist = true;
           }
           _amc.onSdkAdEventonAdsRequestSuccess(this.name, this.adPosition, 3, adType, responseTime, isPlaylist);
-        */
-        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {adData : adsManagerLoadedEvent});
+        
+        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {adData : adsManagerLoadedEvent});*/
 
         if (!_usingAdRules && _IMAAdsManager)
         {
@@ -1530,6 +1532,10 @@ require("../html5-common/js/utils/utils.js");
         // don't have ad object associated.
         var eventType = google.ima.AdEvent.Type;
         var ad = adEvent.getAd();
+        var adData = adEvent.getAdData();
+        OO.log("IMA: Event Type: ", adEvent.type);
+        OO.log("IMA: Event Ad: ", JSON.stringify(ad));
+        OO.log("IMA: Event Ad Data: ", JSON.stringify(adData));
 
         switch (adEvent.type)
         {
