@@ -1696,7 +1696,6 @@ describe('ad_manager_ima', function()
   {
     var called = 0;
     var adPluginName = null;
-<<<<<<< HEAD
     var sdkAdEvent = null;
     amc.onSdkAdEvent = function(name, adEvent) {
       called++;
