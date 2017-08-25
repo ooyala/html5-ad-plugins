@@ -1072,7 +1072,7 @@ OO.Ads.manager(function(_, $) {
           });
         }
         else {
-          console.log(
+          OO.log(
               "VAST: Tried to ping URLs: [" + trackingEventNames +
               "] but ad object passed in was: " + amcAd
           );
@@ -1145,13 +1145,31 @@ OO.Ads.manager(function(_, $) {
      */
     var _getLinearClickTrackingUrls = function(amcAd) {
       var vastAdObject = _getVastAdObject(amcAd);
-      var linearClickTrackingUrls = null;
-      if (vastAdObject &&
-          vastAdObject.linear &&
-          vastAdObject.linear.clickTracking &&
-          vastAdObject.linear.clickTracking.length > 0) {
-        linearClickTrackingUrls = vastAdObject.linear.clickTracking;
+      var linearClickTrackingUrls = [];
+      if (vastAdObject){
+        if (vastAdObject.linear &&
+            vastAdObject.linear.clickTracking &&
+            vastAdObject.linear.clickTracking.length > 0) {
+          linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.clickTracking);
+        }
+
+        if (vastAdObject.linear &&
+          vastAdObject.linear.clickThrough &&
+          vastAdObject.linear.clickThrough.length > 0) {
+          linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.clickThrough);
+        }
+
+        if (vastAdObject.linear &&
+          vastAdObject.linear.customClick &&
+          vastAdObject.linear.customClick.length > 0) {
+          linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.customClick);
+        }
       }
+
+      if (_.isEmpty(linearClickTrackingUrls)) {
+        linearClickTrackingUrls = null;
+      }
+
       return linearClickTrackingUrls;
     };
 
@@ -1801,7 +1819,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.trackError = function(code, currentAdId) {
       if (currentAdId && currentAdId in this.adTrackingInfo) {
-        this.pingURLs(this.adTrackingInfo[currentAdId].errorURLs);
+        this.pingURLs(code, this.adTrackingInfo[currentAdId].errorURLs);
         var parentId = this.adTrackingInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
@@ -1831,8 +1849,8 @@ OO.Ads.manager(function(_, $) {
      * @param {string[]} urls URLs to ping
      */
     this.pingURLs = function(code, urls) {
-      _.each(urls, function() {
-        pingURL(code, url);
+      _.each(urls, function(url) {
+        this.pingURL(code, url);
       }, this);
     };
 
@@ -2823,6 +2841,7 @@ OO.Ads.manager(function(_, $) {
       _.extend(ad, videoClickTracking);
 
       var data = {
+        id: this.$_node.attr('id'),
         adType: 'vpaid',
         companion: companionAds,
         error: errorTracking,
@@ -2975,6 +2994,16 @@ OO.Ads.manager(function(_, $) {
         if (error) {
           OO.pixelPing(error);
         }
+
+        var adId = _getAdId(currentAd);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          this.trackError(this.ERROR_CODES.GENERAL_VPAID, parentId);
+        }
       }
     };
 
@@ -2986,12 +3015,26 @@ OO.Ads.manager(function(_, $) {
      */
     this.sendVpaidImpressions = function() {
       if (currentAd && currentAd.data) {
-        var impressions = currentAd.data.impressions;
+        var impressions = currentAd.data.impression;
         _.each(impressions, function(impression) {
           if (impression && impression.url) {
             OO.pixelPing(impression.url);
           }
         });
+
+        var adId = _getAdId(currentAd);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+          if (parentAdTrackingObject) {
+            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            _handleTrackingUrls(parentAdObject, ["impression"]);
+          }
+        }
       }
     };
 
@@ -3003,7 +3046,9 @@ OO.Ads.manager(function(_, $) {
      * @param {string} type Event name to be send
      */
     this.sendVpaidTracking = function(type) {
-      var ad = prevAd ? prevAd : currentAd;
+      //TODO: Why was this fetching previous ad if it existed?
+      //var ad = prevAd ? prevAd : currentAd;
+      var ad = currentAd;
       if (ad && ad.data) {
         var tracking = ad.data.tracking,
             currentEvent;
@@ -3016,6 +3061,20 @@ OO.Ads.manager(function(_, $) {
             OO.pixelPing(currentEvent.url);
           }
         }
+
+        var adId = _getAdId(ad);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+          if (parentAdTrackingObject) {
+            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            _handleTrackingUrls(parentAdObject, [type]);
+          }
+        }
       }
     };
 
@@ -3024,13 +3083,48 @@ OO.Ads.manager(function(_, $) {
      * This is only required for VPAID ads
      * @public
      * @method Vast#sendVpaidClickTracking
-     * @param {object} ad Ad to look for the tracking url
      */
-    this.sendVpaidClickTracking = function(ad) {
-      if (ad && ad.data && ad.data.videoClickTracking) {
-        var clickTracking = ad.data.videoClickTracking.clickTracking;
-        if (clickTracking){
-          OO.pixelPing(clickTracking);
+    this.sendVpaidClickTracking = function() {
+      var ad = currentAd;
+      if (ad && ad.data) {
+        if (ad.data.videoClickTracking) {
+          var clickTracking = ad.data.videoClickTracking.clickTracking;
+          if (clickTracking){
+            OO.pixelPing(clickTracking);
+          }
+
+          var clickThrough = ad.data.videoClickTracking.clickThrough;
+          if (clickThrough){
+            OO.pixelPing(clickThrough);
+          }
+
+          var customClick = ad.data.videoClickTracking.customClick;
+          if (customClick){
+            OO.pixelPing(customClick);
+          }
+
+          var nonLinearClickThrough = ad.data.videoClickTracking.nonLinearClickThrough;
+          if (nonLinearClickThrough){
+            OO.pixelPing(nonLinearClickThrough);
+          }
+        }
+
+        var adId = _getAdId(ad);
+
+        // Try to ping parent tracking events as well
+        if (this.adTrackingInfo &&
+          this.adTrackingInfo[adId] &&
+          this.adTrackingInfo[adId].wrapperParentId) {
+          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+          if (parentAdTrackingObject) {
+            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            if (ad.data.type === this.amc.ADTYPE.NONLINEAR_OVERLAY) {
+              _handleTrackingUrls(parentAdObject, ["nonLinearClickTracking"]);
+            } else {
+              _handleTrackingUrls(parentAdObject, ["linearClickTracking"]);
+            }
+          }
         }
       }
     };

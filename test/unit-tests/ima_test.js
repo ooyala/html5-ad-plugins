@@ -1696,6 +1696,7 @@ describe('ad_manager_ima', function()
   {
     var called = 0;
     var adPluginName = null;
+<<<<<<< HEAD
     var sdkAdEvent = null;
     amc.onSdkAdEvent = function(name, adEvent) {
       called++;
@@ -1826,5 +1827,15 @@ describe('ad_manager_ima', function()
       expect(sdkAdEventName).to.be(event);
       expect(_.isEmpty(sdkAdEventData)).to.be(false);
     }
+  });
+
+  it('AMC Integration: IMA plugin provides a default value of 15000 ms for loadVideoTimeout', function()
+  {
+    initialize(false);
+    play();
+    ima.playAd(amc.timeline[0]);
+    expect(ima.adsRequested).to.be(true);
+    expect(_.isEmpty(google.ima.adsRenderingSettingsInstance)).to.be(false);
+    expect(google.ima.adsRenderingSettingsInstance.loadVideoTimeout).to.be(15000);
   });
 });
