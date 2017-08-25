@@ -13,6 +13,8 @@ google =
     },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
+
+      this.g = { vpaid : false };
       this.getAdId = function()
       {
         return "blah";
@@ -32,7 +34,10 @@ google =
       };
       //getAdSystem,
       //getCompanionAds,
-      //getContentType,
+      this.getContentType = function()
+      {
+        return "video";
+      };
       //getDescription,
       this.getDuration = function()
       {
@@ -56,6 +61,11 @@ google =
       this.isLinear = function()
       {
         return google.ima.linearAds;
+      };
+
+      this.getMediaUrl = function()
+      {
+        return "http:media.url.com"
       };
     },
     AdDisplayContainer : function()
@@ -143,8 +153,30 @@ google =
                       type : event,
                       getError : function()
                       {
-                        return "Ad Error";
+                        return {
+                            getType : function()
+                            { 
+                              return "someAdError";
+                            },
+                            getInnerError : function()
+                            {
+                              return 900;
+                            },
+                            getErrorCode : function()
+                            {
+                              return 900;
+                            },
+                            getVastErrorCode : function()
+                            {
+                              return 1001;
+                            },
+                            getMessage : function()
+                            {
+                              return "Some Error Message";
+                            },
+                        }
                       }
+                   
                     });
                   }
                   else
@@ -155,6 +187,10 @@ google =
                       getAd : function()
                       {
                         return currentAd;
+                      },
+                      getAdData : function()
+                      {
+                        return {};
                       }
                     });
                   }
@@ -228,6 +264,45 @@ google =
         USER_CLOSE : "userClose",
         VOLUME_CHANGED : "volumeChanged",
         VOLUME_MUTED : "volumeMuted"
+      }
+    },
+    AdError :
+    {
+      ErrorCode :
+      {
+        ADSLOT_NOT_VISIBLE : -1,
+        COMPANION_AD_LOADING_FAILED : -1,
+        COMPANION_REQUIRED_ERROR : 602,
+        FAILED_TO_REQUEST_ADS : 1005,
+        INVALID_ADX_EXTENSION : 1105,
+        INVALID_ARGUMENTS : 1101,
+        NONLINEAR_DIMENSIONS_ERROR : 501,
+        OVERLAY_AD_LOADING_FAILED : -1,
+        OVERLAY_AD_PLAYING_FAILED : 500,
+        REQUIRED_LISTENERS_NOT_ADDED : 900,
+        UNKNOWN_AD_RESPONSE : 1010,
+        UNKNOWN_ERROR : 900,
+        UNSUPPORTED_LOCALE : 1011,
+        VAST_ASSET_MISMATCH : 403,
+        VAST_ASSET_NOT_FOUND : 1007,
+        VAST_EMPTY_RESPONSE : 1009,
+        VAST_LINEAR_ASSET_MISMATCH : 403,
+        VAST_LOAD_TIMEOUT : 301,
+        VAST_MALFORMED_RESPONSE : -1,
+        VAST_MEDIA_ERROR : -1,
+        VAST_MEDIA_LOAD_TIMEOUT : 402,
+        VAST_NONLINEAR_ASSET_MISMATCH : 503,
+        VAST_NO_ADS_AFTER_WRAPPER : 303,
+        VAST_SCHEMA_VALIDATION_ERROR : 10,
+        VAST_TOO_MANY_REDIRECTS : 302,
+        VAST_TRAFFICKING_ERROR : 200,
+        VAST_UNEXPECTED_DURATION_ERROR : 202,
+        VAST_UNEXPECTED_LINEARITY : 201,
+        VAST_UNSUPPORTED_VERSION : 102,
+        VAST_WRAPPER_ERROR : 300,
+        VIDEO_ELEMENT_REQUIRED : -1,
+        VIDEO_ELEMENT_USED:-1,
+        VIDEO_PLAY_ERROR:400
       }
     },
     ViewMode : {},

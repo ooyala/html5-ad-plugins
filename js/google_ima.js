@@ -40,6 +40,7 @@ require("../html5-common/js/utils/utils.js");
       var _adModuleJsReady = false;
       var _playheadTracker;
       var _usingAdRules;
+      var _preloadingEnabled = false;
       var _IMAAdsLoader;
       var _IMAAdsManager;
       var _IMAAdsManagerInitialized;
@@ -120,11 +121,14 @@ require("../html5-common/js/utils/utils.js");
         this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
-        this.timestamp = -1;
+        this.adRequestTime = -1;
+        this.adResponseTime = -1;
         this.mainContentDuration = 0;
         this.initialPlayRequested = false;
         this.canSetupAdsRequest = true;
         this.adTagUrl = null;
+        this.currentImpressionTime = 0; 
+        this.adFinalTagUrl = null;
         this.adPosition = -1;
         this.showInAdControlBar = false;
         this.adsReady = false;
@@ -979,8 +983,7 @@ require("../html5-common/js/utils/utils.js");
           this.adTagUrl += connector + paramArray.join("&");
         }
         adsRequest.adTagUrl = OO.getNormalizedTagUrl(this.adTagUrl, _amc.currentEmbedCode);
-        OO.log("IMA: Ad request Tag: " + adsRequest.adTagUrl);
-        OO.log("IMA: Using Ad rules: " + _usingAdRules);
+        this.adFinalTagUrl = adsRequest.adTagUrl;
         // Specify the linear and nonlinear slot sizes. This helps the SDK to
         // select the correct creative if multiple are returned.
         var w = _amc.ui.width;
@@ -995,8 +998,9 @@ require("../html5-common/js/utils/utils.js");
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
 
-        this.timestamp = new Date().valueOf();
-        _amc.onAdsRequest(this.name, this.adPosition);
+        //Used to determine time until response is received
+        this.adRequestTime = new Date().valueOf();
+        _amc.onAdRequest(this.name, this.adPosition, _preloadingEnabled);
         if (this.runningUnitTests && this.maxAdsRequestTimeout === 0)
         {
           _adsRequestTimeout();
@@ -1005,7 +1009,6 @@ require("../html5-common/js/utils/utils.js");
         {
           this.adsRequestTimeoutRef = _.delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
         }
-
         this.adsRequested = true;
       });
 
@@ -1247,7 +1250,39 @@ require("../html5-common/js/utils/utils.js");
           //if this error came from the SDK
           if(adError.getError)
           {
+            var errorData = adError.getError();
+            var isTimeout = false;
+            var isEmpty = false;
+            var isPlaybackError = false;
+            var vastErrorCode = errorData.getVastErrorCode();
+            var imaErrorCodes = google.ima.AdError.ErrorCode;
+
+            if(vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
+              isTimeout=true;
+            }
+            if(vastErrorCode == imaErrorCodes.VAST_NO_ADS_AFTER_WRAPPER || 
+               vastErrorCode == imaErrorCodes.VAST_EMPTY_RESPONSE){
+              isEmpty=true;
+            }
+            if(vastErrorCode == imaErrorCodes.VIDEO_PLAY_ERROR || 
+               vastErrorCode == imaErrorCodes.VAST_MEDIA_ERROR || 
+               vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
+              isPlaybackError=true;
+            }
+
             _amc.onSdkAdEvent(this.name, adError.type, {adData: adError});
+            if(isEmpty)
+            {
+              _amc.onAdRequestEmpty(this.name, this.adPosition, this.adFinalTagUrl, vastErrorCode, errorData.getMessage());
+            }
+            else if (isPlaybackError)
+            {
+              _amc.onAdPlaybackError(this.name, this.adPosition, this.adFinalTagUrl, vastErrorCode, errorData.getMessage(), [], this.currentMedia);
+            }
+            else
+            {
+              _amc.onAdRequestError(this.name, this.adPosition, this.adFinalTagUrl, vastErrorCode, errorData.getMessage(), isTimeout, false);
+            }
             errorString = "ERROR Google SDK: " + adError.getError();
           }
           else
@@ -1277,7 +1312,9 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onAdRequestSuccess = privateMember(function(adsManagerLoadedEvent)
       {
-        responseTime = new Date().valueOf() - this.timestamp;
+        this.adResponseTime =  new Date().valueOf();
+        var responseTime = this.adResponseTime - this.adRequestTime;
+
         /*
           adType = "VAST";
           if (adsManagerLoadedEvent.vpaid == true){
@@ -1287,9 +1324,9 @@ require("../html5-common/js/utils/utils.js");
           if (adsManagerLoadedEvent.getAdPodInfo().totalAds > 1 || this._usingAdRules ==true){
             isPlaylist = true;
           }
-          _amc.onSdkAdEventonAdsRequestSuccess(this.name, this.adPosition, 3, adType, responseTime, isPlaylist);
+          _amc.onSdkAdEventonAdsRequestSuccess(this.name, this.adPosition, 3, adType, responseTime, isPlaylist);*/
         
-        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {adData : adsManagerLoadedEvent});*/
+        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {adData : adsManagerLoadedEvent});
 
         if (!_usingAdRules && _IMAAdsManager)
         {
@@ -1532,10 +1569,9 @@ require("../html5-common/js/utils/utils.js");
         // don't have ad object associated.
         var eventType = google.ima.AdEvent.Type;
         var ad = adEvent.getAd();
+        // Retrieve the ad data as well. 
+        // Some events will not have ad data associated.
         var adData = adEvent.getAdData();
-        OO.log("IMA: Event Type: ", adEvent.type);
-        OO.log("IMA: Event Ad: ", JSON.stringify(ad));
-        OO.log("IMA: Event Ad Data: ", JSON.stringify(adData));
 
         switch (adEvent.type)
         {
@@ -1596,6 +1632,13 @@ require("../html5-common/js/utils/utils.js");
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
+            var adSkipped = false;
+            if (adEvent.type == eventType.SKIPPED)
+            {
+              adSkipped = true;
+            }
+            var completionTime = new Date().valueOf() - this.currentImpressionTime;
+            _amc.onAdCompleted(this.name, completionTime, adSkipped);
             this.adPlaybackStarted = false;
             if (this.videoControllerWrapper && (ad && ad.isLinear()))
             {
@@ -1646,6 +1689,40 @@ require("../html5-common/js/utils/utils.js");
               _IMA_SDK_resumeMainContent();
             }
 
+            break;
+          case eventType.IMPRESSION:
+            this.currentImpressionTime = new Date().valueOf();
+            this.currentMedia = ad.getMediaUrl();
+            var loadTime = this.currentImpressionTime - this.adResponseTime;
+            var protocol = "VAST";
+            if (ad && ad.g && ad.g.vpaid==true)
+            {
+              protocol = "VPAID";
+            }
+            var type = "unknown";
+            if (ad && ad.isLinear())
+            {
+              if (ad.getContentType().lastIndexOf("video", 0 ) === 0 )
+              {
+                type = _amc.ADTYPE.LINEAR_VIDEO;
+              }
+              else
+              {
+                type = _amc.ADTYPE.LINEAR_OVERLAY;
+              }
+            }
+            else
+            {
+              if (ad && ad.getContentType().lastIndexOf("video", 0 ) === 0 )
+              {
+                type = _amc.ADTYPE.NONLINEAR_VIDEO;
+              }
+              else
+              {
+                type = _amc.ADTYPE.NONLINEAR_OVERLAY;
+              }
+            }
+            _amc.onAdImpression(this.name, this.adPosition, loadTime, protocol, type, "")
             break;
           case eventType.FIRST_QUARTILE:
           case eventType.MIDPOINT:
