@@ -1255,34 +1255,39 @@ require("../html5-common/js/utils/utils.js");
             var isTimeout = false;
             var isEmpty = false;
             var isPlaybackError = false;
-            var vastErrorCode = errorData.getVastErrorCode();
+            var errorCodes = { 
+                               vastErrorCode : errorData.getVastErrorCode(),
+                               innerErrorCode : errorData.getInnerError(),
+                               errorCode : errorData.getErrorCode()
+                             };
+            OO.log("GOOGLE_IMA:: ERROR Code List", JSON.stringify(errorCodes));       
             var imaErrorCodes = google.ima.AdError.ErrorCode;
 
-            if(vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
-              isTimeout=true;
+            if(errorCodes.vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
+              isTimeout = true;
             }
-            if(vastErrorCode == imaErrorCodes.VAST_NO_ADS_AFTER_WRAPPER || 
-               vastErrorCode == imaErrorCodes.VAST_EMPTY_RESPONSE){
-              isEmpty=true;
+            if(errorCodes.vastErrorCode == imaErrorCodes.VAST_NO_ADS_AFTER_WRAPPER || 
+               errorCodes.vastErrorCode == imaErrorCodes.VAST_EMPTY_RESPONSE){
+              isEmpty = true;
             }
-            if(vastErrorCode == imaErrorCodes.VIDEO_PLAY_ERROR || 
-               vastErrorCode == imaErrorCodes.VAST_MEDIA_ERROR || 
-               vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
-              isPlaybackError=true;
+            if(errorCodes.vastErrorCode == imaErrorCodes.VIDEO_PLAY_ERROR || 
+               errorCodes.vastErrorCode == imaErrorCodes.VAST_MEDIA_ERROR || 
+               errorCodes.vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
+              isPlaybackError = true;
             }
 
-            _amc.onSdkAdEvent(this.name, adError.type, {adData: adError});
+            _amc.onSdkAdEvent(this.name, adError.type, {errorData: errorData});
             if(isEmpty)
             {
-              _amc.onAdRequestEmpty(this.name, this.adPosition, this.adFinalTagUrl, vastErrorCode, errorData.getMessage());
+              _amc.onAdRequestEmpty(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage());
             }
             else if (isPlaybackError)
             {
-              _amc.onAdPlaybackError(this.name, this.adPosition, this.adFinalTagUrl, vastErrorCode, errorData.getMessage(), [], this.currentMedia);
+              _amc.onAdPlaybackError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), this.currentMedia);
             }
             else
             {
-              _amc.onAdRequestError(this.name, this.adPosition, this.adFinalTagUrl, vastErrorCode, errorData.getMessage(), isTimeout, false);
+              _amc.onAdRequestError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), isTimeout, false);
             }
             errorString = "ERROR Google SDK: " + adError.getError();
           }
@@ -1326,8 +1331,8 @@ require("../html5-common/js/utils/utils.js");
             isPlaylist = true;
           }
           _amc.onSdkAdEventonAdsRequestSuccess(this.name, this.adPosition, 3, adType, responseTime, isPlaylist);*/
-        
-        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {adData : adsManagerLoadedEvent});
+  
+        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {eventData : adsManagerLoadedEvent});
 
         if (!_usingAdRules && _IMAAdsManager)
         {
