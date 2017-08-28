@@ -40,7 +40,6 @@ require("../html5-common/js/utils/utils.js");
       var _adModuleJsReady = false;
       var _playheadTracker;
       var _usingAdRules;
-      var _preloadingEnabled = false;
       var _IMAAdsLoader;
       var _IMAAdsManager;
       var _IMAAdsManagerInitialized;
@@ -1001,7 +1000,7 @@ require("../html5-common/js/utils/utils.js");
 
         //Used to determine time until response is received
         this.adRequestTime = new Date().valueOf();
-        _amc.onAdRequest(this.name, this.adPosition, _preloadingEnabled);
+        _amc.onAdRequest(this.name, this.adPosition);
         if (this.runningUnitTests && this.maxAdsRequestTimeout === 0)
         {
           _adsRequestTimeout();
@@ -1051,7 +1050,7 @@ require("../html5-common/js/utils/utils.js");
           {
             errorString = "ERROR Google SDK loaded but could not be validated"
           }
-          _amc.onAdSdkLoadFailure(this.name, errorString, false)
+          _amc.onAdSdkLoadFailure(this.name, errorString)
           _amc.unregisterAdManager(this.name);
           return;
         }
@@ -1287,7 +1286,7 @@ require("../html5-common/js/utils/utils.js");
             }
             else
             {
-              _amc.onAdRequestError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), isTimeout, false);
+              _amc.onAdRequestError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), isTimeout);
             }
             errorString = "ERROR Google SDK: " + adError.getError();
           }
@@ -1321,17 +1320,7 @@ require("../html5-common/js/utils/utils.js");
         this.adResponseTime =  new Date().valueOf();
         var responseTime = this.adResponseTime - this.adRequestTime;
 
-        /*
-          adType = "VAST";
-          if (adsManagerLoadedEvent.vpaid == true){
-            adType = "VPAID";
-          }
-          isPlaylist = false;
-          if (adsManagerLoadedEvent.getAdPodInfo().totalAds > 1 || this._usingAdRules ==true){
-            isPlaylist = true;
-          }
-          _amc.onSdkAdEventonAdsRequestSuccess(this.name, this.adPosition, 3, adType, responseTime, isPlaylist);*/
-  
+        _amc.onAdRequestSuccess(this.name, this.adPosition, responseTime);
         _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {eventData : adsManagerLoadedEvent});
 
         if (!_usingAdRules && _IMAAdsManager)
@@ -1729,7 +1718,7 @@ require("../html5-common/js/utils/utils.js");
                 type = _amc.ADTYPE.NONLINEAR_OVERLAY;
               }
             }
-            _amc.onAdImpression(this.name, this.adPosition, loadTime, protocol, type, "")
+            _amc.onAdImpression(this.name, this.adPosition, loadTime, protocol, type)
             break;
           case eventType.FIRST_QUARTILE:
           case eventType.MIDPOINT:
