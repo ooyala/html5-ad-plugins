@@ -92,6 +92,7 @@ fake_amc = function() {
   this.onAdRequestEmpty = function() {};
   this.onAdRequestError = function() {};
   this.onAdPlaybackError = function() {};
+  this.onAdSdkImpression = function() {};
   this.onAdImpression = function() {};
   this.onAdCompleted = function() {};
   this.adsClickthroughOpened = function() {};

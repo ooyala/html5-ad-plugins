@@ -121,12 +121,14 @@ require("../html5-common/js/utils/utils.js");
         this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
+        this.initialPlayRequestTime = -1;
         this.adRequestTime = -1;
         this.adResponseTime = -1;
         this.mainContentDuration = 0;
         this.initialPlayRequested = false;
         this.canSetupAdsRequest = true;
         this.adTagUrl = null;
+        this.currentMedia = null;
         this.currentImpressionTime = 0; 
         this.adFinalTagUrl = null;
         this.adPosition = -1;
@@ -758,6 +760,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onInitialPlayRequested = privateMember(function()
       {
+        this.initialPlayRequestTime = new Date().valueOf();
         OO.log("_onInitialPlayRequested");
         //double check that IMA SDK loaded.
         if(!_IMAAdDisplayContainer)
@@ -1248,7 +1251,7 @@ require("../html5-common/js/utils/utils.js");
           var errorString = "ERROR Google IMA";
 
           //if this error came from the SDK
-          if(adError.getError)
+          if (adError.getError)
           {
             var errorData = adError.getError();
             var isTimeout = false;
@@ -1259,24 +1262,33 @@ require("../html5-common/js/utils/utils.js");
                                innerErrorCode : errorData.getInnerError(),
                                errorCode : errorData.getErrorCode()
                              };
-            OO.log("GOOGLE_IMA:: ERROR Code List", JSON.stringify(errorCodes));       
+            OO.log("GOOGLE_IMA:: SDK Error received: Error Code List", JSON.stringify(errorCodes));       
             var imaErrorCodes = google.ima.AdError.ErrorCode;
 
-            if(errorCodes.vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
-              isTimeout = true;
+            switch (errorCodes.vastErrorCode) 
+            {
+              case imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT:
+              case imaErrorCodes.VAST_LOAD_TIMEOUT:
+                isTimeout = true;
+                break;
+              case imaErrorCodes.VAST_NO_ADS_AFTER_WRAPPER:
+              case imaErrorCodes.VAST_EMPTY_RESPONSE:
+                isEmpty = true;
+                break;
+              case imaErrorCodes.VAST_MEDIA_ERROR:
+              case imaErrorCodes.VIDEO_PLAY_ERROR:
+                isPlaybackError = true;
+                break;
+              default:
+                break;
             }
-            if(errorCodes.vastErrorCode == imaErrorCodes.VAST_NO_ADS_AFTER_WRAPPER || 
-               errorCodes.vastErrorCode == imaErrorCodes.VAST_EMPTY_RESPONSE){
-              isEmpty = true;
-            }
-            if(errorCodes.vastErrorCode == imaErrorCodes.VIDEO_PLAY_ERROR || 
-               errorCodes.vastErrorCode == imaErrorCodes.VAST_MEDIA_ERROR || 
-               errorCodes.vastErrorCode == imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT){
+            if (errorCodes.errorCode == imaErrorCodes.VIDEO_PLAY_ERROR)
+            {
               isPlaybackError = true;
             }
-
+           
             _amc.onSdkAdEvent(this.name, adError.type, {errorData: errorData});
-            if(isEmpty)
+            if (isEmpty)
             {
               _amc.onAdRequestEmpty(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage());
             }
@@ -1317,11 +1329,11 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onAdRequestSuccess = privateMember(function(adsManagerLoadedEvent)
       {
-        this.adResponseTime =  new Date().valueOf();
+        this.adResponseTime = new Date().valueOf();
         var responseTime = this.adResponseTime - this.adRequestTime;
-
-        _amc.onAdRequestSuccess(this.name, this.adPosition, responseTime);
-        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {eventData : adsManagerLoadedEvent});
+        var timeSinceInitialPlay =  this.adResponseTime - this.initialPlayRequestTime;
+        _amc.onAdRequestSuccess(this.name, this.adPosition, responseTime, timeSinceInitialPlay);
+        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {eventData : {}});
 
         if (!_usingAdRules && _IMAAdsManager)
         {
@@ -1572,6 +1584,7 @@ require("../html5-common/js/utils/utils.js");
         switch (adEvent.type)
         {
           case eventType.LOADED:
+            this.currentMedia = ad.getMediaUrl();
             _resetUIContainerStyle();
 
             if (ad.isLinear())
@@ -1628,6 +1641,10 @@ require("../html5-common/js/utils/utils.js");
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
+            if(_usingAdRules)
+            {
+              this.adResponseTime = new Date().valueOf();
+            }
             var adSkipped = false;
             if (adEvent.type == eventType.SKIPPED)
             {
@@ -1687,11 +1704,11 @@ require("../html5-common/js/utils/utils.js");
 
             break;
           case eventType.IMPRESSION:
+
             this.currentImpressionTime = new Date().valueOf();
-            this.currentMedia = ad.getMediaUrl();
             var loadTime = this.currentImpressionTime - this.adResponseTime;
             var protocol = "VAST";
-            if (ad && ad.g && ad.g.vpaid==true)
+            if (ad && ad.g && ad.g.vpaid == true)
             {
               protocol = "VPAID";
             }
@@ -1718,7 +1735,7 @@ require("../html5-common/js/utils/utils.js");
                 type = _amc.ADTYPE.NONLINEAR_OVERLAY;
               }
             }
-            _amc.onAdImpression(this.name, this.adPosition, loadTime, protocol, type)
+            _amc.onAdSdkImpression(this.name, this.adPosition, loadTime, protocol, type)
             break;
           case eventType.FIRST_QUARTILE:
           case eventType.MIDPOINT:
@@ -1745,6 +1762,15 @@ require("../html5-common/js/utils/utils.js");
             _IMA_SDK_onAdClicked(adEvent);
             break;
           case eventType.CONTENT_PAUSE_REQUESTED:
+            if (_usingAdRules && ad)
+            {
+              var adPodInfo = ad.getAdPodInfo();
+              var adPodIndex = adPodInfo.getPodIndex();
+              if (adPodIndex != 0) // if ad is not part of preroll
+              {
+                this.adResponseTime = new Date().valueOf();
+              }
+            }
             _IMA_SDK_pauseMainContent(adEvent);
             break;
           case eventType.CONTENT_RESUME_REQUESTED:

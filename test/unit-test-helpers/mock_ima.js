@@ -31,6 +31,10 @@ google =
           getAdPosition : function ()
           {
             return 1;
+          },
+          getPodIndex : function ()
+          {
+            return 0;
           }
         };
       };
