@@ -7,11 +7,13 @@ google =
     adManagerInstance : null,   //for unit test convenience
     adLoaderInstance : null,    //for unit test convenience
     vpaidMode : null,           //for unit test convenience
+    adsRenderingSettingsInstance : null, //for unit test convenience
     resetDefaultValues : function()
     {
       google.ima.linearAds = true;
       google.ima.delayAdRequest = false;
       google.ima.vpaidMode = null;
+      google.ima.adsRenderingSettingsInstance = null;
     },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
@@ -204,7 +206,9 @@ google =
       };
     },
     AdsRequest : function() {},
-    AdsRenderingSettings : function() {},
+    AdsRenderingSettings : function() {
+      google.ima.adsRenderingSettingsInstance = this;
+    },
     AdEvent :
     {
       Type :

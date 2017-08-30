@@ -1696,26 +1696,6 @@ describe('ad_manager_ima', function()
   {
     var called = 0;
     var adPluginName = null;
-    var sdkAdEvent = null;
-    amc.onSdkAdEvent = function(name, adEvent) {
-      called++;
-      adPluginName = name;
-      sdkAdEvent = adEvent;
-    };
-
-    initialize(false);
-    play();
-    ima.playAd(amc.timeline[0]);
-    expect(ima.adsRequested).to.be(true);
-    expect(called).to.be(1);
-    expect(adPluginName).to.be(ima.name);
-    expect(_.isEmpty(sdkAdEvent)).to.be(false);
-  });
-
-  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad', function()
-  {
-    var called = 0;
-    var adPluginName = null;
     var sdkAdEventType = null;
     var sdkAdEvent = null;
     var sdkAdEventParams = null;
@@ -1908,5 +1888,16 @@ describe('ad_manager_ima', function()
     expect(ima.ready).to.be(true);
     play();
     expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.DISABLED);
+  });
+
+  it('AMC Integration: IMA plugin provides a default value of 15000 ms for loadVideoTimeout', function()
+  {
+    initialize(false);
+    play();
+    ima.playAd(amc.timeline[0]);
+    expect(ima.adsRequested).to.be(true);
+    expect(_.isEmpty(google.ima.adsRenderingSettingsInstance)).to.be(false);
+    expect(google.ima.adsRenderingSettingsInstance.loadVideoTimeout).to.be(15000);
+
   });
 });
