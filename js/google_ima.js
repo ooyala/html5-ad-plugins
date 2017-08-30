@@ -300,14 +300,13 @@ require("../html5-common/js/utils/utils.js");
         google.ima.settings.setPlayerType(PLAYER_TYPE);
         google.ima.settings.setLocale(OO.getLocale());
 
-        var vpaidMode = google.ima.ImaSdkSettings.VpaidMode.INSECURE;
+        var vpaidMode = google.ima.ImaSdkSettings.VpaidMode.ENABLED;
         if (this.desiredVpaidMode)
         {
           switch (this.desiredVpaidMode)
           {
-            case "secure":
-            case "enabled":
-              vpaidMode = google.ima.ImaSdkSettings.VpaidMode.ENABLED;
+            case "insecure":
+              vpaidMode = google.ima.ImaSdkSettings.VpaidMode.INSECURE;
               break;
             case "disabled":
               vpaidMode = google.ima.ImaSdkSettings.VpaidMode.DISABLED;
