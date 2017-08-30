@@ -1820,6 +1820,76 @@ describe('ad_manager_ima', function()
     }
   });
 
+  it('IMA SDK Integration: Default vpaidMode is set to ENABLED', function()
+  {
+    initialize(false);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+  });
+
+  it('IMA SDK Integration: Able to set vpaidMode to INSECURE with page level setting \'insecure\'', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    expect(ima.ready).to.be(false);
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : NON_AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      vpaidMode : "insecure"
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.ready).to.be(true);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+  });
+
+  it('IMA SDK Integration: Able to set vpaidMode to DISABLED with page level setting \'disabled\'', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    expect(ima.ready).to.be(false);
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : NON_AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      vpaidMode : "disabled"
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.ready).to.be(true);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.DISABLED);
+  });
+
+  it('IMA SDK Integration: vpaidMode is set to ENABLED with invalid vpaidMode page level setting', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    expect(ima.ready).to.be(false);
+    var ad =
+    {
+      tag_url : "https://blah",
+      position_type : NON_AD_RULES_POSITION_TYPE
+    };
+    var content =
+    {
+      all_ads : [ad],
+      vpaidMode : ""
+    };
+    ima.loadMetadata(content, {}, {});
+    expect(ima.ready).to.be(true);
+    play();
+    expect(google.ima.vpaidMode).to.be(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+  });
+
   it('AMC Integration: IMA plugin provides a default value of 15000 ms for loadVideoTimeout', function()
   {
     initialize(false);
@@ -1828,5 +1898,6 @@ describe('ad_manager_ima', function()
     expect(ima.adsRequested).to.be(true);
     expect(_.isEmpty(google.ima.adsRenderingSettingsInstance)).to.be(false);
     expect(google.ima.adsRenderingSettingsInstance.loadVideoTimeout).to.be(15000);
+
   });
 });
