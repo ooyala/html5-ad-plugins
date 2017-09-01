@@ -1646,7 +1646,7 @@ require("../html5-common/js/utils/utils.js");
               this.adResponseTime = new Date().valueOf();
             }
             var adSkipped = false;
-            if (adEvent.type == eventType.SKIPPED)
+            if (adEvent.type === eventType.SKIPPED)
             {
               adSkipped = true;
             }
@@ -1708,7 +1708,7 @@ require("../html5-common/js/utils/utils.js");
             this.currentImpressionTime = new Date().valueOf();
             var loadTime = this.currentImpressionTime - this.adResponseTime;
             var protocol = "VAST";
-            if (ad && ad.g && ad.g.vpaid == true)
+            if (ad && ad.g && ad.g.vpaid === true)
             {
               protocol = "VPAID";
             }
