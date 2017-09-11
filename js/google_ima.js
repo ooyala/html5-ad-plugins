@@ -34,6 +34,7 @@ require("../html5-common/js/utils/utils.js");
       this.ready = false;
       this.runningUnitTests = false;
       this.sharedVideoElement = null;
+      this.enableIosSkippableAds = false;
 
       //private member variables of this GoogleIMA object
       var _amc = null;
@@ -293,6 +294,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("iframeZIndex"))
         {
           this.imaIframeZIndex = metadata.iframeZIndex;
+        }
+
+        this.enableIosSkippableAds = false;
+        if (metadata.hasOwnProperty("enableIosSkippableAds"))
+        {
+          this.enableIosSkippableAds = metadata.enableIosSkippableAds;
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
@@ -630,7 +637,10 @@ require("../html5-common/js/utils/utils.js");
           {
             //resumeAd will only be called if we have exited fullscreen
             //so this is safe to call
-            this.sharedVideoElement.webkitEnterFullscreen();
+            if (OO.isIosMajorVersion < 10)
+            {
+              this.sharedVideoElement.webkitEnterFullscreen();
+            }
             this.sharedVideoElement.play();
           }
           _IMAAdsManager.resume();
@@ -1052,6 +1062,8 @@ require("../html5-common/js/utils/utils.js");
         {
           google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
         }
+
+        google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
 
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
@@ -1535,6 +1547,12 @@ require("../html5-common/js/utils/utils.js");
               }
               //Since IMA handles its own UI, we want the video player to hide its UI elements
               _amc.hidePlayerUi(this.showAdControls, false);
+              
+              //in the case where skippable ads are enabled we want to exit fullscreen
+              //because custom playback is disabled and ads can't be rendered in fullscreen.
+              if (OO.iosMajorVersion >= 10 && this.enableIosSkippableAds === true) {
+                this.sharedVideoElement.webkitExitFullscreen();
+              }
             }
             else
             {
