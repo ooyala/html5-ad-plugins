@@ -1372,14 +1372,11 @@ require("../html5-common/js/utils/utils.js");
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
 
         // When the ads manager is ready, we are ready to apply css changes to the video element
-        // If the sharedVideoElement is not used, mark it as null before applying css
         if (this.videoControllerWrapper)
         {
           this.videoControllerWrapper.readyForCss = true;
         }
-        if (!_IMAAdsManager.isCustomPlaybackUsed()) {
-          this.setupSharedVideoElement(null);
-        }
+
         if (this.videoControllerWrapper)
         {
           this.videoControllerWrapper.applyStoredCss();
@@ -1622,8 +1619,12 @@ require("../html5-common/js/utils/utils.js");
 
               //in the case where skippable ads are enabled we want to exit fullscreen
               //because custom playback is disabled and ads can't be rendered in fullscreen.
-              if (_inlinePlaybackSupported() && OO.isIphone && this.enableIosSkippableAds === true) {
-                this.sharedVideoElement.webkitExitFullscreen();
+              if (_inlinePlaybackSupported() && OO.isIphone && this.enableIosSkippableAds === true)
+              {
+                if (this.sharedVideoElement)
+                {
+                  this.sharedVideoElement.webkitExitFullscreen();
+                }
               }
             }
             else
