@@ -7,6 +7,7 @@ google =
     adManagerInstance : null,   //for unit test convenience
     adLoaderInstance : null,    //for unit test convenience
     adsRenderingSettingsInstance : null, //for unit test convenience
+    disableCustomPlaybackForIOS10Plus : false, //for unit test convenience
     resetDefaultValues : function()
     {
       google.ima.linearAds = true;

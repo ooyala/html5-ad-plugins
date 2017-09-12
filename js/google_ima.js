@@ -637,7 +637,7 @@ require("../html5-common/js/utils/utils.js");
           {
             //resumeAd will only be called if we have exited fullscreen
             //so this is safe to call
-            if (OO.isIosMajorVersion < 10)
+            if (!_inlinePlaybackSupported())
             {
               this.sharedVideoElement.webkitEnterFullscreen();
             }
@@ -1553,7 +1553,7 @@ require("../html5-common/js/utils/utils.js");
 
               //in the case where skippable ads are enabled we want to exit fullscreen
               //because custom playback is disabled and ads can't be rendered in fullscreen.
-              if (OO.iosMajorVersion >= 10 && this.enableIosSkippableAds === true) {
+              if (_inlinePlaybackSupported() && OO.isIphone && this.enableIosSkippableAds === true) {
                 this.sharedVideoElement.webkitExitFullscreen();
               }
             }
@@ -2065,6 +2065,11 @@ require("../html5-common/js/utils/utils.js");
       {
         this.videoControllerWrapper = videoWrapper;
       }
+    };
+
+    var _inlinePlaybackSupported = function()
+    {
+      return !(OO.iosMajorVersion < 10 && OO.isIphone);
     };
 
     var _throwError = function(outputStr)
