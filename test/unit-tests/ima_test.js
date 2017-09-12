@@ -1829,4 +1829,30 @@ describe('ad_manager_ima', function()
     expect(_.isEmpty(google.ima.adsRenderingSettingsInstance)).to.be(false);
     expect(google.ima.adsRenderingSettingsInstance.loadVideoTimeout).to.be(15000);
   });
+
+  it('Skippable Ads: Test page level param', function ()
+  {
+    //default case
+    ima.initialize(amc, playerId);
+    expect(google.ima.disableCustomPlaybackForIOS10Plus).to.be(false);
+    expect(ima.enableIosSkippableAds).to.be(false);
+
+    var content =
+    {
+      enableIosSkippableAds : false
+    };
+    ima.loadMetadata(content, {}, {});
+    ima.initialize(amc, playerId);
+    expect(google.ima.disableCustomPlaybackForIOS10Plus).to.be(false);
+    expect(ima.enableIosSkippableAds).to.be(false);
+
+    content =
+    {
+      enableIosSkippableAds : true
+    };
+    ima.loadMetadata(content, {}, {});
+    ima.initialize(amc, playerId);
+    expect(google.ima.disableCustomPlaybackForIOS10Plus).to.be(true);
+    expect(ima.enableIosSkippableAds).to.be(true);
+  });
 });

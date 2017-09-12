@@ -12,6 +12,7 @@ google =
       google.ima.linearAds = true;
       google.ima.delayAdRequest = false;
       google.ima.adsRenderingSettingsInstance = null;
+      google.ima.disableCustomPlaybackForIOS10Plus = false;
     },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
@@ -72,6 +73,7 @@ google =
       setVpaidMode : function() {},
       setLocale : function() {},
       setDisableFlashAds : function() {},
+      setDisableCustomPlaybackForIOS10Plus : function(newValue) {google.ima.disableCustomPlaybackForIOS10Plus = newValue;}
     },
     AdsManagerLoadedEvent :
     {
