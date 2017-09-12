@@ -1050,21 +1050,6 @@ require("../html5-common/js/utils/utils.js");
           return;
         }
 
-        //These are required by Google for tracking purposes.
-        google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
-        google.ima.settings.setPlayerType(PLAYER_TYPE);
-        google.ima.settings.setLocale(OO.getLocale());
-        if (this.useInsecureVpaidMode)
-        {
-          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
-        }
-        else
-        {
-          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
-        }
-
-        google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
-
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
       });
@@ -1086,6 +1071,24 @@ require("../html5-common/js/utils/utils.js");
           if (_IMAAdDisplayContainer) {
             _IMAAdDisplayContainer.destroy();
           }
+
+          //**It's now safe to set SDK settings, we have all the page level overrides and
+          //the SDK is guaranteed to be loaded.
+
+          //These are required by Google for tracking purposes.
+          google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
+          google.ima.settings.setPlayerType(PLAYER_TYPE);
+          google.ima.settings.setLocale(OO.getLocale());
+          if (this.useInsecureVpaidMode)
+          {
+            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+          }
+          else
+          {
+            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+          }
+
+          google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
 
           //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
           _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
@@ -1547,7 +1550,7 @@ require("../html5-common/js/utils/utils.js");
               }
               //Since IMA handles its own UI, we want the video player to hide its UI elements
               _amc.hidePlayerUi(this.showAdControls, false);
-              
+
               //in the case where skippable ads are enabled we want to exit fullscreen
               //because custom playback is disabled and ads can't be rendered in fullscreen.
               if (OO.iosMajorVersion >= 10 && this.enableIosSkippableAds === true) {
