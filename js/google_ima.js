@@ -1695,16 +1695,6 @@ require("../html5-common/js/utils/utils.js");
             _endCurrentAd(false);
             _linearAdIsPlaying = false;
             _onAdMetrics(adEvent);
-
-            // (agunawan): Google SDK is not publishing CONTENT_RESUME with livestream!!! !@#!@#!@#@!#@
-            if (_amc.isLiveStream)
-            {
-              // iOS8 fix
-              _.delay(_.bind(function()
-              {
-                _IMA_SDK_resumeMainContent();
-              }, this), 100);
-            }
             break;
           case eventType.PAUSED:
             _raisePauseEvent();
