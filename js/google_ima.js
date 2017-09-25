@@ -34,6 +34,7 @@ require("../html5-common/js/utils/utils.js");
       this.ready = false;
       this.runningUnitTests = false;
       this.sharedVideoElement = null;
+      this.initTime = Date.now();
 
       //private member variables of this GoogleIMA object
       var _amc = null;
@@ -1202,6 +1203,7 @@ require("../html5-common/js/utils/utils.js");
         {
           this.ready = true;
           _amc.onAdManagerReady();
+          _amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
         }
       });
 

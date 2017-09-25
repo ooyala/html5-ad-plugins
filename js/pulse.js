@@ -38,6 +38,7 @@
         var PulseAdManager = function() {
             this.name = "videoplaza-ads-manager";// mandatory to get the ad set info from Backlot
             this.ready = false; // Also mandatory so the player knows if the ad manager is ready
+            this.initTime = Date.now();
             this.sharedVideoElement = null;//element we will share with the player on iphone
             this._contentMetadata = {};
             this._requestSettings = {};
@@ -362,11 +363,13 @@
                     log('No Pulse hostname found in plugin parameters or media metadata; will not attempt to show Pulse ads');
                     noPulseConfiguration = true;
                     this.ready = true;
+                    amc.reportPluginLoaded(Date.now() - this.initTime, this.name)
                     amc.onAdManagerReady();
                     return;
                 }
 
                 this.ready = true;
+                amc.reportPluginLoaded(Date.now() - this.initTime, this.name)
                 amc.onAdManagerReady();
 
                 this._deviceContainer = adManagerMetadata.pulse_device_container;
