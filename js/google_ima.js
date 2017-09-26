@@ -35,6 +35,7 @@ require("../html5-common/js/utils/utils.js");
       this.runningUnitTests = false;
       this.sharedVideoElement = null;
       this.initTime = Date.now();
+      this.enableIosSkippableAds = false;
 
       //private member variables of this GoogleIMA object
       var _amc = null;
@@ -130,7 +131,7 @@ require("../html5-common/js/utils/utils.js");
         this.canSetupAdsRequest = true;
         this.adTagUrl = null;
         this.currentMedia = null;
-        this.currentImpressionTime = 0; 
+        this.currentImpressionTime = 0;
         this.adFinalTagUrl = null;
         this.adPosition = -1;
         this.showInAdControlBar = false;
@@ -302,6 +303,12 @@ require("../html5-common/js/utils/utils.js");
         if (metadata.hasOwnProperty("iframeZIndex"))
         {
           this.imaIframeZIndex = metadata.iframeZIndex;
+        }
+
+        this.enableIosSkippableAds = false;
+        if (metadata.hasOwnProperty("enableIosSkippableAds"))
+        {
+          this.enableIosSkippableAds = metadata.enableIosSkippableAds;
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
@@ -640,7 +647,10 @@ require("../html5-common/js/utils/utils.js");
           {
             //resumeAd will only be called if we have exited fullscreen
             //so this is safe to call
-            this.sharedVideoElement.webkitEnterFullscreen();
+            if (!_inlinePlaybackSupported())
+            {
+              this.sharedVideoElement.webkitEnterFullscreen();
+            }
             this.sharedVideoElement.play();
           }
           _IMAAdsManager.resume();
@@ -1058,19 +1068,6 @@ require("../html5-common/js/utils/utils.js");
           _amc.unregisterAdManager(this.name);
           return;
         }
-        _amc.onAdSdkLoaded(this.name);
-        //These are required by Google for tracking purposes.
-        google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
-        google.ima.settings.setPlayerType(PLAYER_TYPE);
-        google.ima.settings.setLocale(OO.getLocale());
-        if (this.useInsecureVpaidMode)
-        {
-          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
-        }
-        else
-        {
-          google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
-        }
 
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
@@ -1093,6 +1090,24 @@ require("../html5-common/js/utils/utils.js");
           if (_IMAAdDisplayContainer) {
             _IMAAdDisplayContainer.destroy();
           }
+
+          //**It's now safe to set SDK settings, we have all the page level overrides and
+          //the SDK is guaranteed to be loaded.
+
+          //These are required by Google for tracking purposes.
+          google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
+          google.ima.settings.setPlayerType(PLAYER_TYPE);
+          google.ima.settings.setLocale(OO.getLocale());
+          if (this.useInsecureVpaidMode)
+          {
+            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+          }
+          else
+          {
+            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+          }
+
+          google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
 
           //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
           _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
@@ -1259,15 +1274,15 @@ require("../html5-common/js/utils/utils.js");
             var isTimeout = false;
             var isEmpty = false;
             var isPlaybackError = false;
-            var errorCodes = { 
+            var errorCodes = {
                                vastErrorCode : errorData.getVastErrorCode(),
                                innerErrorCode : errorData.getInnerError(),
                                errorCode : errorData.getErrorCode()
                              };
-            OO.log("GOOGLE_IMA:: SDK Error received: Error Code List", JSON.stringify(errorCodes));       
+            OO.log("GOOGLE_IMA:: SDK Error received: Error Code List", JSON.stringify(errorCodes));
             var imaErrorCodes = google.ima.AdError.ErrorCode;
 
-            switch (errorCodes.vastErrorCode) 
+            switch (errorCodes.vastErrorCode)
             {
               case imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT:
               case imaErrorCodes.VAST_LOAD_TIMEOUT:
@@ -1288,7 +1303,7 @@ require("../html5-common/js/utils/utils.js");
             {
               isPlaybackError = true;
             }
-           
+
             _amc.onSdkAdEvent(this.name, adError.type, {errorData: errorData});
             if (isEmpty)
             {
@@ -1359,14 +1374,11 @@ require("../html5-common/js/utils/utils.js");
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
 
         // When the ads manager is ready, we are ready to apply css changes to the video element
-        // If the sharedVideoElement is not used, mark it as null before applying css
         if (this.videoControllerWrapper)
         {
           this.videoControllerWrapper.readyForCss = true;
         }
-        if (!_IMAAdsManager.isCustomPlaybackUsed()) {
-          this.setupSharedVideoElement(null);
-        }
+
         if (this.videoControllerWrapper)
         {
           this.videoControllerWrapper.applyStoredCss();
@@ -1579,7 +1591,7 @@ require("../html5-common/js/utils/utils.js");
         // don't have ad object associated.
         var eventType = google.ima.AdEvent.Type;
         var ad = adEvent.getAd();
-        // Retrieve the ad data as well. 
+        // Retrieve the ad data as well.
         // Some events will not have ad data associated.
         var adData = adEvent.getAdData();
 
@@ -1606,6 +1618,16 @@ require("../html5-common/js/utils/utils.js");
               }
               //Since IMA handles its own UI, we want the video player to hide its UI elements
               _amc.hidePlayerUi(this.showAdControls, false);
+
+              //in the case where skippable ads are enabled we want to exit fullscreen
+              //because custom playback is disabled and ads can't be rendered in fullscreen.
+              if (_inlinePlaybackSupported() && OO.isIphone && this.enableIosSkippableAds === true)
+              {
+                if (this.sharedVideoElement)
+                {
+                  this.sharedVideoElement.webkitExitFullscreen();
+                }
+              }
             }
             else
             {
@@ -1675,16 +1697,6 @@ require("../html5-common/js/utils/utils.js");
             _endCurrentAd(false);
             _linearAdIsPlaying = false;
             _onAdMetrics(adEvent);
-
-            // (agunawan): Google SDK is not publishing CONTENT_RESUME with livestream!!! !@#!@#!@#@!#@
-            if (_amc.isLiveStream)
-            {
-              // iOS8 fix
-              _.delay(_.bind(function()
-              {
-                _IMA_SDK_resumeMainContent();
-              }, this), 100);
-            }
             break;
           case eventType.PAUSED:
             _raisePauseEvent();
@@ -2169,6 +2181,11 @@ require("../html5-common/js/utils/utils.js");
       {
         this.videoControllerWrapper = videoWrapper;
       }
+    };
+
+    var _inlinePlaybackSupported = function()
+    {
+      return !(OO.iosMajorVersion < 10 && OO.isIphone);
     };
 
     var _throwError = function(outputStr)

@@ -1837,4 +1837,42 @@ describe('ad_manager_ima', function()
     expect(_.isEmpty(google.ima.adsRenderingSettingsInstance)).to.be(false);
     expect(google.ima.adsRenderingSettingsInstance.loadVideoTimeout).to.be(15000);
   });
+
+  it('IOS Skippable Ads: Test page level param default', function ()
+  {
+    //default case
+    ima.initialize(amc, playerId);
+    ima.loadMetadata({}, {}, {});
+    ima.registerUi();
+    expect(google.ima.disableCustomPlaybackForIOS10Plus).to.be(false);
+    expect(ima.enableIosSkippableAds).to.be(false);
+  });
+
+  it('IOS Skippable Ads: Test page level param false', function ()
+  {
+    var content =
+    {
+      enableIosSkippableAds : false
+    };
+    ima.initialize(amc, playerId);
+    ima.loadMetadata(content, {}, {});
+    ima.registerUi();
+    expect(google.ima.disableCustomPlaybackForIOS10Plus).to.be(false);
+    expect(ima.enableIosSkippableAds).to.be(false);
+  });
+
+  it('IOS Skippable Ads: Test page level param true', function ()
+  {
+    var content =
+    {
+      enableIosSkippableAds : true
+    };
+    ima.initialize(amc, playerId);
+    ima.loadMetadata(content, {}, {});
+    ima.registerUi();
+    expect(google.ima.disableCustomPlaybackForIOS10Plus).to.be(true);
+    expect(ima.enableIosSkippableAds).to.be(true);
+  });
+
+
 });
