@@ -1601,6 +1601,7 @@ require("../html5-common/js/utils/utils.js");
 
             if (ad.isLinear())
             {
+              _linearAdIsPlaying = true;
               _amc.focusAdVideo();
             }
             break;
@@ -2288,6 +2289,7 @@ require("../html5-common/js/utils/utils.js");
     this.isControllingVideo = true;
     this.readyForCss = false;
     var storedCss = null;
+    var volumeWhenMuted = 1;
 
     /************************************************************************************/
     // Required. Methods that Video Controller, Destroy, or Factory call
@@ -2384,6 +2386,35 @@ require("../html5-common/js/utils/utils.js");
      */
     this.seek = function(time)
     {
+    };
+
+    /**
+     * Checks to see if autoplay requires the video to be muted
+     * @public
+     * @method TemplateVideoWrapper#requiresMutedAutoplay
+     * @param {boolean} true if video must be muted to autoplay, false otherwise
+     */
+    this.requiresMutedAutoplay = function() {
+      return OO.isSafari || OO.isIos || OO.isAndroid;
+    };
+
+    /**
+     * Triggers a mute on the video element.
+     * @public
+     * @method TemplateVideoWrapper#mute
+     */
+    this.mute = function() {
+      volumeWhenMuted = _ima.getVolume();
+      _ima.setVolume(0);
+    };
+
+    /**
+     * Triggers an unmute on the video element.
+     * @public
+     * @method TemplateVideoWrapper#unmute
+     */
+    this.unmute = function() {
+      _ima.setVolume(volumeWhenMuted);
     };
 
     /**
