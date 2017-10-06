@@ -1601,6 +1601,7 @@ require("../html5-common/js/utils/utils.js");
 
             if (ad.isLinear())
             {
+              _linearAdIsPlaying = true;
               _amc.focusAdVideo();
             }
             break;
@@ -1756,6 +1757,14 @@ require("../html5-common/js/utils/utils.js");
             break;
           case eventType.VOLUME_CHANGED:
           case eventType.VOLUME_MUTED:
+            //Workaround of an issue where if IMA takes too long to mute the video
+            //for autoplay. If we receive the muted event and ad playback has not started,
+            //call resume() to force IMA to try playing the ad again. Note that
+            //calling start() again does not seem to work.
+            //Observed on Android Nexus 6P, version 7.1.1
+            if (adEvent.type === eventType.VOLUME_MUTED && !this.adPlaybackStarted) {
+              _IMAAdsManager.resume();
+            }
             if (this.videoControllerWrapper)
             {
               this.videoControllerWrapper.raiseVolumeEvent();
@@ -2288,6 +2297,7 @@ require("../html5-common/js/utils/utils.js");
     this.isControllingVideo = true;
     this.readyForCss = false;
     var storedCss = null;
+    var volumeWhenMuted = 1;
 
     /************************************************************************************/
     // Required. Methods that Video Controller, Destroy, or Factory call
@@ -2384,6 +2394,37 @@ require("../html5-common/js/utils/utils.js");
      */
     this.seek = function(time)
     {
+    };
+
+    /**
+     * Checks to see if autoplay requires the video to be muted
+     * @public
+     * @method TemplateVideoWrapper#requiresMutedAutoplay
+     * @param {boolean} true if video must be muted to autoplay, false otherwise
+     */
+    this.requiresMutedAutoplay = function() {
+      return (OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid;
+    };
+
+    /**
+     * Triggers a mute on the video element.
+     * @public
+     * @method TemplateVideoWrapper#mute
+     */
+    this.mute = function() {
+      //Note there is no "mute" API. IMA seems to handle the muted
+      //attribute themselves when volume is set to 0
+      volumeWhenMuted = _ima.getVolume();
+      _ima.setVolume(0);
+    };
+
+    /**
+     * Triggers an unmute on the video element.
+     * @public
+     * @method TemplateVideoWrapper#unmute
+     */
+    this.unmute = function() {
+      _ima.setVolume(volumeWhenMuted);
     };
 
     /**
