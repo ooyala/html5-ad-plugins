@@ -2418,15 +2418,15 @@ OO.Ads.manager(function(_, $) {
         var previousAdUnit;
         //Set fallback ad and next ad for each ad unit. Depending on if an ad plays successfully
         //or fails to play, the next ad or fallback ad will be forced to play
-        _.each(adUnits, _.bind(function(adUnit) {
+        for(var index = 0; index < adUnits.length; index++) {
+          adUnit = adUnits[index];
           adUnit.fallbackAd = processedFallbackAd;
           if (previousAdUnit) {
             previousAdUnit.nextAdInPod = adUnit;
           }
           previousAdUnit = adUnit;
-        }, this));
-
-        handled = addToTimeline(adUnits[0]);
+          handled = addToTimeline(adUnit);
+        }
       }
 
       if (handled) {
