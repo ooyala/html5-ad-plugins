@@ -17,6 +17,8 @@ describe('ad_manager_ima', function()
   var originalOoAds = _.clone(OO.Ads);
   var originalOoVideo = _.clone(OO.Video);
   var originalMockAmc = null;
+  var notifyEventNameHistory = [];
+  var notifyParamHistory = [];
   var notifyEventName = null;
   var notifyParams = null;
   var adsClickthroughOpenedCalled;
@@ -29,6 +31,11 @@ describe('ad_manager_ima', function()
   {
     notify : function(eventName, params)
     {
+      if (notifyEventName)
+      {
+        notifyEventNameHistory.push(notifyEventName);
+        notifyParamHistory.push(notifyParams);
+      }
       notifyEventName = eventName;
       notifyParams = params;
     },
@@ -50,7 +57,8 @@ describe('ad_manager_ima', function()
       DURATION_CHANGE : "durationchange",
       PROGRESS : "progress",
       WAITING : "waiting",
-      FULLSCREEN_CHANGED : "fullScreenChanged"
+      FULLSCREEN_CHANGED : "fullScreenChanged",
+      MUTE_STATE_CHANGE : "MUTE_STATE_CHANGE"
     }
   };
 
@@ -155,6 +163,8 @@ describe('ad_manager_ima', function()
     google.ima.resetDefaultValues();
     notifyEventName = null;
     notifyParams = null;
+    notifyEventNameHistory = [];
+    notifyParamHistory = [];
   }, this));
 
   //   ------   TESTS   ------
@@ -1102,6 +1112,10 @@ describe('ad_manager_ima', function()
     am.setVolume = function(volume)
     {
       vol = volume;
+      videoWrapper.raiseVolumeEvent();
+    };
+    am.getVolume = function() {
+      return vol;
     };
     //we tell IMA to start ad
     videoWrapper.play();
@@ -1109,6 +1123,16 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
     videoWrapper.mute();
     expect(vol).to.be(0);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "volume" : 0
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : true
+      });
   });
 
   it('VTC Integration: Video wrapper setVolume updates IMA with volume if ad loaded', function()
@@ -1120,6 +1144,7 @@ describe('ad_manager_ima', function()
     am.setVolume = function(volume)
     {
       vol = volume;
+      videoWrapper.raiseVolumeEvent();
     };
     am.getVolume = function() {
       return vol;
@@ -1131,11 +1156,44 @@ describe('ad_manager_ima', function()
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
 
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "volume" : TEST_VOLUME
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : false
+      });
+
     videoWrapper.mute();
     expect(vol).to.be(0);
 
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "volume" : 0
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : true
+      });
+
     videoWrapper.unmute();
     expect(vol).to.be(TEST_VOLUME);
+
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "volume" : TEST_VOLUME
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : false
+      });
   });
 
   it('VTC Integration: Video wrapper setVolume updates IMA with volume if ad loaded', function()
@@ -1147,6 +1205,10 @@ describe('ad_manager_ima', function()
     am.setVolume = function(volume)
     {
       vol = volume;
+      videoWrapper.raiseVolumeEvent();
+    };
+    am.getVolume = function() {
+      return vol;
     };
     //we tell IMA to start ad
     videoWrapper.play();
@@ -1154,6 +1216,16 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "volume" : TEST_VOLUME
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : false
+      });
   });
 
   it('VTC Integration: Video wrapper setVolume updates IMA with volume if ad started', function()
@@ -1165,6 +1237,10 @@ describe('ad_manager_ima', function()
     am.setVolume = function(volume)
     {
       vol = volume;
+      videoWrapper.raiseVolumeEvent();
+    };
+    am.getVolume = function() {
+      return vol;
     };
     //we tell IMA to start ad
     videoWrapper.play();
@@ -1172,6 +1248,16 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "volume" : TEST_VOLUME
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : false
+      });
   });
 
   it('VTC Integration: Video wrapper setVolume saves volume if ad is not started', function()
@@ -1267,10 +1353,15 @@ describe('ad_manager_ima', function()
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
     videoWrapper.raiseVolumeEvent();
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
-    expect(notifyParams).to.eql(
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         "volume" : TEST_VOLUME
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : false
       });
   });
 
