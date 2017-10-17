@@ -58,7 +58,7 @@ describe('ad_manager_ima', function()
       PROGRESS : "progress",
       WAITING : "waiting",
       FULLSCREEN_CHANGED : "fullScreenChanged",
-      MUTE_STATE_CHANGE : "MUTE_STATE_CHANGE"
+      MUTE_STATE_CHANGE : "muteStateChange"
     }
   };
 
