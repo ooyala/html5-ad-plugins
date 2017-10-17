@@ -2540,8 +2540,15 @@ require("../html5-common/js/utils/utils.js");
 
     this.raiseVolumeEvent = function()
     {
+      //IMA is considered muted when volume is set to 0. There are no getters
+      //for the muted state
       var volume = _ima.getVolume();
       notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
+      if (volume === 0) {
+        notifyIfInControl(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
+      } else {
+        notifyIfInControl(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: false });
+      }
     };
 
     this.raiseTimeUpdate = function(currentTime, duration)
