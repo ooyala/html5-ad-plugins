@@ -161,6 +161,18 @@ describe('ad_manager_ssai_pulse', function()
       "html5_ad_server": "http://blah"}, {}, content);}).to.not.throwException();
   });
 
+  it('Init: ad manager notifies controller that it is loaded', function()
+  {
+    var pluginLoaded = false;
+    amc.reportPluginLoaded = function(date, name){
+      pluginLoaded = true;
+    }
+    SsaiPulse.initialize(amc);
+    expect(function() { SsaiPulse.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, {});}).to.not.throwException();
+    expect(pluginLoaded).to.be(true);
+  });
+
   it('Init: ad manager is ready', function()
   {
     var embed_code = "embed_code";

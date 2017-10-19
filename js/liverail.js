@@ -35,6 +35,7 @@ OO.Ads.manager(function(_, $) {
 
     // module state
     this.ready          = false;
+    this.initTime = Date.now();
     var adModuleJsReady = false;
     var iframeLoaded    = false;
     var metadataFetched = false;
@@ -188,6 +189,7 @@ OO.Ads.manager(function(_, $) {
       if (!adModuleJsReady || !metadataFetched) return;
       this.ready = true;
       amc.onAdManagerReady(this.name);
+      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
     }, this);
 
     ///// Playback /////

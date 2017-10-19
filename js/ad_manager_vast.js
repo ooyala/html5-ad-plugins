@@ -50,6 +50,7 @@ OO.Ads.manager(function(_, $) {
     this.testMode = false;
     this.ADTYPE = "vast";
     this.ready  = false;
+    this.initTime = Date.now();
     this.currentDepth = 0;
     this.loaded = false;
     this.embedCode = 'unknown';
@@ -764,6 +765,7 @@ OO.Ads.manager(function(_, $) {
 
       this.ready = true;
       this.amc.onAdManagerReady();
+      this.amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
     };
 
     /**

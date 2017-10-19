@@ -297,6 +297,18 @@ describe('ad_manager_ima', function()
     expect(ima.ready).to.be(true);
   });
 
+  it('Init: ad manager notifies controller that it is loaded', function()
+  {
+    ima.initialize(amc, playerId);
+    ima.registerUi();
+    var pluginLoaded = false;
+    amc.reportPluginLoaded = function(date, name){
+      pluginLoaded = true;
+    }
+    ima.loadMetadata({}, {}, {});
+    expect(pluginLoaded).to.be(true);
+  });
+
   // Ad Rules
   it('Init, Ad Rules: setup ads request is successful', function()
   {
