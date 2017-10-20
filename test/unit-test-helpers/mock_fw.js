@@ -48,6 +48,9 @@ tv = {
       TIME_POSITION_CLASS_MIDROLL : "midroll",
       TIME_POSITION_CLASS_POSTROLL : "postroll",
       TIME_POSITION_CLASS_OVERLAY : "overlay",
+      VIDEO_STATE_PLAYING : "playing",
+      VIDEO_STATE_PAUSED : "paused",
+      VIDEO_STATE_STOPPED : "stopped",
       AdManager : function(){
         this.setNetwork = function(){};
         this.setServer = function(){};
