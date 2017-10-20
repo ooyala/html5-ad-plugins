@@ -128,6 +128,21 @@ describe('ad_manager_freewheel', function() {
                                         {}); }).to.not.throwException();
   });
 
+  it('Init: ad manager notifies controller that it is loaded', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    var pluginLoaded = false;
+    amc.reportPluginLoaded = function(date, name){
+      pluginLoaded = true;
+    }
+    expect(function() { fw.loadMetadata({"fw_mrm_network_id":"100",
+                                         "html5_ssl_ad_server":"https://blah",
+                                         "html5_ad_server": "http://blah"},
+                                        {},
+                                        {}); }).to.not.throwException();
+    expect(pluginLoaded).to.be(true);
+  });
+
   it('Init: test video asset override fw_video_asset_id vs video embedcode', function(){
     fw.initialize(amc);
     fw.registerUi();

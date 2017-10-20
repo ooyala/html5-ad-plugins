@@ -38,6 +38,7 @@
         var PulseAdManager = function() {
             this.name = "videoplaza-ads-manager";// mandatory to get the ad set info from Backlot
             this.ready = false; // Also mandatory so the player knows if the ad manager is ready
+            this.initTime = Date.now();
             this.sharedVideoElement = null;//element we will share with the player on iphone
             this._contentMetadata = {};
             this._requestSettings = {};
@@ -363,11 +364,13 @@
                     noPulseConfiguration = true;
                     this.ready = true;
                     amc.onAdManagerReady();
+                    amc.reportPluginLoaded(Date.now() - this.initTime, this.name)
                     return;
                 }
 
                 this.ready = true;
                 amc.onAdManagerReady();
+                amc.reportPluginLoaded(Date.now() - this.initTime, this.name)
 
                 this._deviceContainer = adManagerMetadata.pulse_device_container;
                 if (adManagerMetadata.pulse_persistent_id) {

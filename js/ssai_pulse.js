@@ -36,6 +36,7 @@ OO.Ads.manager(function(_, $)
   {
     this.name = "ssai-pulse-ads-manager";
     this.ready = false;
+    this.initTime = Date.now();
     this.videoRestrictions = {};
     this.testMode = false;
 
@@ -153,6 +154,7 @@ OO.Ads.manager(function(_, $)
     this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata)
     {
       this.ready = true;
+      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
 
       if (adManagerMetadata)
       {

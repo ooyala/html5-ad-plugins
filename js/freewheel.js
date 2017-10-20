@@ -33,6 +33,7 @@ OO.Ads.manager(function(_, $) {
 
     // state
     this.ready             = false;
+    this.initTime = Date.now();
     var adModuleJsReady    = false;
     var fwAdDataRequested  = false;
     var currentAd          = null;
@@ -166,16 +167,19 @@ OO.Ads.manager(function(_, $) {
           if (adModuleJsReady) {
             this.ready = true;
             amc.onAdManagerReady();
+            amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
           }
         }, this));
       } else if (this.testMode) {
         this.ready = true;
         adModuleJsReady = true;
         amc.onAdManagerReady();
+        amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
       }
       else {
         this.ready = true;
         amc.onAdManagerReady();
+        amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
       }
     };
 

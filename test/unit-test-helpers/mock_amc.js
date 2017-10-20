@@ -104,7 +104,7 @@ fake_amc = function() {
   this.notifyNonlinearAdEnded = function() {};
   this.hidePlayerUi = function() {};
   this.focusAdVideo = function() {};
-
+  this.reportPluginLoaded = function() {};
   this.adManagerWillControlAds = function() {};
   this.adManagerDoneControllingAds = function() {};
   this.removePlayerListener = function() {};
