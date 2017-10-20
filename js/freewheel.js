@@ -79,6 +79,7 @@ OO.Ads.manager(function(_, $) {
       amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(onPlayRequested, this));
       amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(onReplayRequested, this));
       amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(onPlay, this));
+      amc.addPlayerListener(amc.EVENTS.RESUME, _.bind(onResume, this));
       amc.addPlayerListener(amc.EVENTS.PAUSE, _.bind(onPause, this));
       amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(onContentCompleted, this));
       amc.addPlayerListener(amc.EVENTS.CONTENT_AND_ADS_COMPLETED, _.bind(onAllCompleted, this));
@@ -335,7 +336,7 @@ OO.Ads.manager(function(_, $) {
       if (adRequestTimeout) {
         var error = "Ad Request Timeout already exists - bad state";
         fw_onError(null, error);
-      } 
+      }
       // only set timeout if not in test mode otherwise it will break unit tests
       else if (!this.testMode) {
         adRequestTimeout = _.delay(callback, duration);
@@ -792,11 +793,21 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Called when the video is played/resumed.  Sets the video state with Freewheel.
+     * Called when the video is played intially.  Sets the video state with Freewheel.
      * @private
      * @method Freewheel#onPlay
      */
     var onPlay = function() {
+      if (!fwContext || !_.isFunction(fwContext.setVideoState)) return;
+      fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
+    };
+
+    /**
+     * Called when the video is resumed after being paused or seeked. Sets the video state with Freewheel.
+     * @private
+     * @method Freewheel#onResume
+     */
+    var onResume = function() {
       if (!fwContext || !_.isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
     };
@@ -951,7 +962,7 @@ OO.Ads.manager(function(_, $) {
     var fw_onSlotEnded = function(event) {
       // Disable controls on the video element.  Freewheel seems to be turning it on
       // TODO: inspect event for playback success or errors
-      
+
       // adVideoElement may be null for overlays
       if (currentPlayingSlot &&
           currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
@@ -986,7 +997,7 @@ OO.Ads.manager(function(_, $) {
     }, this);
 
     // Getters
-    
+
     /**
      * Returns whether player is handling click.
      * @public
