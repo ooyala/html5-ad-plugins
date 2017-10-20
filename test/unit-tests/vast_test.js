@@ -1893,7 +1893,7 @@ describe('ad_manager_vast', function() {
       ]
     }, {}, content);
     amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
-    expect(amc.timeline[0].ad.position).to.be(60);
+    expect(amc.timeline[0].ad.position).to.be(50); //this should be the percentage. The plugin no longer takes care of the calculation
     vastAdManager.playAd(amc.timeline[0]);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });
@@ -1919,12 +1919,12 @@ describe('ad_manager_vast', function() {
         {
           "tag_url": "http://blahblah",
           "position_type": "p",
-          "position": "50"
+          "position": "70"
         }
       ]
     }, {}, content);
     amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
-    expect(amc.timeline[0].ad.position).to.be(60);
+    expect(amc.timeline[0].ad.position).to.be(70); //this should be the percentage. The plugin no longer takes care of the calculation
     vastAdManager.playAd(amc.timeline[0]);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });
@@ -1999,8 +1999,8 @@ describe('ad_manager_vast', function() {
     }, {}, content);
     amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.position).to.be(30);
-    expect(amc.timeline[1].ad.position).to.be(60);
+    expect(amc.timeline[0].ad.position).to.be(25);//this should be the percentage. The plugin no longer takes care of the calculation
+    expect(amc.timeline[1].ad.position).to.be(50);//this should be the percentage. The plugin no longer takes care of the calculation
     vastAdManager.playAd(amc.timeline[0]);
     expect(vastAdManager.vastUrl).to.be("http://blahblah");
   });
@@ -2042,7 +2042,7 @@ describe('ad_manager_vast', function() {
     }, {}, content);
     amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(3);
-    expect(amc.timeline[0].ad.position).to.be(30);
+    expect(amc.timeline[0].ad.position).to.be(25);//this should be the percentage. The plugin no longer takes care of the calculation
     expect(amc.timeline[1].ad.position).to.be(50);
     //Timeline is not sorted at this point
     expect(amc.timeline[2].ad.position).to.be(0);
@@ -2989,7 +2989,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
-    
+
     // Wrapper ads could be visualized as a tree with parents and children,
     // but in this case, it looks more like a linked list:
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
@@ -3001,7 +3001,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
     vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
     vastAdManager.onVastResponse(vast_ad, linearXML, parentDepthTwoId);
-   
+
     var adTrackingInfo = vastAdManager.adTrackingInfo;
 
     // adTrackingInfo should have the three ads parsed
@@ -3044,7 +3044,7 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
-    
+
     // Wrapper ads could be visualized as a tree with parents and children,
     // but in this case, it looks more like a linked list:
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
