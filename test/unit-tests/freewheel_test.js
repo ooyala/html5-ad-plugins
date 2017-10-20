@@ -520,4 +520,41 @@ describe('ad_manager_freewheel', function() {
     fw.playerClicked();
     expect(fw.getHandlingClick()).to.be(true);
   });
+
+  describe('Freewheel Context', function() {
+    var videoState;
+
+    beforeEach(function() {
+      videoState = null;
+      initialize();
+      play();
+      fw.playAd(amc.timeline[0]);
+
+      fwContext.setVideoState = function(state) {
+        videoState = state;
+      };
+    });
+
+    it('should set playing state after initial play', function() {
+      amc.callbacks[amc.EVENTS.PLAY_STARTED]();
+      expect(videoState).to.be(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
+    });
+
+    it('should set paused state when content is paused', function() {
+      amc.callbacks[amc.EVENTS.PAUSE]();
+      expect(videoState).to.be(tv.freewheel.SDK.VIDEO_STATE_PAUSED);
+    });
+
+    it('should set playing state when content is resumed', function() {
+      amc.callbacks[amc.EVENTS.RESUME]();
+      expect(videoState).to.be(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
+    });
+
+    it('should set stopped state when content ends', function() {
+      amc.callbacks[amc.EVENTS.CONTENT_COMPLETED]();
+      expect(videoState).to.be(tv.freewheel.SDK.VIDEO_STATE_STOPPED);
+    });
+
+  });
+
 });
