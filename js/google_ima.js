@@ -420,7 +420,6 @@ require("../html5-common/js/utils/utils.js");
                   "mainContentDuration": this.mainContentDuration
                 };
 
-                //percentage position types require a different calculation.
                 if (ad.position_type === NON_AD_RULES_PERCENT_POSITION_TYPE)
                 {
                   adData.positionType = NON_AD_RULES_PERCENT_POSITION_TYPE;
