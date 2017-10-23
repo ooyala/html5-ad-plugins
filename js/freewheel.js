@@ -793,7 +793,7 @@ OO.Ads.manager(function(_, $) {
     };
 
     /**
-     * Called when the video is played intially.  Sets the video state with Freewheel.
+     * Called when the video is played initially.  Sets the video state with Freewheel.
      * @private
      * @method Freewheel#onPlay
      */
