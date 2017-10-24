@@ -833,7 +833,7 @@ OO.Ads.manager(function(_, $) {
       var ad = amcAd.ad;
       this.amc.notifyPodStarted(amcAd.id, 1);
 
-      this.currentAdBeingLoaded = ad;
+      this.currentAdBeingLoaded = amcAd;
       this.loadUrl(ad.tag_url);
       loadedAds = true;
       return loadedAds;
