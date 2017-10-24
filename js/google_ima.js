@@ -417,13 +417,14 @@ require("../html5-common/js/utils/utils.js");
                   "adManager": this.name,
                   "ad": ad,
                   "streams": streams,
-                  "adType": _amc.ADTYPE.UNKNOWN_AD_REQUEST
+                  "adType": _amc.ADTYPE.UNKNOWN_AD_REQUEST,
+                  "mainContentDuration": this.mainContentDuration
                 };
 
-                //percentage position types require a different calculation.
-                if (ad.position_type == NON_AD_RULES_PERCENT_POSITION_TYPE)
+                if (ad.position_type === NON_AD_RULES_PERCENT_POSITION_TYPE)
                 {
-                  adData.position = ad.position/100 * this.mainContentDuration;
+                  adData.positionType = NON_AD_RULES_PERCENT_POSITION_TYPE;
+                  adData.position = ad.position;
                 }
 
                 var adToInsert = new _amc.Ad(adData);

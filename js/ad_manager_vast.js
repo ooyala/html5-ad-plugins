@@ -835,7 +835,7 @@ OO.Ads.manager(function(_, $) {
       var ad = amcAd.ad;
       this.amc.notifyPodStarted(amcAd.id, 1);
 
-      this.currentAdBeingLoaded = ad;
+      this.currentAdBeingLoaded = amcAd;
       this.loadUrl(ad.tag_url);
       loadedAds = true;
       return loadedAds;
@@ -911,21 +911,25 @@ OO.Ads.manager(function(_, $) {
             adManager: this.name,
             ad: adMetadata,
             duration: 0,
-            adType: this.amc.ADTYPE.AD_REQUEST
+            adType: this.amc.ADTYPE.AD_REQUEST,
+            mainContentDuration: this.mainContentDuration
           };
 
-          if (adMetadata.position_type == 't') {
+          if (adMetadata.position_type === 't') {
             //Movie metadata uses time, page level metadata uses position
             if (_isValidPosition(adMetadata.time)) {
+
               adData.position = +adMetadata.time / 1000;
             } else if (_isValidPosition(adMetadata.position)) {
               adData.position = +adMetadata.position / 1000;
             }
-          } else if (adMetadata.position_type == 'p') {
+          } else if (adMetadata.position_type === 'p') {
             if (_isValidPosition(adMetadata.position)) {
-              adData.position = +adMetadata.position / 100 * this.mainContentDuration;
+              adData.positionType = adMetadata.position_type;
+              adData.position = +adMetadata.position;
             }
           }
+
           adMetadata.position = adData.position;
 
           //Movie metadata uses url, page level metadata uses tag_url
