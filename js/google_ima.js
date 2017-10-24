@@ -668,8 +668,11 @@ require("../html5-common/js/utils/utils.js");
 
       this.setVolume = function(volume)
       {
-        if (_IMAAdsManager && _linearAdIsPlaying)
+        if (_IMAAdsManager)
         {
+          if (typeof this.savedVolume === "number") {
+            this.savedVolume = -1;
+          }
           _IMAAdsManager.setVolume(volume);
         }
         else
@@ -1606,6 +1609,13 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
+            //workaround of an IMA issue where the ad starts paused
+            //on Safari 11 with our muted autoplay flow
+            if (this.videoControllerWrapper.requiresMutedAutoplay()) {
+              _IMAAdsManager.pause();
+              _IMAAdsManager.resume();
+            }
+
             this.adPlaybackStarted = true;
             if(ad.isLinear())
             {
