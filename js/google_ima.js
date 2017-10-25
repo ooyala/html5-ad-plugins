@@ -1773,6 +1773,7 @@ require("../html5-common/js/utils/utils.js");
             //calling start() again does not seem to work.
             //Observed on Android Nexus 6P, version 7.1.1
             if (adEvent.type === eventType.VOLUME_MUTED && !this.adPlaybackStarted) {
+              _IMAAdsManager.pause();
               _IMAAdsManager.resume();
             }
             if (this.videoControllerWrapper)
