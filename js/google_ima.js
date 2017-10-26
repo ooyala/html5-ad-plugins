@@ -670,8 +670,9 @@ require("../html5-common/js/utils/utils.js");
 
       this.setVolume = function(volume)
       {
-        if (_IMAAdsManager && _linearAdIsPlaying)
+        if (_IMAAdsManager)
         {
+          this.savedVolume = -1;
           _IMAAdsManager.setVolume(volume);
         }
         else
@@ -1609,6 +1610,13 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
+            //workaround of an IMA issue where the ad starts paused
+            //on Safari 11 with our muted autoplay flow
+            if (this.videoControllerWrapper.requiresMutedAutoplay()) {
+              _IMAAdsManager.pause();
+              _IMAAdsManager.resume();
+            }
+
             this.adPlaybackStarted = true;
             if(ad.isLinear())
             {
@@ -1766,6 +1774,7 @@ require("../html5-common/js/utils/utils.js");
             //calling start() again does not seem to work.
             //Observed on Android Nexus 6P, version 7.1.1
             if (adEvent.type === eventType.VOLUME_MUTED && !this.adPlaybackStarted) {
+              _IMAAdsManager.pause();
               _IMAAdsManager.resume();
             }
             if (this.videoControllerWrapper)

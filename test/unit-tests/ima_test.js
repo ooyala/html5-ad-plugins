@@ -1272,9 +1272,9 @@ describe('ad_manager_ima', function()
       });
   });
 
-  it('VTC Integration: Video wrapper setVolume saves volume if ad is not started', function()
+  it('VTC Integration: Video wrapper setVolume saves volume if IMA ad manager is not initialized', function()
   {
-    initAndPlay(true, vci);
+    createVideoWrapper(vci);
     var TEST_VOLUME = 0.5;
     videoWrapper.setVolume(TEST_VOLUME);
     expect(ima.savedVolume).to.be(TEST_VOLUME);
@@ -1291,11 +1291,6 @@ describe('ad_manager_ima', function()
       vol = volume;
     };
     videoWrapper.setVolume(TEST_VOLUME);
-    expect(ima.savedVolume).to.be(TEST_VOLUME);
-    //we tell IMA to start ad
-    videoWrapper.play();
-    //IMA tells us ad is started
-    am.publishEvent(google.ima.AdEvent.Type.STARTED);
     expect(vol).to.be(TEST_VOLUME);
     expect(ima.savedVolume).to.be(-1);
   });
