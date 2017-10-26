@@ -670,9 +670,7 @@ require("../html5-common/js/utils/utils.js");
       {
         if (_IMAAdsManager)
         {
-          if (typeof this.savedVolume === "number") {
-            this.savedVolume = -1;
-          }
+          this.savedVolume = -1;
           _IMAAdsManager.setVolume(volume);
         }
         else
