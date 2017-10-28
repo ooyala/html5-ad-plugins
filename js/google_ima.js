@@ -674,6 +674,12 @@ require("../html5-common/js/utils/utils.js");
         {
           this.savedVolume = -1;
           _IMAAdsManager.setVolume(volume);
+          //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
+          //on when sharing video elements, so we'll notify of current volume and mute state now
+          if (this.videoControllerWrapper && this.sharedVideoElement)
+          {
+            this.videoControllerWrapper.raiseVolumeEvent();
+          }
         }
         else
         {
@@ -1613,6 +1619,13 @@ require("../html5-common/js/utils/utils.js");
             //workaround of an IMA issue where the ad starts paused
             //on Safari 11 with our muted autoplay flow
             if (this.videoControllerWrapper.requiresMutedAutoplay()) {
+              //workaround of an IMA issue where we don't receive a MUTED ad event
+              //on Safari mobile, so we'll notify of current volume and mute state now
+              if (this.videoControllerWrapper)
+              {
+                this.videoControllerWrapper.raiseVolumeEvent();
+              }
+
               _IMAAdsManager.pause();
               _IMAAdsManager.resume();
             }
@@ -1759,7 +1772,7 @@ require("../html5-common/js/utils/utils.js");
                 type = _amc.ADTYPE.NONLINEAR_OVERLAY;
               }
             }
-            _amc.onAdSdkImpression(this.name, this.adPosition, loadTime, protocol, type)
+            _amc.onAdSdkImpression(this.name, this.adPosition, loadTime, protocol, type);
             break;
           case eventType.FIRST_QUARTILE:
           case eventType.MIDPOINT:
@@ -1774,7 +1787,6 @@ require("../html5-common/js/utils/utils.js");
             //calling start() again does not seem to work.
             //Observed on Android Nexus 6P, version 7.1.1
             if (adEvent.type === eventType.VOLUME_MUTED && !this.adPlaybackStarted) {
-              _IMAAdsManager.pause();
               _IMAAdsManager.resume();
             }
             if (this.videoControllerWrapper)
@@ -2426,7 +2438,10 @@ require("../html5-common/js/utils/utils.js");
     this.mute = function() {
       //Note there is no "mute" API. IMA seems to handle the muted
       //attribute themselves when volume is set to 0
-      volumeWhenMuted = _ima.getVolume();
+      var currentVolume = _ima.getVolume();
+      if (currentVolume) {
+        volumeWhenMuted = currentVolume;
+      }
       _ima.setVolume(0);
     };
 
@@ -2436,7 +2451,7 @@ require("../html5-common/js/utils/utils.js");
      * @method TemplateVideoWrapper#unmute
      */
     this.unmute = function() {
-      _ima.setVolume(volumeWhenMuted);
+      _ima.setVolume(volumeWhenMuted ? volumeWhenMuted : 1);
     };
 
     /**
@@ -2445,9 +2460,16 @@ require("../html5-common/js/utils/utils.js");
      * @method GoogleIMAVideoWrapper#setVolume
      * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
      */
-    this.setVolume = function(volume)
+    this.setVolume = function(volume, muteState)
     {
-      _ima.setVolume(volume);
+      if (muteState)
+      {
+        this.mute();
+      }
+      else
+      {
+        _ima.setVolume(volume);
+      }
     };
 
     /**
