@@ -764,7 +764,7 @@ OO.Ads.manager(function(_, $) {
       }
 
       this.ready = true;
-      this.amc.onAdManagerReady();
+      this.amc.onAdManagerReady(true);
       this.amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
     };
 
