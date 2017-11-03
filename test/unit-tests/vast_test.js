@@ -223,11 +223,11 @@ describe('ad_manager_vast', function() {
   });
 
   it('Init: ad manager handles the loadMetadata function and asks to create an mp4 element', function(){
-    var oldAmcReady = amc.onAdManagerReady;
+    var oldAmcReady = _.bind(amc.onAdManagerReady, amc);
     var createMp4Element = false;
     amc.onAdManagerReady = function(makeMp4) {
       createMp4Element = makeMp4;
-      if (typeof oldAmcReady === "funciton") {
+      if (typeof oldAmcReady === "function") {
         oldAmcReady();
       }
     };
@@ -245,8 +245,8 @@ describe('ad_manager_vast', function() {
       ads: [vast_ad]
     };
     vastAdManager.initialize(amc);
-    expect(function() { vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);}).to.not.throwException();
+    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, content);
     expect(createMp4Element).to.be(true);
   });
 
