@@ -222,7 +222,15 @@ describe('ad_manager_vast', function() {
     expect(function() { vastAdManager.initialize(amc); }).to.not.throwException();
   });
 
-  it('Init: ad manager handles the loadMetadata function', function(){
+  it('Init: ad manager handles the loadMetadata function and asks to create an mp4 element', function(){
+    var oldAmcReady = amc.onAdManagerReady;
+    var createMp4Element = false;
+    amc.onAdManagerReady = function(makeMp4) {
+      createMp4Element = makeMp4;
+      if (typeof oldAmcReady === "funciton") {
+        oldAmcReady();
+      }
+    };
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -239,6 +247,7 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialize(amc);
     expect(function() { vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content);}).to.not.throwException();
+    expect(createMp4Element).to.be(true);
   });
 
   it('Init: ad manager notifies controller that it is loaded', function(){
