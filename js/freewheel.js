@@ -167,19 +167,19 @@ OO.Ads.manager(function(_, $) {
           adModuleJsReady = success;
           if (adModuleJsReady) {
             this.ready = true;
-            amc.onAdManagerReady();
+            amc.onAdManagerReady(true);
             amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
           }
         }, this));
       } else if (this.testMode) {
         this.ready = true;
         adModuleJsReady = true;
-        amc.onAdManagerReady();
+        amc.onAdManagerReady(true);
         amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
       }
       else {
         this.ready = true;
-        amc.onAdManagerReady();
+        amc.onAdManagerReady(true);
         amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
       }
     };
