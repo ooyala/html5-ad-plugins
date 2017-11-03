@@ -1616,8 +1616,6 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
-            //workaround of an IMA issue where the ad starts paused
-            //on Safari 11 with our muted autoplay flow
             if (this.videoControllerWrapper.requiresMutedAutoplay()) {
               //workaround of an IMA issue where we don't receive a MUTED ad event
               //on Safari mobile, so we'll notify of current volume and mute state now
@@ -1625,9 +1623,6 @@ require("../html5-common/js/utils/utils.js");
               {
                 this.videoControllerWrapper.raiseVolumeEvent();
               }
-
-              _IMAAdsManager.pause();
-              _IMAAdsManager.resume();
             }
 
             this.adPlaybackStarted = true;
