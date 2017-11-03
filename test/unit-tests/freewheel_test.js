@@ -119,13 +119,22 @@ describe('ad_manager_freewheel', function() {
   });
 
   it('Init: ad manager handles the loadMetadata function', function(){
+    var oldAmcReady = _.bind(amc.onAdManagerReady, amc);
+    var createMp4Element = false;
+    amc.onAdManagerReady = function(makeMp4) {
+      createMp4Element = makeMp4;
+      if (typeof oldAmcReady === "function") {
+        oldAmcReady();
+      }
+    };
     fw.initialize(amc);
     fw.registerUi();
-    expect(function() { fw.loadMetadata({"fw_mrm_network_id":"100",
+    fw.loadMetadata({"fw_mrm_network_id":"100",
                                          "html5_ssl_ad_server":"https://blah",
                                          "html5_ad_server": "http://blah"},
                                         {},
-                                        {}); }).to.not.throwException();
+                                        {});
+    expect(createMp4Element).to.be(true);
   });
 
   it('Init: ad manager notifies controller that it is loaded', function(){
@@ -134,7 +143,7 @@ describe('ad_manager_freewheel', function() {
     var pluginLoaded = false;
     amc.reportPluginLoaded = function(date, name){
       pluginLoaded = true;
-    }
+    };
     expect(function() { fw.loadMetadata({"fw_mrm_network_id":"100",
                                          "html5_ssl_ad_server":"https://blah",
                                          "html5_ad_server": "http://blah"},
