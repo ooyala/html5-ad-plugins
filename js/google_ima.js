@@ -1253,6 +1253,8 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onImaAdError = privateMember(function(adError)
       {
+        //all IMA errors are fatal so it's safe to clear out this timeout.
+        clearTimeout(this.adsRequestTimeoutRef);
         if(_usingAdRules)
         {
           //if ads are not ready yet, ima failed to load
@@ -1354,6 +1356,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onAdRequestSuccess = privateMember(function(adsManagerLoadedEvent)
       {
+        clearTimeout(this.adsRequestTimeoutRef);
         this.adResponseTime = new Date().valueOf();
         var responseTime = this.adResponseTime - this.adRequestTime;
         var timeSinceInitialPlay =  this.adResponseTime - this.initialPlayRequestTime;
@@ -1438,7 +1441,6 @@ require("../html5-common/js/utils/utils.js");
         OO._.each(imaAdEvents, addIMAEventListener, this);
         _trySetAdManagerToReady();
         this.adsReady = true;
-        clearTimeout(this.adsRequestTimeoutRef);
         _IMA_SDK_tryInitAdsManager();
       });
 
