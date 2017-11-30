@@ -123,6 +123,8 @@ require("../html5-common/js/utils/utils.js");
         this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
+        this.startOnPlay = false;
+        this.capturedUserClick = false;
         this.initialPlayRequestTime = -1;
         this.adRequestTime = -1;
         this.adResponseTime = -1;
@@ -640,7 +642,12 @@ require("../html5-common/js/utils/utils.js");
        */
       this.resumeAd = function(ad)
       {
-        if (_IMAAdsManager && this.adPlaybackStarted)
+        if (this.startOnPlay)
+        {
+          this.startOnPlay = false;
+          this.startIMA();
+        }
+        else if (_IMAAdsManager && this.adPlaybackStarted)
         {
           //On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
           //We want to force the video to reenter fullscreen and play
@@ -672,19 +679,33 @@ require("../html5-common/js/utils/utils.js");
       {
         if (_IMAAdsManager)
         {
-          this.savedVolume = -1;
-          _IMAAdsManager.setVolume(volume);
-          //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
-          //on when sharing video elements, so we'll notify of current volume and mute state now
-          if (this.videoControllerWrapper && this.sharedVideoElement)
+          if (this.capturedUserClick || volume === 0)
           {
-            this.videoControllerWrapper.raiseVolumeEvent();
+            this.savedVolume = -1;
+            _IMAAdsManager.setVolume(volume);
+            //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
+            //on when sharing video elements, so we'll notify of current volume and mute state now
+            if (this.startOnPlay || (this.videoControllerWrapper && this.sharedVideoElement))
+            {
+              this.videoControllerWrapper.raiseVolumeEvent();
+            }
           }
         }
         else
         {
           //if ad is not playing, store the volume to set later when we start the video
           this.savedVolume = volume;
+        }
+      };
+
+      this.setupUnmute = function() {
+        this.capturedUserClick = true;
+        if (!this.currentIMAAd)
+        {
+          if (_IMAAdDisplayContainer)
+          {
+            _IMAAdDisplayContainer.initialize();
+          }
         }
       };
 
@@ -776,8 +797,9 @@ require("../html5-common/js/utils/utils.js");
        * trys to request ads if preloading Ad Rules is not enabled.
        * @private
        * @method GoogleIMA#_onInitialPlayRequested
+       * @param {boolean} wasAutoplayed true if the video was autoplayed, false if not
        */
-      var _onInitialPlayRequested = privateMember(function()
+      var _onInitialPlayRequested = privateMember(function(wasAutoplayed)
       {
         this.initialPlayRequestTime = new Date().valueOf();
         OO.log("_onInitialPlayRequested");
@@ -792,6 +814,7 @@ require("../html5-common/js/utils/utils.js");
         this.initialPlayRequested = true;
         this.isReplay = false;
         _IMAAdDisplayContainer.initialize();
+        this.capturedUserClick = !wasAutoplayed;
         _IMA_SDK_tryInitAdsManager();
 
         //if we aren't preloading the ads, then it's safe to make the ad request now.
@@ -802,6 +825,25 @@ require("../html5-common/js/utils/utils.js");
           _trySetupAdsRequest();
         }
       });
+
+      var _startAdsManager = privateMember(function() {
+        if (!this.capturedUserClick)
+        {
+          this.startOnPlay = true;
+          this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
+        }
+        else
+        {
+          this.startIMA();
+        }
+      });
+
+      this.startIMA = function() {
+        if (_IMAAdsManager)
+        {
+          _IMAAdsManager.start();
+        }
+      };
 
       /**
        * Tries to initialize the AdsManager variable, from the IMA SDK, that is received from an ad request.
@@ -826,13 +868,14 @@ require("../html5-common/js/utils/utils.js");
                 _endCurrentAd(true);
             }
             _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
+
             // PBW-6610
             // Traditionally we have relied on the LOADED ad event before calling adsManager.start.
             // This may have worked accidentally.
             // IMA Guides and the video suite inspector both call adsManager.start immediately after
             // adsManager.init
             // Furthermore, some VPAID ads do not fire LOADED event until adsManager.start is called
-            _IMAAdsManager.start();
+            _startAdsManager();
             _IMAAdsManagerInitialized = true;
             OO.log("tryInitadsManager successful: adsManager started")
           }
@@ -1018,6 +1061,8 @@ require("../html5-common/js/utils/utils.js");
 
         _resetAdsState();
         _trySetupForAdRules();
+        //adsRequest.setAdWillAutoPlay(true);
+        //adsRequest.setAdWillPlayMuted(!this.capturedUserClick);
         _IMAAdsLoader.requestAds(adsRequest);
 
         //Used to determine time until response is received
@@ -1067,12 +1112,12 @@ require("../html5-common/js/utils/utils.js");
         if (!success || !_isGoogleSDKValid())
         {
           _onImaAdError();
-          errorString = "ERROR Google SDK failed to load"
+          errorString = "ERROR Google SDK failed to load";
           if (success && !_isGoogleSDKValid())
           {
             errorString = "ERROR Google SDK loaded but could not be validated"
           }
-          _amc.onAdSdkLoadFailure(this.name, errorString)
+          _amc.onAdSdkLoadFailure(this.name, errorString);
           _amc.unregisterAdManager(this.name);
           return;
         }
@@ -1095,37 +1140,50 @@ require("../html5-common/js/utils/utils.js");
              _throwError("IMA SDK loaded but does not contain valid data");
           }
 
-          if (_IMAAdDisplayContainer) {
-            _IMAAdDisplayContainer.destroy();
-          }
+          //if (_IMAAdDisplayContainer) {
+          //  _IMAAdDisplayContainer.destroy();
+          //  this.capturedUserClick = false;
+          //}
 
-          //**It's now safe to set SDK settings, we have all the page level overrides and
-          //the SDK is guaranteed to be loaded.
-
-          //These are required by Google for tracking purposes.
-          google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
-          google.ima.settings.setPlayerType(PLAYER_TYPE);
-          google.ima.settings.setLocale(OO.getLocale());
-          if (this.useInsecureVpaidMode)
+          if (!_IMAAdDisplayContainer)
           {
-            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+            //**It's now safe to set SDK settings, we have all the page level overrides and
+            //the SDK is guaranteed to be loaded.
+
+            //These are required by Google for tracking purposes.
+            google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
+            google.ima.settings.setPlayerType(PLAYER_TYPE);
+            google.ima.settings.setLocale(OO.getLocale());
+            if (this.useInsecureVpaidMode)
+            {
+              google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+            }
+            else
+            {
+              google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+            }
+
+            google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
+
+            //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
+            _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
+            //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
+            //also doesn't not seem to work nicely with podded ads if you don't use it.
+
+            var vid = this.sharedVideoElement;
+
+            //if (OO.isSafari) {
+            //  vid = document.createElement('video');
+            //  _uiContainer.appendChild(vid);
+            //  vid.muted = true;
+            //  vid.volume = 0;
+            //}
+
+            //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
+            //properly with the Alice skin.
+            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
+                                                                       vid);
           }
-          else
-          {
-            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
-          }
-
-          google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
-
-          //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
-          _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
-          //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
-          //also doesn't not seem to work nicely with podded ads if you don't use it.
-
-          //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
-          //properly with the Alice skin.
-          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
-                                                                     this.sharedVideoElement);
 
           IMA_SDK_tryCreateAdsLoader();
 
@@ -1165,6 +1223,7 @@ require("../html5-common/js/utils/utils.js");
         {
           _IMAAdDisplayContainer.destroy();
           _IMAAdDisplayContainer = null;
+          this.capturedUserClick = false;
         }
       });
 
@@ -1456,7 +1515,7 @@ require("../html5-common/js/utils/utils.js");
         // Proceed as usual if we're not using ad rules
         if (!_usingAdRules)
         {
-          _IMAAdsManager.start();
+          _startAdsManager();
           return;
         }
         // Mimic AMC behavior and cancel any existing non-linear ads before playing the next ad.
@@ -1476,7 +1535,7 @@ require("../html5-common/js/utils/utils.js");
         _uiContainer.setAttribute("style", "display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;");
         _onSizeChanged();
         // Resume ads manager operation
-        _IMAAdsManager.start();
+        _startAdsManager();
       });
 
       /**
@@ -2447,7 +2506,10 @@ require("../html5-common/js/utils/utils.js");
      * @public
      * @method TemplateVideoWrapper#unmute
      */
-    this.unmute = function() {
+    this.unmute = function(fromUser) {
+      if (fromUser) {
+        _ima.setupUnmute();
+      }
       _ima.setVolume(volumeWhenMuted ? volumeWhenMuted : 1);
     };
 
@@ -2590,6 +2652,10 @@ require("../html5-common/js/utils/utils.js");
     this.raiseDurationChange = function(currentTime, duration)
     {
       raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, currentTime, duration);
+    };
+
+    this.raiseUnmutedPlaybackFailed = function() {
+      notifyIfInControl(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
     };
 
     var raisePlayhead = _.bind(function(eventname, currentTime, duration)
