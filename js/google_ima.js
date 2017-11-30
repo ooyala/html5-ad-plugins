@@ -1076,7 +1076,7 @@ require("../html5-common/js/utils/utils.js");
           _amc.unregisterAdManager(this.name);
           return;
         }
-
+        _amc.onAdSdkLoaded(this.name)
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
       });
