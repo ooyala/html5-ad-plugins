@@ -61,7 +61,7 @@ OO.Ads.manager(function(_, $)
 
     // In the event that the ID3 tag has an ad duration of 0 and the VAST XML response does not specify an
     // ad duration, use this constant. Live team said the average SSAI ad was 20 seconds long.
-    var FALLBACK_AD_DURATION = 20 // seconds
+    var FALLBACK_AD_DURATION = 20; // seconds
 
     var baseRequestUrl = "";
     var requestUrl = "";
@@ -80,6 +80,19 @@ OO.Ads.manager(function(_, $)
 
       // Duration of the ad
       DURATION: "d"
+    };
+  
+    // The VAST requirements to tracking event types to track which creative are being viewed
+    var TRACKING_CALL_NAMES =
+    {
+      
+      "25": ["firstQuartile"],
+    
+      "50": ["midpoint"],
+    
+      "75": ["thirdQuartile"],
+    
+      "100": ["complete"]
     };
 
     // Constants used to denote the status of particular ad ID request
@@ -681,7 +694,6 @@ OO.Ads.manager(function(_, $)
      */
     var _preformatUrl = _.bind(function(url)
     {
-      //return ((url||'').indexOf('https') === -1 ? (url||'').replace('http:','https:') : url||'').replace('/hls/','/ai/');
       return (url ||'').replace('/hls/','/ai/');
     }, this);
 
@@ -764,11 +776,11 @@ OO.Ads.manager(function(_, $)
             }
             else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME)
             {
-              parsedId3Object.time = +queryParameterValue;
+              parsedId3Object.time = parseFloat(queryParameterValue);
             }
             else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION)
             {
-              parsedId3Object.duration = +queryParameterValue;
+              parsedId3Object.duration = parseFloat(queryParameterValue);
             }
             else
             {
@@ -1134,7 +1146,9 @@ OO.Ads.manager(function(_, $)
       {
         amc.notifyLinearAdEnded(this.currentAd.id);
         amc.notifyPodEnded(this.currentAd.id);
-        _handleTrackingUrls(this.currentAd, ["firstQuartile", "midpoint", "thirdQuartile", "complete"]);
+        if (this.currentId3Object) {
+          _handleTrackingUrls(this.currentAd, TRACKING_CALL_NAMES[this.currentId3Object.time]);
+        }
       }
       adMode = false;
       this.currentAd = null;
