@@ -319,6 +319,16 @@ describe('ad_manager_ima', function()
     expect(pluginLoaded).to.be(true);
   });
 
+  it('Init: ad sdk loads successfully', function()
+  {
+    var sdkLoaded = false;
+    amc.onAdSdkLoaded = function(name){
+      sdkLoaded = true;
+    }
+    ima.initialize(amc, playerId);
+    expect(sdkLoaded).to.be(true);
+  });
+
   // Ad Rules
   it('Init, Ad Rules: setup ads request is successful', function()
   {
