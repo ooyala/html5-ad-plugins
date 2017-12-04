@@ -123,7 +123,7 @@ require("../html5-common/js/utils/utils.js");
         this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
-        this.startOnPlay = false;
+        this.startImaOnVtcPlay = false;
         this.capturedUserClick = false;
         this.initialPlayRequestTime = -1;
         this.adRequestTime = -1;
@@ -642,10 +642,13 @@ require("../html5-common/js/utils/utils.js");
        */
       this.resumeAd = function(ad)
       {
-        if (this.startOnPlay)
+        if (this.startImaOnVtcPlay)
         {
-          this.startOnPlay = false;
-          this.startIMA();
+          this.startImaOnVtcPlay = false;
+          if (_IMAAdsManager)
+          {
+            _IMAAdsManager.start();
+          }
         }
         else if (_IMAAdsManager && this.adPlaybackStarted)
         {
@@ -679,13 +682,17 @@ require("../html5-common/js/utils/utils.js");
       {
         if (_IMAAdsManager)
         {
+          //do not set non-zero volumes if we have not captured the user click
+          //since that will cause IMA to error out on platforms where
+          //muted autoplay is not supported
           if (this.capturedUserClick || volume === 0)
           {
             this.savedVolume = -1;
             _IMAAdsManager.setVolume(volume);
             //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
-            //on when sharing video elements, so we'll notify of current volume and mute state now
-            if (this.startOnPlay || (this.videoControllerWrapper && this.sharedVideoElement))
+            //on when sharing video element or if playback has not started,
+            //so we'll notify of current volume and mute state now
+            if (this.videoControllerWrapper && (!this.adPlaybackStarted || this.sharedVideoElement))
             {
               this.videoControllerWrapper.raiseVolumeEvent();
             }
@@ -698,8 +705,20 @@ require("../html5-common/js/utils/utils.js");
         }
       };
 
-      this.setupUnmute = function() {
+      /**
+       * Preps the IMA SDK for unmuted playback. This needs to be done
+       * on the user click thread.
+       * @protected
+       * @method GoogleIMA#setupUnmutedPlayback
+       */
+      this.setupUnmutedPlayback = function()
+      {
         this.capturedUserClick = true;
+        //We need to pass the user click to the IMA AdDisplayContainer's
+        //initialize method so that IMA can start ads unmuted.
+        //Do not do this if curently playing an ad or else the ad will restart.
+        //We call IMA's setVolume method to pass the click instead if ad is
+        //currently playing
         if (!this.currentIMAAd)
         {
           if (_IMAAdDisplayContainer)
@@ -826,24 +845,24 @@ require("../html5-common/js/utils/utils.js");
         }
       });
 
-      var _startAdsManager = privateMember(function() {
-        if (!this.capturedUserClick)
+      /**
+       * Tries to start the IMA Ads Manager for ad playback. If we have not detected a user click yet
+       * for platforms where unmuted autoplay is not supported, we'll mute playback first.
+       * @private
+       * @method GoogleIMA#_startAdsManager
+       */
+      var _startAdsManager = privateMember(function()
+      {
+        if (!this.capturedUserClick && this.videoControllerWrapper && this.videoControllerWrapper.requiresMutedAutoplay())
         {
-          this.startOnPlay = true;
+          this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
         }
-        else
-        {
-          this.startIMA();
-        }
-      });
-
-      this.startIMA = function() {
-        if (_IMAAdsManager)
+        else if (_IMAAdsManager)
         {
           _IMAAdsManager.start();
         }
-      };
+      });
 
       /**
        * Tries to initialize the AdsManager variable, from the IMA SDK, that is received from an ad request.
@@ -1061,8 +1080,6 @@ require("../html5-common/js/utils/utils.js");
 
         _resetAdsState();
         _trySetupForAdRules();
-        //adsRequest.setAdWillAutoPlay(true);
-        //adsRequest.setAdWillPlayMuted(!this.capturedUserClick);
         _IMAAdsLoader.requestAds(adsRequest);
 
         //Used to determine time until response is received
@@ -1140,11 +1157,6 @@ require("../html5-common/js/utils/utils.js");
              _throwError("IMA SDK loaded but does not contain valid data");
           }
 
-          //if (_IMAAdDisplayContainer) {
-          //  _IMAAdDisplayContainer.destroy();
-          //  this.capturedUserClick = false;
-          //}
-
           if (!_IMAAdDisplayContainer)
           {
             //**It's now safe to set SDK settings, we have all the page level overrides and
@@ -1171,13 +1183,6 @@ require("../html5-common/js/utils/utils.js");
             //also doesn't not seem to work nicely with podded ads if you don't use it.
 
             var vid = this.sharedVideoElement;
-
-            //if (OO.isSafari) {
-            //  vid = document.createElement('video');
-            //  _uiContainer.appendChild(vid);
-            //  vid.muted = true;
-            //  vid.volume = 0;
-            //}
 
             //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
             //properly with the Alice skin.
@@ -1677,13 +1682,10 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
-            if (this.videoControllerWrapper.requiresMutedAutoplay()) {
+            if (this.videoControllerWrapper && this.videoControllerWrapper.requiresMutedAutoplay()) {
               //workaround of an IMA issue where we don't receive a MUTED ad event
               //on Safari mobile, so we'll notify of current volume and mute state now
-              if (this.videoControllerWrapper)
-              {
-                this.videoControllerWrapper.raiseVolumeEvent();
-              }
+              this.videoControllerWrapper.raiseVolumeEvent();
             }
 
             this.adPlaybackStarted = true;
@@ -2508,7 +2510,7 @@ require("../html5-common/js/utils/utils.js");
      */
     this.unmute = function(fromUser) {
       if (fromUser) {
-        _ima.setupUnmute();
+        _ima.setupUnmutedPlayback();
       }
       _ima.setVolume(volumeWhenMuted ? volumeWhenMuted : 1);
     };
