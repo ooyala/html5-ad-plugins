@@ -50,6 +50,7 @@ require("../html5-common/js/utils/utils.js");
       var _timeUpdater = null;
       var _uiContainer = null;
       var _uiContainerPrevStyle = null;
+      var browserCanAutoplayUnmuted = false;
 
       //Constants
       var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
@@ -853,7 +854,8 @@ require("../html5-common/js/utils/utils.js");
        */
       var _startAdsManager = privateMember(function()
       {
-        if (!this.capturedUserClick && this.videoControllerWrapper && this.videoControllerWrapper.requiresMutedAutoplay())
+        var mutedAutoplay = _requiresMutedAutoplay();
+        if (!this.capturedUserClick && this.videoControllerWrapper && mutedAutoplay)
         {
           this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
@@ -1682,7 +1684,7 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
-            if (this.videoControllerWrapper && this.videoControllerWrapper.requiresMutedAutoplay()) {
+            if (this.videoControllerWrapper && _requiresMutedAutoplay()) {
               //workaround of an IMA issue where we don't receive a MUTED ad event
               //on Safari mobile, so we'll notify of current volume and mute state now
               this.videoControllerWrapper.raiseVolumeEvent();
@@ -2269,7 +2271,29 @@ require("../html5-common/js/utils/utils.js");
       this.registerVideoControllerWrapper = function(videoWrapper)
       {
         this.videoControllerWrapper = videoWrapper;
-      }
+      };
+
+      /**
+       * Notifies IMA if the browser requires muted autoplay or not. This test is typically done
+       * on a video element.
+       * @protected
+       * @method GoogleIMA#setRequiresMutedAutoplay
+       * @param {boolean} required True if the browser requires muted autoplay, false otherwise
+       */
+      this.setRequiresMutedAutoplay = function(required) {
+        browserCanAutoplayUnmuted = !required;
+      };
+
+      /**
+       * Checks to see if autoplay requires the video to be muted
+       * @private
+       * @method GoogleIMA#_requiresMutedAutoplay
+       * @returns {boolean} true if video must be muted to autoplay, false otherwise
+       */
+      var _requiresMutedAutoplay = privateMember(function() {
+        return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
+          (OO.isChrome && OO.chromeMajorVersion >= 64));
+      });
     };
 
     var _inlinePlaybackSupported = function()
@@ -2479,16 +2503,6 @@ require("../html5-common/js/utils/utils.js");
     };
 
     /**
-     * Checks to see if autoplay requires the video to be muted
-     * @public
-     * @method TemplateVideoWrapper#requiresMutedAutoplay
-     * @param {boolean} true if video must be muted to autoplay, false otherwise
-     */
-    this.requiresMutedAutoplay = function() {
-      return (OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid;
-    };
-
-    /**
      * Triggers a mute on the video element.
      * @public
      * @method TemplateVideoWrapper#mute
@@ -2658,6 +2672,10 @@ require("../html5-common/js/utils/utils.js");
 
     this.raiseUnmutedPlaybackFailed = function() {
       notifyIfInControl(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
+    };
+
+    this.notifyUnmutedVideoPlaybackSucceeded = function() {
+      _ima.setRequiresMutedAutoplay(false);
     };
 
     var raisePlayhead = _.bind(function(eventname, currentTime, duration)
