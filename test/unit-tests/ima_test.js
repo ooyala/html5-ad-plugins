@@ -2140,5 +2140,59 @@ describe('ad_manager_ima', function()
     expect(ima.enableIosSkippableAds).to.be(true);
   });
 
+  describe("Override number of redirects", function() {
+    beforeEach(function() {
+      google.ima.numRedirects = undefined;
+    });
+
+    afterEach(function() {
+      google.ima.numRedirects = undefined;
+    });
+
+    it('Test that override works', function() {
+      var content =
+      {
+        setMaxRedirects : 10
+      };
+
+      ima.initialize(amc, playerId);
+      ima.loadMetadata(content, {}, {});
+      ima.registerUi();
+
+      expect(ima.maxRedirects).to.be(10); //this is what we store internally
+      expect(google.ima.numRedirects).to.be(10); //this is what ima receives
+
+    });
+
+    it('Test what happens when you don\'t set the override', function() {
+      var content =
+      {
+        //nothing
+      };
+
+      ima.initialize(amc, playerId);
+      ima.loadMetadata(content, {}, {});
+      ima.registerUi();
+
+      expect(ima.maxRedirects).to.be(undefined); //shouldn't be set since we didn't pass in anything
+      expect(google.ima.numRedirects).to.be(undefined); //ima should not be called
+
+    });
+
+    it('Test bad input', function() {
+      var content =
+      {
+        setMaxRedirects : "bad input"
+      };
+
+      ima.initialize(amc, playerId);
+      ima.loadMetadata(content, {}, {});
+      ima.registerUi();
+
+      expect(ima.maxRedirects).to.be("bad input"); //this is what comes in
+      expect(google.ima.numRedirects).to.be(undefined); //ima should not be called
+    })
+  });
+
 
 });
