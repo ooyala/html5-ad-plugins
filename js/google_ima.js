@@ -850,9 +850,9 @@ require("../html5-common/js/utils/utils.js");
        * Tries to start the IMA Ads Manager for ad playback. If we have not detected a user click yet
        * for platforms where unmuted autoplay is not supported, we'll mute playback first.
        * @private
-       * @method GoogleIMA#_startAdsManager
+       * @method GoogleIMA#_tryStartAdsManager
        */
-      var _startAdsManager = privateMember(function()
+      var _tryStartAdsManager = privateMember(function()
       {
         var mutedAutoplay = _requiresMutedAutoplay();
         if (!this.capturedUserClick && this.videoControllerWrapper && mutedAutoplay)
@@ -896,7 +896,7 @@ require("../html5-common/js/utils/utils.js");
             // IMA Guides and the video suite inspector both call adsManager.start immediately after
             // adsManager.init
             // Furthermore, some VPAID ads do not fire LOADED event until adsManager.start is called
-            _startAdsManager();
+            _tryStartAdsManager();
             _IMAAdsManagerInitialized = true;
             OO.log("tryInitadsManager successful: adsManager started")
           }
@@ -1522,7 +1522,7 @@ require("../html5-common/js/utils/utils.js");
         // Proceed as usual if we're not using ad rules
         if (!_usingAdRules)
         {
-          _startAdsManager();
+          _tryStartAdsManager();
           return;
         }
         // Mimic AMC behavior and cancel any existing non-linear ads before playing the next ad.
@@ -1542,7 +1542,7 @@ require("../html5-common/js/utils/utils.js");
         _uiContainer.setAttribute("style", "display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;");
         _onSizeChanged();
         // Resume ads manager operation
-        _startAdsManager();
+        _tryStartAdsManager();
       });
 
       /**
@@ -2674,7 +2674,7 @@ require("../html5-common/js/utils/utils.js");
       notifyIfInControl(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
     };
 
-    this.notifyUnmutedVideoPlaybackSucceeded = function() {
+    this.notifyUnmutedContentAutoPlaybackSucceeded = function() {
       _ima.setRequiresMutedAutoplay(false);
     };
 
