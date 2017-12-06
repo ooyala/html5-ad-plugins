@@ -245,7 +245,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.onVideoTagFound = function(event, videoId, tagType, metadata) {
       OO.log("TAG FOUND w/ args: ", arguments);
-    }
+    };
 
     /**
      * <i>Optional.</i><br/>
@@ -267,6 +267,20 @@ OO.Ads.manager(function(_, $) {
      */
     this.destroy = function() {
       // Stop any running ads
+    };
+
+    /**
+     * Called by the Ad Manager Controller to determine if an ad video element must be created on player
+     * initialization. This is done so that the Video Controller can interface with the Ad's Video Plugin
+     * prior to an ad request. A typical use case would be to pass a user click to the ad plugin prior
+     * to ad playback so that the ad can start unmuted for browsers that require user interaction for
+     * unmuted playback.
+     * @method AdManager#createAdVideoElementOnPlayerInit
+     * @public
+     * @returns {string[]} An array of encoding types corresponding to the video elements that the Video Controller
+     *                     should create. Return an empty array, null, or undefined if this is not required.
+     */
+    this.createAdVideoElementOnPlayerInit = function() {
     };
 
     var _onContentChanged = function() {
