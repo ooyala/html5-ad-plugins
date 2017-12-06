@@ -311,6 +311,20 @@ require("../html5-common/js/utils/utils.js");
           this.enableIosSkippableAds = metadata.enableIosSkippableAds;
         }
 
+        //we don't set a default because we want Google's default if it isn't specified.
+        if(metadata.hasOwnProperty("setMaxRedirects"))
+        {
+          if (typeof metadata.setMaxRedirects === "number")
+          {
+            this.maxRedirects = metadata.setMaxRedirects;
+          }
+          else if (typeof metadata.setMaxRedirects === "string")
+          {
+            //convert to number
+            this.maxRedirects = +metadata.setMaxRedirects;
+          }
+        }
+
         //On second video playthroughs, we will not be initializing the ad manager again.
         //Attempt to create the ad display container here instead of after the sdk has loaded
         if (!_IMAAdDisplayContainer)
@@ -1116,6 +1130,10 @@ require("../html5-common/js/utils/utils.js");
           }
 
           google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
+
+          if (this.maxRedirects && typeof (this.maxRedirects) === 'number' && this.maxRedirects > 0) {
+            google.ima.settings.setNumRedirects(this.maxRedirects);
+          }
 
           //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
           _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
