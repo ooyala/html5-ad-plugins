@@ -87,7 +87,8 @@ describe('ad_manager_ima', function()
 
   var play = function(autoplayed)
   {
-    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED](autoplayed);
+    var event = amc.EVENTS.INITIAL_PLAY_REQUESTED;
+    amc.callbacks[event](event, autoplayed);
   };
 
   var createVideoWrapper = function(vc)

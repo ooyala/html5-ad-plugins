@@ -817,9 +817,10 @@ require("../html5-common/js/utils/utils.js");
        * trys to request ads if preloading Ad Rules is not enabled.
        * @private
        * @method GoogleIMA#_onInitialPlayRequested
-       * @param {boolean} wasAutoplayed true if the video was autoplayed, false if not
+       * @param {string} event The event name
+       * @param {boolean} wasAutoplayed True if the video was autoplayed, false if not
        */
-      var _onInitialPlayRequested = privateMember(function(wasAutoplayed)
+      var _onInitialPlayRequested = privateMember(function(event, wasAutoplayed)
       {
         this.initialPlayRequestTime = new Date().valueOf();
         OO.log("_onInitialPlayRequested");
