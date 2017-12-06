@@ -2142,10 +2142,12 @@ describe('ad_manager_ima', function()
 
   describe("Override number of redirects", function() {
     beforeEach(function() {
+      ima.maxRedirects = undefined;
       google.ima.numRedirects = undefined;
     });
 
     afterEach(function() {
+      ima.maxRedirects = undefined
       google.ima.numRedirects = undefined;
     });
 
@@ -2153,6 +2155,21 @@ describe('ad_manager_ima', function()
       var content =
       {
         setMaxRedirects : 10
+      };
+
+      ima.initialize(amc, playerId);
+      ima.loadMetadata(content, {}, {});
+      ima.registerUi();
+
+      expect(ima.maxRedirects).to.be(10); //this is what we store internally
+      expect(google.ima.numRedirects).to.be(10); //this is what ima receives
+
+    });
+
+    it('Test that override works with string', function() {
+      var content =
+      {
+        setMaxRedirects : "10"
       };
 
       ima.initialize(amc, playerId);
@@ -2189,9 +2206,9 @@ describe('ad_manager_ima', function()
       ima.loadMetadata(content, {}, {});
       ima.registerUi();
 
-      expect(ima.maxRedirects).to.be("bad input"); //this is what comes in
+      expect(isNaN(ima.maxRedirects)).to.be(true); //this is what comes in
       expect(google.ima.numRedirects).to.be(undefined); //ima should not be called
-    })
+    });
   });
 
 

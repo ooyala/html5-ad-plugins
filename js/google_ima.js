@@ -314,7 +314,15 @@ require("../html5-common/js/utils/utils.js");
         //we don't set a default because we want Google's default if it isn't specified.
         if(metadata.hasOwnProperty("setMaxRedirects"))
         {
-          this.maxRedirects = metadata.setMaxRedirects;
+          if (typeof metadata.setMaxRedirects === "number")
+          {
+            this.maxRedirects = metadata.setMaxRedirects;
+          }
+          else if (typeof metadata.setMaxRedirects === "string")
+          {
+            //convert to number
+            this.maxRedirects = +metadata.setMaxRedirects;
+          }
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
