@@ -94,6 +94,14 @@ OO.Ads.manager(function(_, $)
     
       "100": ["complete"]
     };
+    
+    // Helper map object to replace change the manifest URL to the endpoint
+    // used to retrieve the Vast Ad Response from the ads proxy.
+    var ENDPOINTS_MAP_OBJECT =
+    {
+      vhls: "vai",
+      hls: "ai"
+    };
 
     // Constants used to denote the status of particular ad ID request
     var STATE =
@@ -113,6 +121,8 @@ OO.Ads.manager(function(_, $)
 
     // player configuration parameters / page level params
     var bustTheCache = true;
+    
+    var objectsForImpressionsCalls = [];
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -399,6 +409,12 @@ OO.Ads.manager(function(_, $)
       {
         requestUrl = baseRequestUrl;
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
+  
+        // Create objects for impressions calling
+        objectsForImpressionsCalls.push({
+          currentAd: this.currentAd,
+          id3Objects: this.currentId3Object
+        });
 
         // Check to see if we already have adId in dictionary
         if (!_.has(this.adIdDictionary, this.currentId3Object.adId))
@@ -429,6 +445,8 @@ OO.Ads.manager(function(_, $)
           _adEndedCallback();
           _handleId3Ad(this.currentId3Object);
         }
+  
+        _handleImpressionCalls();
       }
     };
 
@@ -694,7 +712,10 @@ OO.Ads.manager(function(_, $)
      */
     var _preformatUrl = _.bind(function(url)
     {
-      return (url ||'').replace('/hls/','/ai/');
+      return url.replace(/vhls|hls/gi, function(matched)
+      {
+        return ENDPOINTS_MAP_OBJECT[matched];
+      });
     }, this);
 
     /**
@@ -1133,6 +1154,23 @@ OO.Ads.manager(function(_, $)
       }
       return urls;
     }, this);
+  
+    /**
+     * Helper function to call impressions.
+     * @private
+     */
+    var _handleImpressionCalls = function() {
+      for (var i = 0; i < objectsForImpressionsCalls.length; i++ )
+      {
+        var currentObject = objectsForImpressionsCalls[i];
+        if (currentObject.currentAd)
+        {
+          _handleTrackingUrls(currentObject.currentAd, TRACKING_CALL_NAMES[currentObject.id3Objects.time]);
+        }
+        objectsForImpressionsCalls.splice(i, 1);
+        i--;
+      }
+    };
 
     /**
      * Callback used when the duration of an ad has passed.
