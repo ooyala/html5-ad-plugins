@@ -85,9 +85,9 @@ describe('ad_manager_ima', function()
     amc.timeline = ima.buildTimeline();
   };
 
-  var play = function()
+  var play = function(autoplayed)
   {
-    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
+    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED](autoplayed);
   };
 
   var createVideoWrapper = function(vc)
@@ -95,11 +95,11 @@ describe('ad_manager_ima', function()
     videoWrapper = imaVideoPluginFactory.create(null, null, vc, null, playerId);
   };
 
-  var initAndPlay = function(adRules, vc)
+  var initAndPlay = function(adRules, vc, autoplayed)
   {
     initialize(adRules);
     createVideoWrapper(vc);
-    play();
+    play(autoplayed);
   };
 
   before(_.bind(function()
@@ -165,6 +165,8 @@ describe('ad_manager_ima', function()
     notifyParams = null;
     notifyEventNameHistory = [];
     notifyParamHistory = [];
+    OO.isChrome = false;
+    OO.chromeMajorVersion = null;
   }, this));
 
   //   ------   TESTS   ------
@@ -1320,8 +1322,38 @@ describe('ad_manager_ima', function()
     };
     //we tell IMA to start ad
     videoWrapper.play();
-    //IMA tells us ad is started
+    //IMA tells us ad is loaded
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
+    videoWrapper.setVolume(TEST_VOLUME);
+    expect(vol).to.be(TEST_VOLUME);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "volume" : TEST_VOLUME
+      });
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : false
+      });
+  });
+
+  it('VTC Integration: Video wrapper setVolume notifies VTC with volume if ad is not started', function()
+  {
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    var vol = 0;
+    var TEST_VOLUME = 0.5;
+    am.setVolume = function(volume)
+    {
+      vol = volume;
+      //IMA does not publish a volume change event if ad is not started
+    };
+    am.getVolume = function() {
+      return vol;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
     expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
@@ -1368,6 +1400,88 @@ describe('ad_manager_ima', function()
       });
   });
 
+  it('VTC Integration: Video wrapper setVolume with a non-zero value does not update IMA with volume if a user click is required and we autoplayed', function()
+  {
+    var originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initAndPlay(true, vci, true);
+    var am = google.ima.adManagerInstance;
+    var vol = 0;
+    var TEST_VOLUME = 0.5;
+    am.setVolume = function(volume)
+    {
+      vol = volume;
+      videoWrapper.raiseVolumeEvent();
+    };
+    am.getVolume = function() {
+      return vol;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //IMA tells us ad is started
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    videoWrapper.setVolume(TEST_VOLUME);
+    expect(vol).to.be(0);
+    ima.requiresMutedAutoplay = originalRequiresMutedAutoplay;
+  });
+
+  it('VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume if a user click is required and we did not autoplay', function()
+  {
+    var originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initAndPlay(true, vci, false);
+    var am = google.ima.adManagerInstance;
+    var vol = 0;
+    var TEST_VOLUME = 0.5;
+    am.setVolume = function(volume)
+    {
+      vol = volume;
+      videoWrapper.raiseVolumeEvent();
+    };
+    am.getVolume = function() {
+      return vol;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //IMA tells us ad is started
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    videoWrapper.setVolume(TEST_VOLUME);
+    expect(vol).to.be(TEST_VOLUME);
+    ima.requiresMutedAutoplay = originalRequiresMutedAutoplay;
+  });
+
+  it('VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume if a user click is required and we captured a user click', function()
+  {
+    var originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initAndPlay(true, vci, true);
+    var am = google.ima.adManagerInstance;
+    var vol = 0;
+    var TEST_VOLUME = 0.5;
+    am.setVolume = function(volume)
+    {
+      vol = volume;
+      videoWrapper.raiseVolumeEvent();
+    };
+    am.getVolume = function() {
+      return vol;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //IMA tells us ad is started
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    videoWrapper.unmute(true);
+    videoWrapper.setVolume(TEST_VOLUME);
+    expect(vol).to.be(TEST_VOLUME);
+    ima.requiresMutedAutoplay = originalRequiresMutedAutoplay;
+  });
+
   it('VTC Integration: Video wrapper setVolume saves volume if IMA ad manager is not initialized', function()
   {
     createVideoWrapper(vci);
@@ -1389,6 +1503,58 @@ describe('ad_manager_ima', function()
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
     expect(ima.savedVolume).to.be(-1);
+  });
+
+  it('VTC Integration: Video wrapper unmute on user click initializes IMA Ad Display Container', function()
+  {
+    initAndPlay(true, vci, true);
+    var adcInitialized = false;
+    var adc = google.ima.adDisplayContainerInstance;
+    adc.initialize = function() {
+      adcInitialized = true;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //set to false since the ad display container may have been initialized outside of the user click
+    //and we want to check if it gets reinitialized on the user click
+    adcInitialized = false;
+    videoWrapper.unmute(true);
+    expect(adcInitialized).to.be(true);
+  });
+
+  it('VTC Integration: Programatic video wrapper unmute does not initialize the IMA Ad Display Container', function()
+  {
+    initAndPlay(true, vci, true);
+    var adcInitialized = false;
+    var adc = google.ima.adDisplayContainerInstance;
+    adc.initialize = function() {
+      adcInitialized = true;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //set to false since the ad display container may have been initialized outside of the user click
+    adcInitialized = false;
+    videoWrapper.unmute(false);
+    expect(adcInitialized).to.be(false);
+  });
+
+  it('VTC Integration: Video wrapper unmute on user click does not initialize IMA Ad Display Container if ad is playing', function()
+  {
+    initAndPlay(true, vci, true);
+    var adcInitialized = false;
+    var am = google.ima.adManagerInstance;
+    var adc = google.ima.adDisplayContainerInstance;
+    adc.initialize = function() {
+      adcInitialized = true;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //set to false since the ad display container may have been initialized outside of the user click
+    //and we want to check if it gets reinitialized on the user click
+    adcInitialized = false;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    videoWrapper.unmute(true);
+    expect(adcInitialized).to.be(false);
   });
 
   it('VTC Integration: Video wrapper getCurrentTime retrieves the current time', function()
@@ -2130,5 +2296,63 @@ describe('ad_manager_ima', function()
     expect(ima.enableIosSkippableAds).to.be(true);
   });
 
+  it('Muted Autoplay: Ads Manager can start after IMA initialization and automatic initial play requested if muted autoplay is not required', function ()
+  {
+    var originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
+    ima.requiresMutedAutoplay = function() {
+      return false;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adsManagerStarted).to.be(true);
+    ima.requiresMutedAutoplay = originalRequiresMutedAutoplay;
+  });
 
+  it('Muted Autoplay: Ads Manager cannot start and wrapper raises UNMUTED_PLAYBACK_FAILED after IMA initialization and automatic initial play requested if muted autoplay is required', function ()
+  {
+    var originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
+    ima.requiresMutedAutoplay = originalRequiresMutedAutoplay;
+  });
+
+  it('Muted Autoplay: Ads Manager can start after IMA initialization and automatic initial play requested if muted autoplay is required but we capture a user click', function ()
+  {
+    var originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    //user click
+    videoWrapper.unmute(true);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adsManagerStarted).to.be(true);
+    ima.requiresMutedAutoplay = originalRequiresMutedAutoplay;
+  });
+
+  it('Muted Autoplay: VTC can notify IMA that muted autoplay is not required', function ()
+  {
+    OO.isChrome = true;
+    OO.chromeMajorVersion = 64;
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    expect(ima.requiresMutedAutoplay()).to.be(true);
+    videoWrapper.notifyUnmutedContentAutoPlaybackSucceeded();
+    expect(ima.requiresMutedAutoplay()).to.be(false);
+  });
 });

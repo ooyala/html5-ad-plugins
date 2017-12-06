@@ -686,7 +686,7 @@ require("../html5-common/js/utils/utils.js");
           //do not set non-zero volumes if we have not captured the user click
           //since that will cause IMA to error out on platforms where
           //muted autoplay is not supported
-          if (this.capturedUserClick || volume === 0)
+          if (this.capturedUserClick || volume === 0 || !this.requiresMutedAutoplay())
           {
             this.savedVolume = -1;
             _IMAAdsManager.setVolume(volume);
@@ -854,8 +854,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _tryStartAdsManager = privateMember(function()
       {
-        var mutedAutoplay = _requiresMutedAutoplay();
-        if (!this.capturedUserClick && this.videoControllerWrapper && mutedAutoplay)
+        if (!this.capturedUserClick && this.videoControllerWrapper && this.requiresMutedAutoplay())
         {
           this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
@@ -889,7 +888,6 @@ require("../html5-common/js/utils/utils.js");
                 _endCurrentAd(true);
             }
             _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
-
             // PBW-6610
             // Traditionally we have relied on the LOADED ad event before calling adsManager.start.
             // This may have worked accidentally.
@@ -1684,7 +1682,7 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
-            if (this.videoControllerWrapper && _requiresMutedAutoplay()) {
+            if (this.videoControllerWrapper && this.requiresMutedAutoplay()) {
               //workaround of an IMA issue where we don't receive a MUTED ad event
               //on Safari mobile, so we'll notify of current volume and mute state now
               this.videoControllerWrapper.raiseVolumeEvent();
@@ -2286,14 +2284,14 @@ require("../html5-common/js/utils/utils.js");
 
       /**
        * Checks to see if autoplay requires the video to be muted
-       * @private
-       * @method GoogleIMA#_requiresMutedAutoplay
+       * @protected
+       * @method GoogleIMA#requiresMutedAutoplay
        * @returns {boolean} true if video must be muted to autoplay, false otherwise
        */
-      var _requiresMutedAutoplay = privateMember(function() {
+      this.requiresMutedAutoplay = function() {
         return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
           (OO.isChrome && OO.chromeMajorVersion >= 64));
-      });
+      };
     };
 
     var _inlinePlaybackSupported = function()
