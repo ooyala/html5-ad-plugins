@@ -95,7 +95,8 @@ google =
       setVpaidMode : function() {},
       setLocale : function() {},
       setDisableFlashAds : function() {},
-      setDisableCustomPlaybackForIOS10Plus : function(newValue) {google.ima.disableCustomPlaybackForIOS10Plus = newValue;}
+      setDisableCustomPlaybackForIOS10Plus : function(newValue) {google.ima.disableCustomPlaybackForIOS10Plus = newValue;},
+      setNumRedirects : function(newValue) {google.ima.numRedirects = newValue;}
     },
     AdsManagerLoadedEvent :
     {
@@ -173,7 +174,7 @@ google =
                       {
                         return {
                             getType : function()
-                            { 
+                            {
                               return "someAdError";
                             },
                             getInnerError : function()
@@ -194,7 +195,7 @@ google =
                             },
                         }
                       }
-                   
+
                     });
                   }
                   else
