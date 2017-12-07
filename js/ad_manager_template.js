@@ -281,6 +281,7 @@ OO.Ads.manager(function(_, $) {
      *                     should create. Return an empty array, null, or undefined if this is not required.
      */
     this.createAdVideoElementOnPlayerInit = function() {
+      return [];
     };
 
     var _onContentChanged = function() {

@@ -2553,6 +2553,7 @@ require("../html5-common/js/utils/utils.js");
      * Triggers an unmute on the video element.
      * @public
      * @method TemplateVideoWrapper#unmute
+     * @param {boolean} fromUser True if the action was from a user click, false otherwise
      */
     this.unmute = function(fromUser) {
       if (fromUser) {
@@ -2702,10 +2703,21 @@ require("../html5-common/js/utils/utils.js");
       raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, currentTime, duration);
     };
 
+    /**
+     * Notifies the video controller that unmuted playback has failed.
+     * @private
+     * @method GoogleIMAVideoWrapper#raiseUnmutedPlaybackFailed
+     */
     this.raiseUnmutedPlaybackFailed = function() {
       notifyIfInControl(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
     };
 
+    /**
+     * Called by the video controller. Notifies the video plugin that unmuted auto-playback of the content was successful.
+     * Will notify the IMA ad plugin so that it can play ads unmuted.
+     * @public
+     * @method GoogleIMAVideoWrapper#notifyUnmutedContentAutoPlaybackSucceeded
+     */
     this.notifyUnmutedContentAutoPlaybackSucceeded = function() {
       _ima.setRequiresMutedAutoplay(false);
     };
