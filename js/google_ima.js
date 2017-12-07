@@ -50,6 +50,7 @@ require("../html5-common/js/utils/utils.js");
       var _timeUpdater = null;
       var _uiContainer = null;
       var _uiContainerPrevStyle = null;
+      var browserCanAutoplayUnmuted = false;
 
       //Constants
       var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
@@ -123,6 +124,8 @@ require("../html5-common/js/utils/utils.js");
         this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
+        this.startImaOnVtcPlay = false;
+        this.capturedUserClick = false;
         this.initialPlayRequestTime = -1;
         this.adRequestTime = -1;
         this.adResponseTime = -1;
@@ -654,7 +657,15 @@ require("../html5-common/js/utils/utils.js");
        */
       this.resumeAd = function(ad)
       {
-        if (_IMAAdsManager && this.adPlaybackStarted)
+        if (this.startImaOnVtcPlay)
+        {
+          this.startImaOnVtcPlay = false;
+          if (_IMAAdsManager)
+          {
+            _IMAAdsManager.start();
+          }
+        }
+        else if (_IMAAdsManager && this.adPlaybackStarted)
         {
           //On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
           //We want to force the video to reenter fullscreen and play
@@ -686,19 +697,49 @@ require("../html5-common/js/utils/utils.js");
       {
         if (_IMAAdsManager)
         {
-          this.savedVolume = -1;
-          _IMAAdsManager.setVolume(volume);
-          //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
-          //on when sharing video elements, so we'll notify of current volume and mute state now
-          if (this.videoControllerWrapper && this.sharedVideoElement)
+          //do not set non-zero volumes if we have not captured the user click
+          //since that will cause IMA to error out on platforms where
+          //muted autoplay is not supported
+          if (this.capturedUserClick || volume === 0 || !this.requiresMutedAutoplay())
           {
-            this.videoControllerWrapper.raiseVolumeEvent();
+            this.savedVolume = -1;
+            _IMAAdsManager.setVolume(volume);
+            //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
+            //on when sharing video element or if playback has not started,
+            //so we'll notify of current volume and mute state now
+            if (this.videoControllerWrapper && (!this.adPlaybackStarted || this.sharedVideoElement))
+            {
+              this.videoControllerWrapper.raiseVolumeEvent();
+            }
           }
         }
         else
         {
           //if ad is not playing, store the volume to set later when we start the video
           this.savedVolume = volume;
+        }
+      };
+
+      /**
+       * Preps the IMA SDK for unmuted playback. This needs to be done
+       * on the user click thread.
+       * @protected
+       * @method GoogleIMA#setupUnmutedPlayback
+       */
+      this.setupUnmutedPlayback = function()
+      {
+        this.capturedUserClick = true;
+        //We need to pass the user click to the IMA AdDisplayContainer's
+        //initialize method so that IMA can start ads unmuted.
+        //Do not do this if curently playing an ad or else the ad will restart.
+        //We call IMA's setVolume method to pass the click instead if ad is
+        //currently playing
+        if (!this.currentIMAAd)
+        {
+          if (_IMAAdDisplayContainer)
+          {
+            _IMAAdDisplayContainer.initialize();
+          }
         }
       };
 
@@ -790,8 +831,10 @@ require("../html5-common/js/utils/utils.js");
        * trys to request ads if preloading Ad Rules is not enabled.
        * @private
        * @method GoogleIMA#_onInitialPlayRequested
+       * @param {string} event The event name
+       * @param {boolean} wasAutoplayed True if the video was autoplayed, false if not
        */
-      var _onInitialPlayRequested = privateMember(function()
+      var _onInitialPlayRequested = privateMember(function(event, wasAutoplayed)
       {
         this.initialPlayRequestTime = new Date().valueOf();
         OO.log("_onInitialPlayRequested");
@@ -806,6 +849,7 @@ require("../html5-common/js/utils/utils.js");
         this.initialPlayRequested = true;
         this.isReplay = false;
         _IMAAdDisplayContainer.initialize();
+        this.capturedUserClick = !wasAutoplayed;
         _IMA_SDK_tryInitAdsManager();
 
         //if we aren't preloading the ads, then it's safe to make the ad request now.
@@ -814,6 +858,25 @@ require("../html5-common/js/utils/utils.js");
         {
           this.canSetupAdsRequest = true;
           _trySetupAdsRequest();
+        }
+      });
+
+      /**
+       * Tries to start the IMA Ads Manager for ad playback. If we have not detected a user click yet
+       * for platforms where unmuted autoplay is not supported, we'll mute playback first.
+       * @private
+       * @method GoogleIMA#_tryStartAdsManager
+       */
+      var _tryStartAdsManager = privateMember(function()
+      {
+        if (!this.capturedUserClick && this.videoControllerWrapper && this.requiresMutedAutoplay())
+        {
+          this.startImaOnVtcPlay = true;
+          this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
+        }
+        else if (_IMAAdsManager)
+        {
+          _IMAAdsManager.start();
         }
       });
 
@@ -846,7 +909,7 @@ require("../html5-common/js/utils/utils.js");
             // IMA Guides and the video suite inspector both call adsManager.start immediately after
             // adsManager.init
             // Furthermore, some VPAID ads do not fire LOADED event until adsManager.start is called
-            _IMAAdsManager.start();
+            _tryStartAdsManager();
             _IMAAdsManagerInitialized = true;
             OO.log("tryInitadsManager successful: adsManager started")
           }
@@ -1081,12 +1144,12 @@ require("../html5-common/js/utils/utils.js");
         if (!success || !_isGoogleSDKValid())
         {
           _onImaAdError();
-          errorString = "ERROR Google SDK failed to load"
+          errorString = "ERROR Google SDK failed to load";
           if (success && !_isGoogleSDKValid())
           {
             errorString = "ERROR Google SDK loaded but could not be validated"
           }
-          _amc.onAdSdkLoadFailure(this.name, errorString)
+          _amc.onAdSdkLoadFailure(this.name, errorString);
           _amc.unregisterAdManager(this.name);
           return;
         }
@@ -1109,41 +1172,42 @@ require("../html5-common/js/utils/utils.js");
              _throwError("IMA SDK loaded but does not contain valid data");
           }
 
-          if (_IMAAdDisplayContainer) {
-            _IMAAdDisplayContainer.destroy();
-          }
-
-          //**It's now safe to set SDK settings, we have all the page level overrides and
-          //the SDK is guaranteed to be loaded.
-
-          //These are required by Google for tracking purposes.
-          google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
-          google.ima.settings.setPlayerType(PLAYER_TYPE);
-          google.ima.settings.setLocale(OO.getLocale());
-          if (this.useInsecureVpaidMode)
+          if (!_IMAAdDisplayContainer)
           {
-            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+            //**It's now safe to set SDK settings, we have all the page level overrides and
+            //the SDK is guaranteed to be loaded.
+
+            //These are required by Google for tracking purposes.
+            google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
+            google.ima.settings.setPlayerType(PLAYER_TYPE);
+            google.ima.settings.setLocale(OO.getLocale());
+            if (this.useInsecureVpaidMode)
+            {
+              google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
+            }
+            else
+            {
+              google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
+            }
+
+            google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
+
+            if (this.maxRedirects && typeof (this.maxRedirects) === 'number' && this.maxRedirects > 0) {
+              google.ima.settings.setNumRedirects(this.maxRedirects);
+            }
+
+            //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
+            _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
+            //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
+            //also doesn't not seem to work nicely with podded ads if you don't use it.
+
+            var vid = this.sharedVideoElement;
+
+            //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
+            //properly with the Alice skin.
+            _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
+                                                                       vid);
           }
-          else
-          {
-            google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
-          }
-
-          google.ima.settings.setDisableCustomPlaybackForIOS10Plus(this.enableIosSkippableAds);
-
-          if (this.maxRedirects && typeof (this.maxRedirects) === 'number' && this.maxRedirects > 0) {
-            google.ima.settings.setNumRedirects(this.maxRedirects);
-          }
-
-          //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
-          _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
-          //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
-          //also doesn't not seem to work nicely with podded ads if you don't use it.
-
-          //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
-          //properly with the Alice skin.
-          _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
-                                                                     this.sharedVideoElement);
 
           IMA_SDK_tryCreateAdsLoader();
 
@@ -1183,6 +1247,7 @@ require("../html5-common/js/utils/utils.js");
         {
           _IMAAdDisplayContainer.destroy();
           _IMAAdDisplayContainer = null;
+          this.capturedUserClick = false;
         }
       });
 
@@ -1230,6 +1295,21 @@ require("../html5-common/js/utils/utils.js");
         _IMA_SDK_destroyAdDisplayContainer();
         _resetVars();
         _removeAMCListeners();
+      };
+
+      /**
+       * Called by the Ad Manager Controller to determine if an ad video element must be created on player
+       * initialization. This is done so that the Video Controller can interface with the Ad's Video Plugin
+       * prior to an ad request. A typical use case would be to pass a user click to the ad plugin prior
+       * to ad playback so that the ad can start unmuted for browsers that require user interaction for
+       * unmuted playback.
+       * @method AdManager#createAdVideoElementOnPlayerInit
+       * @public
+       * @returns {string[]} An array of encoding types corresponding to the video elements that the Video Controller
+       *                     should create. Return an empty array, null, or undefined if this is not required.
+       */
+      this.createAdVideoElementOnPlayerInit = function() {
+        return [OO.VIDEO.ENCODING.IMA];
       };
 
       /**
@@ -1474,7 +1554,7 @@ require("../html5-common/js/utils/utils.js");
         // Proceed as usual if we're not using ad rules
         if (!_usingAdRules)
         {
-          _IMAAdsManager.start();
+          _tryStartAdsManager();
           return;
         }
         // Mimic AMC behavior and cancel any existing non-linear ads before playing the next ad.
@@ -1494,7 +1574,7 @@ require("../html5-common/js/utils/utils.js");
         _uiContainer.setAttribute("style", "display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;");
         _onSizeChanged();
         // Resume ads manager operation
-        _IMAAdsManager.start();
+        _tryStartAdsManager();
       });
 
       /**
@@ -1636,13 +1716,10 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
-            if (this.videoControllerWrapper.requiresMutedAutoplay()) {
+            if (this.videoControllerWrapper && this.requiresMutedAutoplay()) {
               //workaround of an IMA issue where we don't receive a MUTED ad event
               //on Safari mobile, so we'll notify of current volume and mute state now
-              if (this.videoControllerWrapper)
-              {
-                this.videoControllerWrapper.raiseVolumeEvent();
-              }
+              this.videoControllerWrapper.raiseVolumeEvent();
             }
 
             this.adPlaybackStarted = true;
@@ -2226,7 +2303,29 @@ require("../html5-common/js/utils/utils.js");
       this.registerVideoControllerWrapper = function(videoWrapper)
       {
         this.videoControllerWrapper = videoWrapper;
-      }
+      };
+
+      /**
+       * Notifies IMA if the browser requires muted autoplay or not. This test is typically done
+       * on a video element.
+       * @protected
+       * @method GoogleIMA#setRequiresMutedAutoplay
+       * @param {boolean} required True if the browser requires muted autoplay, false otherwise
+       */
+      this.setRequiresMutedAutoplay = function(required) {
+        browserCanAutoplayUnmuted = !required;
+      };
+
+      /**
+       * Checks to see if autoplay requires the video to be muted
+       * @protected
+       * @method GoogleIMA#requiresMutedAutoplay
+       * @returns {boolean} true if video must be muted to autoplay, false otherwise
+       */
+      this.requiresMutedAutoplay = function() {
+        return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
+          (OO.isChrome && OO.chromeMajorVersion >= 64));
+      };
     };
 
     var _inlinePlaybackSupported = function()
@@ -2436,16 +2535,6 @@ require("../html5-common/js/utils/utils.js");
     };
 
     /**
-     * Checks to see if autoplay requires the video to be muted
-     * @public
-     * @method TemplateVideoWrapper#requiresMutedAutoplay
-     * @param {boolean} true if video must be muted to autoplay, false otherwise
-     */
-    this.requiresMutedAutoplay = function() {
-      return (OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid;
-    };
-
-    /**
      * Triggers a mute on the video element.
      * @public
      * @method TemplateVideoWrapper#mute
@@ -2464,8 +2553,12 @@ require("../html5-common/js/utils/utils.js");
      * Triggers an unmute on the video element.
      * @public
      * @method TemplateVideoWrapper#unmute
+     * @param {boolean} fromUser True if the action was from a user click, false otherwise
      */
-    this.unmute = function() {
+    this.unmute = function(fromUser) {
+      if (fromUser) {
+        _ima.setupUnmutedPlayback();
+      }
       _ima.setVolume(volumeWhenMuted ? volumeWhenMuted : 1);
     };
 
@@ -2608,6 +2701,25 @@ require("../html5-common/js/utils/utils.js");
     this.raiseDurationChange = function(currentTime, duration)
     {
       raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, currentTime, duration);
+    };
+
+    /**
+     * Notifies the video controller that unmuted playback has failed.
+     * @private
+     * @method GoogleIMAVideoWrapper#raiseUnmutedPlaybackFailed
+     */
+    this.raiseUnmutedPlaybackFailed = function() {
+      notifyIfInControl(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
+    };
+
+    /**
+     * Called by the video controller. Notifies the video plugin that unmuted auto-playback of the content was successful.
+     * Will notify the IMA ad plugin so that it can play ads unmuted.
+     * @public
+     * @method GoogleIMAVideoWrapper#notifyUnmutedContentAutoPlaybackSucceeded
+     */
+    this.notifyUnmutedContentAutoPlaybackSucceeded = function() {
+      _ima.setRequiresMutedAutoplay(false);
     };
 
     var raisePlayhead = _.bind(function(eventname, currentTime, duration)

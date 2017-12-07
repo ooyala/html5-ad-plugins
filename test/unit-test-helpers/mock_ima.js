@@ -6,14 +6,17 @@ google =
                                 //normally a call to requestAds calls its callback immediately in this mock
     adManagerInstance : null,   //for unit test convenience
     adLoaderInstance : null,    //for unit test convenience
+    adDisplayContainerInstance: null,    //for unit test convenience
     adsRenderingSettingsInstance : null, //for unit test convenience
     disableCustomPlaybackForIOS10Plus : false, //for unit test convenience
+    adsManagerStarted: false,   //for unit test convenience
     resetDefaultValues : function()
     {
       google.ima.linearAds = true;
       google.ima.delayAdRequest = false;
       google.ima.adsRenderingSettingsInstance = null;
       google.ima.disableCustomPlaybackForIOS10Plus = false;
+      google.ima.adsManagerStarted = false;
     },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
@@ -78,8 +81,12 @@ google =
     },
     AdDisplayContainer : function()
     {
+      google.ima.adDisplayContainerInstance = this;
       this.initialize = function() {};
-      this.destroy = function() {};
+      this.destroy = function()
+      {
+        google.ima.adDisplayContainerInstance = null;
+      };
     },
     settings :
     {
@@ -140,6 +147,7 @@ google =
                 //gets called, otherwise publish events will fail,
                 //failing unit tests
                 canPublishEvents = true;
+                google.ima.adsManagerStarted = true;
               };
               this.stop = function() {};
               this.resume = function() {};
