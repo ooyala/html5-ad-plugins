@@ -460,6 +460,62 @@ describe('ad_manager_ima', function()
     expect(notified).to.be(true);
   });
 
+  describe("Show Ad Control tests", function ()
+  {
+    beforeEach(function()
+    {
+      ima.initialize(amc, "blah");
+      amc.adManagerSettings = {};
+    });
+
+    it('Show Ad Controls Override: playerControlsOverAds = true shows ad controls', function()
+    {
+      amc.pageSettings.playerControlsOverAds = true;
+      ima.loadMetadata({}, {}, {});
+      expect(ima.showAdControls).to.be(true);
+    });
+
+    it('Show Ad Controls Override: playerControlsOverAds = true shows ad controls', function()
+    {
+      amc.pageSettings.playerControlsOverAds = true;
+      var metadata = {
+        showAdControls: true
+      }
+      ima.loadMetadata(metadata, {}, {});
+      expect(ima.showAdControls).to.be(true);
+    });
+
+    it('Show Ad Controls Override: playerControlsOverAds = true overrides showAdControls', function()
+    {
+      amc.pageSettings.playerControlsOverAds = true;
+      var metadata = {
+        showAdControls: false
+      }
+      ima.loadMetadata(metadata, {}, {});
+      expect(ima.showAdControls).to.be(true);
+    });
+
+    it('Show Ad Controls Override: playerControlsOverAds = false does not override showAdControls', function()
+    {
+      amc.pageSettings.playerControlsOverAds = false;
+      var metadata = {
+        showAdControls: true
+      }
+      ima.loadMetadata(metadata, {}, {});
+      expect(ima.showAdControls).to.be(true);
+    });
+
+    it('Show Ad Controls Override: playerControlsOverAds = false and showAdControls = false results in no controls', function()
+    {
+      amc.pageSettings.playerControlsOverAds = false;
+      var metadata = {
+        showAdControls: false
+      }
+      ima.loadMetadata(metadata, {}, {});
+      expect(ima.showAdControls).to.be(false);
+    });
+  });
+
   it('AMC Integration, Ad Rules: Non-linear ad should trigger forceAdToPlay on AMC', function()
   {
     var triggered = 0;

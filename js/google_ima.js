@@ -137,7 +137,6 @@ require("../html5-common/js/utils/utils.js");
         this.currentImpressionTime = 0;
         this.adFinalTagUrl = null;
         this.adPosition = -1;
-        this.showInAdControlBar = false;
         this.adsReady = false;
         this.additionalAdTagParameters = null;
         this.adsRequested = false;
@@ -272,8 +271,14 @@ require("../html5-common/js/utils/utils.js");
           this.additionalAdTagParameters = metadata.additionalAdTagParameters;
         }
 
+        //if playerControlsOverAds is true we can assume the player controls
+        //should be shown. Otherwise use whatever is passed in for showAdControls
         this.showAdControls = false;
-        if (metadata.hasOwnProperty("showAdControls"))
+        if (_amc.pageSettings && _amc.pageSettings.playerControlsOverAds === true)
+        {
+          this.showAdControls = true;
+        }
+        else if (metadata.hasOwnProperty("showAdControls"))
         {
           this.showAdControls = metadata.showAdControls;
         }
