@@ -869,13 +869,19 @@ require("../html5-common/js/utils/utils.js");
        */
       var _tryStartAdsManager = privateMember(function()
       {
-        if (!this.capturedUserClick && this.videoControllerWrapper && this.requiresMutedAutoplay())
+        //PLAYER-2426: We do not want to mute if we are using ad rules, are handling the initial ad request
+        //for ad rules, and found no prerolls.
+        var noPrerollAdRulesAdRequest = _usingAdRules && !this.hasPreroll && this.currentAMCAdPod &&
+            this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST;
+        if (!this.capturedUserClick && this.videoControllerWrapper && this.requiresMutedAutoplay() &&
+            !noPrerollAdRulesAdRequest)
         {
           this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
         }
         else if (_IMAAdsManager)
         {
+          OO.log("Starting IMA Ads Manager");
           _IMAAdsManager.start();
         }
       });
@@ -894,14 +900,6 @@ require("../html5-common/js/utils/utils.js");
         {
           try
           {
-            //notify placeholder end if we do not have a preroll to start main content
-            if(_usingAdRules &&
-              !this.hasPreroll &&
-              this.currentAMCAdPod &&
-              this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
-            {
-                _endCurrentAd(true);
-            }
             _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
             // PBW-6610
             // Traditionally we have relied on the LOADED ad event before calling adsManager.start.
@@ -911,7 +909,18 @@ require("../html5-common/js/utils/utils.js");
             // Furthermore, some VPAID ads do not fire LOADED event until adsManager.start is called
             _tryStartAdsManager();
             _IMAAdsManagerInitialized = true;
-            OO.log("tryInitadsManager successful: adsManager started")
+
+            //notify placeholder end if we do not have a preroll to start main content
+
+            //handling this after starting the ads manager since we need these states for determining
+            //if we require muted autoplay.
+            if(_usingAdRules &&
+              !this.hasPreroll &&
+              this.currentAMCAdPod &&
+              this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST)
+            {
+                _endCurrentAd(true);
+            }
           }
           catch (adError)
           {
@@ -2324,7 +2333,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.requiresMutedAutoplay = function() {
         return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
-          (OO.isChrome && OO.chromeMajorVersion >= 64));
+          (OO.isChrome && OO.chromeMajorVersion >= 65));
       };
     };
 
