@@ -869,11 +869,12 @@ require("../html5-common/js/utils/utils.js");
        */
       var _tryStartAdsManager = privateMember(function()
       {
-        //We do not want to mute if we are using ad rules, are handling the initial ad request
+        //PLAYER-2426: We do not want to mute if we are using ad rules, are handling the initial ad request
         //for ad rules, and found no prerolls.
+        var noPrerollAdRulesAdRequest = _usingAdRules && !this.hasPreroll && this.currentAMCAdPod &&
+            this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST;
         if (!this.capturedUserClick && this.videoControllerWrapper && this.requiresMutedAutoplay() &&
-            !(_usingAdRules && !this.hasPreroll && this.currentAMCAdPod &&
-            this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST))
+            !noPrerollAdRulesAdRequest)
         {
           this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
