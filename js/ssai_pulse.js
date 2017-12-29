@@ -444,6 +444,8 @@ OO.Ads.manager(function(_, $)
  
         _handleImpressionCalls(currentId3Object);
       }
+  
+      return currentId3Object;
     };
 
     /**
@@ -1215,13 +1217,17 @@ OO.Ads.manager(function(_, $)
         if (clearTimeoutId) {
           clearTimeout(clearTimeoutId);
         }
-        
-        amc.notifyLinearAdEnded(self.adIdDictionary[objectId].curAdId);
-        amc.notifyPodEnded(self.adIdDictionary[objectId].curAdId);
-        adMode = false;
-        self.currentAd = null;
-        self.adIdDictionary[objectId].state = null;
-        self.adIdDictionary[objectId].adTimer = null;
+  
+        if (!_.isUndefined(self.adIdDictionary[objectId]))
+        {
+          amc.notifyLinearAdEnded(self.adIdDictionary[objectId].curAdId);
+          amc.notifyPodEnded(self.adIdDictionary[objectId].curAdId);
+    
+          adMode = false;
+          self.currentAd = null;
+          self.adIdDictionary[objectId].state = null;
+          self.adIdDictionary[objectId].adTimer = null;
+        }
       };
     }, this);
 
