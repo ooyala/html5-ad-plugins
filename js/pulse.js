@@ -438,7 +438,10 @@
                 this._requestSettings = {
                     height:   adManagerMetadata.pulse_height,
                     width:   adManagerMetadata.pulse_width,
-                    maxBitRate:   adManagerMetadata.pulse_max_bitrate
+                    maxBitRate:   adManagerMetadata.pulse_max_bitrate,
+                    enforceCacheBusting: adManagerMetadata.pulse_enforce_cachebusting,
+                    useVASTSkipOffset: adManagerMetadata.pulse_use_vast_skipoffset,
+                    seekMode: adManagerMetadata.pulse_seekmode
                 };
 
                 if(forcedSiteId) {
