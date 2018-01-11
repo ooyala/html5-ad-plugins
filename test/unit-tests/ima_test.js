@@ -2428,6 +2428,64 @@ describe('ad_manager_ima', function()
     expect(ima.requiresMutedAutoplay()).to.be(false);
   });
 
+  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a muted ad if muted autoplay is required', function()
+  {
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    expect(google.ima.adWillPlayMuted).to.be(undefined);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adWillPlayMuted).to.be(true);
+  });
+
+  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is not required', function()
+  {
+    ima.requiresMutedAutoplay = function() {
+      return false;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    expect(google.ima.adWillPlayMuted).to.be(undefined);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adWillPlayMuted).to.be(false);
+  });
+
+  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is required but we did not autoplay', function()
+  {
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(false);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    expect(google.ima.adWillPlayMuted).to.be(undefined);
+    ima.setupUnmutedPlayback();
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adWillPlayMuted).to.be(false);
+  });
+
+  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is required but we have captured a user click', function()
+  {
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    expect(google.ima.adWillPlayMuted).to.be(undefined);
+    ima.setupUnmutedPlayback();
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adWillPlayMuted).to.be(false);
+  });
+
   describe("Override number of redirects", function() {
     beforeEach(function() {
       ima.maxRedirects = undefined;
@@ -2435,7 +2493,7 @@ describe('ad_manager_ima', function()
     });
 
     afterEach(function() {
-      ima.maxRedirects = undefined
+      ima.maxRedirects = undefined;
       google.ima.numRedirects = undefined;
     });
 
