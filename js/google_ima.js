@@ -878,8 +878,7 @@ require("../html5-common/js/utils/utils.js");
         //for ad rules, and found no prerolls.
         var noPrerollAdRulesAdRequest = _usingAdRules && !this.hasPreroll && this.currentAMCAdPod &&
             this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST;
-        if (!this.capturedUserClick && this.videoControllerWrapper && this.requiresMutedAutoplay() &&
-            !noPrerollAdRulesAdRequest)
+        if (this.willPlayAdMuted() && this.videoControllerWrapper && !noPrerollAdRulesAdRequest)
         {
           this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
@@ -1106,6 +1105,11 @@ require("../html5-common/js/utils/utils.js");
 
         adsRequest.nonLinearAdSlotWidth = w;
         adsRequest.nonLinearAdSlotHeight = h;
+
+        //Google makes use of certain parameters to determine inventory for ad playback
+        var adWillPlayMuted = this.willPlayAdMuted();
+        OO.log("IMA: setAdWillPlayMuted = " + adWillPlayMuted);
+        adsRequest.setAdWillPlayMuted(adWillPlayMuted);
 
         _resetAdsState();
         _trySetupForAdRules();
@@ -2339,6 +2343,16 @@ require("../html5-common/js/utils/utils.js");
       this.requiresMutedAutoplay = function() {
         return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
           (OO.isChrome && OO.chromeMajorVersion >= 65));
+      };
+
+      /**
+       * Checks to see if we intend for the ad to playback muted.
+       * @protected
+       * @method GoogleIMA#willPlayAdMuted
+       * @returns {boolean} true if we intend for the ad to playback muted, false otherwise
+       */
+      this.willPlayAdMuted = function() {
+        return this.requiresMutedAutoplay() && !this.capturedUserClick;
       };
     };
 

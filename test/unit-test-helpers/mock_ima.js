@@ -17,6 +17,7 @@ google =
       google.ima.adsRenderingSettingsInstance = null;
       google.ima.disableCustomPlaybackForIOS10Plus = false;
       google.ima.adsManagerStarted = false;
+      delete google.ima.adWillPlayMuted;
     },
     Ad : function()
     {   //see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
@@ -253,8 +254,17 @@ google =
         google.ima.adLoaderInstance = null;
       };
     },
-    AdsRequest : function() {},
-    AdsRenderingSettings : function() {
+    AdsRequest : function()
+    {
+      return {
+        setAdWillPlayMuted : function(adWillPlayMuted)
+        {
+          google.ima.adWillPlayMuted = adWillPlayMuted;
+        }
+      };
+    },
+    AdsRenderingSettings : function()
+    {
       google.ima.adsRenderingSettingsInstance = this;
     },
     AdEvent :
