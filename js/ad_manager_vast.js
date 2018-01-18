@@ -3099,11 +3099,6 @@ OO.Ads.manager(function(_, $) {
             OO.pixelPing(clickTracking);
           }
 
-          var clickThrough = ad.data.videoClickTracking.clickThrough;
-          if (clickThrough){
-            OO.pixelPing(clickThrough);
-          }
-
           var customClick = ad.data.videoClickTracking.customClick;
           if (customClick){
             OO.pixelPing(customClick);
