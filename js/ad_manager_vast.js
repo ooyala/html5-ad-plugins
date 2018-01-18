@@ -1160,12 +1160,6 @@ OO.Ads.manager(function(_, $) {
         }
 
         if (vastAdObject.linear &&
-          vastAdObject.linear.clickThrough &&
-          vastAdObject.linear.clickThrough.length > 0) {
-          linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.clickThrough);
-        }
-
-        if (vastAdObject.linear &&
           vastAdObject.linear.customClick &&
           vastAdObject.linear.customClick.length > 0) {
           linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.customClick);
@@ -1787,7 +1781,6 @@ OO.Ads.manager(function(_, $) {
       }
       var newWindow = window.open(url);
       newWindow.opener = null;
-      newWindow.location = url;
       return true;
     };
 
