@@ -2598,6 +2598,7 @@ require("../html5-common/js/utils/utils.js");
      */
     this.setVolume = function(volume, muteState)
     {
+      volumeWhenMuted = volume;
       if (muteState)
       {
         this.mute();
