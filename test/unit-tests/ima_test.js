@@ -2486,6 +2486,24 @@ describe('ad_manager_ima', function()
     expect(google.ima.adWillPlayMuted).to.be(false);
   });
 
+  it('Muted Autoplay: Ad plugin can play a non-muted ad on second content onwards if we have captured a user click in the first content', function()
+  {
+    ima.requiresMutedAutoplay = function() {
+      return true;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(false);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    expect(google.ima.adWillPlayMuted).to.be(undefined);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adWillPlayMuted).to.be(false);
+
+    play(true);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adWillPlayMuted).to.be(false);
+  });
+
   describe("Override number of redirects", function() {
     beforeEach(function() {
       ima.maxRedirects = undefined;

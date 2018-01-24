@@ -854,7 +854,7 @@ require("../html5-common/js/utils/utils.js");
         this.initialPlayRequested = true;
         this.isReplay = false;
         _IMAAdDisplayContainer.initialize();
-        this.capturedUserClick = !wasAutoplayed;
+        this.capturedUserClick = this.capturedUserClick || !wasAutoplayed;
         _IMA_SDK_tryInitAdsManager();
 
         //if we aren't preloading the ads, then it's safe to make the ad request now.
