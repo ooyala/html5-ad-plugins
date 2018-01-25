@@ -2463,7 +2463,7 @@ require("../html5-common/js/utils/utils.js");
     this.isControllingVideo = true;
     this.readyForCss = false;
     var storedCss = null;
-    var volumeWhenMuted = 1;
+    var previousVolume = 1;
 
     /************************************************************************************/
     // Required. Methods that Video Controller, Destroy, or Factory call
@@ -2572,7 +2572,7 @@ require("../html5-common/js/utils/utils.js");
       //attribute themselves when volume is set to 0
       var currentVolume = _ima.getVolume();
       if (currentVolume) {
-        volumeWhenMuted = currentVolume;
+        previousVolume = currentVolume;
       }
       _ima.setVolume(0);
     };
@@ -2587,7 +2587,7 @@ require("../html5-common/js/utils/utils.js");
       if (fromUser) {
         _ima.setupUnmutedPlayback();
       }
-      _ima.setVolume(volumeWhenMuted ? volumeWhenMuted : 1);
+      _ima.setVolume(previousVolume ? previousVolume : 1);
     };
 
     /**
@@ -2598,6 +2598,7 @@ require("../html5-common/js/utils/utils.js");
      */
     this.setVolume = function(volume, muteState)
     {
+      previousVolume = volume;
       if (muteState)
       {
         this.mute();
