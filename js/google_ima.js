@@ -2714,11 +2714,13 @@ require("../html5-common/js/utils/utils.js");
       //IMA is considered muted when volume is set to 0. There are no getters
       //for the muted state
       var volume = _ima.getVolume();
-      notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
       if (volume === 0) {
         notifyIfInControl(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
       } else {
         notifyIfInControl(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: false });
+        //PLAYER-2810: Publishing a volume of 0 overwrites the users unmuted volume. We'll
+        //only publish volume if we're not muted so that this does not happen
+        notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
       }
     };
 
