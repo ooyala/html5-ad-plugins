@@ -1207,11 +1207,7 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
     videoWrapper.mute();
     expect(vol).to.be(0);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
-    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
-      {
-        "volume" : 0
-      });
+    expect(notifyEventNameHistory.length).to.eql(1);
     expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParams).to.eql(
       {
@@ -1240,25 +1236,21 @@ describe('ad_manager_ima', function()
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
-        "volume" : TEST_VOLUME
+        "muted" : false
       });
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
     expect(notifyParams).to.eql(
       {
-        "muted" : false
+        "volume" : TEST_VOLUME
       });
 
     videoWrapper.mute();
     expect(vol).to.be(0);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
-    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
-      {
-        "volume" : 0
-      });
     expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParams).to.eql(
       {
@@ -1269,11 +1261,6 @@ describe('ad_manager_ima', function()
     videoWrapper.mute();
     expect(vol).to.be(0);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
-    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
-      {
-        "volume" : 0
-      });
     expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParams).to.eql(
       {
@@ -1283,15 +1270,16 @@ describe('ad_manager_ima', function()
     videoWrapper.unmute();
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
-        "volume" : TEST_VOLUME
+        "muted" : false
       });
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
     expect(notifyParams).to.eql(
       {
-        "muted" : false
+        "volume" : TEST_VOLUME
       });
   });
 
@@ -1316,11 +1304,6 @@ describe('ad_manager_ima', function()
     videoWrapper.mute();
     expect(vol).to.be(0);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
-    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
-      {
-        "volume" : 0
-      });
     expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParams).to.eql(
       {
@@ -1330,15 +1313,16 @@ describe('ad_manager_ima', function()
     videoWrapper.unmute();
     expect(vol).to.be(1);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
-        "volume" : 1
+        "muted" : false
       });
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
     expect(notifyParams).to.eql(
       {
-        "muted" : false
+        "volume" : 1
       });
   });
 
@@ -1364,11 +1348,6 @@ describe('ad_manager_ima', function()
     videoWrapper.setVolume(1, true);
     expect(vol).to.be(0);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
-    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
-      {
-        "volume" : 0
-      });
     expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParams).to.eql(
       {
@@ -1396,15 +1375,16 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
-        "volume" : TEST_VOLUME
+        "muted" : false
       });
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
     expect(notifyParams).to.eql(
       {
-        "muted" : false
+        "volume" : TEST_VOLUME
       });
   });
 
@@ -1426,15 +1406,16 @@ describe('ad_manager_ima', function()
     videoWrapper.play();
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
-        "volume" : TEST_VOLUME
+        "muted" : false
       });
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
     expect(notifyParams).to.eql(
       {
-        "muted" : false
+        "volume" : TEST_VOLUME
       });
   });
 
@@ -1458,15 +1439,16 @@ describe('ad_manager_ima', function()
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
-        "volume" : TEST_VOLUME
+        "muted" : false
       });
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
     expect(notifyParams).to.eql(
       {
-        "muted" : false
+        "volume" : TEST_VOLUME
       });
   });
 
@@ -1710,15 +1692,16 @@ describe('ad_manager_ima', function()
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
     videoWrapper.raiseVolumeEvent();
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
-        "volume" : TEST_VOLUME
+        "muted" : false
       });
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
     expect(notifyParams).to.eql(
       {
-        "muted" : false
+        "volume" : TEST_VOLUME
       });
   });
 
@@ -1928,7 +1911,7 @@ describe('ad_manager_ima', function()
     expect(currentVolume).to.be(0.5);
   });
 
-  it('IMA Event: Video wrapper notifies of volume change event when we receive IMA VOLUME_MUTED event', function()
+  it('IMA Event: Video wrapper does not notify of volume change event when we receive IMA VOLUME_MUTED event', function()
   {
     var volumeChanged = false;
     var currentVolume = 0.5;
@@ -1950,8 +1933,8 @@ describe('ad_manager_ima', function()
     };
     expect(currentVolume).to.be(0.5);
     am.publishEvent(google.ima.AdEvent.Type.VOLUME_MUTED);
-    expect(volumeChanged).to.be(true);
-    expect(currentVolume).to.be(0);
+    expect(volumeChanged).to.be(false);
+    expect(currentVolume).to.be(0.5);
   });
 
   it('IMA Event: Video wrapper notifies of duration change event when we receive IMA DURATION_CHANGE event', function()
