@@ -86,6 +86,7 @@ describe('ad_manager_freewheel', function() {
   });
 
   afterEach(_.bind(function() {
+    fwParams = {};
     fw.destroy();
     fwContext = null;
     getTemporalSlots = function() {};
@@ -394,6 +395,18 @@ describe('ad_manager_freewheel', function() {
     expect(fw.ready).to.be(true);
   });
 
+  it('Init: ad manager is ready', function(){
+    fw.initialize(amc);
+    fw.registerUi();
+    expect(fw.ready).to.be(false);
+    fw.loadMetadata({"fw_mrm_network_id":"100",
+                     "html5_ssl_ad_server":"https://blah",
+                     "html5_ad_server": "http://blah"},
+                    {},
+                    {});
+    expect(fw.ready).to.be(true);
+  });
+
   it('Init: fake ad is added to timeline', function(){
     initialize();
     expect(amc.timeline.length).to.be(1);
@@ -406,6 +419,73 @@ describe('ad_manager_freewheel', function() {
     play();
     fw.playAd(amc.timeline[0], function(){});
     expect(fwContext).to.not.be(null);
+  });
+
+  describe('Test Bitrate Override', function() {
+    it('bitrateOverride valid string', function() {
+      fw.initialize(amc);
+      fw.registerUi();
+
+      var metadata = {"fw_mrm_network_id":"100",
+                      "html5_ssl_ad_server":"https://blah",
+                      "html5_ad_server": "http://blah",
+                      "bitrateOverride": "1005"};
+      fw.loadMetadata(metadata, {}, {});
+      amc.timeline = fw.buildTimeline();
+      play();
+      fw.playAd(amc.timeline[0]);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].value).to.be(1005);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+    });
+
+    it('bitrateOverride valid int', function() {
+      fw.initialize(amc);
+      fw.registerUi();
+
+      var metadata = {"fw_mrm_network_id":"100",
+                      "html5_ssl_ad_server":"https://blah",
+                      "html5_ad_server": "http://blah",
+                      "bitrateOverride": 1005};
+      fw.loadMetadata(metadata, {}, {});
+      amc.timeline = fw.buildTimeline();
+      play();
+      fw.playAd(amc.timeline[0]);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].value).to.be(1005);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+    });
+
+    it('bitrateOverride not specified', function() {
+      fw.initialize(amc);
+      fw.registerUi();
+
+      var metadata = {"fw_mrm_network_id":"100",
+                      "html5_ssl_ad_server":"https://blah",
+                      "html5_ad_server": "http://blah",
+                      };
+      fw.loadMetadata(metadata, {}, {});
+      amc.timeline = fw.buildTimeline();
+      play();
+      fw.playAd(amc.timeline[0]);
+      //this param shouldn't have been set
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE]).to.be(undefined);
+    });
+
+    it('bitrateOverride bad input specified', function() {
+      fw.initialize(amc);
+      fw.registerUi();
+
+      var metadata = {"fw_mrm_network_id":"100",
+                      "html5_ssl_ad_server":"https://blah",
+                      "html5_ad_server": "http://blah",
+                      "bitrateOverride": "badInput"
+                      };
+      fw.loadMetadata(metadata, {}, {});
+      amc.timeline = fw.buildTimeline();
+      play();
+      fw.playAd(amc.timeline[0]);
+      //this param shouldn't have been set
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE]).to.be(undefined);
+    });
   });
 
   it('Timeline: adds all valid slots', function() {
