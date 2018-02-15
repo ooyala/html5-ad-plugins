@@ -123,7 +123,7 @@ OO.Ads.manager(function(_, $) {
         videoAssetId = metadata['embedCode'];
       }
       remoteModuleJs = amc.platform.isSSL ?
-        'https://m.v.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js' :
+        'https://mssl.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js' :
         'http://adm.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js';
 
       if (metadata) {
