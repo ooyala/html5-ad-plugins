@@ -1808,7 +1808,7 @@ require("../html5-common/js/utils/utils.js");
               adSkipped = true;
             }
             var completionTime = new Date().valueOf() - this.currentImpressionTime;
-            _amc.onAdCompleted(this.name, completionTime, adSkipped);
+            _amc.onAdCompleted(this.name, completionTime, adSkipped, this.adFinalTagUrl);
             this.adPlaybackStarted = false;
             if (this.videoControllerWrapper && (ad && ad.isLinear()))
             {

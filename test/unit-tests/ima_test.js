@@ -1025,6 +1025,33 @@ describe('ad_manager_ima', function()
     expect(notified).to.be(true);
   });
 
+  it('AMC Integration, IMA Event: IMA COMPLETE event passes all required values', function()
+  {
+    var testTime = 500;
+    var name = "";
+    var url = "";
+    var time = -1;
+    var skip = true;
+    initAndPlay(true, vci);
+    amc.onAdCompleted = function(pluginName, completionTime, skipped, adTagUrl )
+    {
+      name = pluginName;
+      url = adTagUrl;
+      if (completionTime >= testTime){
+        time = testTime;
+      }
+      skip = skipped;
+    };
+    ima.currentImpressionTime = new Date().valueOf() - testTime;
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.STARTED);
+    am.publishEvent(google.ima.AdEvent.Type.COMPLETE);
+    expect(name).to.be(ima.name);
+    expect(url).to.be(ima.adFinalTagUrl);
+    expect(skip).to.be(false);
+    expect(time).to.be(testTime);
+  });
+
   it('AMC Integration, IMA Event: IMA COMPLETE event (linear ad) notifies amc of ad pod end with pod size 1', function()
   {
     var notified = false;
