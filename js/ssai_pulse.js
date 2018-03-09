@@ -229,20 +229,29 @@ OO.Ads.manager(function(_, $)
      * @param {string} eventname The name of the event for which this callback is called
      * @param {number} playhead The total amount main video playback time (seconds)
      * @param {number} duration Duration of the live video (seconds)
-     * @param {number} offset Current video time (seconds)
+     * @param {number} offset Current video time (seconds). Currently is obtain just for live stream from amc.
      * @param {number} bufferTime The current playhead within the DVR/live window (seconds)
      */
     
     this.onPlayheadTimeChanged = function(eventName, playhead, duration, offset, bufferTime) {
-      var offset = duration - bufferTime;
+      var offsetParam = duration - playhead;
       
-      if (!amc.isLiveStream) {
-        offset = duration - playhead - bufferTime;
+      if (!amc.isLiveStream) 
+      {
+        if (bufferTime) 
+        {
+          offsetParam = duration - playhead - bufferTime;
+        }
+      }
+      //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
+      if (amc.isLiveStream) 
+      {
+        offsetParam = duration - offset;
       }
       
-      if (_.isFinite(offset) && offset >= 0)
+      if (_.isFinite(offsetParam) && offsetParam >= 0)
       {
-        currentOffset = offset;
+        currentOffset = offsetParam;
       }
     };
 
@@ -420,6 +429,7 @@ OO.Ads.manager(function(_, $)
           };
           
           _handleId3Ad(currentId3Object);
+          _handleImpressionCalls(currentId3Object);
         }
         else if (_.has(this.adIdDictionary, currentId3Object.adId) &&
           !this.adIdDictionary[currentId3Object.adId].state)
@@ -434,15 +444,14 @@ OO.Ads.manager(function(_, $)
           );
           
           _notifyAmcToPlayAd(currentId3Object, this.adIdDictionary[currentId3Object.adId].vastData);
-          
+          _handleImpressionCalls(currentId3Object);
         }
         else if (_.has(this.adIdDictionary, currentId3Object.adId) &&
           isId3ContainsCompletedTime(currentId3Object.time))
         {
           _adEndedCallback(this.adIdDictionary[currentId3Object.adId].adTimer, currentId3Object.adId)()
+
         }
- 
-        _handleImpressionCalls(currentId3Object);
       }
   
       return currentId3Object;
