@@ -174,6 +174,8 @@ require("../html5-common/js/utils/utils.js");
         _IMAAdsManager = null;
         _IMAAdsManagerInitialized = false;
         _IMAAdDisplayContainer = null;
+
+        this.testAdDelay = 0;
       });
 
       /**
@@ -331,6 +333,12 @@ require("../html5-common/js/utils/utils.js");
             //convert to number
             this.maxRedirects = +metadata.setMaxRedirects;
           }
+        }
+
+        this.testAdDelay = 0;
+        if (metadata.hasOwnProperty("testAdDelay"))
+        {
+          this.testAdDelay = metadata.testAdDelay;
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
@@ -1249,7 +1257,11 @@ require("../html5-common/js/utils/utils.js");
           // This will enable notifications whenever ad rules or VMAP ads are scheduled
           // for playback, it has no effect on regular ads
           _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(false);
-          _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
+          _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _.bind(function(loadedEvent) {
+            setTimeout(function() {
+              _onAdRequestSuccess(loadedEvent);
+            }, this.testAdDelay);
+          }, this), false);
           _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
         }
       });
@@ -1338,7 +1350,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _trySetAdManagerToReady = privateMember(function()
       {
-        if (_IMAAdDisplayContainer && this.metadataReady)
+        if (_IMAAdDisplayContainer && this.metadataReady && !this.ready)
         {
           this.ready = true;
           _amc.onAdManagerReady();
@@ -1625,12 +1637,12 @@ require("../html5-common/js/utils/utils.js");
             forced_ad_type: _amc.ADTYPE.LINEAR_VIDEO
           };
           //we do not want to force an ad play with preroll ads
-          if(_playheadTracker.currentTime > 0)
-          {
+          //if(_playheadTracker.currentTime > 0)
+          //{
             var streams = {};
             streams[OO.VIDEO.ENCODING.IMA] = "";
             _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.LINEAR_VIDEO, streams);
-          }
+          //}
         }
       });
 
@@ -1641,11 +1653,11 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_resumeMainContent = privateMember(function()
       {
+        OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
+
         //make sure when we resume, that we have ended the ad pod and told
         //the AMC that we have done so.
         _endCurrentAd(true);
-
-        OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
       });
 
       /**
@@ -1730,7 +1742,6 @@ require("../html5-common/js/utils/utils.js");
             if (ad.isLinear())
             {
               _linearAdIsPlaying = true;
-              _amc.focusAdVideo();
             }
             break;
           case eventType.STARTED:
@@ -1744,6 +1755,8 @@ require("../html5-common/js/utils/utils.js");
             if(ad.isLinear())
             {
               _linearAdIsPlaying = true;
+              _amc.focusAdVideo();
+
               if (this.savedVolume >= 0)
               {
                 this.setVolume(this.savedVolume);
@@ -2342,7 +2355,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.requiresMutedAutoplay = function() {
         return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
-          (OO.isChrome && OO.chromeMajorVersion >= 65));
+          (OO.isChrome));
       };
 
       /**
