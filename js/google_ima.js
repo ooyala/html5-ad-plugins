@@ -2355,7 +2355,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.requiresMutedAutoplay = function() {
         return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
-          (OO.isChrome));
+          (OO.isChrome && OO.chromeMajorVersion >= 66));
       };
 
       /**
