@@ -559,8 +559,6 @@ require("../html5-common/js/utils/utils.js");
 
         if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
-          //we started our placeholder ad
-          _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
           //if the sdk ad request failed when trying to preload, we should end the placeholder ad
           if(this.preloadAdRulesAds && this.adRulesLoadError)
           {
@@ -931,7 +929,8 @@ require("../html5-common/js/utils/utils.js");
               this.currentAMCAdPod &&
               this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST)
             {
-                _endCurrentAd(true);
+              _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
+              _endCurrentAd(true);
             }
           }
           catch (adError)

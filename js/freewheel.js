@@ -519,20 +519,22 @@ OO.Ads.manager(function(_, $) {
             _registerDisplayForLinearAd();
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad) {
-                amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
               }, this, ad);
             slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyPodEnded(adId);
               }, this, ad.id);
-            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId, details) {
+            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad, details) {
                 //We need to remove the fake video element so that Alice
                 //can properly render the UI for a linear ad
                 if (fakeVideo && overlayContainer) {
                   overlayContainer.removeChild(fakeVideo);
                   fakeVideo = null;
                 }
-                amc.notifyLinearAdStarted(adId, details);
-              }, this, ad.id);
+                if (indexInPod <= 1) {
+                  amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
+                }
+                amc.notifyLinearAdStarted(ad.id, details);
+              }, this, ad);
             adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyLinearAdEnded(adId);
               }, this, ad.id);
