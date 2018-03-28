@@ -59,6 +59,7 @@ OO.Ads.manager(function(_, $) {
     var adEndedCallbacks     = {};
     var indexInPod           = 0;
     var adRequestTimeout     = null;
+    var bitrateOverride      = null;
 
     // ui - do I need this?
     var freeWheelCompanionAdsWrapperId = null;
@@ -122,7 +123,7 @@ OO.Ads.manager(function(_, $) {
         videoAssetId = metadata['embedCode'];
       }
       remoteModuleJs = amc.platform.isSSL ?
-        'https://m.v.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js' :
+        'https://mssl.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js' :
         'http://adm.fwmrm.net/p/release/latest-JS/adm/prd/AdManager.js';
 
       if (metadata) {
@@ -136,6 +137,7 @@ OO.Ads.manager(function(_, $) {
         freeWheelCompanionAdsWrapperId = metadata['companion_ad_wrapper_id'];
         adServerURL = (amc.platform.isSSL ? metadata['html5_ssl_ad_server'] : metadata['html5_ad_server']);
         remoteModuleJs = metadata['fw_ad_module_js'] || remoteModuleJs;
+        bitrateOverride = parseInt(metadata['bitrateOverride']);
       }
 
       // If the ad server or network id are not specified, unregister
@@ -271,6 +273,10 @@ OO.Ads.manager(function(_, $) {
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_PROGRESS_DETECT_TIMEOUT, 10000, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_DISPLAY_CONTROLS_WHEN_PAUSE, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+
+      if (bitrateOverride) {
+        fwContext.setParameter(tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE, bitrateOverride, tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+      }
 
       if (OO.requiresSingleVideoElement) {
         // NOTE: If we set renderer.html.coadScriptName we can probably render overlays on our own
@@ -930,6 +936,19 @@ OO.Ads.manager(function(_, $) {
      * @param event {object} event The ad impression object indicating which ad ended
      */
     var fw_onAdImpressionEnd = function(event) {
+      //FW has an issue where it resets the html5 video element's volume and muted attributes according to
+      //FW's internal volume/mute state when moving to the next ad in an ad pod (but not the first ad in an ad pod).
+      //This will break playback if muted autoplay is required and FW unmutes the video element. This internal state
+      //is usually set with the setAdVolume API. We currently do not support any video plugin to ad plugin communication,
+      //so the following is a workaround where we get the ad video element's muted state/volume and call setAdVolume
+      //based on these values
+      if (amc && amc.ui && amc.ui.adVideoElement && amc.ui.adVideoElement[0]) {
+        if (amc.ui.adVideoElement[0].muted) {
+          fwContext.setAdVolume(0);
+        } else {
+          fwContext.setAdVolume(amc.ui.adVideoElement[0].volume);
+        }
+      }
       // TODO: inspect event for playback success or errors
       if (_.isFunction(adEndedCallbacks[event.adInstance.getSlot().getCustomId()])) {
         adEndedCallbacks[event.adInstance.getSlot().getCustomId()]();

@@ -1,4 +1,5 @@
 fwContext = null;
+fwParams = {};
 getTemporalSlots = function() {};
 setVideoAsset = function() {};
 
@@ -51,6 +52,10 @@ tv = {
       VIDEO_STATE_PLAYING : "playing",
       VIDEO_STATE_PAUSED : "paused",
       VIDEO_STATE_STOPPED : "stopped",
+      PARAMETER_DESIRED_BITRATE : "desiredBitrate",
+      PARAMETER_LEVEL_OVERRIDE : "override",
+      PARAMETER_LEVEL_GLOBAL : "global",
+
       AdManager : function(){
         this.setNetwork = function(){};
         this.setServer = function(){};
@@ -64,12 +69,15 @@ tv = {
             this.addEventListener = function(event, callback){
               this.callbacks[event] = callback;
             };
-            this.setParameter = function(){};
+            this.setParameter = function(constName, value, overrideLevel) {
+              fwParams[constName] = {value:value, overrideLevel:overrideLevel};
+            };
             this.submitRequest = function(){};
             this.getTemporalSlots = getTemporalSlots;
             this.registerVideoDisplayBase = function(){};
             this.setContentVideoElement = function(){};
             this.setVideoState = function(){};
+            this.setAdVolume = function(){};
             this.dispose = function(){};
           };
           return fwContext;
