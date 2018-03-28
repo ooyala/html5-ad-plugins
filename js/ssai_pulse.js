@@ -43,7 +43,7 @@ OO.Ads.manager(function(_, $)
     this.currentAd = null;
 
     var amc  = null;
-    var currentOffset = 0;
+    var currentOffset = null;
 
     // Tracking Event states
     var adMode = false;
@@ -136,11 +136,12 @@ OO.Ads.manager(function(_, $)
       // Add any player event listeners now
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
 
-      // ID3 Tag
-      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
       // Stream URL
       amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
       amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
+
+      // ID3 Tag
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
 
       // Replay for Live streams should not be available, but add this for precaution
       amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
@@ -229,22 +230,21 @@ OO.Ads.manager(function(_, $)
      * @param {string} eventname The name of the event for which this callback is called
      * @param {number} playhead The total amount main video playback time (seconds)
      * @param {number} duration Duration of the live video (seconds)
-     * @param {number} offset Current video time (seconds). Currently is obtain just for live stream from amc.
-     * @param {number} bufferTime The current playhead within the DVR/live window (seconds)
+     * @param {number} offset Current video time (seconds). Currently is obtained just for live stream from amc.
      */
     
-    this.onPlayheadTimeChanged = function(eventName, playhead, duration, offset, bufferTime) {
-      var offsetParam = duration - playhead;
+    this.onPlayheadTimeChanged = function(eventName, playhead, duration, offset) {
+      var offsetParam = 0;
       
       if (!amc.isLiveStream) 
       {
-        if (bufferTime) 
+        if (duration && duration > 0)
         {
-          offsetParam = duration - playhead - bufferTime;
+          offsetParam = duration - playhead;
         }
       }
       //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
-      if (amc.isLiveStream) 
+      if (amc.isLiveStream && offset > 0 && offset < duration) 
       {
         offsetParam = duration - offset;
       }
@@ -252,6 +252,7 @@ OO.Ads.manager(function(_, $)
       if (_.isFinite(offsetParam) && offsetParam >= 0)
       {
         currentOffset = offsetParam;
+        //OO.log("Current offset is: " + currentOffset);
       }
     };
 
@@ -414,6 +415,11 @@ OO.Ads.manager(function(_, $)
     this.onVideoTagFound = function(eventName, videoId, tagType, metadata)
     {
       OO.log("TAG FOUND w/ args: ", arguments);
+      if(!amc.isLiveStream && !currentOffset)
+      {
+        OO.log("Ssai Pulse: VOD has currentOffset as: ", currentOffset);
+        return null;
+      }
       var currentId3Object = _parseId3Object(metadata);
       if (currentId3Object)
       {
@@ -429,7 +435,6 @@ OO.Ads.manager(function(_, $)
           };
           
           _handleId3Ad(currentId3Object);
-          _handleImpressionCalls(currentId3Object);
         }
         else if (_.has(this.adIdDictionary, currentId3Object.adId) &&
           !this.adIdDictionary[currentId3Object.adId].state)
@@ -444,13 +449,17 @@ OO.Ads.manager(function(_, $)
           );
           
           _notifyAmcToPlayAd(currentId3Object, this.adIdDictionary[currentId3Object.adId].vastData);
+        }
+        if (this.adIdDictionary[currentId3Object.adId].state != STATE.ERROR)
+        {
           _handleImpressionCalls(currentId3Object);
         }
-        else if (_.has(this.adIdDictionary, currentId3Object.adId) &&
+        
+        if (_.has(this.adIdDictionary, currentId3Object.adId) &&
           isId3ContainsCompletedTime(currentId3Object.time))
         {
+          
           _adEndedCallback(this.adIdDictionary[currentId3Object.adId].adTimer, currentId3Object.adId)()
-
         }
       }
   
@@ -465,7 +474,7 @@ OO.Ads.manager(function(_, $)
      */
     this.onReplay = function()
     {
-      currentOffset = 0;
+        currentOffset = 0;
       this.currentAd = null;
     };
 
@@ -503,6 +512,8 @@ OO.Ads.manager(function(_, $)
 
       var adObject = _getAdObjectFromVast(id3Object, adIdVastData);
       _notifyAmcToPlayAd(id3Object, adObject);
+      //If response succeded, we make impression calls
+      _handleImpressionCalls(id3Object);
     };
     
     /**
@@ -566,6 +577,11 @@ OO.Ads.manager(function(_, $)
       {
         var ssaiAd = _configureSsaiObject(adObject);
         _setVastDataToDictionary(id3Object, adObject);
+        //If not start id3 tag from ad, we recalculate ad duration.
+        if (id3Object.time != 0){
+          var adOffset = id3Object.time * id3Object.duration / 100;
+          id3Object.duration = id3Object.duration - adOffset;
+        }
       }
 
       amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
@@ -666,7 +682,7 @@ OO.Ads.manager(function(_, $)
 
     var _onContentChanged = function()
     {
-      currentOffset = 0;
+        currentOffset = 0;
     };
 
     // Helper Functions
@@ -1103,6 +1119,11 @@ OO.Ads.manager(function(_, $)
       return currentOffset;
     }, this);
 
+    this.setCurrentOffset = function(offset)
+    {
+      currentOffset = offset;
+    }
+
     /**
      * Helper function adjust the duration to a proper value. The priority from which to grab the duration is:
      * 1. ID3 Tag ad duration - if the value is 0, fall through
@@ -1234,8 +1255,8 @@ OO.Ads.manager(function(_, $)
     
           adMode = false;
           self.currentAd = null;
-          self.adIdDictionary[objectId].state = null;
-          self.adIdDictionary[objectId].adTimer = null;
+          //We delete vast info for this ad, since was completed.
+          delete self.adIdDictionary[objectId];
         }
       };
     }, this);
@@ -1254,6 +1275,8 @@ OO.Ads.manager(function(_, $)
         amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
         amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
         amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+        amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
+        amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
       }
     }, this);
   };

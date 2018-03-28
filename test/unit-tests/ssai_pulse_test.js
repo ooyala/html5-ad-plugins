@@ -157,6 +157,8 @@ describe('ad_manager_ssai_pulse', function()
       ads: [vast_ad]
     };
     SsaiPulse.initialize(amc);
+    //For VOD, currentOffset must be greater than 0.
+    SsaiPulse.setCurrentOffset(1);
     expect(function() { SsaiPulse.loadMetadata({"html5_ssl_ad_server":"https://blah",
       "html5_ad_server": "http://blah"}, {}, content);}).to.not.throwException();
   });
@@ -543,77 +545,240 @@ describe('ad_manager_ssai_pulse', function()
     expect(SsaiPulse.adIdDictionary[adId].state).to.be("error");
   });
 
-  it('Correct live offset value should be calculated onPlayheadTimeChanged', function()
+  it('Correct VOD offset value should be calculated onPlayheadTimeChanged', function()
   {
     SsaiPulse.initialize(amc);
     var eventName = "";
     var playhead = 0;
     var duration = 100;
-    var bufferTime = 100;
-    var offsetTime = 0;
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, offsetTime, bufferTime);
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration);
     var offset = SsaiPulse.getCurrentOffset();
-    expect(offset).to.be(0);
+    expect(offset).to.be(100);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 50, 50);
+    SsaiPulse.onPlayheadTimeChanged(eventName, 50, duration);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(50);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 99.0, 99.0);
+    SsaiPulse.onPlayheadTimeChanged(eventName, 75, duration);
     offset = SsaiPulse.getCurrentOffset();
-    expect(offset).to.be(1);
+    expect(offset).to.be(25);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, -1, -1);
-    offset = SsaiPulse.getCurrentOffset();
-    expect(offset).to.be(101);
-
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 100, 100);
+    SsaiPulse.onPlayheadTimeChanged(eventName, 100, duration);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    // We should not have an offset that is greater 0 (aka greater than "Live")
+    // Test bad input
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, "banana");
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, "apple", "banana");
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, 0);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, undefined);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, undefined, duration);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, undefined, undefined);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, null, duration);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(duration);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, null, null);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, {});
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, {}, duration);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+  });
+
+  it('Correct Live offset value should be calculated onPlayheadTimeChanged', function()
+  {
+    amc.isLiveStream = true;
+    SsaiPulse.initialize(amc);
+    var eventName = "";
+    var playhead = 0;
+    var duration = 100;
+    var offsetTime = 0;
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, offsetTime);
+    var offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 50);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(50);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 99.0);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(1);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, -1);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 100);
+    offset = SsaiPulse.getCurrentOffset();
+    expect(offset).to.be(0);
+
+    // We should not have an offset that is greater than duration
     // Keep the previous offset value if an error occurs while calculating new offset
     SsaiPulse.onPlayheadTimeChanged(eventName, playhead, duration, 101);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
     // Test bad input
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, "banana", 1);
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, "banana");
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, "banana", "apple");
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, "banana");
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, undefined, undefined);
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, undefined);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null, null);
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null, undefined);
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, undefined, null);
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, undefined);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, {}, null);
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, {});
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null, {});
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, null);
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
 
-    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, {}, {});
+    SsaiPulse.onPlayheadTimeChanged(eventName, playhead, {});
     offset = SsaiPulse.getCurrentOffset();
     expect(offset).to.be(0);
+  });
+
+  it('Vast cache is deleted when ad is completed', function()
+  {
+    SsaiPulse.initialize(amc);
+    SsaiPulse.setCurrentOffset(1);
+
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=100"
+    };
+    var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=25&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=50&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=75&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=100&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(SsaiPulse.adIdDictionary[currentId3Object.adId]).to.be(undefined);
+  });
+
+  it('Ad break contains two ads', function()
+  {
+    SsaiPulse.initialize(amc);
+    SsaiPulse.setCurrentOffset(1);
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=0&d=100"
+    };
+    var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(SsaiPulse.adIdDictionary[currentId3Object.adId]).to.not.be(null);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=25&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=50&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=75&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=100&d=100"
+    };
+    currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(SsaiPulse.adIdDictionary[currentId3Object.adId]).to.be(undefined);
+    var mockId3Tag2 =
+    {
+      TXXX: "adid=8d157f0b-4f74-4eba-b969-94b3f30616a8&t=0&d=15.160"
+    };
+    var currentId3Object2 = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag2);
+    expect(SsaiPulse.adIdDictionary[currentId3Object2.adId].vastData).to.not.be(null);
+    mockId3Tag2 =
+    {
+      TXXX: "adid=8d157f0b-4f74-4eba-b969-94b3f30616a8&t=25&d=15.160"
+    };
+    currentId3Object2 = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag2);
+    mockId3Tag2 =
+    {
+      TXXX: "adid=8d157f0b-4f74-4eba-b969-94b3f30616a8&t=50&d=15.160"
+    };
+    currentId3Object2 = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag2);
+    mockId3Tag2 =
+    {
+      TXXX: "adid=8d157f0b-4f74-4eba-b969-94b3f30616a8&t=75&d=15.160"
+    };
+    currentId3Object2 = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag2);
+    mockId3Tag2 =
+    {
+      TXXX: "adid=8d157f0b-4f74-4eba-b969-94b3f30616a8&t=100&d=15.160"
+    };
+    currentId3Object2 = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag2);
+    expect(SsaiPulse.adIdDictionary[currentId3Object2.adId]).to.be(undefined);
   });
 
 });
