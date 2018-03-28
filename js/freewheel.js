@@ -936,6 +936,19 @@ OO.Ads.manager(function(_, $) {
      * @param event {object} event The ad impression object indicating which ad ended
      */
     var fw_onAdImpressionEnd = function(event) {
+      //FW has an issue where it resets the html5 video element's volume and muted attributes according to
+      //FW's internal volume/mute state when moving to the next ad in an ad pod (but not the first ad in an ad pod).
+      //This will break playback if muted autoplay is required and FW unmutes the video element. This internal state
+      //is usually set with the setAdVolume API. We currently do not support any video plugin to ad plugin communication,
+      //so the following is a workaround where we get the ad video element's muted state/volume and call setAdVolume
+      //based on these values
+      if (amc && amc.ui && amc.ui.adVideoElement && amc.ui.adVideoElement[0]) {
+        if (amc.ui.adVideoElement[0].muted) {
+          fwContext.setAdVolume(0);
+        } else {
+          fwContext.setAdVolume(amc.ui.adVideoElement[0].volume);
+        }
+      }
       // TODO: inspect event for playback success or errors
       if (_.isFunction(adEndedCallbacks[event.adInstance.getSlot().getCustomId()])) {
         adEndedCallbacks[event.adInstance.getSlot().getCustomId()]();

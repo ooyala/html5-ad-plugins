@@ -77,6 +77,7 @@ tv = {
             this.registerVideoDisplayBase = function(){};
             this.setContentVideoElement = function(){};
             this.setVideoState = function(){};
+            this.setAdVolume = function(){};
             this.dispose = function(){};
           };
           return fwContext;
