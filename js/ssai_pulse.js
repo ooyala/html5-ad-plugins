@@ -486,7 +486,7 @@ OO.Ads.manager(function(_, $)
      */
     var _handleId3Ad = _.bind(function(id3Object)
     {
-      // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
+      // Will call _sendRequest() once live team fixes ads proxy issue.Will directly call onResponse() for now.
       if (!this.testMode)
       {
         _sendRequest(requestUrl, id3Object);
