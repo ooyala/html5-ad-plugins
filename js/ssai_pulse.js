@@ -238,13 +238,13 @@ OO.Ads.manager(function(_, $)
       
       if (!amc.isLiveStream) 
       {
-        if (duration && duration > 0)
+        if (duration && typeof duration === 'number' && duration > 0)
         {
           offsetParam = duration - playhead;
         }
       }
       //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
-      if ((amc.isLiveStream && offset && duration) && offset > 0 && offset < duration) 
+      if ((amc.isLiveStream && (offset && typeof offset === 'number') && (duration && typeof duration === 'number')) && offset > 0 && offset < duration) 
       {
         offsetParam = duration - offset;
       }
@@ -273,20 +273,17 @@ OO.Ads.manager(function(_, $)
       {
         adMode = true;
         this.currentAd = ad;
-        if (ad.ad && ad.ad.data) {
+        if (ad.ad && ad.ad.data && (ad.duration && typeof ad.duration === 'number')) {
           this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
           _handleTrackingUrls(this.currentAd, ["impression", "start"]);
-          if (ad.ad.name && ad.duration && ad.ad.ssai && ad.ad.isLive) {
-            amc.notifyLinearAdStarted(ad.id,
-              {
-                name: ad.ad.name,
-                hasClickUrl: true,
-                duration: ad.duration,
-                ssai: ad.ad.ssai,
-                isLive: ad.ad.isLive
-              }
-            );
-          }
+          amc.notifyLinearAdStarted(ad.id,
+          {
+            name: ad.ad.name,
+            hasClickUrl: true,
+            duration: ad.duration,
+            ssai: ad.ad.ssai,
+            isLive: ad.ad.isLive
+          });
         }
       }
     };
