@@ -244,7 +244,7 @@ OO.Ads.manager(function(_, $)
         }
       }
       //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
-      if (amc.isLiveStream && offset > 0 && offset < duration) 
+      if ((amc.isLiveStream && offset && duration) && offset > 0 && offset < duration) 
       {
         offsetParam = duration - offset;
       }
@@ -252,7 +252,6 @@ OO.Ads.manager(function(_, $)
       if (_.isFinite(offsetParam) && offsetParam >= 0)
       {
         currentOffset = offsetParam;
-        //OO.log("Current offset is: " + currentOffset);
       }
     };
 
@@ -274,17 +273,21 @@ OO.Ads.manager(function(_, $)
       {
         adMode = true;
         this.currentAd = ad;
-        this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
-        _handleTrackingUrls(this.currentAd, ["impression", "start"]);
-        amc.notifyLinearAdStarted(ad.id,
-          {
-            name: ad.ad.name,
-            hasClickUrl: true,
-            duration: ad.duration,
-            ssai: ad.ad.ssai,
-            isLive: ad.ad.isLive
+        if (ad.ad && ad.ad.data) {
+          this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
+          _handleTrackingUrls(this.currentAd, ["impression", "start"]);
+          if (ad.ad.name && ad.duration && ad.ad.ssai && ad.ad.isLive) {
+            amc.notifyLinearAdStarted(ad.id,
+              {
+                name: ad.ad.name,
+                hasClickUrl: true,
+                duration: ad.duration,
+                ssai: ad.ad.ssai,
+                isLive: ad.ad.isLive
+              }
+            );
           }
-        );
+        }
       }
     };
 
@@ -417,7 +420,6 @@ OO.Ads.manager(function(_, $)
       OO.log("TAG FOUND w/ args: ", arguments);
       if(!amc.isLiveStream && !currentOffset)
       {
-        OO.log("Ssai Pulse: VOD has currentOffset as: ", currentOffset);
         return null;
       }
       var currentId3Object = _parseId3Object(metadata);
@@ -450,7 +452,7 @@ OO.Ads.manager(function(_, $)
           
           _notifyAmcToPlayAd(currentId3Object, this.adIdDictionary[currentId3Object.adId].vastData);
         }
-        if (this.adIdDictionary[currentId3Object.adId].state != STATE.ERROR)
+        if (this.adIdDictionary[currentId3Object.adId].state !== STATE.ERROR)
         {
           _handleImpressionCalls(currentId3Object);
         }
@@ -458,8 +460,7 @@ OO.Ads.manager(function(_, $)
         if (_.has(this.adIdDictionary, currentId3Object.adId) &&
           isId3ContainsCompletedTime(currentId3Object.time))
         {
-          
-          _adEndedCallback(this.adIdDictionary[currentId3Object.adId].adTimer, currentId3Object.adId)()
+          _adEndedCallback(this.adIdDictionary[currentId3Object.adId].adTimer, currentId3Object.adId)();
         }
       }
   
