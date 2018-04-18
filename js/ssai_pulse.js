@@ -238,13 +238,13 @@ OO.Ads.manager(function(_, $)
       
       if (!amc.isLiveStream) 
       {
-        if (duration && typeof duration === 'number' && duration > 0)
+        if (duration && _.isNumber(duration) && duration > 0)
         {
           offsetParam = duration - playhead;
         }
       }
       //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
-      if ((amc.isLiveStream && (offset && typeof offset === 'number') && (duration && typeof duration === 'number')) && offset > 0 && offset < duration) 
+      if ((amc.isLiveStream && (offset && _.isNumber(offset)) && (duration && _.isNumber(duration))) && offset > 0 && offset < duration) 
       {
         offsetParam = duration - offset;
       }
@@ -273,9 +273,12 @@ OO.Ads.manager(function(_, $)
       {
         adMode = true;
         this.currentAd = ad;
-        if (ad.ad && ad.ad.data && (ad.duration && typeof ad.duration === 'number')) {
+        if (ad.ad && ad.ad.data) {
           this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
           _handleTrackingUrls(this.currentAd, ["impression", "start"]);
+          if (ad.duration && !_.isNumber(ad.duration)) {
+            ad.duration = 0;
+          }
           amc.notifyLinearAdStarted(ad.id,
           {
             name: ad.ad.name,
