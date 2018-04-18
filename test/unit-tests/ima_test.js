@@ -2453,7 +2453,7 @@ describe('ad_manager_ima', function()
   it('Muted Autoplay: VTC can notify IMA that muted autoplay is not required', function ()
   {
     OO.isChrome = true;
-    OO.chromeMajorVersion = 65;
+    OO.chromeMajorVersion = 66;
     initialize(false);
     createVideoWrapper(vci);
     play(true);

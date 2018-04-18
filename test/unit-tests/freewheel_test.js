@@ -626,16 +626,21 @@ describe('ad_manager_freewheel', function() {
   });
 
   describe('Freewheel Context', function() {
-    var videoState;
+    var videoState, volume;
 
     beforeEach(function() {
       videoState = null;
+      volume = null;
       initialize();
       play();
       fw.playAd(amc.timeline[0]);
 
       fwContext.setVideoState = function(state) {
         videoState = state;
+      };
+
+      fwContext.setAdVolume = function(vol) {
+        volume = vol;
       };
     });
 
@@ -659,6 +664,57 @@ describe('ad_manager_freewheel', function() {
       expect(videoState).to.be(tv.freewheel.SDK.VIDEO_STATE_STOPPED);
     });
 
+    it('should set ad volume when ad impression ends', function() {
+      amc.ui = {
+        adVideoElement: [
+          {
+            muted: false,
+            volume: 0.5
+          }
+        ]
+      };
+
+      var adInstance = new AdInstance({
+        name : "blah",
+        width : 300,
+        height : 50,
+        duration : 5
+      });
+
+      expect(volume).to.be(null);
+
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION_END]({
+        adInstance : adInstance
+      });
+
+      expect(volume).to.be(0.5);
+    });
+
+    it('should mute via setAdVolume when ad impression ends if ad was muted', function() {
+      amc.ui = {
+        adVideoElement: [
+          {
+            muted: true,
+            volume: 0.5
+          }
+        ]
+      };
+
+      var adInstance = new AdInstance({
+        name : "blah",
+        width : 300,
+        height : 50,
+        duration : 5
+      });
+
+      expect(volume).to.be(null);
+
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION_END]({
+        adInstance : adInstance
+      });
+
+      expect(volume).to.be(0);
+    });
   });
 
 });
