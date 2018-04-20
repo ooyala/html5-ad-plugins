@@ -273,7 +273,7 @@ OO.Ads.manager(function(_, $)
       {
         adMode = true;
         this.currentAd = ad;
-        if (ad.ad && ad.ad.data) {
+        if (ad.ad && ad.ad.data && ad.ad.data.id) {
           this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
           _handleTrackingUrls(this.currentAd, ["impression", "start"]);
           if (ad.duration && !_.isNumber(ad.duration)) {
