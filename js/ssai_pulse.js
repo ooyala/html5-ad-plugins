@@ -39,6 +39,9 @@ OO.Ads.manager(function(_, $)
     this.initTime = Date.now();
     this.videoRestrictions = {};
     this.testMode = false;
+    this.timeLine = [];
+    this.currentEmbed = "";
+    this.ssaiGuid = "";
     
     this.currentAd = null;
 
@@ -47,6 +50,7 @@ OO.Ads.manager(function(_, $)
 
     // Tracking Event states
     var adMode = false;
+    var firstAdFound = false;
     var isFullscreen = false;
     var isMuted = false;
     var lastVolume = -1;
@@ -175,6 +179,9 @@ OO.Ads.manager(function(_, $)
     this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata)
     {
       this.ready = true;
+      this.timeLine = [];
+      firstAdFound = false;
+
       amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
 
       if (adManagerMetadata)
@@ -235,7 +242,6 @@ OO.Ads.manager(function(_, $)
     
     this.onPlayheadTimeChanged = function(eventName, playhead, duration, offset) {
       var offsetParam = 0;
-      
       if (!amc.isLiveStream) 
       {
         if (duration && typeof duration === 'number' && duration > 0)
@@ -398,6 +404,7 @@ OO.Ads.manager(function(_, $)
     {
       // important that smart player parameter is set here
       baseRequestUrl = _makeSmartUrl(url);
+      _parseUrl(url);
       amc.updateMainStreamUrl(baseRequestUrl);
       baseRequestUrl = _preformatUrl(baseRequestUrl);
     };
@@ -414,14 +421,19 @@ OO.Ads.manager(function(_, $)
      */
     this.onVideoTagFound = function(eventName, videoId, tagType, metadata)
     {
-      OO.log("TAG FOUND w/ args: ", arguments);
-      if(!amc.isLiveStream && !currentOffset)
+      if (!amc.isLiveStream && !currentOffset)
       {
         return null;
       }
+
       var currentId3Object = _parseId3Object(metadata);
       if (currentId3Object)
       {
+        if (!firstAdFound)
+        {
+          _sendMetadataRequest();
+          firstAdFound = true;
+        }
         requestUrl = baseRequestUrl;
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, currentId3Object.adId);
   
@@ -432,7 +444,6 @@ OO.Ads.manager(function(_, $)
             state: STATE.WAITING,
             adTimer: _.delay(_adEndedCallback(null, currentId3Object.adId), currentId3Object.duration * 1000)
           };
-          
           _handleId3Ad(currentId3Object);
         }
         else if (_.has(this.adIdDictionary, currentId3Object.adId) &&
@@ -446,7 +457,6 @@ OO.Ads.manager(function(_, $)
             _adEndedCallback(null, currentId3Object.adId),
             currentId3Object.duration * 1000
           );
-          
           _notifyAmcToPlayAd(currentId3Object, this.adIdDictionary[currentId3Object.adId].vastData);
         }
         if (this.adIdDictionary[currentId3Object.adId].state !== STATE.ERROR)
@@ -512,6 +522,18 @@ OO.Ads.manager(function(_, $)
       _notifyAmcToPlayAd(id3Object, adObject);
       //If response succeded, we make impression calls
       _handleImpressionCalls(id3Object);
+    };
+
+    /**
+     * Called if the ajax call for SSAI metadata succeeds
+     * @public
+     * @method SsaiPulse#onMetadataResponse
+     * @param {object} metadata The ad metadata JSON
+     */
+    this.onMetadataResponse = function(metadata)
+    {
+      this.timeLine = metadata;
+      amc.notifyAdTimelineReceived(this.timeLine);
     };
     
     /**
@@ -598,6 +620,16 @@ OO.Ads.manager(function(_, $)
         this.adIdDictionary[currentId3Object.adId].state = STATE.ERROR;
         this.currentAd = null;
       }
+    };
+
+    /**
+     * Called if the ajax call for SSAI metadata fails
+     * @public
+     * @method SsaiPulse#onMetadataError
+     */
+    this.onMetadataError = function(error)
+    {
+      OO.log("SSAI Metadata Request: Error" + error);
     };
 
     /**
@@ -709,6 +741,29 @@ OO.Ads.manager(function(_, $)
     }, this);
 
     /**
+     * Parses the ad url to obtain the ssai guid and embed code
+     * @private
+     * @method SsaiPulse#_parseUrl
+     * @param {string} url The stream url
+     */
+    var _parseUrl = _.bind(function(url)
+    {
+      var urlParts = url.split("?");
+      var queryParamString = urlParts[1];
+      var mainUrl = urlParts[0];
+      var mainUrlParts = mainUrl.split("/");
+      this.currentEmbed = mainUrlParts[4];
+      var queryParams = queryParamString.split("&");
+      for (var i = 0; i < queryParams.length; i++) {
+        var paramParts = queryParams[i].split("=");
+        if (paramParts[0] === 'ssai_guid') {
+          this.ssaiGuid = paramParts[1];
+          return;
+        }
+      }
+    }, this);
+
+    /**
      * Helper function to append "offset" and "aid" query parameters to the request URL.
      * @private
      * @method SsaiPulse#_appendAdsProxyQueryParameters
@@ -794,6 +849,30 @@ OO.Ads.manager(function(_, $)
         cache:false,
         success: _.bind(this.onResponse, this, currentId3Object),
         error: _.bind(this.onRequestError, this, currentId3Object)
+      });
+    }, this);
+
+    /**
+     * Attempts to load obtain ad timeline and metadata for the asset from SSAI api.
+     * @private
+     * @method SsaiPulse#_sendMetadataRequest
+     */
+    var _sendMetadataRequest = _.bind(function()
+    {
+      var url = "http://ssai.ooyala.com/v1/metadata/" + this.currentEmbed + "?ssai_guid=" + this.ssaiGuid;
+      $.ajax
+      ({
+        url: url,
+        type: 'GET',
+        beforeSend: function(xhr)
+        {
+          xhr.withCredentials = false;
+        },
+        dataType: "json",
+        crossDomain: true,
+        cache:false,
+        success: _.bind(this.onMetadataResponse, this),
+        error: _.bind(this.onMetadataError, this)
       });
     }, this);
 
