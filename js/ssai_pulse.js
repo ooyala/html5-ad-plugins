@@ -39,12 +39,11 @@ OO.Ads.manager(function(_, $)
     this.initTime = Date.now();
     this.videoRestrictions = {};
     this.testMode = false;
-
-    this.currentId3Object = null;
+    
     this.currentAd = null;
 
     var amc  = null;
-    var currentOffset = 0;
+    var currentOffset = null;
 
     // Tracking Event states
     var adMode = false;
@@ -61,7 +60,7 @@ OO.Ads.manager(function(_, $)
 
     // In the event that the ID3 tag has an ad duration of 0 and the VAST XML response does not specify an
     // ad duration, use this constant. Live team said the average SSAI ad was 20 seconds long.
-    var FALLBACK_AD_DURATION = 20 // seconds
+    var FALLBACK_AD_DURATION = 20; // seconds
 
     var baseRequestUrl = "";
     var requestUrl = "";
@@ -80,6 +79,27 @@ OO.Ads.manager(function(_, $)
 
       // Duration of the ad
       DURATION: "d"
+    };
+  
+    // The VAST requirements to tracking event types to track which creative are being viewed
+    var TRACKING_CALL_NAMES =
+    {
+      
+      "25": ["firstQuartile"],
+    
+      "50": ["midpoint"],
+    
+      "75": ["thirdQuartile"],
+    
+      "100": ["complete"]
+    };
+    
+    // Helper map object to replace change the manifest URL to the endpoint
+    // used to retrieve the Vast Ad Response from the ads proxy.
+    var ENDPOINTS_MAP_OBJECT =
+    {
+      vhls: "vai",
+      hls: "ai"
     };
 
     // Constants used to denote the status of particular ad ID request
@@ -100,7 +120,7 @@ OO.Ads.manager(function(_, $)
 
     // player configuration parameters / page level params
     var bustTheCache = true;
-
+    
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
      * remote JS files.
@@ -116,11 +136,12 @@ OO.Ads.manager(function(_, $)
       // Add any player event listeners now
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
 
-      // ID3 Tag
-      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
       // Stream URL
       amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
       amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
+
+      // ID3 Tag
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
 
       // Replay for Live streams should not be available, but add this for precaution
       amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
@@ -209,13 +230,28 @@ OO.Ads.manager(function(_, $)
      * @param {string} eventname The name of the event for which this callback is called
      * @param {number} playhead The total amount main video playback time (seconds)
      * @param {number} duration Duration of the live video (seconds)
-     * @param {number} livePlayhead The current playhead within the DVR/live window (seconds)
+     * @param {number} offset Current video time (seconds). Currently is obtained just for live stream from amc.
      */
-    this.onPlayheadTimeChanged = function(eventName, playhead, duration, livePlayhead) {
-      var offset = duration - livePlayhead;
-      if (_.isFinite(offset) && offset >= 0)
+    
+    this.onPlayheadTimeChanged = function(eventName, playhead, duration, offset) {
+      var offsetParam = 0;
+      
+      if (!amc.isLiveStream) 
       {
-        currentOffset = offset;
+        if (duration && _.isNumber(duration) && duration > 0)
+        {
+          offsetParam = duration - playhead;
+        }
+      }
+      //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
+      if ((amc.isLiveStream && (offset && _.isNumber(offset)) && (duration && _.isNumber(duration))) && offset > 0 && offset < duration) 
+      {
+        offsetParam = duration - offset;
+      }
+      
+      if (_.isFinite(offsetParam) && offsetParam >= 0)
+      {
+        currentOffset = offsetParam;
       }
     };
 
@@ -237,19 +273,20 @@ OO.Ads.manager(function(_, $)
       {
         adMode = true;
         this.currentAd = ad;
-        if (this.currentAd.ad)
-        {
-          this.currentAd.ad.id3AdId = this.currentId3Object.adId;
+        if (ad.ad && ad.ad.data && ad.ad.data.id) {
+          this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
           _handleTrackingUrls(this.currentAd, ["impression", "start"]);
-          amc.notifyLinearAdStarted(this.currentAd.id,
-            {
-              name: this.currentAd.ad.name,
-              hasClickUrl: true,
-              duration: this.currentAd.duration,
-              ssai: this.currentAd.ad.ssai,
-              isLive: this.currentAd.ad.isLive
-            }
-          );
+          if (ad.duration && !_.isNumber(ad.duration)) {
+            ad.duration = 0;
+          }
+          amc.notifyLinearAdStarted(ad.id,
+          {
+            name: ad.ad.name,
+            hasClickUrl: true,
+            duration: ad.duration,
+            ssai: ad.ad.ssai,
+            isLive: ad.ad.isLive
+          });
         }
       }
     };
@@ -381,42 +418,53 @@ OO.Ads.manager(function(_, $)
     this.onVideoTagFound = function(eventName, videoId, tagType, metadata)
     {
       OO.log("TAG FOUND w/ args: ", arguments);
-      this.currentId3Object = _parseId3Object(metadata);
-      if (this.currentId3Object)
+      if(!amc.isLiveStream && !currentOffset)
+      {
+        return null;
+      }
+      var currentId3Object = _parseId3Object(metadata);
+      if (currentId3Object)
       {
         requestUrl = baseRequestUrl;
-        requestUrl = _appendAdsProxyQueryParameters(requestUrl, this.currentId3Object.adId);
-
+        requestUrl = _appendAdsProxyQueryParameters(requestUrl, currentId3Object.adId);
+  
         // Check to see if we already have adId in dictionary
-        if (!_.has(this.adIdDictionary, this.currentId3Object.adId))
+        if (!_.has(this.adIdDictionary, currentId3Object.adId))
         {
-          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
-
-          // Clear any previous timeouts and notify end of ad.
-          if (this.currentAd)
-          {
-            _adEndedCallback();
-          }
-
-          _handleId3Ad(this.currentId3Object);
+          this.adIdDictionary[currentId3Object.adId] = {
+            state: STATE.WAITING,
+            adTimer: _.delay(_adEndedCallback(null, currentId3Object.adId), currentId3Object.duration * 1000)
+          };
+          
+          _handleId3Ad(currentId3Object);
         }
-        // If there isn't a current ad playing and an ad request associated to the adid
-        // also hasn't sent a request, then play ad in the dictionary.
-        else if (!this.currentAd && this.adIdDictionary[this.currentId3Object.adId] !== STATE.WAITING)
+        else if (_.has(this.adIdDictionary, currentId3Object.adId) &&
+          !this.adIdDictionary[currentId3Object.adId].state)
         {
-          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
-          _handleId3Ad(this.currentId3Object);
+          
+          clearTimeout(this.adIdDictionary[currentId3Object.adId].adTimer);
+          
+          this.adIdDictionary[currentId3Object.adId].state = STATE.WAITING;
+          this.adIdDictionary[currentId3Object.adId].adTimer = _.delay(
+            _adEndedCallback(null, currentId3Object.adId),
+            currentId3Object.duration * 1000
+          );
+          
+          _notifyAmcToPlayAd(currentId3Object, this.adIdDictionary[currentId3Object.adId].vastData);
         }
-        // Check if the ad already playing is not itself
-        else if (this.currentAd &&
-                 this.currentAd.ad &&
-                 this.currentAd.ad.id3AdId !== this.currentId3Object.adId)
+        if (this.adIdDictionary[currentId3Object.adId].state !== STATE.ERROR)
         {
-          this.adIdDictionary[this.currentId3Object.adId] = STATE.WAITING;
-          _adEndedCallback();
-          _handleId3Ad(this.currentId3Object);
+          _handleImpressionCalls(currentId3Object);
+        }
+        
+        if (_.has(this.adIdDictionary, currentId3Object.adId) &&
+          isId3ContainsCompletedTime(currentId3Object.time))
+        {
+          _adEndedCallback(this.adIdDictionary[currentId3Object.adId].adTimer, currentId3Object.adId)();
         }
       }
+  
+      return currentId3Object;
     };
 
     /**
@@ -429,7 +477,6 @@ OO.Ads.manager(function(_, $)
     {
       currentOffset = 0;
       this.currentAd = null;
-      this.currentId3Object = null;
     };
 
     /**
@@ -443,10 +490,7 @@ OO.Ads.manager(function(_, $)
       // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
       if (!this.testMode)
       {
-        // Set timer for duration of the ad.
-        adDurationTimeout = _.delay(_adEndedCallback, id3Object.duration * 1000);
-
-        _sendRequest(requestUrl);
+        _sendRequest(requestUrl, id3Object);
       }
       else {
         this.onResponse(id3Object, null);
@@ -467,6 +511,48 @@ OO.Ads.manager(function(_, $)
       var vastAds = vastParser.parser(xml);
       var adIdVastData = _parseVastAdsObject(vastAds);
 
+      var adObject = _getAdObjectFromVast(id3Object, adIdVastData);
+      _notifyAmcToPlayAd(id3Object, adObject);
+      //If response succeded, we make impression calls
+      _handleImpressionCalls(id3Object);
+    };
+    
+    /**
+     * Returns the ssai data from the vast object in case if the vast
+     * object contains data for the current id3 object.
+     * @private
+     * @param id3Object
+     * @param adIdVastData
+     * @returns {*}
+     */
+    var _getAdObjectFromVast = function(id3Object, adIdVastData) {
+      if (_.has(adIdVastData, id3Object.adId))
+      {
+        return adIdVastData[id3Object.adId];
+      }
+    };
+    
+    /**
+     * Set vast data to the cache for
+     * current id3 object.
+     * @private
+     * @method SsaiPulse#_setVastDataToDictionary
+     */
+    var _setVastDataToDictionary = _.bind(function(id3Object, adObject) {
+      if (this.adIdDictionary[id3Object.adId])
+      {
+        this.adIdDictionary[id3Object.adId].vastData = adObject;
+      }
+    }, this);
+    
+    /**
+     * Configuring the ssai object to force an ad to play
+     * @private
+     * @method SsaiPulse#_configureSsaiObject
+     * @param adObject
+     * @returns {{clickthrough: string, name: string, ssai: boolean, isLive: boolean}}
+     */
+    var _configureSsaiObject = function(adObject) {
       var ssaiAd =
       {
         clickthrough: "",
@@ -475,46 +561,44 @@ OO.Ads.manager(function(_, $)
         isLive: true
       };
 
-      if (_.has(adIdVastData, id3Object.adId))
+      ssaiAd.data = adObject;
+      ssaiAd.clickthrough = _getLinearClickThroughUrl(adObject);
+      ssaiAd.name = _getTitle(adObject);
+      
+      return ssaiAd;
+    };
+    
+    /**
+     * Force an ad to play with configured ssai ad data
+     * @private
+     * @method SsaiPulse#_notifyAmcToPlayAd
+     */
+    var _notifyAmcToPlayAd = _.bind(function(id3Object, adObject) {
+      if (adObject && id3Object)
       {
-        var adObject = adIdVastData[id3Object.adId];
-
-        // If the id3object duration was a bad value, reapply the timeout to the new
-        // duration
-        var duration = _selectDuration(id3Object, adObject);
-        if (duration !== id3Object.duration)
-        {
-          id3Object.duration = duration;
-          _clearAdDurationTimeout();
-          if (!this.testMode)
-          {
-            adDurationTimeout = _.delay(_adEndedCallback, duration * 1000);
-          }
+        var ssaiAd = _configureSsaiObject(adObject);
+        _setVastDataToDictionary(id3Object, adObject);
+        //If not start id3 tag from ad, we recalculate ad duration.
+        if (id3Object.time != 0){
+          var adOffset = id3Object.time * id3Object.duration / 100;
+          id3Object.duration = id3Object.duration - adOffset;
         }
-
-        this.adIdDictionary[id3Object.adId].vastData = adObject;
-        ssaiAd.data = adObject;
-        ssaiAd.clickthrough = _getLinearClickThroughUrl(adObject);
-        ssaiAd.name = _getTitle(adObject);
       }
 
-      this.adIdDictionary[id3Object.adId] = STATE.PLAYING;
       amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
-
-      //_forceMockAd(id3Object);
-    };
+    }, this);
 
     /**
      * Called if the ajax call fails
      * @public
      * @method SsaiPulse#onRequestError
      */
-    this.onRequestError = function()
+    this.onRequestError = function(currentId3Object)
     {
       OO.log("SSAI Pulse: Error");
-      if (_.isObject(this.currentId3Object) && _.has(this.adIdDictionary, this.currentId3Object.adId))
+      if (_.isObject(currentId3Object) && _.has(this.adIdDictionary, currentId3Object.adId))
       {
-        this.adIdDictionary[this.currentId3Object.adId] = STATE.ERROR;
+        this.adIdDictionary[currentId3Object.adId].state = STATE.ERROR;
         this.currentAd = null;
       }
     };
@@ -593,7 +677,6 @@ OO.Ads.manager(function(_, $)
       // reset parameters
       this.ready = false;
       this.currentAd = null;
-      this.currentId3Object = null;
       this.adIdDictionary = {};
       _removeAMCListeners();
     };
@@ -601,8 +684,6 @@ OO.Ads.manager(function(_, $)
     var _onContentChanged = function()
     {
       currentOffset = 0;
-      this.currentAd = null;
-      this.currentId3Object = null;
     };
 
     // Helper Functions
@@ -672,6 +753,30 @@ OO.Ads.manager(function(_, $)
     };
 
     /**
+    * Checks if current ID3 tag is the last one for an ad, value is 
+    * represented in percentage, being 100 the completed time.
+    * @private
+    * @method SsaiPulse#isId3ContainsCompletedTime
+    * @param  {float} id3ObjectTime  Time value from currentId3Object
+    * @returns {boolean}  True if ID3 tag time is 100
+    */
+    var isId3ContainsCompletedTime = function(id3ObjectTime) {
+      return id3ObjectTime === 100;
+    };
+    
+    /**
+    * Checks if current ID3 tag is the first one for an ad, value is
+    * represented in percentage, being 0 the start time.
+    * @private
+    * @method SsaiPulse#isId3ContainsStartedTime
+    * @param  {float} id3ObjectTime  Time value from currentId3Object
+    * @returns {boolean}  True if ID3 tag time is 0
+    */
+    var isId3ContainsStartedTime = function(id3ObjectTime) {
+      return id3ObjectTime === 0;
+    };
+
+    /**
      * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
      * the Vast Ad Response from the ads proxy.
      * @private
@@ -681,8 +786,10 @@ OO.Ads.manager(function(_, $)
      */
     var _preformatUrl = _.bind(function(url)
     {
-      //return ((url||'').indexOf('https') === -1 ? (url||'').replace('http:','https:') : url||'').replace('/hls/','/ai/');
-      return (url ||'').replace('/hls/','/ai/');
+      return url.replace(/vhls|hls/gi, function(matched)
+      {
+        return ENDPOINTS_MAP_OBJECT[matched];
+      });
     }, this);
 
     /**
@@ -691,7 +798,7 @@ OO.Ads.manager(function(_, $)
      * @method SsaiPulse#_sendRequest
      * @param {string} url The url that contains the Ad creative
      */
-    var _sendRequest = _.bind(function(url)
+    var _sendRequest = _.bind(function(url, currentId3Object)
     {
       $.ajax
       ({
@@ -699,13 +806,13 @@ OO.Ads.manager(function(_, $)
         type: 'GET',
         beforeSend: function(xhr)
         {
-          xhr.withCredentials = true;
+          xhr.withCredentials = false;
         },
         dataType: "xml",
         crossDomain: true,
         cache:false,
-        success: _.bind(this.onResponse, this, this.currentId3Object),
-        error: _.bind(this.onRequestError, this)
+        success: _.bind(this.onResponse, this, currentId3Object),
+        error: _.bind(this.onRequestError, this, currentId3Object)
       });
     }, this);
 
@@ -764,11 +871,11 @@ OO.Ads.manager(function(_, $)
             }
             else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME)
             {
-              parsedId3Object.time = +queryParameterValue;
+              parsedId3Object.time = parseFloat(queryParameterValue);
             }
             else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION)
             {
-              parsedId3Object.duration = +queryParameterValue;
+              parsedId3Object.duration = parseFloat(queryParameterValue);
             }
             else
             {
@@ -1019,7 +1126,9 @@ OO.Ads.manager(function(_, $)
     }, this);
 
     /**
-     * Helper function to return how far (in seconds) the current playhead is from Live.
+     * Helper function to retrieve how far (in seconds) the current playhead is from the end (VOD).
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * unless user seeks back).
      * @public
      * @method SsaiPulse#getCurrentOffset
      * @returns {number} The value of the current offset from Live.
@@ -1028,6 +1137,19 @@ OO.Ads.manager(function(_, $)
     {
       return currentOffset;
     }, this);
+
+    /**
+     * Helper function to set how far (in seconds) the current playhead is from the end (VOD).
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * unless user seeks back).
+     * @public
+     * @method SsaiPulse#setCurrentOffset
+     * @param {}
+     */
+    this.setCurrentOffset = function(offset)
+    {
+      currentOffset = offset;
+    }
 
     /**
      * Helper function adjust the duration to a proper value. The priority from which to grab the duration is:
@@ -1121,34 +1243,49 @@ OO.Ads.manager(function(_, $)
       }
       return urls;
     }, this);
+    
+    /**
+     * Helper function to call impressions.
+     * @private
+     * @method SsaiPulse#_handleImpressionCalls
+     * @param {object} curId3Object An object with the impressions data
+     */
+    var _handleImpressionCalls = _.bind(function(curId3Object) {
+      if (!isId3ContainsStartedTime(curId3Object.time)) {
+        var dataToExecutingImpressions = {
+          ad: {
+            data: this.adIdDictionary[curId3Object.adId].vastData
+          }
+        };
+        
+        _handleTrackingUrls(dataToExecutingImpressions, TRACKING_CALL_NAMES[curId3Object.time]);
+      }
+    }, this);
 
     /**
      * Callback used when the duration of an ad has passed.
      * @private
      * @method SsaiPulse#_adEndedCallback
      */
-    var _adEndedCallback = _.bind(function()
+    var _adEndedCallback = _.bind(function(clearTimeoutId, objectId)
     {
-      _clearAdDurationTimeout();
-      if (this.currentAd)
-      {
-        amc.notifyLinearAdEnded(this.currentAd.id);
-        amc.notifyPodEnded(this.currentAd.id);
-        _handleTrackingUrls(this.currentAd, ["firstQuartile", "midpoint", "thirdQuartile", "complete"]);
-      }
-      adMode = false;
-      this.currentAd = null;
-    }, this);
-
-    /**
-     * Helper function to clear ad duration timeout.
-     * @private
-     * @method SsaiPulse#_clearAdDurationTimeout
-     */
-    var _clearAdDurationTimeout = _.bind(function()
-    {
-      clearTimeout(adDurationTimeout);
-      adDurationTimeout = null;
+      var self = this;
+      return function () {
+        if (clearTimeoutId) {
+          clearTimeout(clearTimeoutId);
+        }
+  
+        if (!_.isUndefined(self.adIdDictionary[objectId]))
+        {
+          amc.notifyLinearAdEnded(self.adIdDictionary[objectId].curAdId);
+          amc.notifyPodEnded(self.adIdDictionary[objectId].curAdId);
+    
+          adMode = false;
+          self.currentAd = null;
+          //We delete vast info for this ad, since was completed.
+          delete self.adIdDictionary[objectId];
+        }
+      };
     }, this);
 
     /**
@@ -1165,6 +1302,8 @@ OO.Ads.manager(function(_, $)
         amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
         amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
         amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+        amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
+        amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
       }
     }, this);
   };
