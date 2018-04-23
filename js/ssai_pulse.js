@@ -5,7 +5,6 @@
  */
 
 require("../html5-common/js/utils/InitModules/InitOO.js");
-require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
 require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
 require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
