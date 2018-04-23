@@ -174,8 +174,6 @@ require("../html5-common/js/utils/utils.js");
         _IMAAdsManager = null;
         _IMAAdsManagerInitialized = false;
         _IMAAdDisplayContainer = null;
-
-        this.testAdDelay = 0;
       });
 
       /**
@@ -333,12 +331,6 @@ require("../html5-common/js/utils/utils.js");
             //convert to number
             this.maxRedirects = +metadata.setMaxRedirects;
           }
-        }
-
-        this.testAdDelay = 0;
-        if (metadata.hasOwnProperty("testAdDelay"))
-        {
-          this.testAdDelay = metadata.testAdDelay;
         }
 
         //On second video playthroughs, we will not be initializing the ad manager again.
@@ -1256,11 +1248,7 @@ require("../html5-common/js/utils/utils.js");
           // This will enable notifications whenever ad rules or VMAP ads are scheduled
           // for playback, it has no effect on regular ads
           _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(false);
-          _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _.bind(function(loadedEvent) {
-            setTimeout(function() {
-              _onAdRequestSuccess(loadedEvent);
-            }, this.testAdDelay);
-          }, this), false);
+          _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
           _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
         }
       });

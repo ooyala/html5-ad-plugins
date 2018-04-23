@@ -365,32 +365,24 @@ describe('ad_manager_ima', function()
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.UNKNOWN_AD_REQUEST);
   });
 
-  it('Init, Ad Rules: fake ad started notification is received by amc', function()
+  it('Init, Ad Rules: fake ad starts and ends properly when IMA ads manager is initialized and there is no preroll', function()
   {
-    var notified = false;
+    var endNotified = false;
+    var startNotified = false;
     amc.notifyPodStarted = function(adId)
     {
       //current placeholder id is undefined, update this when this changes
       if(typeof adId === "undefined")
       {
-        notified = true;
+        startNotified = true;
       }
     };
-    initialize(true);
-    play();
-    ima.playAd(amc.timeline[0]);
-    expect(notified).to.be(true);
-  });
-
-  it('Init, Ad Rules: fake ad ends properly when IMA ads manager is initialized and there is no preroll', function()
-  {
-    var notified = false;
     amc.notifyPodEnded = function(adId)
     {
       //current placeholder id is undefined, update this when this changes
       if(typeof adId === "undefined")
       {
-        notified = true;
+        endNotified = true;
       }
     };
     initialize(true);
@@ -399,7 +391,8 @@ describe('ad_manager_ima', function()
     //ends when an ad request is successful
     ima.currentAMCAdPod = amc.timeline[0];
     play();
-    expect(notified).to.be(true);
+    expect(startNotified).to.be(true);
+    expect(endNotified).to.be(true);
   });
 
   // Non-Ad Rules
@@ -919,34 +912,21 @@ describe('ad_manager_ima', function()
     expect(podEndedNotified).to.be(1);
   });
 
-  it('AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element for a linear ad', function()
+  it('AMC Integration, IMA Event: IMA STARTED event notifies amc to focus the ad video element and of linear ad start for a linear ad', function()
   {
-    var notified = false;
-    initAndPlay(true, vci);
-    var am = google.ima.adManagerInstance;
-    amc.focusAdVideo = function()
-    {
-      notified = true;
-      ima.adVideoFocused();
-    };
-    ima.playAd(
-      {
-        id : "ad_1000",
-        ad : {}
-      });
-    am.publishEvent(google.ima.AdEvent.Type.LOADED);
-    expect(notified).to.be(true);
-  });
-
-  it('AMC Integration, IMA Event: IMA STARTED event notifies amc of linear ad start for a linear ad', function()
-  {
-    var notified = false;
+    var adStartedNotified = false;
+    var focusNotified = false;
     var adId = -1;
     initAndPlay(true, vci);
     amc.notifyLinearAdStarted = function(id)
     {
       adId = id;
-      notified = true;
+      adStartedNotified = true;
+    };
+    amc.focusAdVideo = function()
+    {
+      focusNotified = true;
+      ima.adVideoFocused();
     };
     ima.playAd(
     {
@@ -955,8 +935,9 @@ describe('ad_manager_ima', function()
     });
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
-    expect(notified).to.be(true);
+    expect(adStartedNotified).to.be(true);
     expect(adId).to.be("ad_1000");
+    expect(focusNotified).to.be(true);
   });
 
   it('AMC Integration, IMA Event: IMA COMPLETE event notifies amc of linear ad end for a linear ad', function()
