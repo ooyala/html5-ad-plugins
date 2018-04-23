@@ -574,7 +574,7 @@ OO.Ads.manager(function(_, $)
      * @method SsaiPulse#_notifyAmcToPlayAd
      */
     var _notifyAmcToPlayAd = _.bind(function(id3Object, adObject) {
-      if (adObject)
+      if (adObject && id3Object)
       {
         var ssaiAd = _configureSsaiObject(adObject);
         _setVastDataToDictionary(id3Object, adObject);
@@ -752,10 +752,26 @@ OO.Ads.manager(function(_, $)
       return url;
     };
 
+    /**
+    * Checks if current ID3 tag is the last one for an ad, value is 
+    * represented in percentage, being 100 the completed time.
+    * @private
+    * @method SsaiPulse#isId3ContainsCompletedTime
+    * @param  {float} id3ObjectTime  Time value from currentId3Object
+    * @returns {boolean}  True if ID3 tag time is 100
+    */
     var isId3ContainsCompletedTime = function(id3ObjectTime) {
       return id3ObjectTime === 100;
     };
     
+    /**
+    * Checks if current ID3 tag is the first one for an ad, value is
+    * represented in percentage, being 0 the start time.
+    * @private
+    * @method SsaiPulse#isId3ContainsStartedTime
+    * @param  {float} id3ObjectTime  Time value from currentId3Object
+    * @returns {boolean}  True if ID3 tag time is 0
+    */
     var isId3ContainsStartedTime = function(id3ObjectTime) {
       return id3ObjectTime === 0;
     };
@@ -1110,7 +1126,9 @@ OO.Ads.manager(function(_, $)
     }, this);
 
     /**
-     * Helper function to return how far (in seconds) the current playhead is from Live.
+     * Helper function to retrieve how far (in seconds) the current playhead is from the end (VOD).
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * unless user seeks back).
      * @public
      * @method SsaiPulse#getCurrentOffset
      * @returns {number} The value of the current offset from Live.
@@ -1120,6 +1138,14 @@ OO.Ads.manager(function(_, $)
       return currentOffset;
     }, this);
 
+    /**
+     * Helper function to set how far (in seconds) the current playhead is from the end (VOD).
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * unless user seeks back).
+     * @public
+     * @method SsaiPulse#setCurrentOffset
+     * @param {}
+     */
     this.setCurrentOffset = function(offset)
     {
       currentOffset = offset;
