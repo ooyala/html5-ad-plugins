@@ -1623,13 +1623,24 @@ require("../html5-common/js/utils/utils.js");
             position_type: AD_RULES_POSITION_TYPE,
             forced_ad_type: _amc.ADTYPE.LINEAR_VIDEO
           };
-          //we do not want to force an ad play with preroll ads
-          //if(_playheadTracker.currentTime > 0)
-          //{
-            var streams = {};
-            streams[OO.VIDEO.ENCODING.IMA] = "";
+          var streams = {};
+          streams[OO.VIDEO.ENCODING.IMA] = "";
+          if (_playheadTracker.currentTime <= 0) {
+            var ad = {
+              "position": _amc.FORCED_AD_POSITION,
+              "adManager": this.name,
+              "ad": adData,
+              "streams": streams,
+              "adType": _amc.ADTYPE.LINEAR_VIDEO,
+              "mainContentDuration": this.mainContentDuration
+            };
+            _amc.appendToTimeline([
+              new _amc.Ad(ad)
+            ]);
+            _endCurrentAd(true);
+          } else {
             _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.LINEAR_VIDEO, streams);
-          //}
+          }
         }
       });
 
