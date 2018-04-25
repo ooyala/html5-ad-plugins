@@ -5,7 +5,6 @@
  */
 
 require("../html5-common/js/utils/InitModules/InitOO.js");
-require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
 require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
 require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
@@ -244,13 +243,13 @@ OO.Ads.manager(function(_, $)
       var offsetParam = 0;
       if (!amc.isLiveStream) 
       {
-        if (duration && typeof duration === 'number' && duration > 0)
+        if (duration && _.isNumber(duration) && duration > 0)
         {
           offsetParam = duration - playhead;
         }
       }
       //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
-      if ((amc.isLiveStream && (offset && typeof offset === 'number') && (duration && typeof duration === 'number')) && offset > 0 && offset < duration) 
+      if ((amc.isLiveStream && (offset && _.isNumber(offset)) && (duration && _.isNumber(duration))) && offset > 0 && offset < duration) 
       {
         offsetParam = duration - offset;
       }
@@ -279,9 +278,12 @@ OO.Ads.manager(function(_, $)
       {
         adMode = true;
         this.currentAd = ad;
-        if (ad.ad && ad.ad.data && (ad.duration && typeof ad.duration === 'number')) {
+        if (ad.ad && ad.ad.data && ad.ad.data.id) {
           this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
           _handleTrackingUrls(this.currentAd, ["impression", "start"]);
+          if (ad.duration && !_.isNumber(ad.duration)) {
+            ad.duration = 0;
+          }
           amc.notifyLinearAdStarted(ad.id,
           {
             name: ad.ad.name,
@@ -593,7 +595,7 @@ OO.Ads.manager(function(_, $)
      * @method SsaiPulse#_notifyAmcToPlayAd
      */
     var _notifyAmcToPlayAd = _.bind(function(id3Object, adObject) {
-      if (adObject)
+      if (adObject && id3Object)
       {
         var ssaiAd = _configureSsaiObject(adObject);
         _setVastDataToDictionary(id3Object, adObject);
@@ -804,10 +806,26 @@ OO.Ads.manager(function(_, $)
       return url;
     };
 
+    /**
+    * Checks if current ID3 tag is the last one for an ad, value is 
+    * represented in percentage, being 100 the completed time.
+    * @private
+    * @method SsaiPulse#isId3ContainsCompletedTime
+    * @param  {float} id3ObjectTime  Time value from currentId3Object
+    * @returns {boolean}  True if ID3 tag time is 100
+    */
     var isId3ContainsCompletedTime = function(id3ObjectTime) {
       return id3ObjectTime === 100;
     };
     
+    /**
+    * Checks if current ID3 tag is the first one for an ad, value is
+    * represented in percentage, being 0 the start time.
+    * @private
+    * @method SsaiPulse#isId3ContainsStartedTime
+    * @param  {float} id3ObjectTime  Time value from currentId3Object
+    * @returns {boolean}  True if ID3 tag time is 0
+    */
     var isId3ContainsStartedTime = function(id3ObjectTime) {
       return id3ObjectTime === 0;
     };
@@ -1186,7 +1204,9 @@ OO.Ads.manager(function(_, $)
     }, this);
 
     /**
-     * Helper function to return how far (in seconds) the current playhead is from Live.
+     * Helper function to retrieve how far (in seconds) the current playhead is from the end (VOD).
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * unless user seeks back).
      * @public
      * @method SsaiPulse#getCurrentOffset
      * @returns {number} The value of the current offset from Live.
@@ -1196,6 +1216,14 @@ OO.Ads.manager(function(_, $)
       return currentOffset;
     }, this);
 
+    /**
+     * Helper function to set how far (in seconds) the current playhead is from the end (VOD).
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * unless user seeks back).
+     * @public
+     * @method SsaiPulse#setCurrentOffset
+     * @param {}
+     */
     this.setCurrentOffset = function(offset)
     {
       currentOffset = offset;
