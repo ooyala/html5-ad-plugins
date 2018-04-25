@@ -38,7 +38,7 @@ OO.Ads.manager(function(_, $)
     this.initTime = Date.now();
     this.videoRestrictions = {};
     this.testMode = false;
-    this.timeLine = [];
+    this.timeLine = {};
     this.currentEmbed = "";
     this.ssaiGuid = "";
     
@@ -178,7 +178,7 @@ OO.Ads.manager(function(_, $)
     this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata)
     {
       this.ready = true;
-      this.timeLine = [];
+      this.timeline = {};
       firstAdFound = false;
 
       amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
@@ -433,7 +433,9 @@ OO.Ads.manager(function(_, $)
       {
         if (!firstAdFound)
         {
-          _sendMetadataRequest();
+          if (!this.testMode) {
+            _sendMetadataRequest();
+          }
           firstAdFound = true;
         }
         requestUrl = baseRequestUrl;
@@ -534,8 +536,8 @@ OO.Ads.manager(function(_, $)
      */
     this.onMetadataResponse = function(metadata)
     {
-      this.timeLine = metadata;
-      amc.notifyAdTimelineReceived(this.timeLine);
+      this.timeline = metadata;
+      amc.notifyAdTimelineReceived(this.timeline);
     };
     
     /**

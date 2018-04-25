@@ -521,6 +521,34 @@ describe('ad_manager_ssai_pulse', function()
     expect(currentId3Object.duration).to.be(100);
   });
 
+  it('Ad Timeline should be set after ad metadata request', function()
+  {
+    SsaiPulse.initialize(amc);
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=100"
+    };
+    var metadataResponse =
+    {
+      "ads":[{"id":"pre","start":0,"duration":30.0,"adtype":"preroll","adbreakname":"preroll"},
+            {"id":"mid","start":70.4,"duration":15.5,"adtype":"midroll","adbreakname":"midroll1"},
+            {"id":"post","start":600.04,"duration":30.1,"adtype":"postroll","adbreakname":"postroll"}]
+    };
+    var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    SsaiPulse.onMetadataResponse(metadataResponse);
+    expect(SsaiPulse.timeline).to.eql(metadataResponse);
+  });
+
+  it('Ad url should be parsed for ssai guid and embed on content change', function()
+  {
+    var testEmbed = "mytestembedcode12345";
+    var testGuid = "abcdefgh-1234-abcd-1234-abcdefghijk"
+    SsaiPulse.initialize(amc);
+    SsaiPulse.onContentUrlChanged("eventName", "http://ssai.ooyala.com/vhls/"+testEmbed+"/pcode/abcd1234?ssai_guid="+testGuid);
+    expect(SsaiPulse.ssaiGuid).to.eql(testGuid);
+    expect(SsaiPulse.currentEmbed).to.eql(testEmbed);
+  });
+
   it('Ad Id should be marked with the error state if the ad request fails', function()
   {
     SsaiPulse.initialize(amc);
