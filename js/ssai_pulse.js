@@ -431,8 +431,14 @@ OO.Ads.manager(function(_, $)
       var currentId3Object = _parseId3Object(metadata);
       if (currentId3Object)
       {
-        if (!firstAdFound)
-        {
+
+        if (currentId3Object["time"] < 100) {
+          amc.notifySSAIAdPlaying(currentId3Object["duration"]);
+        } else if (currentId3Object["time"] === 100) {
+          amc.notifySSAIAdPlayed();
+        }
+
+        if (!amc.isLiveStream && !firstAdFound) {
           if (!this.testMode) {
             _sendMetadataRequest();
           }
@@ -453,9 +459,7 @@ OO.Ads.manager(function(_, $)
         else if (_.has(this.adIdDictionary, currentId3Object.adId) &&
           !this.adIdDictionary[currentId3Object.adId].state)
         {
-          
           clearTimeout(this.adIdDictionary[currentId3Object.adId].adTimer);
-          
           this.adIdDictionary[currentId3Object.adId].state = STATE.WAITING;
           this.adIdDictionary[currentId3Object.adId].adTimer = _.delay(
             _adEndedCallback(null, currentId3Object.adId),
@@ -633,7 +637,7 @@ OO.Ads.manager(function(_, $)
      */
     this.onMetadataError = function(error)
     {
-      OO.log("SSAI Metadata Request: Error" + error);
+      OO.log("SSAI Metadata Request: Error" + JSON.stringify(error));
     };
 
     /**
