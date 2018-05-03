@@ -120,6 +120,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
     function _onPlayed(){
       reportingPaused = false;
       reportHeartBeat()
+      stopHeartBeat();
     }
 
     function buildConfig(configuration) {
