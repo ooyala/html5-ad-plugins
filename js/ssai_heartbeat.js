@@ -42,7 +42,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
       mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'heartbeat', _onPlayheadTimeChange);
       mb.subscribe(OO.EVENTS.PAUSE, 'heartbeat', _onPause);
       mb.subscribe(OO.EVENTS.PLAY, 'heartbeat', _onPlay);
-      mb.subscribe(OO.EVENTS.PLAYED, 'hearbeat', _onPlayed);
+      mb.subscribe(OO.EVENTS.VC_PLAYED, 'hearbeat', _onPlayed);
       mb.subscribe(OO.EVENTS.DESTROY, 'heartbeat', destroy)
       
 
@@ -56,7 +56,10 @@ OO.plugin('heartbeat', function(OO, _, $) {
     function startHeartBeat() {
       stopHeartBeat();
 
-      heartbeatTimer = setInterval(function(){
+      heartbeatTimer = setInterval(reportHeartBeat, config.Interval);
+    }
+
+    function reportHeartBeat() {
         if(reportingPaused){
           return;
         }
@@ -77,8 +80,6 @@ OO.plugin('heartbeat', function(OO, _, $) {
             log('Heartbeat was sent successfully');
           }
         });
-
-      }, config.Interval);
     }
 
     function parseGUID(url) {
@@ -117,7 +118,8 @@ OO.plugin('heartbeat', function(OO, _, $) {
     }
 
     function _onPlayed(){
-      reportingPaused = true;
+      reportingPaused = false;
+      reportHeartBeat()
     }
 
     function buildConfig(configuration) {
@@ -141,7 +143,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
       mb.unsubscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'heartbeat');
       mb.unsubscribe(OO.EVENTS.PAUSE, 'heartbeat');
       mb.unsubscribe(OO.EVENTS.PLAY, 'heartbeat');
-      mb.unsubscribe(OO.EVENTS.PLAYED, 'hearbeat');
+      mb.unsubscribe(OO.EVENTS.VC_PLAYED, 'hearbeat');
 
       log('destroy');
     }
