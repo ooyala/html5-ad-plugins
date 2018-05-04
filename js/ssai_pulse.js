@@ -433,7 +433,7 @@ OO.Ads.manager(function(_, $)
       {
 
         if (currentId3Object["time"] < 100) {
-          amc.notifySSAIAdPlaying(currentId3Object["duration"]);
+          amc.notifySSAIAdPlaying(currentId3Object);
         } else if (currentId3Object["time"] === 100) {
           amc.notifySSAIAdPlayed();
         }
@@ -541,7 +541,7 @@ OO.Ads.manager(function(_, $)
     this.onMetadataResponse = function(metadata)
     {
       this.timeline = metadata;
-      amc.notifyAdTimelineReceived(this.timeline);
+      amc.notifySSAIAdTimelineReceived(this.timeline);
     };
     
     /**
