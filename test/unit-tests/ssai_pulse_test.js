@@ -809,4 +809,37 @@ describe('ad_manager_ssai_pulse', function()
     expect(SsaiPulse.adIdDictionary[currentId3Object2.adId]).to.be(undefined);
   });
 
+  it('Should fire notifySSAIAdPlaying if ad time is less than 100', function()
+  {
+    var ssaiAdFound = {};
+    amc.notifySSAIAdPlaying = function(ad){
+      ssaiAdFound = ad;
+    }
+    SsaiPulse.initialize(amc);
+    SsaiPulse.setCurrentOffset(1);
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=0&d=100",
+    };
+    var expectedAd = { adId: '11de5230', time: 0, duration: 100 };
+    var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(ssaiAdFound).to.eql(expectedAd);
+  });
+
+  it('Should fire notifySSAIAdPlayed if ad time is equal to 100', function()
+  {
+    var notifySSAIAdPlayingCalled = false;
+    amc.notifySSAIAdPlayed = function(){
+      notifySSAIAdPlayingCalled = true;
+    }
+    SsaiPulse.initialize(amc);
+    SsaiPulse.setCurrentOffset(1);
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=100&d=100",
+    };
+    var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(notifySSAIAdPlayingCalled).to.eql(true);
+  });
+
 });
