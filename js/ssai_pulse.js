@@ -96,6 +96,8 @@ OO.Ads.manager(function(_, $)
     
       "100": ["complete"]
     };
+
+    var TRACKING_COMPLETE = 100;
     
     // Helper map object to replace change the manifest URL to the endpoint
     // used to retrieve the Vast Ad Response from the ads proxy.
@@ -432,9 +434,9 @@ OO.Ads.manager(function(_, $)
       if (currentId3Object)
       {
 
-        if (currentId3Object["time"] < 100) {
+        if (currentId3Object["time"] < TRACKING_COMPLETE) {
           amc.notifySSAIAdPlaying(currentId3Object);
-        } else if (currentId3Object["time"] === 100) {
+        } else if (currentId3Object["time"] === TRACKING_COMPLETE) {
           amc.notifySSAIAdPlayed();
         }
 
@@ -757,13 +759,24 @@ OO.Ads.manager(function(_, $)
     var _parseUrl = _.bind(function(url)
     {
       var urlParts = url.split("?");
+      if (urlParts === null) {
+      	return;
+      }
       var queryParamString = urlParts[1];
       var mainUrl = urlParts[0];
       var mainUrlParts = mainUrl.split("/");
-      this.currentEmbed = mainUrlParts[4];
+      if (mainUrlParts !== null) {
+      	this.currentEmbed = mainUrlParts[4];
+      }
       var queryParams = queryParamString.split("&");
-      for (var i = 0; i < queryParams.length; i++) {
-        var paramParts = queryParams[i].split("=");
+      if (queryParams === null) {
+      	return;
+      }
+      for (var index = 0; index < queryParams.length; index++) {
+        var paramParts = queryParams[index].split("=");
+        if (paramParts === null) {
+	      continue;
+	    }
         if (paramParts[0] === 'ssai_guid') {
           this.ssaiGuid = paramParts[1];
           return;
