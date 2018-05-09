@@ -900,21 +900,28 @@ OO.Ads.manager(function(_, $) {
      */
     var fw_onAdImpression = function(event) {
       indexInPod++;
-      if (!event) return;
-      if (_.isFunction(adStartedCallbacks[event.slotCustomId])) {
-        var clickEvents = _.filter(event.adInstance._eventCallbacks,
-                                   function(callback){ return callback._name == "defaultClick" });
+      if (!event || !event.adInstance) {
+        return;
+      }
+      var adInstance = event.adInstance;
+      var adSlot = adInstance.getSlot();
+      var slotCustomId = (adSlot ? adSlot.getCustomId() : '') || event.slotCustomId;
+
+      if (_.isFunction(adStartedCallbacks[slotCustomId])) {
+        var clickEvents = _.filter(adInstance._eventCallbacks, function(callback) {
+          return callback._name === "defaultClick"
+        });
         var hasClickUrl = clickEvents.length > 0;
-        var activeCreativeRendition = event.adInstance.getActiveCreativeRendition();
-        adStartedCallbacks[event.slotCustomId]({
-            name: activeCreativeRendition.getPrimaryCreativeRenditionAsset().getName(),
-            duration: event.adInstance._creative.getDuration(),
-            hasClickUrl: hasClickUrl,
-            indexInPod: indexInPod,
-            skippable: false,
-            width: activeCreativeRendition.getWidth(),
-            height: activeCreativeRendition.getHeight()
-          });
+        var activeCreativeRendition = adInstance.getActiveCreativeRendition();
+        adStartedCallbacks[slotCustomId]({
+          name: activeCreativeRendition.getPrimaryCreativeRenditionAsset().getName(),
+          duration: adInstance._creative.getDuration(),
+          hasClickUrl: hasClickUrl,
+          indexInPod: indexInPod,
+          skippable: false,
+          width: activeCreativeRendition.getWidth(),
+          height: activeCreativeRendition.getHeight()
+        });
       }
 
       /*

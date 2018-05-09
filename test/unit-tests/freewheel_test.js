@@ -56,6 +56,26 @@ describe('ad_manager_freewheel', function() {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
 
+  var prepareForPreroll = function(customId) {
+    var ad = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, customId);
+    var adInstance = new AdInstance({
+      name: 'freewilly',
+      width: 340,
+      height: 260,
+      duration: 5,
+      customId: customId
+    });
+    getTemporalSlots = function() {
+      return [ ad ];
+    };
+    initialize();
+    play();
+    // Play ad request ad
+    fw.playAd(amc.timeline[0]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({ success: true });
+    return adInstance;
+  };
+
   before(_.bind(function() {
     OO.Ads = {
       manager: function(adManager){
@@ -715,6 +735,48 @@ describe('ad_manager_freewheel', function() {
 
       expect(volume).to.be(0);
     });
+
+    it('should notify linear ad started even if impression\'s event.slotCustomId property is missing', function() {
+      var customId = 1234;
+      var notified = false;
+      amc.notifyLinearAdStarted = function() {
+        notified = true;
+      };
+      var adInstance = prepareForPreroll(customId);
+      // Play ad
+      fw.playAd(amc.timeline[1]);
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+        slotCustomId: null,
+        adInstance: adInstance
+      });
+      expect(notified).to.be(true);
+    });
+
+    // Shouldn't happen, but we should be able to fall back to the previous behavior if it did
+    it('should fall back to impression\'s event.slotCustomId property if slot.getCustomId() fails', function() {
+      var customId = 1234;
+      var notified = false;
+      amc.notifyLinearAdStarted = function() {
+        notified = true;
+      };
+      var adInstance = prepareForPreroll(customId);
+      // Override custom id
+      adInstance.getSlot = function() {
+        return {
+          getCustomId: function() {
+            return null;
+          }
+        };
+      };
+      // Play ad
+      fw.playAd(amc.timeline[1]);
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+        slotCustomId: customId,
+        adInstance: adInstance
+      });
+      expect(notified).to.be(true);
+    });
+
   });
 
 });

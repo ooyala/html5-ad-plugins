@@ -119,4 +119,5 @@ fake_amc = function() {
   this.showCompanion = function() {};
   this.onSdkAdEvent = function() {};
   this.adManagerSettings = {};
+  this.willRequireEmbedCodeMetadata = function() {};
 };

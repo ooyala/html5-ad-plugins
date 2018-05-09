@@ -138,6 +138,9 @@ OO.Ads.manager(function(_, $)
     {
       amc = adManagerController;
 
+      // Request embed code provider metadata
+      amc.willRequireEmbedCodeMetadata();
+
       // Add any player event listeners now
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
 

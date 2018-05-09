@@ -198,7 +198,7 @@ describe('ad_manager_ssai_pulse', function()
       "html5_ad_server": "http://blah"}, {}, content);
     expect(SsaiPulse.ready).to.be(true);
   });
-  
+
   it('ID3 Object should be parsed', function()
   {
     SsaiPulse.initialize(amc);
@@ -217,7 +217,7 @@ describe('ad_manager_ssai_pulse', function()
     var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
     expect(OO._.isEqual(currentId3Object, expectedResult)).to.be(true);
   });
-  
+
   it('ID3 Object should not be parsed if ID3 tag contains incorrect inputs', function() {
     SsaiPulse.initialize(amc);
     var mockId3Tag =
@@ -230,30 +230,30 @@ describe('ad_manager_ssai_pulse', function()
     var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
     expect(currentId3Object).to.be(expectedResult);
   });
-  
+
   it('ID3 Object should not be parsed if ID3 tag is empty', function() {
     SsaiPulse.initialize(amc);
-  
+
     var mockId3Tag =
     {
       TXXX: ""
     };
     var expectedResult = null;
     var currentId3Object= SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    
+
     expect(currentId3Object).to.be(expectedResult);
   });
-  
+
   it('ID3 Object should not be parsed if ID3 tag is null', function() {
     SsaiPulse.initialize(amc);
-    
+
     var mockId3Tag =
       {
         TXXX: null
       };
     var expectedResult = null;
     var currentId3Object= SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    
+
     expect(currentId3Object).to.be(expectedResult);
   });
 
@@ -482,10 +482,10 @@ describe('ad_manager_ssai_pulse', function()
     SsaiPulse.loadMetadata(adManagerMetadata, backlotBaseMetadata, movieMetadata);
     expect(SsaiPulse.getBustTheCache()).to.be(false);
   });
-  
+
   it('Correct ID3 ad duration should be selected', function() {
     SsaiPulse.initialize(amc);
-    
+
     var mockId3Tag =
       {
         TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=1"
@@ -499,7 +499,7 @@ describe('ad_manager_ssai_pulse', function()
     var currentId3Object = SsaiPulse.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
     expect(OO._.isEqual(currentId3Object, expectedResult)).to.be(true);
   });
-  
+
   it('Correct Ad Duration should be selected', function()
   {
     SsaiPulse.initialize(amc);
@@ -569,7 +569,7 @@ describe('ad_manager_ssai_pulse', function()
     SsaiPulse.onRequestError(currentId3Object);
 
     var adId = expectedResult.adId;
-    
+
     expect(SsaiPulse.adIdDictionary[adId].state).to.be("error");
   });
 
@@ -842,4 +842,15 @@ describe('ad_manager_ssai_pulse', function()
     expect(notifySSAIAdPlayingCalled).to.eql(true);
   });
 
+  it('Init: SSAI requires embed code metadata', function()
+  {
+    var embedCodeMetadata = false;
+    amc.willRequireEmbedCodeMetadata = function(required) {
+      embedCodeMetadata = true;
+    }
+    SsaiPulse.initialize(amc);
+    expect(function() { SsaiPulse.loadMetadata({"html5_ssl_ad_server":"https://blah",
+      "html5_ad_server": "http://blah"}, {}, {});}).to.not.throwException();
+    expect(embedCodeMetadata).to.be(true);
+  });
 });
