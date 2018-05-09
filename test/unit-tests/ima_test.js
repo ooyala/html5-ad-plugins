@@ -82,7 +82,9 @@ describe('ad_manager_ima', function()
     {
       all_ads : [ad]
     };
-    ima.loadMetadata(content, {}, {});
+    ima.loadMetadata(content, {}, {
+      duration: 60000
+    });
     amc.timeline = ima.buildTimeline();
   };
 
@@ -367,6 +369,7 @@ describe('ad_manager_ima', function()
 
   it('Init, Ad Rules: fake ad starts and ends properly when IMA ads manager is initialized and there is no preroll', function()
   {
+    google.ima.delayAdRequest = true;
     var endNotified = false;
     var startNotified = false;
     amc.notifyPodStarted = function(adId)
@@ -391,6 +394,10 @@ describe('ad_manager_ima', function()
     //ends when an ad request is successful
     ima.currentAMCAdPod = amc.timeline[0];
     play();
+    expect(startNotified).to.be(false);
+    expect(endNotified).to.be(false);
+
+    google.ima.delayedAdRequestCallback();
     expect(startNotified).to.be(true);
     expect(endNotified).to.be(true);
   });
@@ -812,24 +819,51 @@ describe('ad_manager_ima', function()
     expect(_.isObject(google.ima.adLoaderInstance)).to.be(true);
   });
 
-  it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc of a forced ad playback with streams set if a preroll', function()
+  it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc of a forced ad playback with streams set if a preroll and instead adds preroll to timeline', function()
   {
-    var notified = false;
+    var forcedAdNotified = 0;
+    var appendedToTimeline = [];
+    var podEndedNotified = 0;
     initAndPlay(true, vci);
     amc.forceAdToPlay = function(adManager, ad, adType, streams)
     {
       if(adManager === name && streams["ima"])
       {
-        notified = true;
+        forcedAdNotified++;
       }
     };
+    amc.appendToTimeline = function(ads) {
+      appendedToTimeline = appendedToTimeline.concat(ads);
+    };
+    amc.notifyPodEnded = function() {
+      podEndedNotified++;
+    };
+
     ima.playAd(
     {
       ad : {}
     });
     var am = google.ima.adManagerInstance;
     am.publishEvent(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED);
-    expect(notified).to.be(false);
+    expect(forcedAdNotified).to.be(0);
+
+    //check that the ad rules ad request ad ended
+    expect(podEndedNotified).to.be(1);
+
+    //check that the new preroll was appended to the timeline
+    expect(appendedToTimeline).to.eql([new amc.Ad({
+              "position": amc.FORCED_AD_POSITION,
+              "adManager": name,
+              "ad": {
+                "position_type": "r",
+                "forced_ad_type" : amc.ADTYPE.LINEAR_VIDEO
+              },
+              "streams": {
+                "ima": ""
+              },
+              "adType": amc.ADTYPE.LINEAR_VIDEO,
+              "mainContentDuration": 60
+            })]);
   });
 
   it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED notifies amc of a forced ad playback with streams set if not a preroll', function()

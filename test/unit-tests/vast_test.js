@@ -699,11 +699,13 @@ describe('ad_manager_vast', function() {
     var skipOffset = 0;
     var adPodLength = -1;
     var indexInPod = -1;
+    var adPodStartedCalled = 0;
     amc.showSkipVideoAdButton = function(allowButton, offset) {
       allowSkipButton = allowButton;
       skipOffset = offset;
     };
     amc.notifyPodStarted = function(id, podLength) {
+      adPodStartedCalled++;
       adPodLength = podLength;
     };
     amc.notifyLinearAdStarted = function(name, props) {
@@ -731,7 +733,9 @@ describe('ad_manager_vast', function() {
       "html5_ad_server": "http://blah"}, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
-    vastAdManager.onVastResponse(vast_ad_mid, linearXML);
+    expect(adPodStartedCalled).to.be(0);
+    vastAdManager.onResponse('', vast_ad_mid, linearXML);
+    expect(adPodStartedCalled).to.be(1);
     expect(errorType.length).to.be(0);
     var vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);

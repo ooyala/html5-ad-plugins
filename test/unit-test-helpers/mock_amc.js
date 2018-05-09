@@ -9,6 +9,7 @@ fake_amc = function() {
       this.callbacks[event].apply(this, arguments);
     }
   };
+  this.FORCED_AD_POSITION = -1;
   this.EVENTS = {
     INITIAL_PLAY_REQUESTED :    "initialPlayRequested",
     PLAY_STARTED :              "playStarted",
