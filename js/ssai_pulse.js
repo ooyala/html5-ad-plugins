@@ -439,7 +439,6 @@ OO.Ads.manager(function(_, $)
         } else if (currentId3Object["time"] === TRACKING_COMPLETE) {
           amc.notifySSAIAdPlayed();
         }
-
         if (!amc.isLiveStream && !firstAdFound) {
           if (!this.testMode) {
             _sendMetadataRequest();
@@ -637,9 +636,14 @@ OO.Ads.manager(function(_, $)
      * @public
      * @method SsaiPulse#onMetadataError
      */
-    this.onMetadataError = function(error)
+    this.onMetadataError = function(url, error)
     {
       OO.log("SSAI Metadata Request: Error" + JSON.stringify(error));
+      if (error !== null){
+      	var code = error["status"];
+      	var message = error["responseText"];
+      	amc.raiseApiError(code, message, url);
+      }
     };
 
     /**
@@ -758,6 +762,9 @@ OO.Ads.manager(function(_, $)
      */
     var _parseUrl = _.bind(function(url)
     {
+      if (url === null) {
+      	return;
+      }
       var urlParts = url.split("?");
       if (urlParts === null) {
       	return;
@@ -909,7 +916,7 @@ OO.Ads.manager(function(_, $)
         crossDomain: true,
         cache:false,
         success: _.bind(this.onMetadataResponse, this),
-        error: _.bind(this.onMetadataError, this)
+        error: _.bind(this.onMetadataError, this, url)
       });
     }, this);
 
