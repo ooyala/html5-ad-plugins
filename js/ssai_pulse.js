@@ -427,6 +427,7 @@ OO.Ads.manager(function(_, $)
       var currentId3Object = _parseId3Object(metadata);
       if (currentId3Object)
       {
+      	OO.log("ID3 TAG FOUND for time: ", currentId3Object["time"]);
         requestUrl = baseRequestUrl;
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, currentId3Object.adId);
   
