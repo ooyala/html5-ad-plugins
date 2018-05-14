@@ -765,7 +765,7 @@ OO.Ads.manager(function(_, $)
      */
     var _parseUrl = _.bind(function(url)
     {
-      if (url === null) {
+      if (typeof url !== "string") {
       	return;
       }
       var urlParts = url.split("?");
