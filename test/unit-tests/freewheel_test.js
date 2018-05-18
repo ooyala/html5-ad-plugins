@@ -608,6 +608,64 @@ describe('ad_manager_freewheel', function() {
     expect(notified).to.be(true);
   });
 
+  it('Linear ad: notifies AMC of linear ad events', function() {
+    var customId = 1234;
+    var linearAd = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 10, 5000, customId);
+    var linearAdStartedCount = 0;
+    var podStartedCount = 0;
+    amc.notifyLinearAdStarted = function() {
+      linearAdStartedCount++;
+    };
+    amc.notifyPodStarted = function() {
+      podStartedCount++;
+    };
+    var adInstance = new AdInstance({
+      name : "blah",
+      width : 300,
+      height : 50,
+      duration : 5,
+      customId : customId
+    });
+    getTemporalSlots = function(){
+      return [
+        linearAd
+      ];
+    };
+    initialize();
+    expect(amc.timeline.length).to.be(1);
+    play();
+    expect(linearAdStartedCount).to.be(0);
+    expect(podStartedCount).to.be(0);
+    //play ad request ad
+    fw.playAd(amc.timeline[0]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
+    expect(linearAdStartedCount).to.be(0);
+    expect(podStartedCount).to.be(1);
+    expect(amc.timeline.length).to.be(2);
+    //play linear ad
+    fw.playAd(amc.timeline[1]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_SLOT_STARTED]({
+      adInstance : adInstance
+    });
+    expect(linearAdStartedCount).to.be(0);
+    expect(podStartedCount).to.be(1);
+
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+      slotCustomId : customId,
+      adInstance : adInstance
+    });
+    expect(linearAdStartedCount).to.be(1);
+    expect(podStartedCount).to.be(2);
+
+    //check that another ad in an ad pod does not throw another pod started event
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+      slotCustomId : customId,
+      adInstance : adInstance
+    });
+    expect(linearAdStartedCount).to.be(2);
+    expect(podStartedCount).to.be(2);
+  });
+
   it('Ad Clickthrough: AMC\'s adsClickthroughOpened() should be called when FW\'s ads click event occurs', function() {
     amc.adsClickthroughOpened = function() {
       adsClickthroughOpenedCalled += 1;
