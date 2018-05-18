@@ -69,7 +69,7 @@ describe('ad_manager_ima', function()
 
   // Helper functions
 
-  var initialize = function(adRules)
+  var initialize = function(adRules, showAdControls)
   {
     ima.initialize(amc, playerId);
     ima.registerUi();
@@ -80,8 +80,12 @@ describe('ad_manager_ima', function()
     };
     var content =
     {
-      all_ads : [ad]
+      all_ads : [ad],
     };
+
+    if (typeof showAdControls !== 'undefined') {
+      content.showAdControls = showAdControls;
+    }
     ima.loadMetadata(content, {}, {});
     amc.timeline = ima.buildTimeline();
   };
@@ -97,9 +101,9 @@ describe('ad_manager_ima', function()
     videoWrapper = imaVideoPluginFactory.create(null, null, vc, null, playerId);
   };
 
-  var initAndPlay = function(adRules, vc, autoplayed)
+  var initAndPlay = function(adRules, vc, autoplayed, showAdControls)
   {
-    initialize(adRules);
+    initialize(adRules, showAdControls);
     createVideoWrapper(vc);
     play(autoplayed);
   };
@@ -506,6 +510,7 @@ describe('ad_manager_ima', function()
       }
       ima.loadMetadata(metadata, {}, {});
       expect(ima.showAdControls).to.be(true);
+      expect(ima.autoHideAdControls).to.be(false);
     });
 
     it('Show Ad Controls Override: playerControlsOverAds = false and showAdControls = false results in no controls', function()
@@ -516,7 +521,52 @@ describe('ad_manager_ima', function()
       }
       ima.loadMetadata(metadata, {}, {});
       expect(ima.showAdControls).to.be(false);
+      expect(ima.autoHideAdControls).to.be(true);
     });
+
+    it('Autohide ad controls should be enabled if we are showing the controls over the ads.', function()
+    {
+      amc.pageSettings.playerControlsOverAds = true;
+      var metadata = {
+        showAdControls: true
+      }
+      ima.loadMetadata(metadata, {}, {});
+      expect(ima.showAdControls).to.be(true);
+      expect(ima.autoHideAdControls).to.be(true);
+    });
+
+    it('Play ad: Requests the AMC to hide the player UI', function()
+    {
+      var notified = false;
+      amc.hidePlayerUi = function(showAdControls, showAdMarquee, autoHideAdControls) {
+        expect(showAdControls).to.be(false);
+        expect(autoHideAdControls).to.be(true);
+        notified = true;
+      };
+      initAndPlay(true, vci);
+      ima.playAd(amc.timeline[0]);
+      var am = google.ima.adManagerInstance;
+      am.publishEvent(google.ima.AdEvent.Type.STARTED);
+      expect(notified).to.be(true);
+    });
+
+    it('Play ad: Requests the AMC to hide the player UI', function()
+    {
+      var notified = false;
+      var showAdControls = true;
+      amc.pageSettings.playerControlsOverAds = false;
+      amc.hidePlayerUi = function(showAdControls, showAdMarquee, autoHideAdControls) {
+        expect(showAdControls).to.be(true);
+        expect(autoHideAdControls).to.be(false);
+        notified = true;
+      };
+      initAndPlay(true, vci, undefined, showAdControls);
+      ima.playAd(amc.timeline[0]);
+      var am = google.ima.adManagerInstance;
+      am.publishEvent(google.ima.AdEvent.Type.STARTED);
+      expect(notified).to.be(true);
+    });
+
   });
 
   it('AMC Integration, Ad Rules: Non-linear ad should trigger forceAdToPlay on AMC', function()
