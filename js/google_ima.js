@@ -560,8 +560,6 @@ require("../html5-common/js/utils/utils.js");
 
         if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
-          //we started our placeholder ad
-          _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
           //if the sdk ad request failed when trying to preload, we should end the placeholder ad
           if(this.preloadAdRulesAds && this.adRulesLoadError)
           {
@@ -932,7 +930,8 @@ require("../html5-common/js/utils/utils.js");
               this.currentAMCAdPod &&
               this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST)
             {
-                _endCurrentAd(true);
+              _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
+              _endCurrentAd(true);
             }
           }
           catch (adError)
@@ -1347,7 +1346,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _trySetAdManagerToReady = privateMember(function()
       {
-        if (_IMAAdDisplayContainer && this.metadataReady)
+        if (_IMAAdDisplayContainer && this.metadataReady && !this.ready)
         {
           this.ready = true;
           _amc.onAdManagerReady();
@@ -1633,11 +1632,22 @@ require("../html5-common/js/utils/utils.js");
             position_type: AD_RULES_POSITION_TYPE,
             forced_ad_type: _amc.ADTYPE.LINEAR_VIDEO
           };
-          //we do not want to force an ad play with preroll ads
-          if(_playheadTracker.currentTime > 0)
-          {
-            var streams = {};
-            streams[OO.VIDEO.ENCODING.IMA] = "";
+          var streams = {};
+          streams[OO.VIDEO.ENCODING.IMA] = "";
+          if (_playheadTracker.currentTime <= 0) {
+            var ad = {
+              "position": _amc.FORCED_AD_POSITION,
+              "adManager": this.name,
+              "ad": adData,
+              "streams": streams,
+              "adType": _amc.ADTYPE.LINEAR_VIDEO,
+              "mainContentDuration": this.mainContentDuration
+            };
+            _amc.appendToTimeline([
+              new _amc.Ad(ad)
+            ]);
+            _endCurrentAd(true);
+          } else {
             _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.LINEAR_VIDEO, streams);
           }
         }
@@ -1650,11 +1660,11 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_resumeMainContent = privateMember(function()
       {
+        OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
+
         //make sure when we resume, that we have ended the ad pod and told
         //the AMC that we have done so.
         _endCurrentAd(true);
-
-        OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
       });
 
       /**
@@ -1739,7 +1749,6 @@ require("../html5-common/js/utils/utils.js");
             if (ad.isLinear())
             {
               _linearAdIsPlaying = true;
-              _amc.focusAdVideo();
             }
             break;
           case eventType.STARTED:
@@ -1753,6 +1762,8 @@ require("../html5-common/js/utils/utils.js");
             if(ad.isLinear())
             {
               _linearAdIsPlaying = true;
+              _amc.focusAdVideo();
+
               if (this.savedVolume >= 0)
               {
                 this.setVolume(this.savedVolume);
@@ -2351,7 +2362,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.requiresMutedAutoplay = function() {
         return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
-          (OO.isChrome && OO.chromeMajorVersion >= 65));
+          (OO.isChrome && OO.chromeMajorVersion >= 66));
       };
 
       /**

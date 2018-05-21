@@ -519,20 +519,22 @@ OO.Ads.manager(function(_, $) {
             _registerDisplayForLinearAd();
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad) {
-                amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
               }, this, ad);
             slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyPodEnded(adId);
               }, this, ad.id);
-            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId, details) {
+            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad, details) {
                 //We need to remove the fake video element so that Alice
                 //can properly render the UI for a linear ad
                 if (fakeVideo && overlayContainer) {
                   overlayContainer.removeChild(fakeVideo);
                   fakeVideo = null;
                 }
-                amc.notifyLinearAdStarted(adId, details);
-              }, this, ad.id);
+                if (indexInPod <= 1) {
+                  amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
+                }
+                amc.notifyLinearAdStarted(ad.id, details);
+              }, this, ad);
             adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyLinearAdEnded(adId);
               }, this, ad.id);
@@ -900,21 +902,28 @@ OO.Ads.manager(function(_, $) {
      */
     var fw_onAdImpression = function(event) {
       indexInPod++;
-      if (!event) return;
-      if (_.isFunction(adStartedCallbacks[event.slotCustomId])) {
-        var clickEvents = _.filter(event.adInstance._eventCallbacks,
-                                   function(callback){ return callback._name == "defaultClick" });
+      if (!event || !event.adInstance) {
+        return;
+      }
+      var adInstance = event.adInstance;
+      var adSlot = adInstance.getSlot();
+      var slotCustomId = (adSlot ? adSlot.getCustomId() : '') || event.slotCustomId;
+
+      if (_.isFunction(adStartedCallbacks[slotCustomId])) {
+        var clickEvents = _.filter(adInstance._eventCallbacks, function(callback) {
+          return callback._name === "defaultClick"
+        });
         var hasClickUrl = clickEvents.length > 0;
-        var activeCreativeRendition = event.adInstance.getActiveCreativeRendition();
-        adStartedCallbacks[event.slotCustomId]({
-            name: activeCreativeRendition.getPrimaryCreativeRenditionAsset().getName(),
-            duration: event.adInstance._creative.getDuration(),
-            hasClickUrl: hasClickUrl,
-            indexInPod: indexInPod,
-            skippable: false,
-            width: activeCreativeRendition.getWidth(),
-            height: activeCreativeRendition.getHeight()
-          });
+        var activeCreativeRendition = adInstance.getActiveCreativeRendition();
+        adStartedCallbacks[slotCustomId]({
+          name: activeCreativeRendition.getPrimaryCreativeRenditionAsset().getName(),
+          duration: adInstance._creative.getDuration(),
+          hasClickUrl: hasClickUrl,
+          indexInPod: indexInPod,
+          skippable: false,
+          width: activeCreativeRendition.getWidth(),
+          height: activeCreativeRendition.getHeight()
+        });
       }
 
       /*
@@ -936,6 +945,19 @@ OO.Ads.manager(function(_, $) {
      * @param event {object} event The ad impression object indicating which ad ended
      */
     var fw_onAdImpressionEnd = function(event) {
+      //FW has an issue where it resets the html5 video element's volume and muted attributes according to
+      //FW's internal volume/mute state when moving to the next ad in an ad pod (but not the first ad in an ad pod).
+      //This will break playback if muted autoplay is required and FW unmutes the video element. This internal state
+      //is usually set with the setAdVolume API. We currently do not support any video plugin to ad plugin communication,
+      //so the following is a workaround where we get the ad video element's muted state/volume and call setAdVolume
+      //based on these values
+      if (amc && amc.ui && amc.ui.adVideoElement && amc.ui.adVideoElement[0]) {
+        if (amc.ui.adVideoElement[0].muted) {
+          fwContext.setAdVolume(0);
+        } else {
+          fwContext.setAdVolume(amc.ui.adVideoElement[0].volume);
+        }
+      }
       // TODO: inspect event for playback success or errors
       if (_.isFunction(adEndedCallbacks[event.adInstance.getSlot().getCustomId()])) {
         adEndedCallbacks[event.adInstance.getSlot().getCustomId()]();

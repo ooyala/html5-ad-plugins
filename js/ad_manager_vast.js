@@ -5,7 +5,6 @@
 
 
 require("../html5-common/js/utils/InitModules/InitOO.js");
-require("../html5-common/js/utils/InitModules/InitOOJQuery.js");
 require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
 require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
@@ -833,7 +832,6 @@ OO.Ads.manager(function(_, $) {
     var loadAd = _.bind(function(amcAd) {
       var loadedAds = false;
       var ad = amcAd.ad;
-      this.amc.notifyPodStarted(amcAd.id, 1);
 
       this.currentAdBeingLoaded = amcAd;
       this.loadUrl(ad.tag_url);
@@ -2495,6 +2493,7 @@ OO.Ads.manager(function(_, $) {
      * @param {XMLDocument} xml The xml returned from loading the ad
      */
     this.onResponse = function(wrapperParentId, adLoaded, xml) {
+      this.amc.notifyPodStarted(adLoaded.id, 1);
       if (_isVMAPResponse(xml)) {
         this.onVMAPResponse(xml);
       }

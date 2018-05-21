@@ -56,6 +56,26 @@ describe('ad_manager_freewheel', function() {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
 
+  var prepareForPreroll = function(customId) {
+    var ad = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, customId);
+    var adInstance = new AdInstance({
+      name: 'freewilly',
+      width: 340,
+      height: 260,
+      duration: 5,
+      customId: customId
+    });
+    getTemporalSlots = function() {
+      return [ ad ];
+    };
+    initialize();
+    play();
+    // Play ad request ad
+    fw.playAd(amc.timeline[0]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({ success: true });
+    return adInstance;
+  };
+
   before(_.bind(function() {
     OO.Ads = {
       manager: function(adManager){
@@ -588,6 +608,64 @@ describe('ad_manager_freewheel', function() {
     expect(notified).to.be(true);
   });
 
+  it('Linear ad: notifies AMC of linear ad events', function() {
+    var customId = 1234;
+    var linearAd = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 10, 5000, customId);
+    var linearAdStartedCount = 0;
+    var podStartedCount = 0;
+    amc.notifyLinearAdStarted = function() {
+      linearAdStartedCount++;
+    };
+    amc.notifyPodStarted = function() {
+      podStartedCount++;
+    };
+    var adInstance = new AdInstance({
+      name : "blah",
+      width : 300,
+      height : 50,
+      duration : 5,
+      customId : customId
+    });
+    getTemporalSlots = function(){
+      return [
+        linearAd
+      ];
+    };
+    initialize();
+    expect(amc.timeline.length).to.be(1);
+    play();
+    expect(linearAdStartedCount).to.be(0);
+    expect(podStartedCount).to.be(0);
+    //play ad request ad
+    fw.playAd(amc.timeline[0]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_REQUEST_COMPLETE]({"success":true});
+    expect(linearAdStartedCount).to.be(0);
+    expect(podStartedCount).to.be(1);
+    expect(amc.timeline.length).to.be(2);
+    //play linear ad
+    fw.playAd(amc.timeline[1]);
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_SLOT_STARTED]({
+      adInstance : adInstance
+    });
+    expect(linearAdStartedCount).to.be(0);
+    expect(podStartedCount).to.be(1);
+
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+      slotCustomId : customId,
+      adInstance : adInstance
+    });
+    expect(linearAdStartedCount).to.be(1);
+    expect(podStartedCount).to.be(2);
+
+    //check that another ad in an ad pod does not throw another pod started event
+    fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+      slotCustomId : customId,
+      adInstance : adInstance
+    });
+    expect(linearAdStartedCount).to.be(2);
+    expect(podStartedCount).to.be(2);
+  });
+
   it('Ad Clickthrough: AMC\'s adsClickthroughOpened() should be called when FW\'s ads click event occurs', function() {
     amc.adsClickthroughOpened = function() {
       adsClickthroughOpenedCalled += 1;
@@ -626,16 +704,21 @@ describe('ad_manager_freewheel', function() {
   });
 
   describe('Freewheel Context', function() {
-    var videoState;
+    var videoState, volume;
 
     beforeEach(function() {
       videoState = null;
+      volume = null;
       initialize();
       play();
       fw.playAd(amc.timeline[0]);
 
       fwContext.setVideoState = function(state) {
         videoState = state;
+      };
+
+      fwContext.setAdVolume = function(vol) {
+        volume = vol;
       };
     });
 
@@ -657,6 +740,99 @@ describe('ad_manager_freewheel', function() {
     it('should set stopped state when content ends', function() {
       amc.callbacks[amc.EVENTS.CONTENT_COMPLETED]();
       expect(videoState).to.be(tv.freewheel.SDK.VIDEO_STATE_STOPPED);
+    });
+
+    it('should set ad volume when ad impression ends', function() {
+      amc.ui = {
+        adVideoElement: [
+          {
+            muted: false,
+            volume: 0.5
+          }
+        ]
+      };
+
+      var adInstance = new AdInstance({
+        name : "blah",
+        width : 300,
+        height : 50,
+        duration : 5
+      });
+
+      expect(volume).to.be(null);
+
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION_END]({
+        adInstance : adInstance
+      });
+
+      expect(volume).to.be(0.5);
+    });
+
+    it('should mute via setAdVolume when ad impression ends if ad was muted', function() {
+      amc.ui = {
+        adVideoElement: [
+          {
+            muted: true,
+            volume: 0.5
+          }
+        ]
+      };
+
+      var adInstance = new AdInstance({
+        name : "blah",
+        width : 300,
+        height : 50,
+        duration : 5
+      });
+
+      expect(volume).to.be(null);
+
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION_END]({
+        adInstance : adInstance
+      });
+
+      expect(volume).to.be(0);
+    });
+
+    it('should notify linear ad started even if impression\'s event.slotCustomId property is missing', function() {
+      var customId = 1234;
+      var notified = false;
+      amc.notifyLinearAdStarted = function() {
+        notified = true;
+      };
+      var adInstance = prepareForPreroll(customId);
+      // Play ad
+      fw.playAd(amc.timeline[1]);
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+        slotCustomId: null,
+        adInstance: adInstance
+      });
+      expect(notified).to.be(true);
+    });
+
+    // Shouldn't happen, but we should be able to fall back to the previous behavior if it did
+    it('should fall back to impression\'s event.slotCustomId property if slot.getCustomId() fails', function() {
+      var customId = 1234;
+      var notified = false;
+      amc.notifyLinearAdStarted = function() {
+        notified = true;
+      };
+      var adInstance = prepareForPreroll(customId);
+      // Override custom id
+      adInstance.getSlot = function() {
+        return {
+          getCustomId: function() {
+            return null;
+          }
+        };
+      };
+      // Play ad
+      fw.playAd(amc.timeline[1]);
+      fwContext.callbacks[tv.freewheel.SDK.EVENT_AD_IMPRESSION]({
+        slotCustomId: customId,
+        adInstance: adInstance
+      });
+      expect(notified).to.be(true);
     });
 
   });

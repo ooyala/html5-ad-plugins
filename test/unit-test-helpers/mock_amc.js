@@ -9,6 +9,7 @@ fake_amc = function() {
       this.callbacks[event].apply(this, arguments);
     }
   };
+  this.FORCED_AD_POSITION = -1;
   this.EVENTS = {
     INITIAL_PLAY_REQUESTED :    "initialPlayRequested",
     PLAY_STARTED :              "playStarted",
@@ -102,6 +103,10 @@ fake_amc = function() {
   this.notifyLinearAdEnded = function() {};
   this.notifyNonlinearAdStarted = function() {};
   this.notifyNonlinearAdEnded = function() {};
+  this.notifySSAIAdTimelineReceived = function() {};
+  this.notifySSAIAdPlaying = function() {};
+  this.notifySSAIAdPlayed = function() {};
+  this.updateMainStreamUrl = function() {};
   this.hidePlayerUi = function() {};
   this.focusAdVideo = function() {};
   this.reportPluginLoaded = function() {};
@@ -115,4 +120,5 @@ fake_amc = function() {
   this.showCompanion = function() {};
   this.onSdkAdEvent = function() {};
   this.adManagerSettings = {};
+  this.willRequireEmbedCodeMetadata = function() {};
 };
