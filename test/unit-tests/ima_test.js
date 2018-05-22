@@ -80,7 +80,7 @@ describe('ad_manager_ima', function()
     };
     var content =
     {
-      all_ads : [ad],
+      all_ads : [ad]
     };
 
     if (typeof showAdControls !== 'undefined') {
@@ -535,7 +535,7 @@ describe('ad_manager_ima', function()
       expect(ima.autoHideAdControls).to.be(true);
     });
 
-    it('Play ad: Requests the AMC to hide the player UI', function()
+    it('Play ad: Requests the AMC to hide the player UI by default', function()
     {
       var notified = false;
       amc.hidePlayerUi = function(showAdControls, showAdMarquee, autoHideAdControls) {
@@ -550,7 +550,7 @@ describe('ad_manager_ima', function()
       expect(notified).to.be(true);
     });
 
-    it('Play ad: Requests the AMC to hide the player UI', function()
+    it('Play ad: Requests the AMC to show the player UI and not autohide', function()
     {
       var notified = false;
       var showAdControls = true;
