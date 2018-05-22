@@ -274,13 +274,22 @@ require("../html5-common/js/utils/utils.js");
         //if playerControlsOverAds is true we can assume the player controls
         //should be shown. Otherwise use whatever is passed in for showAdControls
         this.showAdControls = false;
-        if (_amc.pageSettings && _amc.pageSettings.playerControlsOverAds === true)
+        this.playerControlsOverAds = _amc.pageSettings && _amc.pageSettings.playerControlsOverAds === true;
+        if (this.playerControlsOverAds)
         {
           this.showAdControls = true;
         }
         else if (metadata.hasOwnProperty("showAdControls"))
         {
           this.showAdControls = metadata.showAdControls;
+        }
+
+        //if we are showing the ad controls but the control bar isn't
+        //supposed to go over the video, then the video will resize
+        //and we have to disable autohiding the bar.
+        this.autoHideAdControls = true;
+        if (this.showAdControls && !this.playerControlsOverAds) {
+          this.autoHideAdControls = false;
         }
 
         this.useGoogleAdUI = false;
@@ -1761,7 +1770,7 @@ require("../html5-common/js/utils/utils.js");
                 this.savedVolume = -1;
               }
               //Since IMA handles its own UI, we want the video player to hide its UI elements
-              _amc.hidePlayerUi(this.showAdControls, false);
+              _amc.hidePlayerUi(this.showAdControls, false, this.autoHideAdControls);
 
               //in the case where skippable ads are enabled we want to exit fullscreen
               //because custom playback is disabled and ads can't be rendered in fullscreen.
