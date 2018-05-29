@@ -1743,6 +1743,13 @@ require("../html5-common/js/utils/utils.js");
         switch (adEvent.type)
         {
           case eventType.LOADED:
+            //We normally focus the video element when receiving the ad STARTED notification from IMA.
+            //However, for environments where only a single video element is supported, we will focus the video
+            //element right before starting the ad. This allows the video element listeners to get unregistered
+            //and prevent shared video element interference.
+            if (_amc.ui.useSingleVideoElement) {
+              _amc.focusAdVideo();
+            }
             this.currentMedia = ad.getMediaUrl();
             _resetUIContainerStyle();
 
@@ -1752,6 +1759,16 @@ require("../html5-common/js/utils/utils.js");
             }
             break;
           case eventType.STARTED:
+            //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
+            //We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
+            if (OO.isIos) {
+              var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
+              if (IMAiframe && IMAiframe.style)
+              {
+                IMAiframe.style.display = 'block';
+              }
+            }
+
             if (this.videoControllerWrapper && this.requiresMutedAutoplay()) {
               //workaround of an IMA issue where we don't receive a MUTED ad event
               //on Safari mobile, so we'll notify of current volume and mute state now
@@ -1762,7 +1779,10 @@ require("../html5-common/js/utils/utils.js");
             if(ad.isLinear())
             {
               _linearAdIsPlaying = true;
-              _amc.focusAdVideo();
+
+              if (!_amc.ui.useSingleVideoElement) {
+                _amc.focusAdVideo();
+              }
 
               if (this.savedVolume >= 0)
               {
@@ -1818,6 +1838,16 @@ require("../html5-common/js/utils/utils.js");
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
+            //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
+            //We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
+            if (OO.isIos) {
+              var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
+              if (IMAiframe && IMAiframe.style)
+              {
+                IMAiframe.style.display = 'none';
+              }
+            }
+
             if(_usingAdRules)
             {
               this.adResponseTime = new Date().valueOf();
@@ -1868,7 +1898,6 @@ require("../html5-common/js/utils/utils.js");
             {
               _IMA_SDK_resumeMainContent();
             }
-
             break;
           case eventType.IMPRESSION:
 

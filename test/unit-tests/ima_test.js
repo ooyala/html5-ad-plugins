@@ -1024,6 +1024,26 @@ describe('ad_manager_ima', function()
     expect(focusNotified).to.be(true);
   });
 
+  it('AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element for single video element mode', function()
+  {
+    amc.ui.useSingleVideoElement = true;
+    var focusNotified = false;
+    initAndPlay(true, vci);
+    amc.focusAdVideo = function()
+    {
+      focusNotified = true;
+      ima.adVideoFocused();
+    };
+    ima.playAd(
+      {
+        id : "ad_1000",
+        ad : {}
+      });
+    var am = google.ima.adManagerInstance;
+    am.publishEvent(google.ima.AdEvent.Type.LOADED);
+    expect(focusNotified).to.be(true);
+  });
+
   it('AMC Integration, IMA Event: IMA COMPLETE event notifies amc of linear ad end for a linear ad', function()
   {
     var raiseTimeUpdateCalled = 0;
