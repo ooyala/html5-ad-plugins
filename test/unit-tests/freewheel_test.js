@@ -613,6 +613,10 @@ describe('ad_manager_freewheel', function() {
     var linearAd = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 10, 5000, customId);
     var linearAdStartedCount = 0;
     var podStartedCount = 0;
+    var focusAdVideoCount = 0;
+    amc.focusAdVideo = function() {
+      focusAdVideoCount++;
+    };
     amc.notifyLinearAdStarted = function() {
       linearAdStartedCount++;
     };
@@ -644,9 +648,11 @@ describe('ad_manager_freewheel', function() {
     expect(amc.timeline.length).to.be(2);
     //play linear ad
     fw.playAd(amc.timeline[1]);
+    expect(focusAdVideoCount).to.be(0);
     fwContext.callbacks[tv.freewheel.SDK.EVENT_SLOT_STARTED]({
       adInstance : adInstance
     });
+    expect(focusAdVideoCount).to.be(1);
     expect(linearAdStartedCount).to.be(0);
     expect(podStartedCount).to.be(1);
 

@@ -519,6 +519,7 @@ OO.Ads.manager(function(_, $) {
             _registerDisplayForLinearAd();
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad) {
+              amc.focusAdVideo();
               }, this, ad);
             slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
                 amc.notifyPodEnded(adId);
