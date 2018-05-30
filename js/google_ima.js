@@ -1565,7 +1565,7 @@ require("../html5-common/js/utils/utils.js");
         OO._.each(imaAdEvents, addIMAEventListener, this);
 
         //Workaround of an issue on iOS where the IMA iframe is capturing clicks.
-        if(OO.isIos) {
+        if (OO.isIos) {
           _hideImaIframe();
         }
         _trySetAdManagerToReady();
