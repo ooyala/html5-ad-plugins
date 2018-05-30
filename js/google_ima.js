@@ -552,7 +552,7 @@ require("../html5-common/js/utils/utils.js");
         This fixes issues where overlays appear behind the video and for iOS it fixes
         video ads not showing.
         */
-        var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
+        var IMAiframe = _getImaIframe();
         if (IMAiframe && IMAiframe.style)
         {
           IMAiframe.style.zIndex = this.imaIframeZIndex;
@@ -1762,7 +1762,7 @@ require("../html5-common/js/utils/utils.js");
             //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
             //We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
             if (OO.isIos) {
-              var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
+              var IMAiframe = _getImaIframe();
               if (IMAiframe && IMAiframe.style)
               {
                 IMAiframe.style.display = 'block';
@@ -1841,7 +1841,7 @@ require("../html5-common/js/utils/utils.js");
             //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
             //We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
             if (OO.isIos) {
-              var IMAiframe = $("iframe[src^='http://imasdk.googleapis.com/']")[0];
+              var IMAiframe = _getImaIframe();
               if (IMAiframe && IMAiframe.style)
               {
                 IMAiframe.style.display = 'none';
@@ -2091,6 +2091,22 @@ require("../html5-common/js/utils/utils.js");
         {
           _amc.adManagerDoneControllingAds(this.name);
         }
+      });
+
+      /**
+       * Searches for the iframe that IMA uses to render ads.
+       * @private
+       * @method GoogleIMA#_getImaIframe
+       * @returns {object} The IMA iframe
+       */
+      var _getImaIframe = privateMember(function()
+      {
+        var imaIframe = null;
+        if (_uiContainer) {
+          var iframes = $(_uiContainer).find('iframe');
+          imaIframe = iframes[0];
+        }
+        return imaIframe;
       });
 
       /**
