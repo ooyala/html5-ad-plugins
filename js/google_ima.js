@@ -1563,6 +1563,11 @@ require("../html5-common/js/utils/utils.js");
           };
 
         OO._.each(imaAdEvents, addIMAEventListener, this);
+
+        //Workaround of an issue on iOS where the IMA iframe is capturing clicks.
+        if (OO.isIos) {
+          _hideImaIframe();
+        }
         _trySetAdManagerToReady();
         this.adsReady = true;
         _IMA_SDK_tryInitAdsManager();
@@ -1841,11 +1846,7 @@ require("../html5-common/js/utils/utils.js");
             //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
             //We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
             if (OO.isIos) {
-              var IMAiframe = _getImaIframe();
-              if (IMAiframe && IMAiframe.style)
-              {
-                IMAiframe.style.display = 'none';
-              }
+              _hideImaIframe();
             }
 
             if(_usingAdRules)
@@ -2107,6 +2108,20 @@ require("../html5-common/js/utils/utils.js");
           imaIframe = iframes[0];
         }
         return imaIframe;
+      });
+
+      /**
+       * Hides the iframe that IMA uses to render ads.
+       * @private
+       * @method GoogleIMA#_hideImaIframe
+       */
+      var _hideImaIframe = privateMember(function()
+      {
+        var IMAiframe = _getImaIframe();
+        if (IMAiframe && IMAiframe.style)
+        {
+          IMAiframe.style.display = 'none';
+        }
       });
 
       /**
