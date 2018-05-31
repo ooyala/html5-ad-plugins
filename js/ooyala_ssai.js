@@ -33,7 +33,7 @@ OO.Ads.manager(function(_, $)
    */
   var OoyalaSsai = function()
   {
-    this.name = "ooyala_ssai";
+    this.name = "ooyala-ssai-ads-manager";
     this.ready = false;
     this.initTime = Date.now();
     this.videoRestrictions = {};
