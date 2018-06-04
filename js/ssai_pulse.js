@@ -40,6 +40,7 @@ OO.Ads.manager(function(_, $)
     this.testMode = false;
     this.timeLine = {};
     this.currentEmbed = "";
+    this.domainName = "ssai.ooyala.com";
     this.ssaiGuid = "";
     
     this.currentAd = null;
@@ -137,7 +138,7 @@ OO.Ads.manager(function(_, $)
     this.initialize = function(adManagerController, playerId)
     {
       amc = adManagerController;
-
+      
       // Request embed code provider metadata
       amc.willRequireEmbedCodeMetadata();
 
@@ -776,6 +777,7 @@ OO.Ads.manager(function(_, $)
       var mainUrl = urlParts[0];
       var mainUrlParts = mainUrl.split("/");
       if (mainUrlParts !== null) {
+      	this.domainName = mainUrlParts[2];
       	this.currentEmbed = mainUrlParts[4];
       }
       var queryParams = queryParamString.split("&");
@@ -906,7 +908,7 @@ OO.Ads.manager(function(_, $)
      */
     var _sendMetadataRequest = _.bind(function()
     {
-      var url = "http://ssai.ooyala.com/v1/metadata/" + this.currentEmbed + "?ssai_guid=" + this.ssaiGuid;
+      var url = "http://"+this.domainName+ "/v1/metadata/" + this.currentEmbed + "?ssai_guid=" + this.ssaiGuid;
       $.ajax
       ({
         url: url,
