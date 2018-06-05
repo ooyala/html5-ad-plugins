@@ -40,6 +40,7 @@ OO.Ads.manager(function(_, $)
     this.testMode = false;
     this.timeLine = {};
     this.currentEmbed = "";
+    this.domainName = "ssai.ooyala.com";
     this.ssaiGuid = "";
 
     this.currentAd = null;
@@ -758,7 +759,7 @@ OO.Ads.manager(function(_, $)
     }, this);
 
     /**
-     * Parses the ad url to obtain the ssai guid and embed code
+     * Parses the ad url to obtain the ssai guid, embed code and ssai api domain name
      * @private
      * @method OoyalaSsai#_parseUrl
      * @param {string} url The stream url
@@ -776,6 +777,7 @@ OO.Ads.manager(function(_, $)
       var mainUrl = urlParts[0];
       var mainUrlParts = mainUrl.split("/");
       if (mainUrlParts !== null) {
+      	this.domainName = mainUrlParts[2];
       	this.currentEmbed = mainUrlParts[4];
       }
       var queryParams = queryParamString.split("&");
@@ -906,7 +908,7 @@ OO.Ads.manager(function(_, $)
      */
     var _sendMetadataRequest = _.bind(function()
     {
-      var url = "http://ssai.ooyala.com/v1/metadata/" + this.currentEmbed + "?ssai_guid=" + this.ssaiGuid;
+      var url = "http://"+this.domainName+ "/v1/metadata/" + this.currentEmbed + "?ssai_guid=" + this.ssaiGuid;
       $.ajax
       ({
         url: url,

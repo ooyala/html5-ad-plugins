@@ -542,11 +542,24 @@ describe('ad_manager_ooyala_ssai', function()
   it('Ad url should be parsed for ssai guid and embed on content change', function()
   {
     var testEmbed = "mytestembedcode12345";
-    var testGuid = "abcdefgh-1234-abcd-1234-abcdefghijk"
+    var testGuid = "abcdefgh-1234-abcd-1234-abcdefghijk";
     OoyalaSsai.initialize(amc);
-    OoyalaSsai.onContentUrlChanged("eventName", "http://ssai.ooyala.com/vhls/"+testEmbed+"/pcode/abcd1234?ssai_guid="+testGuid);
+    OoyalaSsai.onContentUrlChanged("eventName", "http://ssai.ooyala.com/vhls/" + testEmbed + "/pcode/abcd1234?ssai_guid=" + testGuid);
     expect(OoyalaSsai.ssaiGuid).to.eql(testGuid);
     expect(OoyalaSsai.currentEmbed).to.eql(testEmbed);
+  });
+
+  it('Ad url domain should be parsed from content url on content change', function()
+  {
+    var testEmbed = "mytestembedcode12345";
+    var testGuid = "abcdefgh-1234-abcd-1234-abcdefghijk";
+    var testDomain = "ssai-staging.ooyala.com";
+    OoyalaSsai.initialize(amc);
+    expect(OoyalaSsai.domainName).to.eql("ssai.ooyala.com");
+    OoyalaSsai.onContentUrlChanged("eventName", "http://" + testDomain + "/vhls/" + testEmbed + "/pcode/abcd1234?ssai_guid=" + testGuid);
+    expect(OoyalaSsai.ssaiGuid).to.eql(testGuid);
+    expect(OoyalaSsai.currentEmbed).to.eql(testEmbed);
+    expect(OoyalaSsai.domainName).to.eql(testDomain);
   });
 
   it('Ad Id should be marked with the error state if the ad request fails', function()
