@@ -971,6 +971,9 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
 
+                        if(OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.MUTED || OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.SHARED) {
+                            adPlayer.mute();
+                        }
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
                         }
@@ -1310,7 +1313,9 @@
          */
         this.setVolume = function(volume) {
             if(_adManager && _adManager.getAdPlayer()) {
-                _adManager.getAdPlayer().setVolume(volume);
+                if(OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.MUTED && OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.SHARED) {
+                    _adManager.getAdPlayer().setVolume(volume);
+                }
             }
         };
 
