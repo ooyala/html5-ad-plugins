@@ -138,7 +138,7 @@ OO.Ads.manager(function(_, $)
     this.initialize = function(adManagerController, playerId)
     {
       amc = adManagerController;
-      
+
       // Request embed code provider metadata
       amc.willRequireEmbedCodeMetadata();
 
@@ -759,7 +759,7 @@ OO.Ads.manager(function(_, $)
     }, this);
 
     /**
-     * Parses the ad url to obtain the ssai guid and embed code
+     * Parses the ad url to obtain the ssai guid, embed code and ssai api domain name
      * @private
      * @method SsaiPulse#_parseUrl
      * @param {string} url The stream url
