@@ -1,5 +1,5 @@
 /*
- * Ad Manager for SSAI Pulse
+ * Ooyala SSAI plugin
  *
  * version 0.1
  */
@@ -19,8 +19,8 @@ var adManagerUtils = require("../utils/ad_manager_utils.js");
 OO.Ads.manager(function(_, $)
 {
   /**
-   * @class SsaiPulse
-   * @classDesc The SSAI Pulse Ads Manager class, registered as an ads manager with the ad manager controller.
+   * @class OoyalaSsai
+   * @classDesc The Ooyala SSAI Ads Manager class, registered as an ads manager with the ad manager controller.
    * Controls how SSAI Pulse ads are loaded and played while communicating with the ad manager framework.
    * @public
    * @property {string} name The name of the ad manager. This should match the name used by the server to
@@ -31,9 +31,9 @@ OO.Ads.manager(function(_, $)
    * @property {object} videoRestrictions Optional property that represents restrictions on the video plugin
    *   used.  ex. {"technology":OO.VIDEO.TECHNOLOGY.HTML5, "features":[OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE]}
    */
-  var SsaiPulse = function()
+  var OoyalaSsai = function()
   {
-    this.name = "ssai-pulse-ads-manager";
+    this.name = "ooyala-ssai-ads-manager";
     this.ready = false;
     this.initTime = Date.now();
     this.videoRestrictions = {};
@@ -41,7 +41,7 @@ OO.Ads.manager(function(_, $)
     this.timeLine = {};
     this.currentEmbed = "";
     this.ssaiGuid = "";
-    
+
     this.currentAd = null;
 
     var amc  = null;
@@ -83,22 +83,22 @@ OO.Ads.manager(function(_, $)
       // Duration of the ad
       DURATION: "d"
     };
-  
+
     // The VAST requirements to tracking event types to track which creative are being viewed
     var TRACKING_CALL_NAMES =
     {
-      
+
       "25": ["firstQuartile"],
-    
+
       "50": ["midpoint"],
-    
+
       "75": ["thirdQuartile"],
-    
+
       "100": ["complete"]
     };
 
     var TRACKING_COMPLETE = 100;
-    
+
     // Helper map object to replace change the manifest URL to the endpoint
     // used to retrieve the Vast Ad Response from the ads proxy.
     var ENDPOINTS_MAP_OBJECT =
@@ -125,11 +125,11 @@ OO.Ads.manager(function(_, $)
 
     // player configuration parameters / page level params
     var bustTheCache = true;
-    
+
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
      * remote JS files.
-     * @method SsaiPulse#initialize
+     * @method OoyalaSsai#initialize
      * @public
      * @param {object} adManagerController A reference to the Ad Manager Controller
      * @param {string} playerId The unique player identifier of the player initializing the class
@@ -162,7 +162,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called by Ad Manager Controller.  When this function is called, the ui has been setup and the values
      * in amc.ui are ready to be used.
-     * @method SsaiPulse#registerUi
+     * @method OoyalaSsai#registerUi
      * @public
      */
     this.registerUi = function()
@@ -174,7 +174,7 @@ OO.Ads.manager(function(_, $)
      * Called by Ad Manager Controller.  When this function is called, all movie and server metadata are
      * ready to be parsed.
      * This metadata may contain the adTagUrl and other ad manager and movie specific configuration.
-     * @method SsaiPulse#loadMetadata
+     * @method OoyalaSsai#loadMetadata
      * @public
      * @param {object} adManagerMetadata Ad manager-specific metadata
      * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
@@ -207,7 +207,7 @@ OO.Ads.manager(function(_, $)
         // log message if parameter does not conform to any of the above values
         else
         {
-          OO.log("SSAI Pulse: page level parameter: \"cacheBuster\" expected value: \"true\"" +
+          OO.log("Ooyala Pulse: page level parameter: \"cacheBuster\" expected value: \"true\"" +
                  " or \"false\", but value received was: " + adManagerMetadata["cacheBuster"]);
         }
       }
@@ -217,11 +217,11 @@ OO.Ads.manager(function(_, $)
      * Called once per video by Ad Manager Controller once the ad manager has set its ready flag to true.
      * This function asks the ad manager to return a list of all ads to the controller for addition in the
      * timeline.  If the list of ads is not available at this time, return [] or null and call
-     * [SsaiPulseController].appendToTimeline() when the ads become available.
+     * [OoyalaSsaiController].appendToTimeline() when the ads become available.
      * The duration and position of each ad should be specified in seconds.
-     * @method SsaiPulse#buildTimeline
+     * @method OoyalaSsai#buildTimeline
      * @public
-     * @returns {OO.SsaiPulseController#Ad[]} timeline A list of the ads to play for the current video
+     * @returns {OO.OoyalaSsaiController#Ad[]} timeline A list of the ads to play for the current video
      */
     this.buildTimeline = function()
     {
@@ -237,16 +237,16 @@ OO.Ads.manager(function(_, $)
      * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the the play head updates
      * during playback.
      * @public
-     * @method SsaiPulse#onPlayheadTimeChanged
+     * @method OoyalaSsai#onPlayheadTimeChanged
      * @param {string} eventname The name of the event for which this callback is called
      * @param {number} playhead The total amount main video playback time (seconds)
      * @param {number} duration Duration of the live video (seconds)
      * @param {number} offset Current video time (seconds). Currently is obtained just for live stream from amc.
      */
-    
+
     this.onPlayheadTimeChanged = function(eventName, playhead, duration, offset) {
       var offsetParam = 0;
-      if (!amc.isLiveStream) 
+      if (!amc.isLiveStream)
       {
         if (duration && _.isNumber(duration) && duration > 0)
         {
@@ -254,11 +254,11 @@ OO.Ads.manager(function(_, $)
         }
       }
       //For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
-      if ((amc.isLiveStream && (offset && _.isNumber(offset)) && (duration && _.isNumber(duration))) && offset > 0 && offset < duration) 
+      if ((amc.isLiveStream && (offset && _.isNumber(offset)) && (duration && _.isNumber(duration))) && offset > 0 && offset < duration)
       {
         offsetParam = duration - offset;
       }
-      
+
       if (_.isFinite(offsetParam) && offsetParam >= 0)
       {
         currentOffset = offsetParam;
@@ -268,7 +268,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called by Ad Manager Controller.  The ad manager should play the ad or group of podded ads passed to
      * the function as a parameter.
-     * @method SsaiPulse#playAd
+     * @method OoyalaSsai#playAd
      * @public
      * @param {object} ad The ad object to play
      * @param {function} adPodStartedCallback Call this function when the ad or group of podded ads have
@@ -306,7 +306,7 @@ OO.Ads.manager(function(_, $)
      * parameter.  After cancelling the ad, the ad manager should call the adEndedCallback to indicate that
      * ad cancellation has completed.  If the given ad is not currently playing and the adEndedCallback has
      * already been called, then no action is required.
-     * @method SsaiPulse#cancelAd
+     * @method OoyalaSsai#cancelAd
      * @public
      * @param {object} ad The ad object to cancel
      * @param {object} params An object containing information about the cancellation. It will include the
@@ -320,7 +320,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called by Ad Manager Controller.  The ad manager should pause the ad passed to the function as a
      * parameter.  If the given ad is not currently playing, no action is required.
-     * @method SsaiPulse#pauseAd
+     * @method OoyalaSsai#pauseAd
      * @public
      * @param {object} ad The ad object to pause
      */
@@ -331,7 +331,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called by Ad Manager Controller.  The ad manager should resume the ad passed to the function as a
      * parameter.  If the given ad is not currently loaded or not paused, no action is required.
-     * @method SsaiPulse#resumeAd
+     * @method OoyalaSsai#resumeAd
      * @public
      * @param {object} ad The ad object to resume
      */
@@ -344,7 +344,7 @@ OO.Ads.manager(function(_, $)
      * When the Ad Manager Controller needs to hide the overlay it will call this function.
      * NOTE: This function should only be used by the ad manager if the cancelOverlay function is not being used.
      * NOTE 2: Only implement this function if you plan to hide and reshow the overlay. Otherwise delete it or leave it commented.
-     * @method SsaiPulse#hideOverlay
+     * @method OoyalaSsai#hideOverlay
      * @public
      * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
      */
@@ -356,7 +356,7 @@ OO.Ads.manager(function(_, $)
      * When the Ad Manager Controller needs to cancel the overlay it will call this function.
      * NOTE: This function should only be used by the ad manager if the hideOverlay function is not being used.
      * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delete it.
-     * @method SsaiPulse#cancelOverlay
+     * @method OoyalaSsai#cancelOverlay
      * @public
      * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
      */
@@ -368,7 +368,7 @@ OO.Ads.manager(function(_, $)
      * finished playing and there was an overlay displayed before the post-roll then it needs to be removed. If the main
      * video hasn't finished playing and there was an overlay displayed before the ad video played, then it will show
      * the overlay again.
-     * @method SsaiPulse#showOverlay
+     * @method OoyalaSsai#showOverlay
      * @public
      */
     this.showOverlay = function()
@@ -379,7 +379,7 @@ OO.Ads.manager(function(_, $)
      * <i>Optional.</i><br/>
      * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
      * called
-     * @method SsaiPulse#playerClicked
+     * @method OoyalaSsai#playerClicked
      * @public
      */
     this.playerClicked = function(amcAd, showPage)
@@ -394,7 +394,7 @@ OO.Ads.manager(function(_, $)
     /**
      * <i>Optional.</i><br/>
      * Called when the player detects start of ad video playback.
-     * @method SsaiPulse#adVideoPlaying
+     * @method OoyalaSsai#adVideoPlaying
      * @public
      */
     this.adVideoPlaying = function()
@@ -404,7 +404,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called when the player creates a new video element and selects the stream url.
      * @public
-     * @method SsaiPulse#onContentUrlChanged
+     * @method OoyalaSsai#onContentUrlChanged
      * @param {string} url The stream url
      */
     this.onContentUrlChanged = function(eventName, url)
@@ -420,7 +420,7 @@ OO.Ads.manager(function(_, $)
      * This is an example callback that interprets video stream tags.  The event is subscribed to in
      * the initialize function.
      * @public
-     * @method SsaiPulse#onVideoTagFound
+     * @method OoyalaSsai#onVideoTagFound
      * @param {string} event The event that triggered this callback
      * @param {string} videoId The id of the video element that processed a tag
      * @param {string} tagType The type of tag that was detected
@@ -450,7 +450,7 @@ OO.Ads.manager(function(_, $)
         }
         requestUrl = baseRequestUrl;
         requestUrl = _appendAdsProxyQueryParameters(requestUrl, currentId3Object.adId);
-  
+
         // Check to see if we already have adId in dictionary
         if (!_.has(this.adIdDictionary, currentId3Object.adId))
         {
@@ -475,14 +475,14 @@ OO.Ads.manager(function(_, $)
         {
           _handleImpressionCalls(currentId3Object);
         }
-        
+
         if (_.has(this.adIdDictionary, currentId3Object.adId) &&
           isId3ContainsCompletedTime(currentId3Object.time))
         {
           _adEndedCallback(this.adIdDictionary[currentId3Object.adId].adTimer, currentId3Object.adId)();
         }
       }
-  
+
       return currentId3Object;
     };
 
@@ -490,7 +490,7 @@ OO.Ads.manager(function(_, $)
      * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
      * clicked. Here it will try to load the rest of the vast ads at this point if there any.
      * @public
-     * @method SsaiPulse#onReplay
+     * @method OoyalaSsai#onReplay
      */
     this.onReplay = function()
     {
@@ -501,7 +501,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to handle the ID3 Ad timeout and request.
      * @private
-     * @method SsaiPulse#_handleId3Ad
+     * @method OoyalaSsai#_handleId3Ad
      * @param {object} id3Object The ID3 object
      */
     var _handleId3Ad = _.bind(function(id3Object)
@@ -519,13 +519,13 @@ OO.Ads.manager(function(_, $)
     /**
      * Called if the ajax call succeeds
      * @public
-     * @method SsaiPulse#onResponse
+     * @method OoyalaSsai#onResponse
      * @param {object} id3Object The ID3 object
      * @param {XMLDocument} xml The xml returned from loading the ad
      */
     this.onResponse = function(id3Object, xml)
     {
-      OO.log("SSAI Pulse: Response");
+      OO.log("Ooyala SSAI: Response");
       // Call VastParser code
       var vastAds = vastParser.parser(xml);
       var adIdVastData = _parseVastAdsObject(vastAds);
@@ -539,7 +539,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called if the ajax call for SSAI metadata succeeds
      * @public
-     * @method SsaiPulse#onMetadataResponse
+     * @method OoyalaSsai#onMetadataResponse
      * @param {object} metadata The ad metadata JSON
      */
     this.onMetadataResponse = function(metadata)
@@ -547,7 +547,7 @@ OO.Ads.manager(function(_, $)
       this.timeline = metadata;
       amc.notifySSAIAdTimelineReceived(this.timeline);
     };
-    
+
     /**
      * Returns the ssai data from the vast object in case if the vast
      * object contains data for the current id3 object.
@@ -562,12 +562,12 @@ OO.Ads.manager(function(_, $)
         return adIdVastData[id3Object.adId];
       }
     };
-    
+
     /**
      * Set vast data to the cache for
      * current id3 object.
      * @private
-     * @method SsaiPulse#_setVastDataToDictionary
+     * @method OoyalaSsai#_setVastDataToDictionary
      */
     var _setVastDataToDictionary = _.bind(function(id3Object, adObject) {
       if (this.adIdDictionary[id3Object.adId])
@@ -575,11 +575,11 @@ OO.Ads.manager(function(_, $)
         this.adIdDictionary[id3Object.adId].vastData = adObject;
       }
     }, this);
-    
+
     /**
      * Configuring the ssai object to force an ad to play
      * @private
-     * @method SsaiPulse#_configureSsaiObject
+     * @method OoyalaSsai#_configureSsaiObject
      * @param adObject
      * @returns {{clickthrough: string, name: string, ssai: boolean, isLive: boolean}}
      */
@@ -595,14 +595,14 @@ OO.Ads.manager(function(_, $)
       ssaiAd.data = adObject;
       ssaiAd.clickthrough = _getLinearClickThroughUrl(adObject);
       ssaiAd.name = _getTitle(adObject);
-      
+
       return ssaiAd;
     };
-    
+
     /**
      * Force an ad to play with configured ssai ad data
      * @private
-     * @method SsaiPulse#_notifyAmcToPlayAd
+     * @method OoyalaSsai#_notifyAmcToPlayAd
      */
     var _notifyAmcToPlayAd = _.bind(function(id3Object, adObject) {
       if (adObject && id3Object)
@@ -622,11 +622,11 @@ OO.Ads.manager(function(_, $)
     /**
      * Called if the ajax call fails
      * @public
-     * @method SsaiPulse#onRequestError
+     * @method OoyalaSsai#onRequestError
      */
     this.onRequestError = function(currentId3Object)
     {
-      OO.log("SSAI Pulse: Error");
+      OO.log("Ooyala SSAI: Error");
       if (_.isObject(currentId3Object) && _.has(this.adIdDictionary, currentId3Object.adId))
       {
         this.adIdDictionary[currentId3Object.adId].state = STATE.ERROR;
@@ -637,7 +637,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called if the ajax call for SSAI metadata fails
      * @public
-     * @method SsaiPulse#onMetadataError
+     * @method OoyalaSsai#onMetadataError
      */
     this.onMetadataError = function(url, error)
     {
@@ -653,7 +653,7 @@ OO.Ads.manager(function(_, $)
      * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
      * This is only required for VPAID ads
      * @public
-     * @method SsaiPulse#onFullScreenChanged
+     * @method OoyalaSsai#onFullScreenChanged
      * @param {string} eventName The name of the event for which this callback is called
      * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
      */
@@ -676,7 +676,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Callback for Ad Manager Controller. Handles volume changes.
      * @public
-     * @method SsaiPulse#onAdVolumeChanged
+     * @method OoyalaSsai#onAdVolumeChanged
      * @param {string} eventName The name of the event for which this callback is called
      * @param {number} volume The current volume level
      */
@@ -703,7 +703,7 @@ OO.Ads.manager(function(_, $)
      * <i>Optional.</i><br/>
      * Called when the player detects an error in the ad video playback.  If the ad manager did not detect
      * this error itself, it can use this time to end the ad playback.
-     * @method SsaiPulse#adVideoError
+     * @method OoyalaSsai#adVideoError
      * @public
      * @param {object} adWrapper The current Ad's metadata
      * @param {number} errorCode The error code associated with the video playback error
@@ -715,7 +715,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
      * the Ad Manager Controller.
-     * @method SsaiPulse#destroy
+     * @method OoyalaSsai#destroy
      * @public
      */
     this.destroy = function()
@@ -737,7 +737,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Getter for the bustTheCache variable
      * @public
-     * @method SsaiPulse#getBustTheCache
+     * @method OoyalaSsai#getBustTheCache
      * @returns {boolean} the bustTheCache variable
      */
     this.getBustTheCache = _.bind(function()
@@ -748,7 +748,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Appends the smart player identifier to the request URL.
      * @private
-     * @method SsaiPulse#_makeSmartUrl
+     * @method OoyalaSsai#_makeSmartUrl
      * @param {string} url The stream url
      * @returns {string} The modified stream url with the appended unique identifier.
      */
@@ -760,7 +760,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Parses the ad url to obtain the ssai guid and embed code
      * @private
-     * @method SsaiPulse#_parseUrl
+     * @method OoyalaSsai#_parseUrl
      * @param {string} url The stream url
      */
     var _parseUrl = _.bind(function(url)
@@ -797,7 +797,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to append "offset" and "aid" query parameters to the request URL.
      * @private
-     * @method SsaiPulse#_appendAdsProxyQueryParameters
+     * @method OoyalaSsai#_appendAdsProxyQueryParameters
      * @param {string} url The request URL
      * @param {string} adId The ID of the ad
      * @returns {string} The request URL with the appended query parameters.
@@ -836,22 +836,22 @@ OO.Ads.manager(function(_, $)
     };
 
     /**
-    * Checks if current ID3 tag is the last one for an ad, value is 
+    * Checks if current ID3 tag is the last one for an ad, value is
     * represented in percentage, being 100 the completed time.
     * @private
-    * @method SsaiPulse#isId3ContainsCompletedTime
+    * @method OoyalaSsai#isId3ContainsCompletedTime
     * @param  {float} id3ObjectTime  Time value from currentId3Object
     * @returns {boolean}  True if ID3 tag time is 100
     */
     var isId3ContainsCompletedTime = function(id3ObjectTime) {
       return id3ObjectTime === 100;
     };
-    
+
     /**
     * Checks if current ID3 tag is the first one for an ad, value is
     * represented in percentage, being 0 the start time.
     * @private
-    * @method SsaiPulse#isId3ContainsStartedTime
+    * @method OoyalaSsai#isId3ContainsStartedTime
     * @param  {float} id3ObjectTime  Time value from currentId3Object
     * @returns {boolean}  True if ID3 tag time is 0
     */
@@ -863,7 +863,7 @@ OO.Ads.manager(function(_, $)
      * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
      * the Vast Ad Response from the ads proxy.
      * @private
-     * @method SsaiPulse#_preformatUrl
+     * @method OoyalaSsai#_preformatUrl
      * @param {string} url The request URL
      * @returns {string} The request URL with the formatted request URL.
      */
@@ -878,7 +878,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Attempts to load the Ad after normalizing the url.
      * @private
-     * @method SsaiPulse#_sendRequest
+     * @method OoyalaSsai#_sendRequest
      * @param {string} url The url that contains the Ad creative
      */
     var _sendRequest = _.bind(function(url, currentId3Object)
@@ -902,7 +902,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Attempts to load obtain ad timeline and metadata for the asset from SSAI api.
      * @private
-     * @method SsaiPulse#_sendMetadataRequest
+     * @method OoyalaSsai#_sendMetadataRequest
      */
     var _sendMetadataRequest = _.bind(function()
     {
@@ -927,7 +927,7 @@ OO.Ads.manager(function(_, $)
      * TODO: Improve return statement jsdoc
      * Parses the ID3 metadata that is received.
      * @private
-     * @method SsaiPulse#_parseId3Object
+     * @method OoyalaSsai#_parseId3Object
      * @param {object} id3Object The ID3 metadata passed in
      * @returns {object} An object with "adId", "time", and "duration" as properties.
      */
@@ -943,7 +943,7 @@ OO.Ads.manager(function(_, $)
         }
         else
         {
-          OO.log("SSAI Pulse: Expected ID3 Metadata Object to have a 'TXXX' property");
+          OO.log("Ooyala SSAI: Expected ID3 Metadata Object to have a 'TXXX' property");
         }
       }
       return parsedId3Object;
@@ -953,7 +953,7 @@ OO.Ads.manager(function(_, $)
      * TODO: Improve return statement jsdoc
      * Parses the string contained in the ID3 metadata.
      * @private
-     * @method SsaiPulse#_parseId3String
+     * @method OoyalaSsai#_parseId3String
      * @param {string} id3String The string contained under the "TXXX" property to parse
      * @returns {object} An object with "adId", "time", and "duration" as properties.
      */
@@ -986,7 +986,7 @@ OO.Ads.manager(function(_, $)
             }
             else
             {
-              OO.log("SSAI Pulse: " + queryParameterKey + " is an unrecognized query parameter.\n" +
+              OO.log("Ooyala SSAI: " + queryParameterKey + " is an unrecognized query parameter.\n" +
                      "Recognized query parameters: " + _id3QueryParametersToString());
               parsedId3Object = null;
               break;
@@ -995,7 +995,7 @@ OO.Ads.manager(function(_, $)
         }
         else
         {
-          OO.log("SSAI Pulse: ID3 Metadata String contains" + queryParameterStrings.length +
+          OO.log("Ooyala SSAI: ID3 Metadata String contains" + queryParameterStrings.length +
                  "query parameters, but was expected to contain 3 query parameters: " +
                  _id3QueryParametersToString());
           parsedId3Object = null;
@@ -1007,7 +1007,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to pretty print the ID3_QUERY_PARAMETERS object.
      * @private
-     * @method SsaiPulse#_id3QueryParametersToString
+     * @method OoyalaSsai#_id3QueryParametersToString
      * @returns {string} The string: "adid, t, d".
      */
     var _id3QueryParametersToString = _.bind(function()
@@ -1024,7 +1024,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Temporary mock function to force an ad to play until live team fixes ad proxy.
      * @private
-     * @method SsaiPulse#_forceMockAd
+     * @method OoyalaSsai#_forceMockAd
      * @param {object} id3Object The ID3 object
      */
     var _forceMockAd = _.bind(function(id3Object)
@@ -1042,7 +1042,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Ping a list of tracking event names' URLs.
      * @private
-     * @method SsaiPulse#_handleTrackingUrls
+     * @method OoyalaSsai#_handleTrackingUrls
      * @param {object} adObject The ad metadata
      * @param {string[]} trackingEventNames The array of tracking event names
      */
@@ -1060,8 +1060,8 @@ OO.Ads.manager(function(_, $)
             default:
               /*
                * Note: Had to change _getTrackingEventUrls to a less generic, _getLinearTrackingEventUrls.
-               * Slight discrepancy between ssai pulse and vast ad manager here. For vast, the
-               * "tracking" object exists in the ad.data object, but not in ssai pulse.
+               * Slight discrepancy between Ooyala SSAI and vast ad manager here. For vast, the
+               * "tracking" object exists in the ad.data object, but not in Ooyala SSAI.
                */
               urls = _getLinearTrackingEventUrls(adObject, trackingEventName);
           }
@@ -1072,7 +1072,7 @@ OO.Ads.manager(function(_, $)
       }
       else {
         console.log(
-            "SSAI Pulse: Tried to ping URLs: [" + trackingEventNames +
+            "Ooyala SSAI: Tried to ping URLs: [" + trackingEventNames +
             "] but ad object passed in was: " + adObject
         );
         return;
@@ -1082,7 +1082,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to retrieve the ad object's impression urls.
      * @private
-     * @method SsaiPulse#_getImpressionUrls
+     * @method OoyalaSsai#_getImpressionUrls
      * @param {object} adObject The ad metadata
      * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
      */
@@ -1101,7 +1101,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to retrieve the ad object's linear click tracking urls.
      * @private
-     * @method SsaiPulse#_getLinearClickTrackingUrls
+     * @method OoyalaSsai#_getLinearClickTrackingUrls
      * @param {object} adObject The ad metadata
      * @return {string[]|null} The array of linear click tracking urls. Returns null if no
      * URLs exist.
@@ -1122,7 +1122,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to retrieve the ad object's tracking urls under a specific event name.
      * @private
-     * @method SsaiPulse#_getLinearTrackingEventUrls
+     * @method OoyalaSsai#_getLinearTrackingEventUrls
      * @param {object} adObject The ad metadata
      * @param {string} trackingEventName The name of the tracking event
      * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
@@ -1144,7 +1144,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to retrieve the ad object's title.
      * @private
-     * @method SsaiPulse#_getTitle
+     * @method OoyalaSsai#_getTitle
      * @param {object} adObject The ad metadata
      * @return {string|null} The title of the ad. Returns null if no title exists.
      */
@@ -1159,7 +1159,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to retrieve the ad object's linear click through url.
      * @private
-     * @method SsaiPulse#_getLinearClickThroughUrl
+     * @method OoyalaSsai#_getLinearClickThroughUrl
      * @param {object} adObject The ad metadata
      * @return {string|null} The linear click through url. Returns null if no
      * URL exists.
@@ -1178,7 +1178,7 @@ OO.Ads.manager(function(_, $)
      * Helper function to convert the ad object returned by the Vast#parser function into
      * a key-value pair object where the key is the ad id and the value is the ad object.
      * @private
-     * @method SsaiPulse#_parseVastAdsObject
+     * @method OoyalaSsai#_parseVastAdsObject
      * @param {object} vastAds The object containing the parsed ad data
      * @returns {object} The key-value pair object.
      */
@@ -1216,7 +1216,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to get the duration property within the Vast ad object.
      * @private
-     * @method SsaiPulse#_getDuration
+     * @method OoyalaSsai#_getDuration
      * @param {object} vastAdData The Vast ad object
      * @returns {string} The Vast ad duration time stamp.
      */
@@ -1234,10 +1234,10 @@ OO.Ads.manager(function(_, $)
 
     /**
      * Helper function to retrieve how far (in seconds) the current playhead is from the end (VOD).
-     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0,
      * unless user seeks back).
      * @public
-     * @method SsaiPulse#getCurrentOffset
+     * @method OoyalaSsai#getCurrentOffset
      * @returns {number} The value of the current offset from Live.
      */
     this.getCurrentOffset = _.bind(function()
@@ -1247,10 +1247,10 @@ OO.Ads.manager(function(_, $)
 
     /**
      * Helper function to set how far (in seconds) the current playhead is from the end (VOD).
-     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0, 
+     * For Live it indicates how far the playhead is from actual Live (this value mostly is 0,
      * unless user seeks back).
      * @public
-     * @method SsaiPulse#setCurrentOffset
+     * @method OoyalaSsai#setCurrentOffset
      * @param {}
      */
     this.setCurrentOffset = function(offset)
@@ -1264,7 +1264,7 @@ OO.Ads.manager(function(_, $)
      * 2. VAST XML Response ad duration - if the ad duration is not defined, fall through
      * 3. FALLBACK_AD_DURATION
      * @private
-     * @method SsaiPulse#_selectDuration
+     * @method OoyalaSsai#_selectDuration
      * @param {object} id3Object The object containing the ID3 Tag information
      * @param {object} vastAdData The object containing the parsed Vast ad data
      * @returns {number} The duration of the ad (in seconds).
@@ -1290,7 +1290,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Helper function to ping URLs in each set of tracking event arrays.
      * @private
-     * @method SsaiPulse#_pingTrackingUrls
+     * @method OoyalaSsai#_pingTrackingUrls
      * @param {object} urlObject An object with the tracking event names and their
      * associated URL array.
      */
@@ -1310,16 +1310,16 @@ OO.Ads.manager(function(_, $)
                 urls = _cacheBuster(urls);
               }
               OO.pixelPings(urls);
-              OO.log("SSAI Pulse: \"" + trackingName + "\" tracking URLs pinged");
+              OO.log("Ooyala SSAI: \"" + trackingName + "\" tracking URLs pinged");
             }
             else
             {
-              OO.log("SSAI Pulse: No \"" + trackingName + "\" tracking URLs provided to ping");
+              OO.log("Ooyala SSAI: No \"" + trackingName + "\" tracking URLs provided to ping");
             }
           }
           catch(e)
           {
-            OO.log("SSAI Pulse: Failed to ping \"" + trackingName + "\" tracking URLs");
+            OO.log("Ooyala SSAI: Failed to ping \"" + trackingName + "\" tracking URLs");
             if (amc)
             {
               amc.raiseAdError(e);
@@ -1334,7 +1334,7 @@ OO.Ads.manager(function(_, $)
      * random generated string. The purpose of a cachebuster is to keep the URLs unique to prevent
      * cached responses.
      * @private
-     * @method SsaiPulse#_cacheBuster
+     * @method OoyalaSsai#_cacheBuster
      * @param {string[]} urls The array of URLs
      * @returns {string[]} The new array of URLs.
      */
@@ -1350,11 +1350,11 @@ OO.Ads.manager(function(_, $)
       }
       return urls;
     }, this);
-    
+
     /**
      * Helper function to call impressions.
      * @private
-     * @method SsaiPulse#_handleImpressionCalls
+     * @method OoyalaSsai#_handleImpressionCalls
      * @param {object} curId3Object An object with the impressions data
      */
     var _handleImpressionCalls = _.bind(function(curId3Object) {
@@ -1364,7 +1364,7 @@ OO.Ads.manager(function(_, $)
             data: this.adIdDictionary[curId3Object.adId].vastData
           }
         };
-        
+
         _handleTrackingUrls(dataToExecutingImpressions, TRACKING_CALL_NAMES[curId3Object.time]);
       }
     }, this);
@@ -1372,7 +1372,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Callback used when the duration of an ad has passed.
      * @private
-     * @method SsaiPulse#_adEndedCallback
+     * @method OoyalaSsai#_adEndedCallback
      */
     var _adEndedCallback = _.bind(function(clearTimeoutId, objectId)
     {
@@ -1381,12 +1381,12 @@ OO.Ads.manager(function(_, $)
         if (clearTimeoutId) {
           clearTimeout(clearTimeoutId);
         }
-  
+
         if (!_.isUndefined(self.adIdDictionary[objectId]))
         {
           amc.notifyLinearAdEnded(self.adIdDictionary[objectId].curAdId);
           amc.notifyPodEnded(self.adIdDictionary[objectId].curAdId);
-    
+
           adMode = false;
           self.currentAd = null;
           //We delete vast info for this ad, since was completed.
@@ -1398,7 +1398,7 @@ OO.Ads.manager(function(_, $)
     /**
      * Remove listeners from the Ad Manager Controller about playback.
      * @private
-     * @method SsaiPulse#_removeAMCListeners
+     * @method OoyalaSsai#_removeAMCListeners
      */
     var _removeAMCListeners = _.bind(function()
     {
@@ -1414,5 +1414,5 @@ OO.Ads.manager(function(_, $)
       }
     }, this);
   };
-  return new SsaiPulse();
+  return new OoyalaSsai();
 });
