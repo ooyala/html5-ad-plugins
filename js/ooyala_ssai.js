@@ -326,6 +326,8 @@ OO.Ads.manager(function(_, $)
      */
     this.pauseAd = function(ad)
     {
+      //Removing the ad timeout since ad was paused
+      clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
     };
 
     /**
@@ -337,6 +339,11 @@ OO.Ads.manager(function(_, $)
      */
     this.resumeAd = function(ad)
     {
+      //Setting the ad callback again since ad was resumed
+      this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
+        _adEndedCallback(null, ad.ad.data.id),
+        currentId3Object.duration * 1000
+      );
     };
 
     /**
