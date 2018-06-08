@@ -157,6 +157,7 @@ OO.Ads.manager(function(_, $)
       // Listeners for tracking events
       amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
       amc.addPlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+
     };
 
     /**
