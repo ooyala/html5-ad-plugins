@@ -327,7 +327,9 @@ OO.Ads.manager(function(_, $)
     this.pauseAd = function(ad)
     {
       //Removing the ad timeout since ad was paused
-      clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
+      if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id]) {
+        clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
+      }
     };
 
     /**
@@ -339,11 +341,13 @@ OO.Ads.manager(function(_, $)
      */
     this.resumeAd = function(ad)
     {
-      //Setting the ad callback again since ad was resumed
-      this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
-        _adEndedCallback(null, ad.ad.data.id),
-        currentId3Object.duration * 1000
-      );
+      if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && currentId3Object) {
+        //Setting the ad callback again since ad was resumed
+        this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
+          _adEndedCallback(null, ad.ad.data.id),
+          currentId3Object.duration * 1000
+        );
+      }
     };
 
     /**

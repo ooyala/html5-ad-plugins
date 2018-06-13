@@ -853,4 +853,48 @@ describe('ad_manager_ooyala_ssai', function()
       "html5_ad_server": "http://blah"}, {}, {});}).to.not.throwException();
     expect(embedCodeMetadata).to.be(true);
   });
+
+  it('Ad timer is cleared when pause occurs', function()
+  {
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=100&d=100",
+    };
+    var ad =
+    {
+      ad: {
+        data: {
+          id: "11de5230"
+        }
+      }
+    };
+    OoyalaSsai.initialize(amc);
+    var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.not.be(null);
+    OoyalaSsai.pauseAd(ad);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.be(undefined);
+  });
+
+  it('Ad timer is created again when resume occurs', function()
+  {
+    var mockId3Tag =
+    {
+      TXXX: "adid=11de5230&t=100&d=100",
+    };
+    var ad =
+    {
+      ad: {
+        data: {
+          id: "11de5230"
+        }
+      }
+    };
+    OoyalaSsai.initialize(amc);
+    var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.not.be(null);
+    OoyalaSsai.pauseAd(ad);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.be(undefined);
+    OoyalaSsai.resumeAd(ad);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.not.be(null);
+  });
 });
