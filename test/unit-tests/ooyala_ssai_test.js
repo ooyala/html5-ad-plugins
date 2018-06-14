@@ -858,7 +858,7 @@ describe('ad_manager_ooyala_ssai', function()
   {
     var mockId3Tag =
     {
-      TXXX: "adid=11de5230&t=100&d=100",
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=100",
     };
     var ad =
     {
@@ -869,8 +869,9 @@ describe('ad_manager_ooyala_ssai', function()
       }
     };
     OoyalaSsai.initialize(amc);
+    OoyalaSsai.setCurrentOffset(1);
     var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.not.be(null);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adId].adTimer).to.not.be(undefined);
     OoyalaSsai.pauseAd(ad);
     expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.be(undefined);
   });
@@ -879,7 +880,7 @@ describe('ad_manager_ooyala_ssai', function()
   {
     var mockId3Tag =
     {
-      TXXX: "adid=11de5230&t=100&d=100",
+      TXXX: "adid=11de5230-ff5c-4d36-ad77-c0c7644d28e9&t=0&d=100",
     };
     var ad =
     {
@@ -890,11 +891,12 @@ describe('ad_manager_ooyala_ssai', function()
       }
     };
     OoyalaSsai.initialize(amc);
+    OoyalaSsai.setCurrentOffset(1);
     var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.not.be(null);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adId].adTimer).to.not.be(undefined);
     OoyalaSsai.pauseAd(ad);
     expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.be(undefined);
     OoyalaSsai.resumeAd(ad);
-    expect(OoyalaSsai.adIdDictionary[currentId3Object.adTimer]).to.not.be(null);
+    expect(OoyalaSsai.adIdDictionary[currentId3Object.adId]).to.not.be(undefined);
   });
 });
