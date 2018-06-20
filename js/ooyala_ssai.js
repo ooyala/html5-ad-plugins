@@ -158,6 +158,7 @@ OO.Ads.manager(function(_, $)
       // Listeners for tracking events
       amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
       amc.addPlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+      amc.addPlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, _.bind(this.onMuteStateChanged, this));
     };
 
     /**
@@ -328,9 +329,12 @@ OO.Ads.manager(function(_, $)
     this.pauseAd = function(ad)
     {
       //Removing the ad timeout since ad was paused
-      if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id]) {
-        clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
-      }
+      if (adMode) {
+        _handleTrackingUrls(this.currentAd, ["pause"]);
+        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id]) {
+          clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
+        }
+  	  }
     };
 
     /**
@@ -342,12 +346,15 @@ OO.Ads.manager(function(_, $)
      */
     this.resumeAd = function(ad)
     {
-      if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && currentId3Object) {
-        //Setting the ad callback again since ad was resumed
-        this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
-          _adEndedCallback(null, ad.ad.data.id),
-          currentId3Object.duration * 1000
-        );
+      if (adMode) {
+        _handleTrackingUrls(this.currentAd, ["resume"]);
+        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && currentId3Object) {
+          //Setting the ad callback again since ad was resumed
+          this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
+            _adEndedCallback(null, ad.ad.data.id),
+            currentId3Object.duration * 1000
+          );
+        }
       }
     };
 
@@ -706,6 +713,30 @@ OO.Ads.manager(function(_, $)
         {
           isMuted = false;
           lastVolume = volume;
+          _handleTrackingUrls(this.currentAd, ["unmute"]);
+        }
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles mute state changes.
+     * @public
+     * @method OoyalaSsai#onMuteStateChanged
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {boolean} muteState True if ad was muted, false if ad was unmuted
+     */
+    this.onMuteStateChanged = function(eventName, muteState)
+    {
+      if (adMode)
+      {
+        if (!isMuted && muteState === true)
+        {
+          isMuted = true;
+          _handleTrackingUrls(this.currentAd, ["mute"]);
+        }
+        else if (isMuted && muteState === false)
+        {
+          isMuted = false;
           _handleTrackingUrls(this.currentAd, ["unmute"]);
         }
       }
@@ -1422,6 +1453,7 @@ OO.Ads.manager(function(_, $)
         amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
         amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
         amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+        amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, _.bind(this.onMuteStateChanged, this));
         amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
         amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
       }
