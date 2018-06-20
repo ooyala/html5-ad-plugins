@@ -22,6 +22,8 @@
               <Tracking event="thirdQuartile">thirdQuartileUrl2</Tracking>
               <Tracking event="complete">completeUrl</Tracking>
               <Tracking event="complete">completeUrl2</Tracking>
+              <Tracking event="pause">pauseUrl</Tracking>
+              <Tracking event="resume">resumeUrl</Tracking>
               <Tracking event="mute">muteUrl</Tracking>
               <Tracking event="unmute">unmuteUrl</Tracking>
               <Tracking event="fullscreen">fullscreenUrl</Tracking>

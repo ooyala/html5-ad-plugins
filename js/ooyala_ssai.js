@@ -70,6 +70,7 @@ OO.Ads.manager(function(_, $)
     var requestUrl = "";
 
     this.adIdDictionary = {};
+    this.currentId3Object = null;
 
     // The expected query parameters in an ID3 Metadata String
     var ID3_QUERY_PARAMETERS =
@@ -348,11 +349,11 @@ OO.Ads.manager(function(_, $)
     {
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ["resume"]);
-        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && currentId3Object) {
+        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && _.isNumber(ad.duration)) {
           //Setting the ad callback again since ad was resumed
           this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
             _adEndedCallback(null, ad.ad.data.id),
-            currentId3Object.duration * 1000
+            ad.duration * 1000
           );
         }
       }
