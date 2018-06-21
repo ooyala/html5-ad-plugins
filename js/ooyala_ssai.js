@@ -335,7 +335,7 @@ OO.Ads.manager(function(_, $)
         if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id]) {
           clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
         }
-  	  }
+      }
     };
 
     /**
@@ -349,7 +349,7 @@ OO.Ads.manager(function(_, $)
     {
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ["resume"]);
-        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && _.isNumber(ad.duration)) {
+        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && _.isFinite(ad.duration)) {
           //Setting the ad callback again since ad was resumed
           this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
             _adEndedCallback(null, ad.ad.data.id),
@@ -748,7 +748,7 @@ OO.Ads.manager(function(_, $)
         {
           _handleTrackingUrls(this.currentAd, url);
         }
-  	  }
+      }
     };
 
     /**
