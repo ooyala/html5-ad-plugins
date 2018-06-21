@@ -266,6 +266,7 @@ describe('ad_manager_ooyala_ssai', function()
         "adManager": adManager,
         "adType": adType,
         "ad": ad,
+        "duration": 15,
         "streams":streams,
         "position": -1 //we want it to play immediately
       };
@@ -275,7 +276,7 @@ describe('ad_manager_ooyala_ssai', function()
 
     OoyalaSsai.initialize(amc);
 
-    OoyalaSsai.currentId3Object =
+    var currentId3Object =
     {
       adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
       t: 0,
@@ -292,10 +293,9 @@ describe('ad_manager_ooyala_ssai', function()
       ad: {}
     };
 
-    OoyalaSsai.onResponse(OoyalaSsai.currentId3Object, ssaiXml);
+    OoyalaSsai.onResponse(currentId3Object, ssaiXml);
 
     var ad = adQueue[0];
-
     // impression, and start tracking events
     OoyalaSsai.playAd(ad);
     expect(trackingUrlsPinged.startUrl).to.be(1);
@@ -303,9 +303,88 @@ describe('ad_manager_ooyala_ssai', function()
     expect(trackingUrlsPinged.impressionUrl).to.be(1);
     expect(trackingUrlsPinged.impressionUrl2).to.be(1);
 
+    // pause and resume events
+    OoyalaSsai.pauseAd(ad);
+    expect(trackingUrlsPinged.pauseUrl).to.be(1);
+    OoyalaSsai.resumeAd(ad);
+    expect(trackingUrlsPinged.resumeUrl).to.be(1);
+
+    // mute and unmute events
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", true);
+    expect(trackingUrlsPinged.muteUrl).to.be(1);
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", false);
+    expect(trackingUrlsPinged.unmuteUrl).to.be(1);
+
+    // volume change events should also trigger mute / unmute urls
+    OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 0);
+    expect(trackingUrlsPinged.muteUrl).to.be(2);
+    OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 50);
+    expect(trackingUrlsPinged.unmuteUrl).to.be(2);
+
+    // fullscreen events 
+    OoyalaSsai.onFullscreenChanged("fullscreenChanged", true);
+    expect(trackingUrlsPinged.fullscreenUrl).to.be(1);
+
+
     // clickthrough tracking events
     OoyalaSsai.playerClicked(ad);
     expect(trackingUrlsPinged.linearClickTrackingUrl).to.be(1);
+  });
+
+  it('Linear Creative Tracking Events mute/unmute urls should be pinged only once if multiple events received', function()
+  {
+    var adQueue = [];
+    amc.forceAdToPlay = function(adManager, ad, adType, streams)
+    {
+      var adData = {
+        "adManager": adManager,
+        "adType": adType,
+        "ad": ad,
+        "duration": 15,
+        "streams":streams,
+        "position": -1 //we want it to play immediately
+      };
+      var newAd = new amc.Ad(adData);
+      adQueue.push(newAd);
+    };
+
+    OoyalaSsai.initialize(amc);
+
+    var currentId3Object =
+    {
+      adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
+      t: 0,
+      d: 15
+    };
+
+    OoyalaSsai.adIdDictionary =
+    {
+      "11de5230-ff5c-4d36-ad77-c0c7644d28e9": true
+    };
+
+    OoyalaSsai.onResponse(currentId3Object, ssaiXml);
+
+    var ad = adQueue[0];
+    // impression, and start tracking events
+    OoyalaSsai.playAd(ad);
+    // mute and unmute events
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", true);
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", true);
+    expect(trackingUrlsPinged.muteUrl).to.be(1);
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", false);
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", false);
+    expect(trackingUrlsPinged.unmuteUrl).to.be(1);
+
+    // volume change events should also trigger mute / unmute urls
+    OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 0);
+    OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 0);
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", false);
+    expect(trackingUrlsPinged.muteUrl).to.be(2);
+    OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 50);
+    OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 10);
+    OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 100);
+    OoyalaSsai.onMuteStateChanged("muteStateChanged", true);
+    expect(trackingUrlsPinged.unmuteUrl).to.be(2);
   });
 
   it('Correct clickthrough URL should be opened', function()
@@ -332,7 +411,7 @@ describe('ad_manager_ooyala_ssai', function()
 
     OoyalaSsai.initialize(amc);
 
-    OoyalaSsai.currentId3Object =
+    var currentId3Object =
     {
       adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
       t: 0,
@@ -349,7 +428,7 @@ describe('ad_manager_ooyala_ssai', function()
       ad: {}
     };
 
-    OoyalaSsai.onResponse(OoyalaSsai.currentId3Object, ssaiXml);
+    OoyalaSsai.onResponse(currentId3Object, ssaiXml);
 
     var ad = adQueue[0];
 
@@ -376,7 +455,7 @@ describe('ad_manager_ooyala_ssai', function()
 
     OoyalaSsai.initialize(amc);
 
-    OoyalaSsai.currentId3Object =
+    var currentId3Object =
     {
       adId: "11de5230-ff5c-4d36-ad77-c0c7644d28e9",
       t: 0,
@@ -393,7 +472,7 @@ describe('ad_manager_ooyala_ssai', function()
       ad: {}
     };
 
-    OoyalaSsai.onResponse(OoyalaSsai.currentId3Object, ssaiXml);
+    OoyalaSsai.onResponse(currentId3Object, ssaiXml);
 
     var ad = adQueue[0];
 

@@ -70,6 +70,7 @@ OO.Ads.manager(function(_, $)
     var requestUrl = "";
 
     this.adIdDictionary = {};
+    this.currentId3Object = null;
 
     // The expected query parameters in an ID3 Metadata String
     var ID3_QUERY_PARAMETERS =
@@ -158,6 +159,7 @@ OO.Ads.manager(function(_, $)
       // Listeners for tracking events
       amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
       amc.addPlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+      amc.addPlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, _.bind(this.onMuteStateChanged, this));
     };
 
     /**
@@ -328,8 +330,11 @@ OO.Ads.manager(function(_, $)
     this.pauseAd = function(ad)
     {
       //Removing the ad timeout since ad was paused
-      if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id]) {
-        clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
+      if (adMode) {
+        _handleTrackingUrls(this.currentAd, ["pause"]);
+        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id]) {
+          clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
+        }
       }
     };
 
@@ -342,12 +347,15 @@ OO.Ads.manager(function(_, $)
      */
     this.resumeAd = function(ad)
     {
-      if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && currentId3Object) {
-        //Setting the ad callback again since ad was resumed
-        this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
-          _adEndedCallback(null, ad.ad.data.id),
-          currentId3Object.duration * 1000
-        );
+      if (adMode) {
+        _handleTrackingUrls(this.currentAd, ["resume"]);
+        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && _.isFinite(ad.duration)) {
+          //Setting the ad callback again since ad was resumed
+          this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
+            _adEndedCallback(null, ad.ad.data.id),
+            ad.duration * 1000
+          );
+        }
       }
     };
 
@@ -694,19 +702,51 @@ OO.Ads.manager(function(_, $)
      */
     this.onAdVolumeChanged = function(eventName, volume)
     {
+      var url = [];
+      if (volume === 0 && volume !== lastVolume)
+      {
+        lastVolume = volume;
+        url = ["mute"];
+      }
+      else if (volume > 0 && lastVolume === 0)
+      {
+        lastVolume = volume;
+        url = ["unmute"];
+      }
+
       if (adMode)
       {
-        if (volume === 0 && volume !== lastVolume)
+        _handleTrackingUrls(this.currentAd, url);
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles mute state changes.
+     * @public
+     * @method OoyalaSsai#onMuteStateChanged
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {boolean} muteState True if ad was muted, false if ad was unmuted
+     */
+    this.onMuteStateChanged = function(eventName, muteState)
+    {
+      var url = []
+
+      // If volume is zero mute events are not relevant
+      if ( lastVolume !== 0) {
+        if (!isMuted && muteState === true)
         {
           isMuted = true;
-          lastVolume = volume;
-          _handleTrackingUrls(this.currentAd, ["mute"]);
+          url = ["mute"];
         }
-        else if (isMuted && volume !== lastVolume)
+        else if (isMuted && muteState === false)
         {
           isMuted = false;
-          lastVolume = volume;
-          _handleTrackingUrls(this.currentAd, ["unmute"]);
+          url = ["unmute"];
+        }
+
+        if (adMode)
+        {
+          _handleTrackingUrls(this.currentAd, url);
         }
       }
     };
@@ -1422,6 +1462,7 @@ OO.Ads.manager(function(_, $)
         amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, _.bind(this.onContentUrlChanged, this));
         amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
         amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
+        amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, _.bind(this.onMuteStateChanged, this));
         amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , _.bind(this.onPlayheadTimeChanged, this));
         amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(this.onReplay, this));
       }
