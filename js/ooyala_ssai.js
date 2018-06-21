@@ -702,20 +702,21 @@ OO.Ads.manager(function(_, $)
      */
     this.onAdVolumeChanged = function(eventName, volume)
     {
+      var url = [];
+      if (volume === 0 && volume !== lastVolume)
+      {
+        lastVolume = volume;
+        url = ["mute"];
+      }
+      else if (volume > 0 && lastVolume === 0)
+      {
+        lastVolume = volume;
+        url = ["unmute"];
+      }
+
       if (adMode)
       {
-        if (volume === 0 && volume !== lastVolume)
-        {
-          isMuted = true;
-          lastVolume = volume;
-          _handleTrackingUrls(this.currentAd, ["mute"]);
-        }
-        else if (isMuted && volume !== lastVolume)
-        {
-          isMuted = false;
-          lastVolume = volume;
-          _handleTrackingUrls(this.currentAd, ["unmute"]);
-        }
+        _handleTrackingUrls(this.currentAd, url);
       }
     };
 
@@ -728,19 +729,26 @@ OO.Ads.manager(function(_, $)
      */
     this.onMuteStateChanged = function(eventName, muteState)
     {
-      if (adMode)
-      {
+      var url = []
+
+      // If volume is zero mute events are not relevant
+      if ( lastVolume !== 0) {
         if (!isMuted && muteState === true)
         {
           isMuted = true;
-          _handleTrackingUrls(this.currentAd, ["mute"]);
+          url = ["mute"];
         }
         else if (isMuted && muteState === false)
         {
           isMuted = false;
-          _handleTrackingUrls(this.currentAd, ["unmute"]);
+          url = ["unmute"];
         }
-      }
+
+        if (adMode)
+        {
+          _handleTrackingUrls(this.currentAd, url);
+        }
+  	  }
     };
 
     /**
