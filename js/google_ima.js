@@ -2675,6 +2675,7 @@ require("../html5-common/js/utils/utils.js");
      * @public
      * @method GoogleIMAVideoWrapper#setVolume
      * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
+     * @param {boolean} muteState True if the volume should be muted, regardless of the value of 'volume'.
      */
     this.setVolume = function(volume, muteState)
     {

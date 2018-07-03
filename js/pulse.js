@@ -1310,14 +1310,21 @@
          * @public
          * @method PulseVideoWrapper#setVolume
          * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
+         * @param {boolean} muteState True if the volume should be muted, regardless of the value of 'volume'.
          */
-        this.setVolume = function(volume) {
+        this.setVolume = function(volume, muteState) {
             if(_adManager && _adManager.getAdPlayer()) {
+              if (muteState) {
+                _adManager.getAdPlayer().setVolume(volume);
+                _adManager.getAdPlayer().mute();
+              } else {
                 if(OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.MUTED && OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.SHARED) {
                     _adManager.getAdPlayer().setVolume(volume);
                 }
+              }
             }
         };
+
 
         /**
          * Gets the current time position of the video.
