@@ -13,6 +13,7 @@ var gulp = require('gulp'),
     _ = require('underscore'),
     listFiles = require('file-lister'),
     exec = require('child_process').exec;
+var babelify = require('babelify');
 
 var path = {
   originalJs: ['./js/']
@@ -26,6 +27,7 @@ var browserify_fn = function() {
       var b = browserify({
         entries: sourceFile,
         debug: false,
+        transform: [babelify]
       });
 
       b.bundle()

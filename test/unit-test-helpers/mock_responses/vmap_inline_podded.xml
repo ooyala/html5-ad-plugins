@@ -53,6 +53,7 @@
                       <Tracking event="collapse">collapseUrl</Tracking>
                     </TrackingEvents>
                   </NonLinearAds>
+                </Creative>
               </Creatives>
             </InLine>
           </Ad>

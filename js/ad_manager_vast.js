@@ -1543,7 +1543,7 @@ OO.Ads.manager(function(_, $) {
             this.amc.notifyNonlinearAdEnded(ad.id);
           }
           if((ad.ad.adPodIndex === ad.ad.adPodLength && !failed) || !nextAd) {
-            var adPod = adPodPrimary || ad.id;
+            var adPod = adPodPrimary || ad;
             adPodPrimary = null;
             this.amc.notifyPodEnded(adPod.id);
           }
@@ -2123,7 +2123,7 @@ OO.Ads.manager(function(_, $) {
       var mediaFile = linearXml.find("MediaFile");
 
       parseTrackingEvents(result.tracking, linearXml);
-      if (mediaFile.size() > 0) {
+      if (mediaFile.length > 0) {
         result.mediaFiles = filterEmpty(mediaFile.map(function(i,v) {
           return {
             type: $(v).attr("type").toLowerCase(),
@@ -2152,7 +2152,7 @@ OO.Ads.manager(function(_, $) {
 
       parseTrackingEvents(result.tracking, nonLinearAdsXml);
 
-      if (nonLinear.size() > 0) {
+      if (nonLinear.length > 0) {
         var staticResource = nonLinear.find("StaticResource");
         var iframeResource = nonLinear.find("IFrameResource");
         var htmlResource = nonLinear.find("HTMLResource");
@@ -2168,11 +2168,11 @@ OO.Ads.manager(function(_, $) {
                                         find("NonLinearClickTracking").
                                         map(function() { return $(this).text(); }));
 
-        if (staticResource.size() > 0) {
+        if (staticResource.length > 0) {
           _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
-        } else if (iframeResource.size() > 0) {
+        } else if (iframeResource.length > 0) {
           _.extend(result, { type: "iframe", data: iframeResource.text(), url: iframeResource.text() });
-        } else if (htmlResource.size() > 0) {
+        } else if (htmlResource.length > 0) {
           _.extend(result, { type: "html", data: htmlResource.text(), htmlCode: htmlResource.text() });
         }
       }
@@ -2194,9 +2194,9 @@ OO.Ads.manager(function(_, $) {
       var inline = jqueryXML.find(AD_TYPE.INLINE);
       var wrapper = jqueryXML.find(AD_TYPE.WRAPPER);
 
-      if (inline.size() > 0) {
+      if (inline.length > 0) {
         result.type = AD_TYPE.INLINE;
-      } else if (wrapper.size() > 0) {
+      } else if (wrapper.length > 0) {
         result.type = AD_TYPE.WRAPPER;
       } else {
         //TODO: See if returning null here is valid
@@ -2213,8 +2213,8 @@ OO.Ads.manager(function(_, $) {
       result.impression = filterEmpty(jqueryXML.find("Impression").map(function() { return $(this).text(); }));
       result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function() { return $(this).text(); })));
 
-      if (linear.size() > 0) { result.linear = parseLinearAd(linear); }
-      if (nonLinearAds.size() > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
+      if (linear.length > 0) { result.linear = parseLinearAd(linear); }
+      if (nonLinearAds.length > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
       jqueryXML.find("Companion").map(function(i, v){
         result.companion.push(parseCompanionAd($(v)));
         return 1;
@@ -3448,9 +3448,12 @@ OO.Ads.manager(function(_, $) {
      */
     var _updateCreativeSize = _.bind(function() {
       if (this._slot) {
+        var clientRect = this._slot.getBoundingClientRect();
+        var offsetWidth = this._slot.offsetWidth ? this._slot.offsetWidth : clientRect.width;
+        var offsetHeight = this._slot.offsetHeight ? this._slot.offsetHeight : clientRect.height;
         var viewMode = _getFsState() ? 'fullscreen' : 'normal';
-        var width = viewMode === 'fullscreen' ? window.screen.width : this._slot.offsetWidth;
-        var height = viewMode === 'fullscreen' ? window.screen.height : this._slot.offsetHeight;
+        var width = viewMode === 'fullscreen' ? window.screen.width : offsetWidth;
+        var height = viewMode === 'fullscreen' ? window.screen.height : offsetHeight;
         this.resize(width, height, viewMode);
       }
     }, this);

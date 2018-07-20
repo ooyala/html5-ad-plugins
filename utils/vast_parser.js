@@ -108,9 +108,9 @@ var VastParser = function() {
     var inline = jqueryXML.find(AD_TYPE.INLINE);
     var wrapper = jqueryXML.find(AD_TYPE.WRAPPER);
 
-    if (inline.size() > 0) {
+    if (inline.length > 0) {
       result.type = AD_TYPE.INLINE;
-    } else if (wrapper.size() > 0) {
+    } else if (wrapper.length > 0) {
       result.type = AD_TYPE.WRAPPER;
     } else {
       //TODO: See if returning null here is valid
@@ -127,8 +127,8 @@ var VastParser = function() {
     result.impression = filterEmpty(jqueryXML.find("Impression").map(function() { return $(this).text(); }));
     result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function() { return $(this).text(); })));
 
-    if (linear.size() > 0) { result.linear = parseLinearAd(linear); }
-    if (nonLinearAds.size() > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
+    if (linear.length > 0) { result.linear = parseLinearAd(linear); }
+    if (nonLinearAds.length > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
     jqueryXML.find("Companion").map(function(i, v){
       result.companion.push(parseCompanionAd($(v)));
       return 1;
@@ -169,7 +169,7 @@ var VastParser = function() {
     var mediaFile = linearXml.find("MediaFile");
 
     parseTrackingEvents(result.tracking, linearXml);
-    if (mediaFile.size() > 0) {
+    if (mediaFile.length > 0) {
       result.mediaFiles = filterEmpty(mediaFile.map(function(i,v) {
         return {
           type: $(v).attr("type").toLowerCase(),
@@ -198,7 +198,7 @@ var VastParser = function() {
 
     parseTrackingEvents(result.tracking, nonLinearAdsXml);
 
-    if (nonLinear.size() > 0) {
+    if (nonLinear.length > 0) {
       var staticResource = nonLinear.find("StaticResource");
       var iframeResource = nonLinear.find("IFrameResource");
       var htmlResource = nonLinear.find("HTMLResource");
@@ -214,11 +214,11 @@ var VastParser = function() {
                                       find("NonLinearClickTracking").
                                       map(function() { return $(this).text(); }));
 
-      if (staticResource.size() > 0) {
+      if (staticResource.length > 0) {
         _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
-      } else if (iframeResource.size() > 0) {
+      } else if (iframeResource.length > 0) {
         _.extend(result, { type: "iframe", data: iframeResource.text(), url: iframeResource.text() });
-      } else if (htmlResource.size() > 0) {
+      } else if (htmlResource.length > 0) {
         _.extend(result, { type: "html", data: htmlResource.text(), htmlCode: htmlResource.text() });
       }
     }
