@@ -91,7 +91,7 @@ describe('ad_manager_freewheel', function() {
   after(function() {
     var parentDom, element;
     _.each(document.getElementsByTagName('style'), function(oneStyle){
-      if (oneStyle.innerHTML.indexOf("fw_") >= 0) {
+      if (oneStyle && oneStyle.innerHTML.indexOf("fw_") >= 0) {
         element = oneStyle;
         parentDom = oneStyle.parentNode;
         parentDom.removeChild(element);
