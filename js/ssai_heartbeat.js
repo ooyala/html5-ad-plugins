@@ -61,7 +61,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
         return;
       }
 
-      var reportingURL = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
+      var reportingUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
       
       var data = {
         playheadpos: parseInt(playheadPosition),
@@ -81,7 +81,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
 
     }
 
-    function parseGUID(url) {
+    function parseGuid(url) {
       var reg = new RegExp(/ssai_guid=([^&?]*)/g);
       var result = reg.exec(url);
 
@@ -93,7 +93,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
 
     function _onVcWillPlay(event, videoId, url) {
       streamUrl = url || '';
-      ssaiGuid = parseGUID(streamUrl);
+      ssaiGuid = parseGuid(streamUrl);
       if (ssaiGuid) {
         reportHeartBeat();
         startHeartBeat();
