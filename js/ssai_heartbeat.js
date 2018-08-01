@@ -69,7 +69,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
       };
 
       $.ajax({
-        url: reportingURL,
+        url: reportingUrl,
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'text/plain',
