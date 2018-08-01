@@ -137,7 +137,6 @@ OO.plugin('heartbeat', function(OO, _, $) {
 
     function destroy() {
       stopHeartBeat();
-
       mb.unsubscribe(OO.EVENTS.VC_WILL_PLAY, 'heartbeat');
       mb.unsubscribe(OO.EVENTS.DESTROY, 'heartbeat');
       mb.unsubscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'heartbeat');
@@ -145,7 +144,6 @@ OO.plugin('heartbeat', function(OO, _, $) {
       mb.unsubscribe(OO.EVENTS.PAUSE, 'heartbeat');
       mb.unsubscribe(OO.EVENTS.PLAY, 'heartbeat');
       mb.unsubscribe(OO.EVENTS.VC_PLAYED, 'hearbeat');
-
       log('destroy');
     }
   };
