@@ -43,8 +43,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
       mb.subscribe(OO.EVENTS.PAUSE, 'heartbeat', _onPause);
       mb.subscribe(OO.EVENTS.PLAY, 'heartbeat', _onPlay);
       mb.subscribe(OO.EVENTS.VC_PLAYED, 'hearbeat', _onPlayed);
-      mb.subscribe(OO.EVENTS.DESTROY, 'heartbeat', destroy)
-      
+      mb.subscribe(OO.EVENTS.DESTROY, 'heartbeat', destroy);
       log('initialization completed', config);
     }
 
