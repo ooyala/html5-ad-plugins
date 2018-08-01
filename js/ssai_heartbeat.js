@@ -61,7 +61,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
         return;
       }
 
-      var reportingUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
+      var reportUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
       
       var data = {
         playheadpos: parseInt(playheadPosition),
@@ -69,7 +69,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
       };
 
       $.ajax({
-        url: reportingUrl,
+        url: reportUrl,
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'text/plain',
