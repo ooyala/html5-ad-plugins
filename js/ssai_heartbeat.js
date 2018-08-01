@@ -20,9 +20,9 @@ OO.plugin('heartbeat', function(OO, _, $) {
       PROXY_REFRESH_TIME: 6,
     });
 
-    var streamURL = '';
-    var ssai_guid = '';
-    var embed_code = '';
+    var streamUrl = '';
+    var ssaiGuid = '';
+    var embedCode = '';
 
     var movieDuration = 0;
     var playheadPosition = 0;
@@ -45,7 +45,6 @@ OO.plugin('heartbeat', function(OO, _, $) {
       mb.subscribe(OO.EVENTS.VC_PLAYED, 'hearbeat', _onPlayed);
       mb.subscribe(OO.EVENTS.DESTROY, 'heartbeat', destroy)
       
-
       log('initialization completed', config);
     }
 
@@ -55,47 +54,49 @@ OO.plugin('heartbeat', function(OO, _, $) {
 
     function startHeartBeat() {
       stopHeartBeat();
-
       heartbeatTimer = setInterval(reportHeartBeat, config.Interval);
     }
 
     function reportHeartBeat() {
-        if(reportingPaused){
-          return;
+      if(reportingPaused){
+        return;
+      }
+
+      var reportingURL = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
+      
+      var data = {
+        playheadpos: parseInt(playheadPosition),
+        pingfrequency: parseInt(config.Interval / 1000)
+      };
+
+      $.ajax({
+        url: reportingURL,
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'text/plain',
+        dataType: 'text',
+        success:function(){
+          log('Heartbeat was sent successfully');
         }
+      });
 
-        var reportingURL = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embed_code).replace(/<ssai_guid>/g, ssai_guid);
-        var data = {
-          playheadpos: parseInt(playheadPosition),
-          pingfrequency: parseInt(config.Interval / 1000)
-        };
-
-        $.ajax({
-          url: reportingURL,
-          type: 'POST',
-          data: JSON.stringify(data),
-          contentType: 'text/plain',
-          dataType: 'text',
-          success:function(){
-            log('Heartbeat was sent successfully');
-          }
-        });
     }
 
     function parseGUID(url) {
       var reg = new RegExp(/ssai_guid=([^&?]*)/g);
       var result = reg.exec(url);
 
-      if ( result.length && result[1] ) {
+      if (result.length && result[1]) {
         return result[1];
       }
       return '';
     }
 
     function _onVcWillPlay(event, videoId, url) {
-      streamURL = url || '';
-      ssai_guid = parseGUID(streamURL);
-      if (ssai_guid) {
+      streamUrl = url || '';
+      ssaiGuid = parseGUID(streamUrl);
+      if (ssaiGuid) {
+        reportHeartBeat();
         startHeartBeat();
       }
     }
@@ -105,8 +106,8 @@ OO.plugin('heartbeat', function(OO, _, $) {
       playheadPosition = currentTime || 0;
     }
 
-    function _onEmbedCodeChanged(event, embedCode){
-      embed_code = embedCode || '';
+    function _onEmbedCodeChanged(event, theEmbedCode){
+      embedCode = theEmbedCode || '';
     }
 
     function _onPause(){
@@ -119,7 +120,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
 
     function _onPlayed(){
       reportingPaused = false;
-      reportHeartBeat()
+      reportHeartBeat();
       stopHeartBeat();
     }
 
@@ -131,7 +132,6 @@ OO.plugin('heartbeat', function(OO, _, $) {
       } else {
         _config.maxSegmentsToCheck = -1;
       }
-
       return _config;
     }
 
@@ -149,7 +149,6 @@ OO.plugin('heartbeat', function(OO, _, $) {
       log('destroy');
     }
   };
-
+  
   return heartbeat;
-
 });
