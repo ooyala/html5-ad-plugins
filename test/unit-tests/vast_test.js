@@ -1829,6 +1829,53 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(0);
   });
 
+  it('Vast Ad Manager: Should notify non-linear ad end when stream ends with active overlay', function() {
+    var nonLinearStartNotified = 0;
+    var nonLinearEndNotified = 0;
+    var embed_code = "embed_code";
+    var vast_ad_mid = {
+      type: "vast",
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: "ad_set_code",
+      time: 10,
+      position_type: "t",
+      url: "1.svg"
+    };
+    var content = {
+      embed_code: embed_code,
+      ads: [vast_ad_mid]
+    };
+
+    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+      nonLinearStartNotified++;
+    };
+    amc.notifyNonlinearAdEnded = function() {
+      nonLinearEndNotified++;
+    };
+
+    vastAdManager.initialize(amc);
+    vastAdManager.loadMetadata({
+      "html5_ssl_ad_server": "https://blah.com",
+      "html5_ad_server": "http://blah.com"
+    }, {}, content);
+    initialPlay();
+    vastAdManager.initialPlay();
+    vastAdManager.onVastResponse(vast_ad_mid, nonLinearXML);
+    expect(errorType.length).to.be(0);
+
+    var vastAd = amc.timeline[1];
+    vastAdManager.playAd(vastAd);
+    expect(nonLinearStartNotified).to.be(1);
+    expect(nonLinearEndNotified).to.be(0);
+
+    vastAdManager.cancelAd(vastAd, {
+      code : amc.AD_CANCEL_CODE.STREAM_ENDED
+    });
+    expect(nonLinearStartNotified).to.be(1);
+    expect(nonLinearEndNotified).to.be(1);
+  });
+
   it('Vast Ad Manager: Should use page level settings with position_type t', function() {
     var embed_code = "embed_code";
     var vast_ad = {
