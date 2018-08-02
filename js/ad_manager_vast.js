@@ -1494,6 +1494,12 @@ OO.Ads.manager(function(_, $) {
             _skipAd(currentAd);
           }
         }
+        // [PLAYER-3912]
+        // Make sure that NONLINEAR_AD_PLAYED gets fired when a stream ends
+        // with an active overlay, otherwise the skin will keep it for new videos.
+        else if (!ad.isLinear && params.code === this.amc.AD_CANCEL_CODE.STREAM_ENDED) {
+          _endAd(ad, false);
+        }
       }
       else {
         _endAd(ad, false);
