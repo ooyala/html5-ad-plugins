@@ -2,6 +2,9 @@
   "name": "html5-ad-plugins",
   "version": "0.0.1",
   "description": "Ooyala ad manager plugins",
+  "engines": {
+    "node": ">=8.11.3"
+  },
   "keywords": [
     "ad manager",
     "ads",
