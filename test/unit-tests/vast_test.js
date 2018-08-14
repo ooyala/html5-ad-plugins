@@ -2737,8 +2737,12 @@ describe('ad_manager_vast', function() {
     vastAdManager.initializeAd();
     expect(ad.vpaidAd.properties.width).to.be(100);
     expect(ad.vpaidAd.properties.height).to.be(100);
-    vastAdManager._slot.offsetWidth = 200;
-    vastAdManager._slot.offsetHeight = 300;
+    vastAdManager._slot.getBoundingClientRect = function() {
+      return {
+        width: 200,
+        height: 300
+      }
+    };
     amc.publishPlayerEvent(amc.EVENTS.SIZE_CHANGED);
     expect(ad.vpaidAd.properties.width).to.be(200);
     expect(ad.vpaidAd.properties.height).to.be(300);
@@ -2751,8 +2755,12 @@ describe('ad_manager_vast', function() {
     vastAdManager.initializeAd();
     expect(ad.vpaidAd.properties.width).to.be(100);
     expect(ad.vpaidAd.properties.height).to.be(100);
-    vastAdManager._slot.offsetWidth = 200;
-    vastAdManager._slot.offsetHeight = 300;
+    vastAdManager._slot.getBoundingClientRect = function() {
+      return {
+        width: 200,
+        height: 300
+      }
+    };
     amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED);
     expect(ad.vpaidAd.properties.width).to.be(200);
     expect(ad.vpaidAd.properties.height).to.be(300);
