@@ -1064,7 +1064,7 @@
              * @param {String} event The event name
              * @param {Object} metadata The metadata associated with the event
              */
-            var _onAdVolumeChanged = function(event,metadata) {
+            var _onAdVolumeChanged = function(event, metadata) {
                 this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
             };
 
