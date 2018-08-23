@@ -107,7 +107,7 @@
                 this.ui = amc.ui;
                 //Set the CSS overlay so it's responsive
 
-                style = document.createElement('style');
+                var style = document.createElement('style');
                 var css = '.oo-ad-overlay-image { width:100% !important}' +
                     ' .oo-ad-overlay {  margin:auto !important}';
 
@@ -885,6 +885,20 @@
                 }
             };
 
+            /**
+             * Checks to see if the ad player is muted.
+             * @protected
+             * @method Pulse#muted
+             * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
+             */
+            this.muted = function () {
+                var muted = true;
+                if (adPlayer) {
+                    muted = adPlayer._muted;
+                }
+                return muted;
+            };
+
             var playPlaceholder = _.bind(function () {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
@@ -895,7 +909,6 @@
                     streams
                 );
             }, this);
-
 
             var _onMainVideoTimeUpdate = _.bind(function (event,playheadTime, duration) {
                 if(adPlayer)
@@ -970,10 +983,9 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, _.bind(_onAdVolumeChanged, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, _.bind(_onAdPlayPromiseRejected, this));
 
-                        if(OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.MUTED || OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.SHARED) {
-                            adPlayer.mute();
-                        }
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
                         }
@@ -1044,6 +1056,34 @@
                 this.videoControllerWrapper.raisePlayingEvent();
             };
 
+            /**
+             * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
+             * the video controller wrapper to notify the player of the volume change event.
+             * @private
+             * @method Pulse#_onAdVolumeChanged
+             * @param {String} event The event name
+             * @param {Object} metadata The metadata associated with the event
+             */
+            var _onAdVolumeChanged = function(event, metadata) {
+                this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
+            };
+
+            /**
+             * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
+             * the video controller wrapper to notify the player of the playback failure.
+             * @private
+             * @method Pulse#_onAdPlayPromiseRejected
+             * @param {String} event The event name
+             * @param {Object} metadata The metadata associated with the event
+             */
+            var _onAdPlayPromiseRejected = function(event, metadata) {
+                if (this.muted()) {
+                    this.videoControllerWrapper.raiseMutedPlaybackFailed();
+                } else {
+                    this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
+                }
+            };
+
             var _onSessionStarted = function(event, metadata) {
                 if(pluginCallbacks && pluginCallbacks.onSessionCreated) {
                     pluginCallbacks.onSessionCreated(session);
@@ -1051,7 +1091,6 @@
             };
 
             var _onAdTimeUpdate = function(event, eventData) {
-
                 var duration = eventData.duration ? eventData.duration :this.currentAd.getCoreAd().creatives[0].duration;
                 this.videoControllerWrapper.raiseTimeUpdate(eventData.position, duration);
             };
@@ -1312,10 +1351,31 @@
          * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
          */
         this.setVolume = function(volume) {
+            //Do not set the volume if the Pulse ad player is muted since that will unmute the ad player
+            if(_adManager && _adManager.getAdPlayer() && !_adManager.muted()) {
+                _adManager.getAdPlayer().setVolume(volume);
+            }
+        };
+
+        /**
+         * Mutes the Pulse ad player.
+         * @public
+         * @method PulseVideoWrapper#mute
+         */
+        this.mute = function() {
             if(_adManager && _adManager.getAdPlayer()) {
-                if(OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.MUTED && OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.SHARED) {
-                    _adManager.getAdPlayer().setVolume(volume);
-                }
+                _adManager.getAdPlayer().mute();
+            }
+        };
+
+        /**
+         * Unmutes the Pulse ad player.
+         * @public
+         * @method PulseVideoWrapper#unmute
+         */
+        this.unmute = function() {
+            if(_adManager && _adManager.getAdPlayer()) {
+                _adManager.getAdPlayer().unmute();
             }
         };
 
@@ -1423,8 +1483,38 @@
             this.controller.notify(this.controller.EVENTS.STALLED);
         };
 
-        this.raiseVolumeEvent = function(event) {
-            this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : event.target.volume });
+        /**
+         * Notifies the video controller of VOLUME_CHANGE and MUTE_STATE_CHANGE events.
+         * @private
+         * @method PulseVideoWrapper#raiseVolumeEvent
+         * @param {Number} volume The current volume
+         * @param {boolean} muted The current mute state
+         */
+        this.raiseVolumeEvent = function(volume, muted) {
+            if (volume === 0 || muted) {
+                this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
+            } else {
+                this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: false });
+                this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
+            }
+        };
+
+        /**
+         * Notifies the video controller of the UNMUTED_PLAYBACK_FAILED event.
+         * @private
+         * @method PulseVideoWrapper#raiseUnmutedPlaybackFailed
+         */
+        this.raiseUnmutedPlaybackFailed = function() {
+            this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
+        };
+
+        /**
+         * Notifies the video controller of the MUTED_PLAYBACK_FAILED event.
+         * @private
+         * @method PulseVideoWrapper#raiseMutedPlaybackFailed
+         */
+        this.raiseMutedPlaybackFailed = function() {
+            this.controller.notify(this.controller.EVENTS.MUTED_PLAYBACK_FAILED);
         };
 
         this.raiseWaitingEvent = function() {
