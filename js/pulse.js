@@ -62,7 +62,7 @@
             var showAdTitle = false;
             var preferredRenderingMode = null;
             var amc  = null;
-            var pulseSDKUrl = "/proxy/pulse-sdk-html5/2.1/latest.min.js";
+            var pulseSDKUrl = "/proxy/pulse-sdk-html5/2.1/latest.min.js?pulse_debug=true";
             var adModuleState = AD_MODULE_STATE.UNINITIALIZED;
             var enableDebugMode = false;
             var pluginCallbacks = {
@@ -107,7 +107,7 @@
                 this.ui = amc.ui;
                 //Set the CSS overlay so it's responsive
 
-                style = document.createElement('style');
+                var style = document.createElement('style');
                 var css = '.oo-ad-overlay-image { width:100% !important}' +
                     ' .oo-ad-overlay {  margin:auto !important}';
 
@@ -716,6 +716,7 @@
              */
             this.resumeAd = function(ad) {
                 if(adPlayer) {
+                    console.log('alex ad player play');
                     adPlayer.play();
                 }
             };
@@ -971,9 +972,13 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
 
-                        if(OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.MUTED || OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.SHARED) {
-                            adPlayer.mute();
-                        }
+                        //new stuff
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, _.bind(_onAdVolumeChanged, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, _.bind(_onAdPlayPromiseRejected, this));
+
+                        //if(OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.MUTED || OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.SHARED) {
+                        //    adPlayer.mute();
+                        //}
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
                         }
@@ -994,6 +999,8 @@
                     if(!adPlayer) {
                         this.tryInitAdPlayer();
                     }
+
+                    OO.Pulse.debug = true;
 
                     session = OO.Pulse.createSession(this._contentMetadata, this._requestSettings);
 
@@ -1044,6 +1051,18 @@
                 this.videoControllerWrapper.raisePlayingEvent();
             };
 
+            var _onAdVolumeChanged = function(event,metadata) {
+                this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, adPlayer._muted);
+            };
+
+            var _onAdPlayPromiseRejected = function(event, metadata) {
+                if (adPlayer._muted) {
+                    this.videoControllerWrapper.raiseMutedPlaybackFailed();
+                } else {
+                    this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
+                }
+            };
+
             var _onSessionStarted = function(event, metadata) {
                 if(pluginCallbacks && pluginCallbacks.onSessionCreated) {
                     pluginCallbacks.onSessionCreated(session);
@@ -1051,7 +1070,6 @@
             };
 
             var _onAdTimeUpdate = function(event, eventData) {
-
                 var duration = eventData.duration ? eventData.duration :this.currentAd.getCoreAd().creatives[0].duration;
                 this.videoControllerWrapper.raiseTimeUpdate(eventData.position, duration);
             };
@@ -1273,7 +1291,9 @@
          */
         this.play = function() {
             if(_adManager) {
+                console.log("alex play")
                 _adManager.resumeAd();
+                //adPlayer.play();
                 this.isPlaying = true;
                 this.raisePlayingEvent();
             }
@@ -1288,6 +1308,7 @@
         this.pause = function() {
             if(_adManager) {
                 _adManager.pauseAd();
+                //adPlayer.pause();
                 this.isPlaying = false;
                 this.raisePauseEvent();
             }
@@ -1312,10 +1333,24 @@
          * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
          */
         this.setVolume = function(volume) {
+            console.log('alex try set volume', volume);
+            if(_adManager && _adManager.getAdPlayer() && !_adManager.getAdPlayer()._muted) {
+                console.log('alex set volume', volume);
+                //if(OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.MUTED && OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.SHARED) {
+                _adManager.getAdPlayer().setVolume(volume);
+                //}
+            }
+        };
+
+        this.mute = function() {
             if(_adManager && _adManager.getAdPlayer()) {
-                if(OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.MUTED && OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.SHARED) {
-                    _adManager.getAdPlayer().setVolume(volume);
-                }
+                _adManager.getAdPlayer().mute();
+            }
+        };
+
+        this.unmute = function() {
+            if(_adManager && _adManager.getAdPlayer()) {
+                _adManager.getAdPlayer().unmute();
             }
         };
 
@@ -1423,8 +1458,28 @@
             this.controller.notify(this.controller.EVENTS.STALLED);
         };
 
-        this.raiseVolumeEvent = function(event) {
-            this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : event.target.volume });
+        this.raiseVolumeEvent = function(volume, muted) {
+            console.log('alex: volume changed', volume, muted);
+            if (volume === 0 || muted) {
+                this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
+            } else {
+                this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: false });
+                this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
+            }
+        };
+
+        /**
+         */
+        this.raiseUnmutedPlaybackFailed = function() {
+            console.log('alex: unmuted playback failed');
+            this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
+        };
+
+        /**
+         */
+        this.raiseMutedPlaybackFailed = function() {
+            console.log('alex: muted playback failed');
+            this.controller.notify(this.controller.EVENTS.MUTED_PLAYBACK_FAILED);
         };
 
         this.raiseWaitingEvent = function() {
