@@ -62,7 +62,7 @@
             var showAdTitle = false;
             var preferredRenderingMode = null;
             var amc  = null;
-            var pulseSDKUrl = "/proxy/pulse-sdk-html5/2.1/latest.min.js?pulse_debug=true";
+            var pulseSDKUrl = "/proxy/pulse-sdk-html5/2.1/latest.min.js";
             var adModuleState = AD_MODULE_STATE.UNINITIALIZED;
             var enableDebugMode = false;
             var pluginCallbacks = {
@@ -716,7 +716,6 @@
              */
             this.resumeAd = function(ad) {
                 if(adPlayer) {
-                    console.log('alex ad player play');
                     adPlayer.play();
                 }
             };
@@ -886,6 +885,20 @@
                 }
             };
 
+            /**
+             * Checks to see if the ad player is muted.
+             * @protected
+             * @method Pulse#muted
+             * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
+             */
+            this.muted = function () {
+                var muted = true;
+                if (adPlayer) {
+                    muted = adPlayer._muted;
+                }
+                return muted;
+            };
+
             var playPlaceholder = _.bind(function () {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
@@ -896,7 +909,6 @@
                     streams
                 );
             }, this);
-
 
             var _onMainVideoTimeUpdate = _.bind(function (event,playheadTime, duration) {
                 if(adPlayer)
@@ -971,14 +983,9 @@
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
-
-                        //new stuff
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, _.bind(_onAdVolumeChanged, this));
                         adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, _.bind(_onAdPlayPromiseRejected, this));
 
-                        //if(OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.MUTED || OO.Pulse.getAutoplayMode() === OO.Pulse.AutoplayMode.SHARED) {
-                        //    adPlayer.mute();
-                        //}
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
                         }
@@ -999,8 +1006,6 @@
                     if(!adPlayer) {
                         this.tryInitAdPlayer();
                     }
-
-                    OO.Pulse.debug = true;
 
                     session = OO.Pulse.createSession(this._contentMetadata, this._requestSettings);
 
@@ -1051,12 +1056,28 @@
                 this.videoControllerWrapper.raisePlayingEvent();
             };
 
+            /**
+             * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
+             * the video controller wrapper to notify the player of the volume change event.
+             * @method Pulse#_onAdVolumeChanged
+             * @param {String} event The event name
+             * @param {Object} metadata The metadata associated with the event
+             * @private
+             */
             var _onAdVolumeChanged = function(event,metadata) {
-                this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, adPlayer._muted);
+                this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
             };
 
+            /**
+             * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
+             * the video controller wrapper to notify the player of the playback failure.
+             * @method Pulse#_onAdPlayPromiseRejected
+             * @param {String} event The event name
+             * @param {Object} metadata The metadata associated with the event
+             * @private
+             */
             var _onAdPlayPromiseRejected = function(event, metadata) {
-                if (adPlayer._muted) {
+                if (this.muted()) {
                     this.videoControllerWrapper.raiseMutedPlaybackFailed();
                 } else {
                     this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
@@ -1291,9 +1312,7 @@
          */
         this.play = function() {
             if(_adManager) {
-                console.log("alex play")
                 _adManager.resumeAd();
-                //adPlayer.play();
                 this.isPlaying = true;
                 this.raisePlayingEvent();
             }
@@ -1308,7 +1327,6 @@
         this.pause = function() {
             if(_adManager) {
                 _adManager.pauseAd();
-                //adPlayer.pause();
                 this.isPlaying = false;
                 this.raisePauseEvent();
             }
@@ -1333,21 +1351,28 @@
          * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
          */
         this.setVolume = function(volume) {
-            console.log('alex try set volume', volume);
-            if(_adManager && _adManager.getAdPlayer() && !_adManager.getAdPlayer()._muted) {
-                console.log('alex set volume', volume);
-                //if(OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.MUTED && OO.Pulse.getAutoplayMode() != OO.Pulse.AutoplayMode.SHARED) {
+            //Do not set the volume if the Pulse ad player is muted since that will unmute the ad player
+            if(_adManager && _adManager.getAdPlayer() && !_adManager.muted()) {
                 _adManager.getAdPlayer().setVolume(volume);
-                //}
             }
         };
 
+        /**
+         * Mutes the Pulse ad player.
+         * @public
+         * @method PulseVideoWrapper#mute
+         */
         this.mute = function() {
             if(_adManager && _adManager.getAdPlayer()) {
                 _adManager.getAdPlayer().mute();
             }
         };
 
+        /**
+         * Unmutes the Pulse ad player.
+         * @public
+         * @method PulseVideoWrapper#unmute
+         */
         this.unmute = function() {
             if(_adManager && _adManager.getAdPlayer()) {
                 _adManager.getAdPlayer().unmute();
@@ -1458,8 +1483,14 @@
             this.controller.notify(this.controller.EVENTS.STALLED);
         };
 
+        /**
+         * Notifies the video controller of VOLUME_CHANGE and MUTE_STATE_CHANGE events.
+         * @private
+         * @method PulseVideoWrapper#raiseVolumeEvent
+         * @param {Number} volume The current volume
+         * @param {boolean} muted The current mute state
+         */
         this.raiseVolumeEvent = function(volume, muted) {
-            console.log('alex: volume changed', volume, muted);
             if (volume === 0 || muted) {
                 this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
             } else {
@@ -1469,16 +1500,20 @@
         };
 
         /**
+         * Notifies the video controller of the UNMUTED_PLAYBACK_FAILED event.
+         * @private
+         * @method PulseVideoWrapper#raiseUnmutedPlaybackFailed
          */
         this.raiseUnmutedPlaybackFailed = function() {
-            console.log('alex: unmuted playback failed');
             this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
         };
 
         /**
+         * Notifies the video controller of the MUTED_PLAYBACK_FAILED event.
+         * @private
+         * @method PulseVideoWrapper#raiseMutedPlaybackFailed
          */
         this.raiseMutedPlaybackFailed = function() {
-            console.log('alex: muted playback failed');
             this.controller.notify(this.controller.EVENTS.MUTED_PLAYBACK_FAILED);
         };
 
