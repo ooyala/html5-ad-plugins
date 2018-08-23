@@ -1059,10 +1059,10 @@
             /**
              * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
              * the video controller wrapper to notify the player of the volume change event.
+             * @private
              * @method Pulse#_onAdVolumeChanged
              * @param {String} event The event name
              * @param {Object} metadata The metadata associated with the event
-             * @private
              */
             var _onAdVolumeChanged = function(event,metadata) {
                 this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
@@ -1071,10 +1071,10 @@
             /**
              * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
              * the video controller wrapper to notify the player of the playback failure.
+             * @private
              * @method Pulse#_onAdPlayPromiseRejected
              * @param {String} event The event name
              * @param {Object} metadata The metadata associated with the event
-             * @private
              */
             var _onAdPlayPromiseRejected = function(event, metadata) {
                 if (this.muted()) {
