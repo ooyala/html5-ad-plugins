@@ -1069,26 +1069,8 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA#_trySetupAdsRequest
        */
-      const date = Math.round(new Date().getTime());
-      const k = false;
       var _trySetupAdsRequest = privateMember(function()
       {
-        const now = Math.round(new Date().getTime());
-        const diff = now - date;
-        console.log('>>>>>', diff, '>>>>', this.adsRequested,
-          !this.canSetupAdsRequest,
-          !this.adTagUrl,
-          !this.uiRegistered,
-          !_amc.currentEmbedCode,
-          !_IMAAdsLoader,
-          !_checkRequestAdsOnReplay(), '=>', this.adsRequested         ||
-          !this.canSetupAdsRequest   ||
-          !this.adTagUrl             ||
-          !this.uiRegistered         ||
-          !_amc.currentEmbedCode     ||
-          !_IMAAdsLoader             ||
-          !_checkRequestAdsOnReplay());
-
         //need metadata, ima sdk, and ui to be registered before we can request an ad
         if ( this.adsRequested         ||
             !this.canSetupAdsRequest   ||
