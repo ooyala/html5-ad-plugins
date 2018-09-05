@@ -17,6 +17,7 @@ require("../html5-common/js/utils/utils.js");
 
   OO.Ads.manager(function(_, $)
   {
+
     /**
      * @class GoogleIMA
      * @classDesc The GoogleIMA Ads Manager class is registered as an ads manager with the Ad Manager Controller.
@@ -531,6 +532,7 @@ require("../html5-common/js/utils/utils.js");
        */
       this.playAd = function(amcAdPod)
       {
+        
         if(this.currentAMCAdPod)
         {
           _endCurrentAd(true);
@@ -557,7 +559,7 @@ require("../html5-common/js/utils/utils.js");
         {
           IMAiframe.style.zIndex = this.imaIframeZIndex;
         }
-
+        
         if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
           //if the sdk ad request failed when trying to preload, we should end the placeholder ad
@@ -573,7 +575,7 @@ require("../html5-common/js/utils/utils.js");
         {
           _amc.ui.adVideoElement.css(INVISIBLE_CSS);
         }
-
+        
         if(_usingAdRules && this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY)
         {
           _tryStartAd();
@@ -1067,8 +1069,26 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA#_trySetupAdsRequest
        */
+      const date = Math.round(new Date().getTime());
+      const k = false;
       var _trySetupAdsRequest = privateMember(function()
       {
+        const now = Math.round(new Date().getTime());
+        const diff = now - date;
+        console.log('>>>>>', diff, '>>>>', this.adsRequested,
+          !this.canSetupAdsRequest,
+          !this.adTagUrl,
+          !this.uiRegistered,
+          !_amc.currentEmbedCode,
+          !_IMAAdsLoader,
+          !_checkRequestAdsOnReplay(), '=>', this.adsRequested         ||
+          !this.canSetupAdsRequest   ||
+          !this.adTagUrl             ||
+          !this.uiRegistered         ||
+          !_amc.currentEmbedCode     ||
+          !_IMAAdsLoader             ||
+          !_checkRequestAdsOnReplay());
+
         //need metadata, ima sdk, and ui to be registered before we can request an ad
         if ( this.adsRequested         ||
             !this.canSetupAdsRequest   ||
@@ -1080,14 +1100,13 @@ require("../html5-common/js/utils/utils.js");
         {
           return;
         }
-
         //at this point we are guaranteed that metadata has been received and the sdk is loaded.
         //so now we can set whether to disable flash ads or not.
         if (google && google.ima && google.ima.settings)
         {
           google.ima.settings.setDisableFlashAds(this.disableFlashAds);
         }
-
+        
         var adsRequest = new google.ima.AdsRequest();
         if (this.additionalAdTagParameters)
         {
@@ -1118,7 +1137,6 @@ require("../html5-common/js/utils/utils.js");
         var adWillPlayMuted = this.willPlayAdMuted();
         OO.log("IMA: setAdWillPlayMuted = " + adWillPlayMuted);
         adsRequest.setAdWillPlayMuted(adWillPlayMuted);
-
         _resetAdsState();
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
@@ -1385,6 +1403,17 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onImaAdError = privateMember(function(adError)
       {
+        if (adError &&
+          adError.type === 'adError' &&
+          adError.h &&
+          adError.h.h === 1009 /*'The VAST response document is empty.'*/ ) {
+          // Empty response happens when 2 or more ads must be loaded simultaneously after playback seek ahead
+          // for 2 or more points of ads. In this case all prev ads loads are cancelled and the only last loaded.
+          // The requests for already cancelled ads seems to return empty VAST. Consider this is not an error
+          // @see https://jira.corp.ooyala.com/browse/PLAYER-3832 discussion
+          return;
+        }
+
         //all IMA errors are fatal so it's safe to clear out this timeout.
         clearTimeout(this.adsRequestTimeoutRef);
         if(_usingAdRules)
