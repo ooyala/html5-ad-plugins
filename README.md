@@ -51,8 +51,16 @@ The following example assumes that you hare hosting the html5-skin repo at http:
 </html>
 ```
 
-## Structure and Data Flow
+## Serving from localhost
 
+1. In debugging reason you might need to serve the plugins from localhost
+   ```bash
+   $ gulp webserver watch
+   ```
+2. The plugin files can be accessed then by http://localhost:9003/build/google_ima.js (or any other ad plugin file)
+3. Any changes of the files located under /src path trigger the rebuild process automatically.
+
+We use Mocha as our testing framework: https://mochajs.org/
 
 ## Developer help tool
 You'll need to run a webserver in order to serve the ad_manager_[name].html.

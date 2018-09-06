@@ -1387,8 +1387,7 @@ require("../html5-common/js/utils/utils.js");
       {
         if (adError &&
           adError.type === 'adError' &&
-          adError.h &&
-          adError.h.h === 1009 /*'The VAST response document is empty.'*/ ) {
+          adError.getErrorCode() === 1009 /*'The VAST response document is empty.'*/ ) {
           // Empty response happens when 2 or more ads must be loaded simultaneously after playback seek ahead
           // for 2 or more points of ads. In this case all prev ads loads are cancelled and the only last loaded.
           // The requests for already cancelled ads seems to return empty VAST. Consider this is not an error
