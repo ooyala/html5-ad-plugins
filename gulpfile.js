@@ -10,6 +10,7 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     shell = require('gulp-shell'),
     rename = require('gulp-rename'),
+    webserver = require('gulp-webserver'),
     _ = require('underscore'),
     listFiles = require('file-lister'),
     exec = require('child_process').exec;
@@ -80,12 +81,24 @@ var getFileNameFromPath = function(path)
   return path.substring(start);
 }
 
+// Run as webserver for debugging purpose
+gulp.task('webserver', 
+  function() {
+    gulp.src('.')
+      .pipe(webserver({
+        livereload: true,
+        directoryListing: true,
+        open: true,
+        port: 9003
+      }));
+  });
+
 // Run tests
 gulp.task('test', shell.task(['make test']));
 
 // Initiate a watch
 gulp.task('watch', function() {
-  gulp.watch(path.scripts, ['browserify']);
+  gulp.watch("js/**/*", ['build']);
 });
 
 // The default task (called when you run `gulp` from cli)

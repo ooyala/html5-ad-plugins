@@ -17,6 +17,7 @@ require("../html5-common/js/utils/utils.js");
 
   OO.Ads.manager(function(_, $)
   {
+
     /**
      * @class GoogleIMA
      * @classDesc The GoogleIMA Ads Manager class is registered as an ads manager with the Ad Manager Controller.
@@ -70,6 +71,7 @@ require("../html5-common/js/utils/utils.js");
 
       var TIME_UPDATER_INTERVAL = 500;
       var OOYALA_IMA_PLUGIN_TIMEOUT = "ooyalaImaPluginTimeout";
+      const DEBOUNCE_TIMEOUT = 500; /** ms */
 
       /**
        * Helper function to make functions private to GoogleIMA variable for consistency
@@ -524,13 +526,33 @@ require("../html5-common/js/utils/utils.js");
       });
 
       /**
+       * debouncing the case when user forwarded ahead and 2 or more ads requests simultaneosly issued
+       * @see https://jira.corp.ooyala.com/browse/PLAYER-3832
+       * @private
+       * @method GoogleIMA#playAd
+       * @param {object} ad The ad to play from the timeline
+       * @returns {void}
+       */
+      let debouncerId = null;
+      this.playAd = function(amcAdPod)
+      {
+        if (debouncerId) {
+          _resetAdsState();
+        }
+        debouncerId = setTimeout(() => {
+          debouncerId = null;
+          playAd(amcAdPod);
+        }, DEBOUNCE_TIMEOUT);
+      }
+
+      /**
        * Called by the ad manager controller.  Ad Manager Controller lets the module know that an ad should play now.
-       * @public
+       * @private
        * @method GoogleIMA#playAd
        * @param {object} ad The ad to play from the timeline.
        */
-      this.playAd = function(amcAdPod)
-      {
+      let playAd = (amcAdPod) => {
+
         if(this.currentAMCAdPod)
         {
           _endCurrentAd(true);
@@ -557,7 +579,7 @@ require("../html5-common/js/utils/utils.js");
         {
           IMAiframe.style.zIndex = this.imaIframeZIndex;
         }
-
+        
         if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
           //if the sdk ad request failed when trying to preload, we should end the placeholder ad
@@ -573,7 +595,7 @@ require("../html5-common/js/utils/utils.js");
         {
           _amc.ui.adVideoElement.css(INVISIBLE_CSS);
         }
-
+        
         if(_usingAdRules && this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY)
         {
           _tryStartAd();
@@ -820,6 +842,8 @@ require("../html5-common/js/utils/utils.js");
        */
       var _resetAdsState = privateMember(function()
       {
+        clearTimeout(debouncerId);
+        debouncerId = null;
         _tryUndoSetupForAdRules();
 
         //If you want to use the same ad tag twice you have to destroy the admanager and call
@@ -834,7 +858,6 @@ require("../html5-common/js/utils/utils.js");
         }
         this.currentIMAAd = null;
         this.currentNonLinearIMAAd = null;
-
         this.adsRequested = false;
       });
 
@@ -1080,14 +1103,13 @@ require("../html5-common/js/utils/utils.js");
         {
           return;
         }
-
         //at this point we are guaranteed that metadata has been received and the sdk is loaded.
         //so now we can set whether to disable flash ads or not.
         if (google && google.ima && google.ima.settings)
         {
           google.ima.settings.setDisableFlashAds(this.disableFlashAds);
         }
-
+        
         var adsRequest = new google.ima.AdsRequest();
         if (this.additionalAdTagParameters)
         {
@@ -1118,7 +1140,6 @@ require("../html5-common/js/utils/utils.js");
         var adWillPlayMuted = this.willPlayAdMuted();
         OO.log("IMA: setAdWillPlayMuted = " + adWillPlayMuted);
         adsRequest.setAdWillPlayMuted(adWillPlayMuted);
-
         _resetAdsState();
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
