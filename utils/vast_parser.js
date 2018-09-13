@@ -122,10 +122,21 @@ var VastParser = function() {
     var linear = jqueryXML.find("Linear").eq(0);
     var nonLinearAds = jqueryXML.find("NonLinearAds");
 
-    if (result.type === AD_TYPE.WRAPPER) { result.VASTAdTagURI = jqueryXML.find("VASTAdTagURI").text(); }
-    result.error = filterEmpty(jqueryXML.find("Error").map(function() { return OO.$(this).text(); }));
-    result.impression = filterEmpty(jqueryXML.find("Impression").map(function() { return OO.$(this).text(); }));
-    result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function() { return OO.$(this).text(); })));
+    if (result.type === AD_TYPE.WRAPPER) {
+      result.VASTAdTagURI = jqueryXML.find("VASTAdTagURI").text();
+    }
+
+    result.error = filterEmpty(jqueryXML.find("Error").map(function() {
+      return OO.$(this).text();
+    }));
+
+    result.impression = filterEmpty(jqueryXML.find("Impression").map(function () {
+      return OO.$(this).text();
+    }));
+    
+    result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function () {
+      return OO.$(this).text();
+    })));
 
     if (linear.length > 0) { result.linear = parseLinearAd(linear); }
     if (nonLinearAds.length > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
