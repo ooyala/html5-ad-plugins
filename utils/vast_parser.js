@@ -36,7 +36,7 @@ var VastParser = function() {
    * @returns {object[]} An array containing the ad(s) if ads are found, otherwise it returns null.
    */
   this.parser = function(vastXML, adLoaded) {
-    var jqueryAds =  $(vastXML).find("Ad");
+    var jqueryAds =  OO.$(vastXML).find("Ad");
     if (!this.checkNoAds(vastXML, jqueryAds)){
       // need to get error tracking information early in case error events need to be reported
       // before the ad object is created
@@ -79,7 +79,7 @@ var VastParser = function() {
   this.parseAds = function(vastXML, adLoaded) {
     var result = [];
     var version = getVastVersion(vastXML);
-    $(vastXML).find("Ad").each(function() {
+    OO.$(vastXML).find("Ad").each(function() {
       //no vpaid for ssai yet
       //var singleAd = _getVpaidCreative(this, version, adLoaded);
       var singleAd = null;
@@ -104,7 +104,7 @@ var VastParser = function() {
    */
   var vastAdSingleParser = _.bind(function(xml, version) {
     var result = getVastTemplate();
-    var jqueryXML = $(xml);
+    var jqueryXML = OO.$(xml);
     var inline = jqueryXML.find(AD_TYPE.INLINE);
     var wrapper = jqueryXML.find(AD_TYPE.WRAPPER);
 
@@ -123,14 +123,14 @@ var VastParser = function() {
     var nonLinearAds = jqueryXML.find("NonLinearAds");
 
     if (result.type === AD_TYPE.WRAPPER) { result.VASTAdTagURI = jqueryXML.find("VASTAdTagURI").text(); }
-    result.error = filterEmpty(jqueryXML.find("Error").map(function() { return $(this).text(); }));
-    result.impression = filterEmpty(jqueryXML.find("Impression").map(function() { return $(this).text(); }));
-    result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function() { return $(this).text(); })));
+    result.error = filterEmpty(jqueryXML.find("Error").map(function() { return OO.$(this).text(); }));
+    result.impression = filterEmpty(jqueryXML.find("Impression").map(function() { return OO.$(this).text(); }));
+    result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function() { return OO.$(this).text(); })));
 
     if (linear.length > 0) { result.linear = parseLinearAd(linear); }
     if (nonLinearAds.length > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
     jqueryXML.find("Companion").map(function(i, v){
-      result.companion.push(parseCompanionAd($(v)));
+      result.companion.push(parseCompanionAd(OO.$(v)));
       return 1;
     });
 
@@ -158,13 +158,13 @@ var VastParser = function() {
     var result = {
       tracking: {},
       // clickTracking needs to be remembered because it can exist in wrapper ads
-      clickTracking: filterEmpty($(linearXml).find("ClickTracking").map(function() { return $(this).text(); })),
+      clickTracking: filterEmpty(OO.$(linearXml).find("ClickTracking").map(function() { return OO.$(this).text(); })),
       //There can only be one clickthrough as per Vast 2.0/3.0 specs and XSDs
-      clickThrough: $(linearXml).find("ClickThrough").text(),
-      customClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
+      clickThrough: OO.$(linearXml).find("ClickThrough").text(),
+      customClick: filterEmpty(OO.$(linearXml).find("CustomClick").map(function() { return OO.$(this).text(); }))
     };
 
-    result.skipOffset = $(linearXml).attr("skipoffset");
+    result.skipOffset = OO.$(linearXml).attr("skipoffset");
 
     var mediaFile = linearXml.find("MediaFile");
 
@@ -172,11 +172,11 @@ var VastParser = function() {
     if (mediaFile.length > 0) {
       result.mediaFiles = filterEmpty(mediaFile.map(function(i,v) {
         return {
-          type: $(v).attr("type").toLowerCase(),
-          url: $.trim($(v).text()),
-          bitrate: $(v).attr("bitrate"),
-          width: $(v).attr("width"),
-          height: $(v).attr("height")
+          type: OO.$(v).attr("type").toLowerCase(),
+          url: OO.$.trim(OO.$(v).text()),
+          bitrate: OO.$(v).attr("bitrate"),
+          width: OO.$(v).attr("width"),
+          height: OO.$(v).attr("height")
         };
       }));
       result.duration = linearXml.find("Duration").text();
@@ -210,9 +210,9 @@ var VastParser = function() {
       result.maintainAspectRatio = nonLinear.attr("maintainAspectRatio");
       result.minSuggestedDuration = nonLinear.attr("minSuggestedDuration");
       result.nonLinearClickThrough = nonLinear.find("NonLinearClickThrough").text();
-      result.nonLinearClickTracking = filterEmpty($(nonLinearAdsXml).
+      result.nonLinearClickTracking = filterEmpty(OO.$(nonLinearAdsXml).
                                       find("NonLinearClickTracking").
-                                      map(function() { return $(this).text(); }));
+                                      map(function() { return OO.$(this).text(); }));
 
       if (staticResource.length > 0) {
         _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
@@ -239,7 +239,7 @@ var VastParser = function() {
     if (ads.length === 0) {
       OO.log("VAST: No ads in XML");
       // there could be an <Error> element in the vast response
-      var noAdsErrorURL = $(vastXML).find("Error").text();
+      var noAdsErrorURL = OO.$(vastXML).find("Error").text();
       if (noAdsErrorURL) {
         this.pingErrorURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
       }
@@ -292,11 +292,11 @@ var VastParser = function() {
         wrapperParentId: this.wrapperParentId || null
       };
 
-      var errorElement = $(ad).find("Error");
+      var errorElement = OO.$(ad).find("Error");
       if (errorElement.length > 0){
         error.errorURLs = [errorElement.text()];
       }
-      var adId = $(ad).prop("id");
+      var adId = OO.$(ad).prop("id");
       this.errorInfo[adId] = error;
     }, this);
   };
@@ -354,7 +354,7 @@ var VastParser = function() {
    */
   var getVastVersion = _.bind(function(vastXML) {
     var vastTag = getVastRoot(vastXML);
-    return $(vastTag).attr('version');
+    return OO.$(vastTag).attr('version');
   }, this);
 
   /**
@@ -366,7 +366,7 @@ var VastParser = function() {
    * returns the VAST root element.
    */
   var getVastRoot = _.bind(function(vastXML) {
-    var vastRootElement = $(vastXML).find("VAST");
+    var vastRootElement = OO.$(vastXML).find("VAST");
     if (vastRootElement.length === 0) {
       OO.log("VAST: No VAST tags in XML");
       return null;
@@ -525,7 +525,7 @@ var VastParser = function() {
     var events = trackingEvents || TrackingEvents;
     _.each(events, function(item) {
       var sel = "Tracking[event=" + item + "]";
-      tracking[item] = filterEmpty(xml.find(sel).map(function(i, v) { return $(v).text(); }));
+      tracking[item] = filterEmpty(xml.find(sel).map(function(i, v) { return OO.$(v).text(); }));
     }, {});
   }, this);
 
