@@ -526,8 +526,7 @@ require("../html5-common/js/utils/utils.js");
       });
 
       /**
-       * debouncing the case when user forwarded ahead and 2 or more ads requests simultaneosly issued
-       * @see https://jira.corp.ooyala.com/browse/PLAYER-3832
+       * Debouncing the case when a user forwarded ahead and 2 or more ad requests are simultaneously issued
        * @private
        * @method GoogleIMA#playAd
        * @param {object} ad The ad to play from the timeline
