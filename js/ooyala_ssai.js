@@ -13,7 +13,7 @@ require("../html5-common/js/utils/constants.js");
 require("../html5-common/js/utils/utils.js");
 require("../html5-common/js/utils/environment.js");
 
-var vastParser = require("../utils/vast_parser.js");
+var VastParser = require("../utils/vast_parser.js");
 var adManagerUtils = require("../utils/ad_manager_utils.js");
 
 OO.Ads.manager(function(_, $)
@@ -42,6 +42,7 @@ OO.Ads.manager(function(_, $)
     this.currentEmbed = "";
     this.domainName = "ssai.ooyala.com";
     this.ssaiGuid = "";
+    this.vastParser = new VastParser($);
 
     this.currentAd = null;
 
@@ -547,7 +548,7 @@ OO.Ads.manager(function(_, $)
     {
       OO.log("Ooyala SSAI: Response");
       // Call VastParser code
-      var vastAds = vastParser.parser(xml);
+      var vastAds = this.vastParser.parser(xml);
       var adIdVastData = _parseVastAdsObject(vastAds);
 
       var adObject = _getAdObjectFromVast(id3Object, adIdVastData);

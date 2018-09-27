@@ -1,4 +1,4 @@
-var VastParser = function() {
+var VastParser = function($) {
 
   this.errorInfo = {};
   this.wrapperParentId = null;
@@ -122,10 +122,21 @@ var VastParser = function() {
     var linear = jqueryXML.find("Linear").eq(0);
     var nonLinearAds = jqueryXML.find("NonLinearAds");
 
-    if (result.type === AD_TYPE.WRAPPER) { result.VASTAdTagURI = jqueryXML.find("VASTAdTagURI").text(); }
-    result.error = filterEmpty(jqueryXML.find("Error").map(function() { return $(this).text(); }));
-    result.impression = filterEmpty(jqueryXML.find("Impression").map(function() { return $(this).text(); }));
-    result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function() { return $(this).text(); })));
+    if (result.type === AD_TYPE.WRAPPER) {
+      result.VASTAdTagURI = jqueryXML.find("VASTAdTagURI").text();
+    }
+
+    result.error = filterEmpty(jqueryXML.find("Error").map(function() {
+      return $(this).text();
+    }));
+
+    result.impression = filterEmpty(jqueryXML.find("Impression").map(function () {
+      return $(this).text();
+    }));
+
+    result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function () {
+      return $(this).text();
+    })));
 
     if (linear.length > 0) { result.linear = parseLinearAd(linear); }
     if (nonLinearAds.length > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
@@ -540,4 +551,4 @@ var VastParser = function() {
   };
 };
 
-module.exports = new VastParser();
+module.exports = VastParser;
