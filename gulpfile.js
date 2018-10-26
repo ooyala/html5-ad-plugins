@@ -13,6 +13,7 @@ var gulp = require('gulp'),
     _ = require('underscore'),
     listFiles = require('file-lister'),
     exec = require('child_process').exec;
+const webserver = require('gulp-webserver');
 var babelify = require('babelify');
 
 var path = {
@@ -85,8 +86,19 @@ gulp.task('test', shell.task(['make test']));
 
 // Initiate a watch
 gulp.task('watch', function() {
-  gulp.watch(path.scripts, ['browserify']);
+  gulp.watch("js/**/*", ['build']);
 });
 
 // The default task (called when you run `gulp` from cli)
-gulp.task('default', ['build']);
+gulp.task('default', ['build', 'webserver', 'watch']);
+
+// Run as webserver for debugging purpose
+gulp.task('webserver', function() {
+  gulp.src('.')
+    .pipe(webserver({
+      livereload: true,
+      directoryListing: true,
+      open: true,
+      port: 9003
+    }));
+});

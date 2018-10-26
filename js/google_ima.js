@@ -712,8 +712,10 @@ require("../html5-common/js/utils/utils.js");
           //do not set non-zero volumes if we have not captured the user click
           //since that will cause IMA to error out on platforms where
           //muted autoplay is not supported
-          if (this.capturedUserClick || volume === 0 || !this.requiresMutedAutoplay())
-          {
+          const isVolumeDifferent = _IMAAdsManager.getVolume() !== volume;
+          if (isVolumeDifferent &&
+            (this.capturedUserClick || volume === 0 || !this.requiresMutedAutoplay())
+          ) {
             this.savedVolume = -1;
             _IMAAdsManager.setVolume(volume);
             //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
@@ -1799,6 +1801,7 @@ require("../html5-common/js/utils/utils.js");
 
               if (this.savedVolume >= 0)
               {
+                
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }

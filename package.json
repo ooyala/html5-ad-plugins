@@ -33,6 +33,7 @@
     "gulp-sourcemaps": "2.6.4",
     "gulp-uglify": "3.0.0",
     "gulp-util": "3.0.8",
+    "gulp-webserver": "0.9.1",
     "hazmat": "*",
     "jquery": "3.3.1",
     "jsdom": "11.11.0",
