@@ -1800,8 +1800,7 @@ require("../html5-common/js/utils/utils.js");
               }
 
               if (this.savedVolume >= 0)
-              {
-                
+              { 
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }
