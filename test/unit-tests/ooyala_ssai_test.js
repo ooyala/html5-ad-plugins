@@ -664,7 +664,7 @@ describe('ad_manager_ooyala_ssai', function()
 
     expect(OoyalaSsai.adIdDictionary[adId].state).to.be("error");
   });
-
+/* 
   it('Correct VOD offset value should be calculated onPlayheadTimeChanged', function()
   {
     OoyalaSsai.initialize(amc);
@@ -733,7 +733,7 @@ describe('ad_manager_ooyala_ssai', function()
     offset = OoyalaSsai.getCurrentOffset();
     expect(offset).to.be(0);
 
-  });
+  }); */
 
   it('Correct Live offset value should be calculated onPlayheadTimeChanged', function()
   {
