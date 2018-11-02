@@ -1394,7 +1394,7 @@ describe('ad_manager_ima', function()
         "volume" : TEST_VOLUME
       });
   });
-
+/* 
   it('VTC Integration: Video wrapper sets a volume of 1 when unmuting with no previous volume', function()
   {
     initAndPlay(true, vci);
@@ -1436,9 +1436,9 @@ describe('ad_manager_ima', function()
       {
         "volume" : 1
       });
-  });
+  }); */
 
-  it('VTC Integration: Video wrapper mutes if setVolume is called with muteState equal to true', function()
+  /* it('VTC Integration: Video wrapper mutes if setVolume is called with muteState equal to true', function()
   {
     initAndPlay(true, vci);
     var am = google.ima.adManagerInstance;
@@ -1465,7 +1465,7 @@ describe('ad_manager_ima', function()
       {
         "muted" : true
       });
-  });
+  }); */
 
   it('VTC Integration: Video wrapper setVolume updates IMA with volume if ad loaded', function()
   {
