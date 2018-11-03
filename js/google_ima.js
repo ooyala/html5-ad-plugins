@@ -52,6 +52,9 @@ require("../html5-common/js/utils/utils.js");
       var _uiContainerPrevStyle = null;
       var browserCanAutoplayUnmuted = false;
 
+      var _playAdOnRequestSuccess = null;
+      var _adRequest = null;
+
       //Constants
       var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
       var DEFAULT_ADS_REQUEST_TIME_OUT = 15000;
@@ -523,14 +526,54 @@ require("../html5-common/js/utils/utils.js");
         return isSameAdType && url && typeof url === 'string';
       });
 
+      this.playRequestedAd = function(amcAdPod)
+      {
+        if (amcAdPod && this.currentAMCAdPod === amcAdPod) {
+          _playAdOnRequestSuccess = this.currentAMCAdPod;
+
+          if (this.adsReady)
+          {
+            _playImaAd();
+          }
+
+          return true;
+        } else {
+          return false;
+        }
+      };
+
       /**
        * Called by the ad manager controller.  Ad Manager Controller lets the module know that an ad should play now.
        * @public
        * @method GoogleIMA#playAd
        * @param {object} ad The ad to play from the timeline.
+       * @param {object} adRequestOnly True to request the ad without starting playback, false to request and playback the ad
        */
-      this.playAd = function(amcAdPod)
+      this.playAd = function(amcAdPod, adRequestOnly)
       {
+        OO.log("Alex", "playAd", amcAdPod, adRequestOnly);
+        if (!this.initialPlayRequested) {
+          adRequestOnly = true;
+        }
+
+        if (!adRequestOnly)
+        {
+          _playAdOnRequestSuccess = amcAdPod;
+        }
+        else
+        {
+          _adRequest = amcAdPod;
+        }
+
+        if (_adRequest === amcAdPod && this.currentAMCAdPod === amcAdPod) {
+          if (!adRequestOnly)
+          {
+            this.playRequestedAd(amcAdPod);
+          }
+
+          return;
+        }
+
         if(this.currentAMCAdPod)
         {
           _endCurrentAd(true);
@@ -560,11 +603,21 @@ require("../html5-common/js/utils/utils.js");
 
         if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
         {
-          //if the sdk ad request failed when trying to preload, we should end the placeholder ad
-          if(this.preloadAdRulesAds && this.adRulesLoadError)
+          if (adRequestOnly)
           {
-            _amc.notifyPodEnded(this.currentAMCAdPod.id, 1);
+            //_resetAdsState();
+            this.canSetupAdsRequest = true;
+            _trySetupAdsRequest();
           }
+          else
+          {
+            //if the sdk ad request failed when trying to preload, we should end the placeholder ad
+            if(this.preloadAdRulesAds && this.adRulesLoadError)
+            {
+              _amc.notifyPodEnded(this.currentAMCAdPod.id, 1);
+            }
+          }
+
           return;
         }
 
@@ -669,11 +722,13 @@ require("../html5-common/js/utils/utils.js");
        */
       this.resumeAd = function(ad)
       {
+        OO.log("Alex", "Resuming ad");
         if (this.startImaOnVtcPlay)
         {
           this.startImaOnVtcPlay = false;
           if (_IMAAdsManager)
           {
+            OO.log("Alex", "Starting ads manager in resume ad");
             _IMAAdsManager.start();
           }
         }
@@ -864,6 +919,8 @@ require("../html5-common/js/utils/utils.js");
         this.isReplay = false;
         _IMAAdDisplayContainer.initialize();
         this.capturedUserClick = this.capturedUserClick || !wasAutoplayed;
+        //_resetPlayheadTracker();
+        _playheadTracker.currentTime = 0;
         _playImaAd();
 
         //if we aren't preloading the ads, then it's safe to make the ad request now.
@@ -902,8 +959,12 @@ require("../html5-common/js/utils/utils.js");
         var notified = _tryNotifyUnmutedPlaybackFailed();
         if (!notified && _IMAAdsManager)
         {
-          OO.log("Starting IMA Ads Manager");
+          OO.log("Alex", "Starting IMA Ads Manager");
           _IMAAdsManager.start();
+        }
+        else
+        {
+          OO.log("Alex", "Delaying start of ads manager");
         }
       });
 
@@ -917,7 +978,8 @@ require("../html5-common/js/utils/utils.js");
         //block this code from running till we want to play the video
         //if you run it before then ima will take over and immediately try to play
         //ads (if there is a preroll)
-        if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer)
+        if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer
+            && ((this.currentAMCAdPod && _playAdOnRequestSuccess === this.currentAMCAdPod) || _usingAdRules))
         {
           try
           {
@@ -928,6 +990,7 @@ require("../html5-common/js/utils/utils.js");
             // adsManager.init
             // Furthermore, some VPAID ads do not fire LOADED event until adsManager.start is called
             _tryStartAdsManager();
+            _playAdOnRequestSuccess = null;
             _imaAdPlayed = true;
 
             //notify placeholder end if we do not have a preroll to start main content
@@ -987,6 +1050,7 @@ require("../html5-common/js/utils/utils.js");
         //more ads while playing the current one.
         if(!_linearAdIsPlaying)
         {
+          OO.log("ALEX", "setting playhead tracker in playhead time changed", playheadTime, duration);
           _playheadTracker.currentTime = playheadTime;
           _playheadTracker.duration = duration;
         }
@@ -1062,11 +1126,11 @@ require("../html5-common/js/utils/utils.js");
       {
         if (!_playheadTracker)
         {
-          _playheadTracker = {duration: 0, currentTime: 0};
+          _playheadTracker = {duration: 0, currentTime: -1};
         }
         else
         {
-          _playheadTracker.currentTime = 0;
+          _playheadTracker.currentTime = -1;
         }
       });
 
@@ -1188,7 +1252,7 @@ require("../html5-common/js/utils/utils.js");
           _amc.unregisterAdManager(this.name);
           return;
         }
-        _amc.onAdSdkLoaded(this.name)
+        _amc.onAdSdkLoaded(this.name);
         _IMA_SDK_tryInitAdContainer();
         _trySetupAdsRequest();
       });
@@ -1273,7 +1337,7 @@ require("../html5-common/js/utils/utils.js");
           _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
           // This will enable notifications whenever ad rules or VMAP ads are scheduled
           // for playback, it has no effect on regular ads
-          _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(false);
+          //_IMAAdsLoader.getSettings().setAutoPlayAdBreaks(true);
           _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
           _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
         }
@@ -1591,6 +1655,7 @@ require("../html5-common/js/utils/utils.js");
 
         _trySetAdManagerToReady();
         this.adsReady = true;
+
         _playImaAd();
       });
 
@@ -1684,11 +1749,14 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_resumeMainContent = privateMember(function()
       {
-        OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
+        OO.log("Alex","GOOGLE_IMA:: Content Resume Requested by Google IMA!");
 
         //make sure when we resume, that we have ended the ad pod and told
         //the AMC that we have done so.
         _endCurrentAd(true);
+        //OO.log("ALEX", "setting playhead tracker in resume");
+        //_playheadTracker.currentTime = 1;
+        //_playheadTracker.duration = 10000000000;
       });
 
       /**
@@ -1750,15 +1818,15 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_onAdEvent = privateMember(function(adEvent)
       {
-        OO.log("IMA Event", adEvent);
+        OO.log("Alex", "IMA Event", adEvent, _playheadTracker.currentTime);
         if (_ignoreWhenAdNotPlaying(adEvent))
         {
-          OO.log("Ignoring IMA EVENT: ", adEvent.type, adEvent);
+          OO.log("Alex", "Ignoring IMA EVENT: ", adEvent.type, adEvent);
           return;
         }
         else
         {
-          OO.log("Handling IMA EVENT: ", adEvent.type, adEvent);
+          OO.log("Alex", "Handling IMA EVENT: ", adEvent.type, adEvent);
         }
         _amc.onSdkAdEvent(this.name, adEvent.type, {adData : adEvent.getAdData()});
         // Retrieve the ad from the event. Some events (e.g. ALL_ADS_COMPLETED)
