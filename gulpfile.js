@@ -90,7 +90,7 @@ gulp.task('watch', function() {
 });
 
 // The default task (called when you run `gulp` from cli)
-gulp.task('default', ['build', 'webserver', 'watch']);
+gulp.task('default', ['build']);
 
 // Run as webserver for debugging purpose
 gulp.task('webserver', function() {

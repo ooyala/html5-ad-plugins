@@ -1394,7 +1394,7 @@ describe('ad_manager_ima', function()
         "volume" : TEST_VOLUME
       });
   });
- 
+
   it('VTC Integration: Video wrapper sets a volume of 1 when unmuting with no previous volume', function()
   {
     initAndPlay(true, vci);
