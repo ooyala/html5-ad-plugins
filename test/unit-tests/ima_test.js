@@ -1394,51 +1394,8 @@ describe('ad_manager_ima', function()
         "volume" : TEST_VOLUME
       });
   });
-/* 
+
   it('VTC Integration: Video wrapper sets a volume of 1 when unmuting with no previous volume', function()
-  {
-    initAndPlay(true, vci);
-    var am = google.ima.adManagerInstance;
-    var vol = 0;
-    am.setVolume = function(volume)
-    {
-      vol = volume;
-      videoWrapper.raiseVolumeEvent();
-    };
-    am.getVolume = function() {
-      return vol;
-    };
-    //we tell IMA to start ad
-    videoWrapper.play();
-    //IMA tells us ad is started
-    am.publishEvent(google.ima.AdEvent.Type.LOADED);
-
-    videoWrapper.mute();
-    expect(vol).to.be(0);
-
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
-    expect(notifyParams).to.eql(
-      {
-        "muted" : true
-      });
-
-    videoWrapper.unmute();
-    expect(vol).to.be(1);
-
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
-    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
-      {
-        "muted" : false
-      });
-
-    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
-    expect(notifyParams).to.eql(
-      {
-        "volume" : 1
-      });
-  }); */
-
-  /* it('VTC Integration: Video wrapper mutes if setVolume is called with muteState equal to true', function()
   {
     initAndPlay(true, vci);
     var am = google.ima.adManagerInstance;
@@ -1456,6 +1413,54 @@ describe('ad_manager_ima', function()
     videoWrapper.play();
     //IMA tells us ad is started
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
+	videoWrapper.setVolume(TEST_VOLUME);
+	expect(vol).to.be(TEST_VOLUME);
+
+    videoWrapper.mute();
+    expect(vol).to.be(0);
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "muted" : true
+      });
+
+    videoWrapper.unmute();
+    expect(vol).to.be(TEST_VOLUME);
+
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
+      {
+        "muted" : false
+      });
+
+    expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.VOLUME_CHANGE);
+    expect(notifyParams).to.eql(
+      {
+        "volume" : TEST_VOLUME
+      });
+  }); 
+
+  it('VTC Integration: Video wrapper mutes if setVolume is called with muteState equal to true', function()
+  {
+    initAndPlay(true, vci);
+    var am = google.ima.adManagerInstance;
+    var vol = 0;
+    var TEST_VOLUME = 0.5;
+    am.setVolume = function(volume)
+    {
+      vol = volume;
+      videoWrapper.raiseVolumeEvent();
+    };
+    am.getVolume = function() {
+      return vol;
+    };
+    //we tell IMA to start ad
+    videoWrapper.play();
+    //IMA tells us ad is started
+    am.publishEvent(google.ima.AdEvent.Type.LOADED);
+    videoWrapper.setVolume(TEST_VOLUME);
+	expect(vol).to.be(TEST_VOLUME);
 
     videoWrapper.setVolume(1, true);
     expect(vol).to.be(0);
@@ -1465,7 +1470,7 @@ describe('ad_manager_ima', function()
       {
         "muted" : true
       });
-  }); */
+  });
 
   it('VTC Integration: Video wrapper setVolume updates IMA with volume if ad loaded', function()
   {
