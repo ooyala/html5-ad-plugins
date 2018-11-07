@@ -726,7 +726,7 @@ require("../html5-common/js/utils/utils.js");
         if (this.startImaOnVtcPlay)
         {
           this.startImaOnVtcPlay = false;
-          if (_IMAAdsManager)
+          if (_IMAAdsManager && !_usingAdRules)
           {
             OO.log("Alex", "Starting ads manager in resume ad");
             _IMAAdsManager.start();
@@ -920,7 +920,12 @@ require("../html5-common/js/utils/utils.js");
         _IMAAdDisplayContainer.initialize();
         this.capturedUserClick = this.capturedUserClick || !wasAutoplayed;
         //_resetPlayheadTracker();
-        _playheadTracker.currentTime = 0;
+        //_playheadTracker.currentTime = 0;
+        //_playheadTracker.duration = 60;
+
+        if (_usingAdRules && _IMAAdsManager) {
+          _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
+        }
         _playImaAd();
 
         //if we aren't preloading the ads, then it's safe to make the ad request now.
@@ -957,14 +962,14 @@ require("../html5-common/js/utils/utils.js");
       var _tryStartAdsManager = privateMember(function()
       {
         var notified = _tryNotifyUnmutedPlaybackFailed();
-        if (!notified && _IMAAdsManager)
+        if (!notified && _IMAAdsManager && !_usingAdRules)
         {
           OO.log("Alex", "Starting IMA Ads Manager");
           _IMAAdsManager.start();
         }
         else
         {
-          OO.log("Alex", "Delaying start of ads manager");
+          //OO.log("Alex", "Delaying start of ads manager");
         }
       });
 
@@ -1126,11 +1131,13 @@ require("../html5-common/js/utils/utils.js");
       {
         if (!_playheadTracker)
         {
-          _playheadTracker = {duration: 0, currentTime: -1};
+          OO.log("Alex", "resetting playhead tracker");
+          _playheadTracker = {duration: NaN, currentTime: 0};
         }
         else
         {
-          _playheadTracker.currentTime = -1;
+          OO.log("Alex", "setting playhead tracker current time to 0");
+          _playheadTracker.currentTime = 0;
         }
       });
 
@@ -1337,7 +1344,7 @@ require("../html5-common/js/utils/utils.js");
           _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
           // This will enable notifications whenever ad rules or VMAP ads are scheduled
           // for playback, it has no effect on regular ads
-          //_IMAAdsLoader.getSettings().setAutoPlayAdBreaks(true);
+          _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(true);
           _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
           _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
         }
@@ -1651,7 +1658,15 @@ require("../html5-common/js/utils/utils.js");
           _hideImaIframe();
         }
 
-        _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
+        if (!_usingAdRules || this.initialPlayRequested) {
+          _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
+        }
+
+
+        //if (_usingAdRules) {
+        //  OO.log("Alex", "Testing start after init")
+        //  _IMAAdsManager.start();
+        //}
 
         _trySetAdManagerToReady();
         this.adsReady = true;
@@ -1818,7 +1833,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_onAdEvent = privateMember(function(adEvent)
       {
-        OO.log("Alex", "IMA Event", adEvent, _playheadTracker.currentTime);
+        OO.log("Alex", "IMA Event", adEvent, _playheadTracker.currentTime, _playheadTracker.duration);
         if (_ignoreWhenAdNotPlaying(adEvent))
         {
           OO.log("Alex", "Ignoring IMA EVENT: ", adEvent.type, adEvent);
