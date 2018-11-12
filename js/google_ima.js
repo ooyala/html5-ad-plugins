@@ -53,7 +53,7 @@ require("../html5-common/js/utils/utils.js");
       var browserCanAutoplayUnmuted = false;
 
       var _playAdOnRequestSuccess = null;
-      var _adRequest = null;
+      var _requestedAd = null;
 
       //Constants
       var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
@@ -124,7 +124,6 @@ require("../html5-common/js/utils/utils.js");
       var _resetVars = privateMember(function()
       {
         this.ready = false;
-        this.preloadAdRulesAds = false;
         _usingAdRules = true;
 
         this.startImaOnVtcPlay = false;
@@ -157,6 +156,7 @@ require("../html5-common/js/utils/utils.js");
         this.currentNonLinearIMAAd = null;
         this.isReplay = false;
         this.requestAdsOnReplay = true;
+        this.preloadAds = false;
         _linearAdIsPlaying = false;
         _resetPlayheadTracker();
         this.hasPreroll = false;
@@ -171,6 +171,10 @@ require("../html5-common/js/utils/utils.js");
 
         //flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
+
+        //ad request vars
+        _playAdOnRequestSuccess = null;
+        _requestedAd = null;
 
         //google sdk variables
         _IMAAdsLoader = null;
@@ -247,14 +251,17 @@ require("../html5-common/js/utils/utils.js");
           this.adPosition = 0;
         }
 
-        //the preload feature works, but has been disabled due to product, so setting to false here
-        this.preloadAdRulesAds = false;
-
         //check if ads should play on replays
         this.requestAdsOnReplay = true;
         if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.REPLAY_ADS))
         {
           this.requestAdsOnReplay = _amc.adManagerSettings[_amc.AD_SETTINGS.REPLAY_ADS];
+        }
+
+        this.preloadAds = false;
+        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.PRELOAD_ADS))
+        {
+          this.preloadAds = _amc.adManagerSettings[_amc.AD_SETTINGS.PRELOAD_ADS];
         }
 
         //check for override on ad timeout
@@ -368,15 +375,7 @@ require("../html5-common/js/utils/utils.js");
         {
           if (_usingAdRules)
           {
-            if (this.preloadAdRulesAds)
-            {
-              this.canSetupAdsRequest = true;
-              _trySetupAdsRequest();
-            }
-            else
-            {
-              this.canSetupAdsRequest = false;
-            }
+            this.canSetupAdsRequest = false;
           }
         }
       };
@@ -526,22 +525,6 @@ require("../html5-common/js/utils/utils.js");
         return isSameAdType && url && typeof url === 'string';
       });
 
-      this.playRequestedAd = function(amcAdPod)
-      {
-        if (amcAdPod && this.currentAMCAdPod === amcAdPod) {
-          _playAdOnRequestSuccess = this.currentAMCAdPod;
-
-          if (this.adsReady)
-          {
-            _playImaAd();
-          }
-
-          return true;
-        } else {
-          return false;
-        }
-      };
-
       /**
        * Called by the ad manager controller.  Ad Manager Controller lets the module know that an ad should play now.
        * @public
@@ -551,10 +534,15 @@ require("../html5-common/js/utils/utils.js");
        */
       this.playAd = function(amcAdPod, adRequestOnly)
       {
-        OO.log("Alex", "playAd", amcAdPod, adRequestOnly);
-        if (!this.initialPlayRequested) {
-          adRequestOnly = true;
+        if (amcAdPod === null || typeof amcAdPod === 'undefined')
+        {
+          return;
         }
+        OO.log("Alex", "playAd", amcAdPod, adRequestOnly);
+        //if (!this.initialPlayRequested)
+        //{
+        //  adRequestOnly = true;
+        //}
 
         if (!adRequestOnly)
         {
@@ -562,13 +550,19 @@ require("../html5-common/js/utils/utils.js");
         }
         else
         {
-          _adRequest = amcAdPod;
+          _requestedAd = amcAdPod;
         }
 
-        if (_adRequest === amcAdPod && this.currentAMCAdPod === amcAdPod) {
+        if (_requestedAd === amcAdPod && this.currentAMCAdPod === amcAdPod)
+        {
           if (!adRequestOnly)
           {
-            this.playRequestedAd(amcAdPod);
+            _playAdOnRequestSuccess = this.currentAMCAdPod;
+
+            if (this.adsReady)
+            {
+              _playImaAd();
+            }
           }
 
           return;
@@ -605,17 +599,8 @@ require("../html5-common/js/utils/utils.js");
         {
           if (adRequestOnly)
           {
-            //_resetAdsState();
             this.canSetupAdsRequest = true;
             _trySetupAdsRequest();
-          }
-          else
-          {
-            //if the sdk ad request failed when trying to preload, we should end the placeholder ad
-            if(this.preloadAdRulesAds && this.adRulesLoadError)
-            {
-              _amc.notifyPodEnded(this.currentAMCAdPod.id, 1);
-            }
           }
 
           return;
@@ -919,24 +904,22 @@ require("../html5-common/js/utils/utils.js");
         this.isReplay = false;
         _IMAAdDisplayContainer.initialize();
         this.capturedUserClick = this.capturedUserClick || !wasAutoplayed;
-        //_resetPlayheadTracker();
-        //_playheadTracker.currentTime = 0;
-        //_playheadTracker.duration = 60;
 
         if (_usingAdRules && _IMAAdsManager) {
           _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
         }
         _playImaAd();
 
-        //if we aren't preloading the ads, then it's safe to make the ad request now.
-        //so we don't mess up analytics and request ads that may not be shown.
-        if (!this.preloadAdRulesAds)
-        {
-          this.canSetupAdsRequest = true;
-          _trySetupAdsRequest();
-        }
+        this.canSetupAdsRequest = true;
+        _trySetupAdsRequest();
       });
 
+      /**
+       * Tries to notify the VTC that we cannot playback unmuted since attempting to play unmuted
+       * in an environment where muted playback is required will cause a fatal ad error.
+       * @private
+       * @method GoogleIMA#_tryNotifyUnmutedPlaybackFailed
+       */
       var _tryNotifyUnmutedPlaybackFailed = privateMember(function()
       {
         var notified = false;
@@ -967,10 +950,6 @@ require("../html5-common/js/utils/utils.js");
           OO.log("Alex", "Starting IMA Ads Manager");
           _IMAAdsManager.start();
         }
-        else
-        {
-          //OO.log("Alex", "Delaying start of ads manager");
-        }
       });
 
       /**
@@ -983,8 +962,9 @@ require("../html5-common/js/utils/utils.js");
         //block this code from running till we want to play the video
         //if you run it before then ima will take over and immediately try to play
         //ads (if there is a preroll)
-        if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer
-            && ((this.currentAMCAdPod && _playAdOnRequestSuccess === this.currentAMCAdPod) || _usingAdRules))
+        var validAdRequestSuccess = this.currentAMCAdPod && _playAdOnRequestSuccess === this.currentAMCAdPod;
+        var readyToPlay = validAdRequestSuccess || _usingAdRules;
+        if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer && readyToPlay)
         {
           try
           {
@@ -1131,12 +1111,10 @@ require("../html5-common/js/utils/utils.js");
       {
         if (!_playheadTracker)
         {
-          OO.log("Alex", "resetting playhead tracker");
-          _playheadTracker = {duration: NaN, currentTime: 0};
+          _playheadTracker = {duration: 0, currentTime: 0};
         }
         else
         {
-          OO.log("Alex", "setting playhead tracker current time to 0");
           _playheadTracker.currentTime = 0;
         }
       });
@@ -1342,9 +1320,6 @@ require("../html5-common/js/utils/utils.js");
           var adErrorEvent = google.ima.AdErrorEvent.Type;
           _IMA_SDK_destroyAdsLoader();
           _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
-          // This will enable notifications whenever ad rules or VMAP ads are scheduled
-          // for playback, it has no effect on regular ads
-          _IMAAdsLoader.getSettings().setAutoPlayAdBreaks(true);
           _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
           _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
         }
@@ -1587,7 +1562,7 @@ require("../html5-common/js/utils/utils.js");
         adsSettings.loadVideoTimeout = DEFAULT_LOAD_VIDEO_TIME_OUT;
         adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
-        adsSettings.enablePreloading = true;
+        adsSettings.enablePreloading = this.preloadAds;
         if (this.useGoogleCountdown)
         {
           //both COUNTDOWN and AD_ATTRIBUTION are required as per
@@ -1662,12 +1637,6 @@ require("../html5-common/js/utils/utils.js");
           _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
         }
 
-
-        //if (_usingAdRules) {
-        //  OO.log("Alex", "Testing start after init")
-        //  _IMAAdsManager.start();
-        //}
-
         _trySetAdManagerToReady();
         this.adsReady = true;
 
@@ -1682,7 +1651,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _startPlaylistAd = privateMember(function(adEvent)
       {
-        OO.log("GOOGLE_IMA:: start playlist ad");
+        OO.log("GOOGLE_IMA:: starting playlist ad");
         // Proceed as usual if we're not using ad rules
         if (!_usingAdRules)
         {
@@ -1769,9 +1738,6 @@ require("../html5-common/js/utils/utils.js");
         //make sure when we resume, that we have ended the ad pod and told
         //the AMC that we have done so.
         _endCurrentAd(true);
-        //OO.log("ALEX", "setting playhead tracker in resume");
-        //_playheadTracker.currentTime = 1;
-        //_playheadTracker.duration = 10000000000;
       });
 
       /**
@@ -1865,11 +1831,6 @@ require("../html5-common/js/utils/utils.js");
             }
             this.currentMedia = ad.getMediaUrl();
             _resetUIContainerStyle();
-
-            if (ad.isLinear())
-            {
-              _linearAdIsPlaying = true;
-            }
             break;
           case eventType.STARTED:
             //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
