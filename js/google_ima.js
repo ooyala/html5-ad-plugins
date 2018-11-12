@@ -538,11 +538,6 @@ require("../html5-common/js/utils/utils.js");
         {
           return;
         }
-        OO.log("Alex", "playAd", amcAdPod, adRequestOnly);
-        //if (!this.initialPlayRequested)
-        //{
-        //  adRequestOnly = true;
-        //}
 
         if (!adRequestOnly)
         {
@@ -707,13 +702,11 @@ require("../html5-common/js/utils/utils.js");
        */
       this.resumeAd = function(ad)
       {
-        OO.log("Alex", "Resuming ad");
         if (this.startImaOnVtcPlay)
         {
           this.startImaOnVtcPlay = false;
-          if (_IMAAdsManager && !_usingAdRules)
+          if (_IMAAdsManager)
           {
-            OO.log("Alex", "Starting ads manager in resume ad");
             _IMAAdsManager.start();
           }
         }
@@ -905,6 +898,9 @@ require("../html5-common/js/utils/utils.js");
         _IMAAdDisplayContainer.initialize();
         this.capturedUserClick = this.capturedUserClick || !wasAutoplayed;
 
+        //if the IMA ads manager object exists, this means that the ad was preloaded
+        //Call the init function here when using ad rules so that IMA can take over ad control.
+        //If we call it earlier, the ad will start playback automatically even if we're not autoplaying
         if (_usingAdRules && _IMAAdsManager) {
           _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
         }
@@ -947,7 +943,7 @@ require("../html5-common/js/utils/utils.js");
         var notified = _tryNotifyUnmutedPlaybackFailed();
         if (!notified && _IMAAdsManager && !_usingAdRules)
         {
-          OO.log("Alex", "Starting IMA Ads Manager");
+          OO.log("Starting IMA Ads Manager");
           _IMAAdsManager.start();
         }
       });
@@ -1035,7 +1031,6 @@ require("../html5-common/js/utils/utils.js");
         //more ads while playing the current one.
         if(!_linearAdIsPlaying)
         {
-          OO.log("ALEX", "setting playhead tracker in playhead time changed", playheadTime, duration);
           _playheadTracker.currentTime = playheadTime;
           _playheadTracker.duration = duration;
         }
@@ -1633,6 +1628,9 @@ require("../html5-common/js/utils/utils.js");
           _hideImaIframe();
         }
 
+        //We can safely call init here if we're not using ad rules
+        //If we are using ad rules, we need to wait until we get the initialPlayRequested event so that we
+        //are ready for ad playback.
         if (!_usingAdRules || this.initialPlayRequested) {
           _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
         }
@@ -1733,7 +1731,7 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_resumeMainContent = privateMember(function()
       {
-        OO.log("Alex","GOOGLE_IMA:: Content Resume Requested by Google IMA!");
+        OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
 
         //make sure when we resume, that we have ended the ad pod and told
         //the AMC that we have done so.
@@ -1799,15 +1797,10 @@ require("../html5-common/js/utils/utils.js");
        */
       var _IMA_SDK_onAdEvent = privateMember(function(adEvent)
       {
-        OO.log("Alex", "IMA Event", adEvent, _playheadTracker.currentTime, _playheadTracker.duration);
         if (_ignoreWhenAdNotPlaying(adEvent))
         {
-          OO.log("Alex", "Ignoring IMA EVENT: ", adEvent.type, adEvent);
+          OO.log("Ignoring IMA EVENT: ", adEvent.type, adEvent);
           return;
-        }
-        else
-        {
-          OO.log("Alex", "Handling IMA EVENT: ", adEvent.type, adEvent);
         }
         _amc.onSdkAdEvent(this.name, adEvent.type, {adData : adEvent.getAdData()});
         // Retrieve the ad from the event. Some events (e.g. ALL_ADS_COMPLETED)
