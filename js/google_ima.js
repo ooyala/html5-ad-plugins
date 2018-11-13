@@ -52,7 +52,7 @@ require("../html5-common/js/utils/utils.js");
       var _uiContainerPrevStyle = null;
       var browserCanAutoplayUnmuted = false;
 
-      var _playAdOnRequestSuccess = null;
+      var _adToPlayOnRequestSuccess = null;
       var _requestedAd = null;
 
       //Constants
@@ -173,7 +173,7 @@ require("../html5-common/js/utils/utils.js");
         this.adRulesLoadError = false;
 
         //ad request vars
-        _playAdOnRequestSuccess = null;
+        _adToPlayOnRequestSuccess = null;
         _requestedAd = null;
 
         //google sdk variables
@@ -541,7 +541,7 @@ require("../html5-common/js/utils/utils.js");
 
         if (!adRequestOnly)
         {
-          _playAdOnRequestSuccess = amcAdPod;
+          _adToPlayOnRequestSuccess = amcAdPod;
         }
         else
         {
@@ -552,7 +552,7 @@ require("../html5-common/js/utils/utils.js");
         {
           if (!adRequestOnly)
           {
-            _playAdOnRequestSuccess = this.currentAMCAdPod;
+            _adToPlayOnRequestSuccess = this.currentAMCAdPod;
 
             if (this.adsReady)
             {
@@ -958,7 +958,7 @@ require("../html5-common/js/utils/utils.js");
         //block this code from running till we want to play the video
         //if you run it before then ima will take over and immediately try to play
         //ads (if there is a preroll)
-        var validAdRequestSuccess = this.currentAMCAdPod && _playAdOnRequestSuccess === this.currentAMCAdPod;
+        var validAdRequestSuccess = this.currentAMCAdPod && _adToPlayOnRequestSuccess === this.currentAMCAdPod;
         var readyToPlay = validAdRequestSuccess || _usingAdRules;
         if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer && readyToPlay)
         {
@@ -971,7 +971,7 @@ require("../html5-common/js/utils/utils.js");
             // adsManager.init
             // Furthermore, some VPAID ads do not fire LOADED event until adsManager.start is called
             _tryStartAdsManager();
-            _playAdOnRequestSuccess = null;
+            _adToPlayOnRequestSuccess = null;
             _imaAdPlayed = true;
 
             //notify placeholder end if we do not have a preroll to start main content
