@@ -2,6 +2,7 @@ google =
 {
   ima :
   {
+    linearAds: true,
     delayedAdRequestCallback: null, //for unit test convenience, call when delayAdRequest is true to complete the ad request
     delayAdRequest: false,      //for unit test convenience,
                                 //normally a call to requestAds calls its callback immediately in this mock
@@ -127,7 +128,6 @@ google =
           {
             var mockAdManager = function()
             {
-              var canPublishEvents = false;
               var amCallbacks = {};
               var currentAd = null;
               this.init = function()
@@ -146,10 +146,6 @@ google =
                 amCallbacks[event] = callback;
               };
               this.start = function() {
-                //Use the canPublishEvents flag to ensure that start
-                //gets called, otherwise publish events will fail,
-                //failing unit tests
-                canPublishEvents = true;
                 google.ima.adsManagerStarted = true;
               };
               this.stop = function() {};
@@ -166,7 +162,7 @@ google =
               };
               this.publishEvent = function(event)
               {      //convenience function for unit tests
-                if (typeof amCallbacks[event] === "function" && canPublishEvents)
+                if (typeof amCallbacks[event] === "function")
                 {
                   if (event === google.ima.AdErrorEvent.Type.AD_ERROR)
                   {

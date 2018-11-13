@@ -585,7 +585,7 @@ describe('ad_manager_ima', function()
     expect(triggered).to.be(1);
   });
 
-  it('AMC Integration, Ad Rules: Existing non-linear ad should be cancelled when next ad break is ready', function()
+  it('AMC Integration, Ad Rules: Existing non-linear ad should be cancelled when content pause is requested', function()
   {
     google.ima.linearAds = false;
     amc.playAd = function (ad) {
@@ -612,7 +612,7 @@ describe('ad_manager_ima', function()
     // These should exist when overlay is being displayed
     expect(ima.currentAMCAdPod).to.be.ok();
     expect(ima.currentIMAAd).to.be.ok();
-    am.publishEvent(google.ima.AdEvent.Type.AD_BREAK_READY);
+    am.publishEvent(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED);
     // These should be removed when next ad break is ready
     expect(ima.currentAMCAdPod).to.not.be.ok();
     expect(ima.currentIMAAd).to.not.be.ok();
