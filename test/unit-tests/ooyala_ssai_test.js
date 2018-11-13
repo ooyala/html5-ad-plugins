@@ -733,7 +733,7 @@ describe('ad_manager_ooyala_ssai', function()
     offset = OoyalaSsai.getCurrentOffset();
     expect(offset).to.be(0);
 
-  });
+  }); 
 
   it('Correct Live offset value should be calculated onPlayheadTimeChanged', function()
   {
