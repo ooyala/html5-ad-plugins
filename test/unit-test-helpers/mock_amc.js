@@ -38,7 +38,8 @@ fake_amc = function() {
     SHOW_NONLINEAR_CLOSE_BUTTON: "showNonLinearCloseButton",
     SHOW_LINEAR_AD_SKIP_BUTTON: "showLinearAdSkipButton",
     LINEAR_AD_SKIP_BUTTON_START_TIME: "linearAdSkipButtonStartTime",
-    ALLOW_AD_CLICK_THROUGH_ON_VIDEO: "allowAdClickThroughOnVideo"
+    ALLOW_AD_CLICK_THROUGH_ON_VIDEO: "allowAdClickThroughOnVideo",
+    PRELOAD_ADS: "preloadAds"
   };
   this.ADTYPE = {
     LINEAR_OVERLAY : "linearOverlay",

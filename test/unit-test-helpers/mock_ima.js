@@ -12,6 +12,8 @@ google =
     adsRenderingSettingsInstance : null, //for unit test convenience
     disableCustomPlaybackForIOS10Plus : false, //for unit test convenience
     adsManagerStarted: false,   //for unit test convenience
+    adsManagerInitCalled: false,   //for unit test convenience
+    adsRequestMade: false,
     resetDefaultValues : function()
     {
       google.ima.linearAds = true;
@@ -20,6 +22,8 @@ google =
       google.ima.adsRenderingSettingsInstance = null;
       google.ima.disableCustomPlaybackForIOS10Plus = false;
       google.ima.adsManagerStarted = false;
+      google.ima.adsManagerInitCalled = false;
+      google.ima.adsRequestMade = false;
       delete google.ima.adWillPlayMuted;
     },
     Ad : function()
@@ -136,6 +140,7 @@ google =
                 {
                   currentAd = new google.ima.Ad();
                 }
+                google.ima.adsManagerInitCalled = true;
               };
               this.getCuePoints = function()
               {
@@ -191,7 +196,7 @@ google =
                             getMessage : function()
                             {
                               return "Some Error Message";
-                            },
+                            }
                         }
                       }
 
@@ -240,6 +245,7 @@ google =
       this.contentComplete = function() {};
       this.requestAds = function()
       {
+        google.ima.adsRequestMade = true;
         //mock executes this callback immediately. Typically this does not occur in real world situations
         if (typeof callbacks[google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED] === "function")
         {

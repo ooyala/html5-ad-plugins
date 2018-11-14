@@ -2698,4 +2698,36 @@ describe('ad_manager_ima', function()
       expect(google.ima.numRedirects).to.be(undefined); //ima should not be called
     });
   });
+
+  describe('Ad preloading', function() {
+    beforeEach(function() {
+    });
+
+    afterEach(function() {
+    });
+
+    describe.only('Ad Rules', function() {
+      it('Does not preload an ad by default', function() {
+        initialize(true);
+        createVideoWrapper(vci);
+        ima.playAd(amc.timeline[0]);
+        expect(google.ima.adsManagerInitCalled).to.be(false);
+        expect(google.ima.adsRequestMade).to.be(false);
+        play(false);
+        expect(google.ima.adsRequestMade).to.be(true);
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+      });
+
+      it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', function() {
+        amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
+        initialize(true);
+        createVideoWrapper(vci);
+        ima.playAd(amc.timeline[0], true);
+        expect(google.ima.adsManagerInitCalled).to.be(false);
+        expect(google.ima.adsRequestMade).to.be(true);
+        play(false);
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+      });
+    });
+  });
 });
