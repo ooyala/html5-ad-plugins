@@ -556,7 +556,7 @@ require("../html5-common/js/utils/utils.js");
 
             if (this.adsReady)
             {
-              _playImaAd();
+              _tryPlayImaAd();
             }
           }
 
@@ -904,7 +904,7 @@ require("../html5-common/js/utils/utils.js");
         if (_usingAdRules && _IMAAdsManager) {
           _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
         }
-        _playImaAd();
+        _tryPlayImaAd();
 
         this.canSetupAdsRequest = true;
         _trySetupAdsRequest();
@@ -951,9 +951,9 @@ require("../html5-common/js/utils/utils.js");
       /**
        * Tries to initialize the AdsManager variable, from the IMA SDK, that is received from an ad request.
        * @private
-       * @method GoogleIMA#_playImaAd
+       * @method GoogleIMA#_tryPlayImaAd
        */
-      var _playImaAd = privateMember(function()
+      var _tryPlayImaAd = privateMember(function()
       {
         //block this code from running till we want to play the video
         //if you run it before then ima will take over and immediately try to play
@@ -1638,7 +1638,7 @@ require("../html5-common/js/utils/utils.js");
         _trySetAdManagerToReady();
         this.adsReady = true;
 
-        _playImaAd();
+        _tryPlayImaAd();
       });
 
       /**

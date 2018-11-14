@@ -2700,14 +2700,19 @@ describe('ad_manager_ima', function()
   });
 
   describe('Ad preloading', function() {
-    beforeEach(function() {
-    });
-
-    afterEach(function() {
-    });
-
-    describe.only('Ad Rules', function() {
+    describe('Ad Rules', function() {
       it('Does not preload an ad by default', function() {
+        initialize(true);
+        createVideoWrapper(vci);
+        expect(google.ima.adsManagerInitCalled).to.be(false);
+        expect(google.ima.adsRequestMade).to.be(false);
+        play(false);
+        ima.playAd(amc.timeline[0]);
+        expect(google.ima.adsRequestMade).to.be(true);
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+      });
+
+      it('Does not preload an ad if playAd was called prior to initial play with preloadAds set to false', function() {
         initialize(true);
         createVideoWrapper(vci);
         ima.playAd(amc.timeline[0]);
@@ -2716,6 +2721,8 @@ describe('ad_manager_ima', function()
         play(false);
         expect(google.ima.adsRequestMade).to.be(true);
         expect(google.ima.adsManagerInitCalled).to.be(true);
+        //we don't need to call start for ad rules ads
+        expect(google.ima.adsManagerStarted).to.be(false);
       });
 
       it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', function() {
@@ -2723,10 +2730,82 @@ describe('ad_manager_ima', function()
         initialize(true);
         createVideoWrapper(vci);
         ima.playAd(amc.timeline[0], true);
+        //For ad rules, AdsManager.init() sets off ad playback, so we do not want it called yet even when preloading
         expect(google.ima.adsManagerInitCalled).to.be(false);
         expect(google.ima.adsRequestMade).to.be(true);
         play(false);
         expect(google.ima.adsManagerInitCalled).to.be(true);
+        //we don't need to call start for ad rules ads
+        expect(google.ima.adsManagerStarted).to.be(false);
+      });
+
+      it('Ads Manager init is called after ad request is successful', function() {
+        google.ima.delayAdRequest = true;
+        amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
+        initialize(true);
+        createVideoWrapper(vci);
+        ima.playAd(amc.timeline[0], true);
+        //For ad rules, AdsManager.init() sets off ad playback, so we do not want it called yet even when preloading
+        expect(google.ima.adsManagerInitCalled).to.be(false);
+        expect(google.ima.adsRequestMade).to.be(true);
+        play(false);
+        expect(google.ima.adsManagerInitCalled).to.be(false);
+        google.ima.delayedAdRequestCallback();
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+        //we don't need to call start for ad rules ads
+        expect(google.ima.adsManagerStarted).to.be(false);
+      });
+    });
+
+    describe('Non Ad Rules', function() {
+      it('Does not preload an ad by default', function() {
+        initialize(false);
+        createVideoWrapper(vci);
+        expect(google.ima.adsManagerInitCalled).to.be(false);
+        expect(google.ima.adsRequestMade).to.be(false);
+        expect(google.ima.adsManagerStarted).to.be(false);
+        play(false);
+        ima.playAd(amc.timeline[0]);
+        expect(google.ima.adsRequestMade).to.be(true);
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+        expect(google.ima.adsManagerStarted).to.be(true);
+      });
+
+      it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', function() {
+        amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
+        initialize(false);
+        createVideoWrapper(vci);
+        ima.playAd(amc.timeline[0], true);
+        //For non-ad rules, AdsManager.start() sets off ad playback, so init can be called here safely to preload
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+        expect(google.ima.adsRequestMade).to.be(true);
+        expect(google.ima.adsManagerStarted).to.be(false);
+        play(false);
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+        expect(google.ima.adsManagerStarted).to.be(false);
+        ima.playAd(amc.timeline[0], false);
+        expect(google.ima.adsManagerStarted).to.be(true);
+      });
+
+      it('Ads Manager init is called after ad request is successful', function() {
+        google.ima.delayAdRequest = true;
+        amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
+        initialize(false);
+        createVideoWrapper(vci);
+        ima.playAd(amc.timeline[0], true);
+        expect(google.ima.adsRequestMade).to.be(true);
+        expect(google.ima.adsManagerInitCalled).to.be(false);
+        expect(google.ima.adsManagerStarted).to.be(false);
+        google.ima.delayedAdRequestCallback();
+        //For non-ad rules, AdsManager.start() sets off ad playback, so init can be called here safely to preload
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+        expect(google.ima.adsRequestMade).to.be(true);
+        expect(google.ima.adsManagerStarted).to.be(false);
+        play(false);
+        expect(google.ima.adsManagerInitCalled).to.be(true);
+        expect(google.ima.adsManagerStarted).to.be(false);
+        ima.playAd(amc.timeline[0], false);
+        expect(google.ima.adsManagerStarted).to.be(true);
       });
     });
   });
