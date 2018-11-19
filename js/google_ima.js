@@ -941,7 +941,7 @@ require("../html5-common/js/utils/utils.js");
       var _tryStartAdsManager = privateMember(function()
       {
         var notified = _tryNotifyUnmutedPlaybackFailed();
-        if (!notified && _IMAAdsManager && !_usingAdRules)
+        if (!notified && _IMAAdsManager)
         {
           OO.log("Starting IMA Ads Manager");
           _IMAAdsManager.start();

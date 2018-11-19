@@ -2721,8 +2721,8 @@ describe('ad_manager_ima', function()
         play(false);
         expect(google.ima.adsRequestMade).to.be(true);
         expect(google.ima.adsManagerInitCalled).to.be(true);
-        //we don't need to call start for ad rules ads
-        expect(google.ima.adsManagerStarted).to.be(false);
+        //start is needed to show the skip ad button for ad rules ads. This is not documented by Google
+        expect(google.ima.adsManagerStarted).to.be(true);
       });
 
       it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', function() {
@@ -2735,8 +2735,8 @@ describe('ad_manager_ima', function()
         expect(google.ima.adsRequestMade).to.be(true);
         play(false);
         expect(google.ima.adsManagerInitCalled).to.be(true);
-        //we don't need to call start for ad rules ads
-        expect(google.ima.adsManagerStarted).to.be(false);
+        //start is needed to show the skip ad button for ad rules ads. This is not documented by Google
+        expect(google.ima.adsManagerStarted).to.be(true);
       });
 
       it('Ads Manager init is called after ad request is successful', function() {
@@ -2752,8 +2752,8 @@ describe('ad_manager_ima', function()
         expect(google.ima.adsManagerInitCalled).to.be(false);
         google.ima.delayedAdRequestCallback();
         expect(google.ima.adsManagerInitCalled).to.be(true);
-        //we don't need to call start for ad rules ads
-        expect(google.ima.adsManagerStarted).to.be(false);
+        //start is needed to show the skip ad button for ad rules ads. This is not documented by Google
+        expect(google.ima.adsManagerStarted).to.be(true);
       });
     });
 
