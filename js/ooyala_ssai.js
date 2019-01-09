@@ -161,6 +161,11 @@ OO.Ads.manager(function(_, $)
       amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(this.onFullscreenChanged, this));
       amc.addPlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, _.bind(this.onAdVolumeChanged, this));
       amc.addPlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, _.bind(this.onMuteStateChanged, this));
+      amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(this.onPlayStarted, this));
+    };
+
+    this.onPlayStarted = function () {
+        _sendMetadataRequest();
     };
 
     /**
