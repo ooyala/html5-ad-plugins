@@ -163,6 +163,19 @@ describe('ad_manager_ooyala_ssai', function()
       "html5_ad_server": "http://blah"}, {}, content);}).to.not.throwException();
   });
 
+  it('Init: sets currentOffset before video was started', function()
+  {
+    var asset = {
+      duration: 366.61199999999997,
+    };
+
+    OoyalaSsai.initialize(amc);
+    OoyalaSsai.onContentTreeFetched('eventName', asset);
+    expect(OoyalaSsai.getCurrentOffset()).to.equal(366.61199999999997);
+    // we should know video length before sending request for VAST xml for SSAI AD
+    // as it requires current offset from the end
+  });
+
   it('Init: ad manager notifies controller that it is loaded', function()
   {
     var pluginLoaded = false;
@@ -321,7 +334,7 @@ describe('ad_manager_ooyala_ssai', function()
     OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 50);
     expect(trackingUrlsPinged.unmuteUrl).to.be(2);
 
-    // fullscreen events 
+    // fullscreen events
     OoyalaSsai.onFullscreenChanged("fullscreenChanged", true);
     expect(trackingUrlsPinged.fullscreenUrl).to.be(1);
 
@@ -733,7 +746,7 @@ describe('ad_manager_ooyala_ssai', function()
     offset = OoyalaSsai.getCurrentOffset();
     expect(offset).to.be(0);
 
-  }); 
+  });
 
   it('Correct Live offset value should be calculated onPlayheadTimeChanged', function()
   {
