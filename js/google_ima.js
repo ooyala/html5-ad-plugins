@@ -4,6 +4,18 @@
  * originally authored: June 2015
  */
 
+const {
+  bind,
+  isFunction,
+  find,
+  isFinite,
+  filter,
+  delay,
+  each,
+  contains,
+  pairs,
+} = require('underscore');
+
 //TODO make amc ignore ad request timeout.
 require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
 require("../html5-common/js/utils/constants.js");
@@ -11,11 +23,11 @@ require("../html5-common/js/utils/utils.js");
 
 
 
-(function(_, $)
+(function()
 {
   var registeredGoogleIMAManagers = {};
 
-  OO.Ads.manager(function(_, $)
+  OO.Ads.manager(function()
   {
     /**
      * @class GoogleIMA
@@ -78,14 +90,14 @@ require("../html5-common/js/utils/utils.js");
        * Helper function to make functions private to GoogleIMA variable for consistency
        * and ease of reading.
        */
-      var privateMember = _.bind(function(functionVar)
+      var privateMember = bind(function(functionVar)
       {
-        if (!_.isFunction(functionVar))
+        if (!isFunction(functionVar))
         {
           _throwError("Error: Trying to make private function but " + functionVar + " is not a function.");
           return;
         }
-        return _.bind(functionVar, this);
+        return bind(functionVar, this);
       }, this);
 
       /**
@@ -239,7 +251,7 @@ require("../html5-common/js/utils/utils.js");
           {
             return ad.position_type == AD_RULES_POSITION_TYPE;
           };
-        var adRulesAd = _.find(metadata.all_ads, usesAdRulesCheck);
+        var adRulesAd = find(metadata.all_ads, usesAdRulesCheck);
         _usingAdRules = !!adRulesAd;
         this.adRulesLoadError = false;
 
@@ -269,7 +281,7 @@ require("../html5-common/js/utils/utils.js");
         //IMA does not like timeouts of 0, it still attempts to play the ad even though
         //we have timed out
         //This may be a fault of the plugin or SDK. More investigation is required
-        if (_.isFinite(_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT])
+        if (isFinite(_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT])
             && (_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0 || this.runningUnitTests))
         {
           this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
@@ -502,7 +514,7 @@ require("../html5-common/js/utils/utils.js");
           return null;
         }
 
-        return _.filter(this.allAdInfo, _isValidAdTag);
+        return filter(this.allAdInfo, _isValidAdTag);
       });
 
       /**
@@ -1185,7 +1197,7 @@ require("../html5-common/js/utils/utils.js");
         }
         else
         {
-          this.adsRequestTimeoutRef = _.delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
+          this.adsRequestTimeoutRef = delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
         }
         this.adsRequested = true;
       });
@@ -1267,7 +1279,7 @@ require("../html5-common/js/utils/utils.js");
             {
               google.ima.settings.setLocale(OO.getLocale());
             }
-            
+
             if (this.useInsecureVpaidMode)
             {
               google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
@@ -1621,7 +1633,7 @@ require("../html5-common/js/utils/utils.js");
             _IMAAdsManager.addEventListener(e, _IMA_SDK_onAdEvent, false, this);
           };
 
-        OO._.each(imaAdEvents, addIMAEventListener, this);
+        each(imaAdEvents, addIMAEventListener, this);
 
         //Workaround of an issue on iOS where the IMA iframe is capturing clicks.
         if (OO.isIos) {
@@ -1771,11 +1783,11 @@ require("../html5-common/js/utils/utils.js");
         var companionAds = [],
             companionAd = null;
 
-        _.each(slots, function(slot) {
+        each(slots, function(slot) {
           if (slot.width && slot.height) {
             companionAd = ad.getCompanionAds(slot.width, slot.height);
             if (companionAd.length) {
-              _.each(companionAd, function(ad) {
+              each(companionAd, function(ad) {
                 companionAds.push({slotSize: slot.width + "x" + slot.height, ad: ad.getContent()});
               });
             }
@@ -1852,7 +1864,7 @@ require("../html5-common/js/utils/utils.js");
               }
 
               if (this.savedVolume >= 0)
-              { 
+              {
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }
@@ -2074,7 +2086,7 @@ require("../html5-common/js/utils/utils.js");
           // eventType.DURATION_CHANGE
         ];
 
-        return !adEvent || (!this.adPlaybackStarted && _.contains(ignoredEvents, adEvent.type));
+        return !adEvent || (!this.adPlaybackStarted && contains(ignoredEvents, adEvent.type));
       });
 
       /**
@@ -2104,7 +2116,7 @@ require("../html5-common/js/utils/utils.js");
         //starting an interval causes unit tests to throw a max call stack exceeded error
         if (!this.runningUnitTests)
         {
-          _timeUpdater = setInterval(_.bind(function()
+          _timeUpdater = setInterval(bind(function()
           {
             if(_linearAdIsPlaying)
             {
@@ -2165,8 +2177,8 @@ require("../html5-common/js/utils/utils.js");
       {
         var imaIframe = null;
         if (_uiContainer) {
-          var iframes = $(_uiContainer).find('iframe');
-          imaIframe = iframes[0];
+          var iframes = _uiContainer.querySelector('iframe');
+          imaIframe = iframes;
         }
         return imaIframe;
       });
@@ -2557,7 +2569,7 @@ require("../html5-common/js/utils/utils.js");
     this.createFromExisting = function(domId, ooyalaVideoController, playerId)
     {
       var googleIMA = registeredGoogleIMAManagers[playerId];
-      googleIMA.setupSharedVideoElement($("#" + domId)[0]);
+      googleIMA.setupSharedVideoElement(document.getElementById(domId));
       var wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
@@ -2803,10 +2815,13 @@ require("../html5-common/js/utils/utils.js");
      * @private
      * @method GoogleIMAVideoWrapper#applyCssToElemenet
      */
-    var applyCssToElement = _.bind(function(css)
+    var applyCssToElement = bind(function(css)
     {
       if (css && this.isControllingVideo && _ima.sharedVideoElement) {
-        $(_ima.sharedVideoElement).css(css);
+        var node = document.querySelector(_ima.sharedVideoElement);
+        pairs(css).forEach(([key, value]) => {
+          node.style[key] = value;
+        });
       }
     }, this);
 
@@ -2827,7 +2842,7 @@ require("../html5-common/js/utils/utils.js");
      * @param {string} event The event to raise to the video controller
      * @param {object} params [optional] Event parameters
      */
-    var notifyIfInControl = _.bind(function(event, params) {
+    var notifyIfInControl = bind(function(event, params) {
       if (this.isControllingVideo) {
         this.controller.notify(event, params);
       }
@@ -2894,7 +2909,7 @@ require("../html5-common/js/utils/utils.js");
       _ima.setRequiresMutedAutoplay(false);
     };
 
-    var raisePlayhead = _.bind(function(eventname, currentTime, duration)
+    var raisePlayhead = bind(function(eventname, currentTime, duration)
     {
       notifyIfInControl(eventname,
         { "currentTime" : currentTime,
@@ -2905,4 +2920,4 @@ require("../html5-common/js/utils/utils.js");
   };
 
   OO.Video.plugin(new GoogleIMAVideoFactory());
-}(OO._, OO.$));
+}());

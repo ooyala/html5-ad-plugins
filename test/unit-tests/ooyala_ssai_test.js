@@ -23,20 +23,9 @@ describe('ad_manager_ooyala_ssai', function()
   // Vast XML
   var ssaiXmlString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/ssai.xml"), "utf8");
   var ssaiNoDurationXmlString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/ssai_no_duration.xml"), "utf8");
-  var ssaiXml = OO.$.parseXML(ssaiXmlString);
-  var ssaiNoDurationXml = OO.$.parseXML(ssaiNoDurationXmlString);
+  var ssaiXml = $.parseXML(ssaiXmlString);
+  var ssaiNoDurationXml = $.parseXML(ssaiNoDurationXmlString);
   var trackingUrlsPinged = {};
-
-  // Helper functions
-  var fakeAd = function(timePositionClass, position, duration)
-  {
-    var timePositionClass = timePositionClass;
-    var position = position;
-    var duration = duration;
-    this.getTimePositionClass = function(){ return timePositionClass; };
-    this.getTimePosition = function() { return position; };
-    this.getTotalDuration = function() { return duration; };
-  };
 
   var initialize = function()
   {
@@ -215,7 +204,7 @@ describe('ad_manager_ooyala_ssai', function()
     };
 
     var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    expect(OO._.isEqual(currentId3Object, expectedResult)).to.be(true);
+    expect(_.isEqual(currentId3Object, expectedResult)).to.be(true);
   });
 
   it('ID3 Object should not be parsed if ID3 tag contains incorrect inputs', function() {
@@ -321,7 +310,7 @@ describe('ad_manager_ooyala_ssai', function()
     OoyalaSsai.onAdVolumeChanged("adVolumeChanged", 50);
     expect(trackingUrlsPinged.unmuteUrl).to.be(2);
 
-    // fullscreen events 
+    // fullscreen events
     OoyalaSsai.onFullscreenChanged("fullscreenChanged", true);
     expect(trackingUrlsPinged.fullscreenUrl).to.be(1);
 
@@ -576,7 +565,7 @@ describe('ad_manager_ooyala_ssai', function()
         duration: 1
       };
     var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    expect(OO._.isEqual(currentId3Object, expectedResult)).to.be(true);
+    expect(_.isEqual(currentId3Object, expectedResult)).to.be(true);
   });
 
   it('Correct Ad Duration should be selected', function()
@@ -595,7 +584,7 @@ describe('ad_manager_ooyala_ssai', function()
       duration: 100
     };
     var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    expect(OO._.isEqual(currentId3Object, expectedResult)).to.be(true);
+    expect(_.isEqual(currentId3Object, expectedResult)).to.be(true);
     OoyalaSsai.onResponse(currentId3Object, ssaiXml);
     expect(currentId3Object.duration).to.be(100);
   });
@@ -657,7 +646,7 @@ describe('ad_manager_ooyala_ssai', function()
       duration: 100
     };
     var currentId3Object = OoyalaSsai.onVideoTagFound("eventName", "videoId", "tagType", mockId3Tag);
-    expect(OO._.isEqual(currentId3Object, expectedResult)).to.be(true);
+    expect(_.isEqual(currentId3Object, expectedResult)).to.be(true);
     OoyalaSsai.onRequestError(currentId3Object);
 
     var adId = expectedResult.adId;
@@ -733,7 +722,7 @@ describe('ad_manager_ooyala_ssai', function()
     offset = OoyalaSsai.getCurrentOffset();
     expect(offset).to.be(0);
 
-  }); 
+  });
 
   it('Correct Live offset value should be calculated onPlayheadTimeChanged', function()
   {

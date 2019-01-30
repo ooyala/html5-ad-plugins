@@ -11,9 +11,17 @@
  *     http://hub.freewheel.tv/display/techdocs/How+to+Get+Ad+Level+Information+from+Events
  */
 
+const {
+  bind,
+  isFunction,
+  each,
+  delay,
+  filter,
+} = require('underscore');
+
 require("../html5-common/js/utils/constants.js");
 
-OO.Ads.manager(function(_, $) {
+OO.Ads.manager(function() {
   /**
    * @class Freewheel
    * @classDesc The Freewheel Ads Manager class, registered as an ads manager with the ad manager controller.
@@ -78,16 +86,16 @@ OO.Ads.manager(function(_, $) {
      */
     this.initialize = function(amcIn) {
       amc = amcIn;
-      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(onPlayRequested, this));
-      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(onReplayRequested, this));
-      amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(onPlay, this));
-      amc.addPlayerListener(amc.EVENTS.PAUSE, _.bind(onPause, this));
-      amc.addPlayerListener(amc.EVENTS.RESUME, _.bind(onResume, this));
-      amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(onContentCompleted, this));
-      amc.addPlayerListener(amc.EVENTS.CONTENT_AND_ADS_COMPLETED, _.bind(onAllCompleted, this));
-      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(onContentChanged, this));
-      amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _.bind(onResize, this));
-      amc.addPlayerListener(amc.EVENTS.MAIN_CONTENT_IN_FOCUS, _.bind(onMainContentInFocus, this));
+      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, bind(onPlayRequested, this));
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, bind(onReplayRequested, this));
+      amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, bind(onPlay, this));
+      amc.addPlayerListener(amc.EVENTS.PAUSE, bind(onPause, this));
+      amc.addPlayerListener(amc.EVENTS.RESUME, bind(onResume, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, bind(onContentCompleted, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_AND_ADS_COMPLETED, bind(onAllCompleted, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(onContentChanged, this));
+      amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, bind(onResize, this));
+      amc.addPlayerListener(amc.EVENTS.MAIN_CONTENT_IN_FOCUS, bind(onMainContentInFocus, this));
     };
 
     /**
@@ -165,7 +173,7 @@ OO.Ads.manager(function(_, $) {
       // overridden in Backlot until now.  Since we only want to make this request once, this is the earliest we can
       // do it. The 'if' ensures that we do not reload the Freewheel SDK when the movie changes.
       if (!adModuleJsReady && !this.testMode) {
-        amc.loadAdModule(this.name, remoteModuleJs, _.bind(function (success) {
+        amc.loadAdModule(this.name, remoteModuleJs, bind(function (success) {
           adModuleJsReady = success;
           if (adModuleJsReady) {
             this.ready = true;
@@ -191,7 +199,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Freewheel#_positionOverlays
      */
-    var _positionOverlays = _.bind(function() {
+    var _positionOverlays = bind(function() {
       // Set the css for z-index
       // TODO: Set the z index of the overlay - PBI-658
       var css = '#' + amc.ui.videoWrapper.attr("id") + ' ',
@@ -215,7 +223,7 @@ OO.Ads.manager(function(_, $) {
      */
     this.registerUi = function() {
       if (freeWheelCompanionAdsWrapperId) {
-        freeWheelCompanionAdsWrapper = $('#' + freeWheelCompanionAdsWrapperId);
+        freeWheelCompanionAdsWrapper = document.getElementById(freeWheelCompanionAdsWrapperId);
       }
 
       _positionOverlays();
@@ -226,7 +234,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Freewheel#_sendFreewheelRequest
      */
-    var _sendFreewheelRequest = _.bind(function() {
+    var _sendFreewheelRequest = bind(function() {
       if (!adModuleJsReady) return;
       shouldRequestAds = false;
 
@@ -253,20 +261,20 @@ OO.Ads.manager(function(_, $) {
       // Include dynamically set key value data
       // Note: Revisit this if customer data can include ";" or "=" characters
       if (FRMSegment) {
-        _.each(FRMSegment.split(";"), function(segment) {
+        each(FRMSegment.split(";"), function(segment) {
           segment = segment.split("=");
           fwContext.addKeyValue(segment[0], segment[1]);
         }, this);
       }
 
       // Listen to AdManager Events
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, _.bind(fw_onAdImpression, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, _.bind(fw_onAdImpressionEnd, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, _.bind(fw_onSlotStarted, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_ENDED, _.bind(fw_onSlotEnded, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE, _.bind(fw_onAdRequestComplete, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_CLICK, _.bind(fw_onAdClick, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_ERROR, _.bind(fw_onError, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, bind(fw_onAdImpression, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, bind(fw_onAdImpressionEnd, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, bind(fw_onSlotStarted, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_ENDED, bind(fw_onSlotEnded, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE, bind(fw_onAdRequestComplete, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_CLICK, bind(fw_onAdClick, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_ERROR, bind(fw_onError, this));
 
       // To make sure video ad playback in poor network condition, set video ad timeout parameters.
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_START_DETECT_TIMEOUT, 10000, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
@@ -322,7 +330,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Freewheel#_adRequestTimeout
      */
-    var _adRequestTimeout = _.bind(function(){
+    var _adRequestTimeout = bind(function(){
       _clearAdRequestTimeout();
       if (!fwContext._adResponse) {
         fwContext.removeEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE);
@@ -342,14 +350,14 @@ OO.Ads.manager(function(_, $) {
      * @param callback The function to call when we time out
      * @param duration the time to wait before timing out
      */
-    var _setAdRequestTimeout = _.bind(function(callback, duration){
+    var _setAdRequestTimeout = bind(function(callback, duration){
       if (adRequestTimeout) {
         var error = "Ad Request Timeout already exists - bad state";
         fw_onError(null, error);
       }
       // only set timeout if not in test mode otherwise it will break unit tests
       else if (!this.testMode) {
-        adRequestTimeout = _.delay(callback, duration);
+        adRequestTimeout = delay(callback, duration);
       }
     }, this);
 
@@ -403,7 +411,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Freewheel#_prepareTimeline
      */
-    var _prepareTimeline = _.bind(function() {
+    var _prepareTimeline = bind(function() {
       if (!slots) return [];
       if (timeline.length > 0) return;
       for (var i=0; i<slots.length; i++)
@@ -453,7 +461,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Freewheel#_registerDisplayForLinearAd
      */
-    var _registerDisplayForLinearAd = _.bind(function() {
+    var _registerDisplayForLinearAd = bind(function() {
       fwContext.registerVideoDisplayBase(amc.ui.adWrapper.attr("id"));
     }, this);
 
@@ -462,7 +470,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Freewheel#_registerDisplayForNonlinearAd
      */
-    var _registerDisplayForNonlinearAd = _.bind(function() {
+    var _registerDisplayForNonlinearAd = bind(function() {
       if (OO.requiresSingleVideoElement) {
         //on iOS and Android, FW expects the following to be our legit video element when
         //playing back video ads. If we attempt to use the fake video and then switch to
@@ -503,7 +511,7 @@ OO.Ads.manager(function(_, $) {
             // Trigger the request for the list of ads;
             indexInPod = 0;
             amc.notifyPodStarted(ad.id, 1);
-            slotEndedCallbacks[amc.ADTYPE.AD_REQUEST] = _.bind(function(adId) { amc.notifyPodEnded(adId); }, this, ad.id);
+            slotEndedCallbacks[amc.ADTYPE.AD_REQUEST] = bind(function(adId) { amc.notifyPodEnded(adId); }, this, ad.id);
             _sendFreewheelRequest();
           } else {
             amc.notifyPodStarted(ad.id, 1);
@@ -518,13 +526,13 @@ OO.Ads.manager(function(_, $) {
           if (ad.isLinear) {
             _registerDisplayForLinearAd();
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-            slotStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad) {
+            slotStartedCallbacks[ad.ad.getCustomId()] = bind(function(ad) {
               amc.focusAdVideo();
               }, this, ad);
-            slotEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
+            slotEndedCallbacks[ad.ad.getCustomId()] = bind(function(adId) {
                 amc.notifyPodEnded(adId);
               }, this, ad.id);
-            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(ad, details) {
+            adStartedCallbacks[ad.ad.getCustomId()] = bind(function(ad, details) {
                 //We need to remove the fake video element so that Alice
                 //can properly render the UI for a linear ad
                 if (fakeVideo && overlayContainer) {
@@ -536,7 +544,7 @@ OO.Ads.manager(function(_, $) {
                 }
                 amc.notifyLinearAdStarted(ad.id, details);
               }, this, ad);
-            adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
+            adEndedCallbacks[ad.ad.getCustomId()] = bind(function(adId) {
                 amc.notifyLinearAdEnded(adId);
               }, this, ad.id);
             //Freewheel has a limitation where it is not possible to skip a single ad in a pod.
@@ -550,7 +558,7 @@ OO.Ads.manager(function(_, $) {
           } else {
             _registerDisplayForNonlinearAd();
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-            adStartedCallbacks[ad.ad.getCustomId()] = _.bind(function(details) {
+            adStartedCallbacks[ad.ad.getCustomId()] = bind(function(details) {
               //provide width and height values if available. Alice will use these to resize
               //the skin plugins div when a non linear overlay is on screen
               if (details) {
@@ -569,7 +577,7 @@ OO.Ads.manager(function(_, $) {
               amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
             }, this);
 
-            adEndedCallbacks[ad.ad.getCustomId()] = _.bind(function(adId) {
+            adEndedCallbacks[ad.ad.getCustomId()] = bind(function(adId) {
               if (fakeVideo && overlayContainer) {
                 overlayContainer.removeChild(fakeVideo);
                 fakeVideo = null;
@@ -590,7 +598,7 @@ OO.Ads.manager(function(_, $) {
       }
     };
 
-    var _resetAdState = _.bind(function() {
+    var _resetAdState = bind(function() {
       handlingClick = false;
       currentPlayingSlot = null;
       currentAd = null;
@@ -635,7 +643,7 @@ OO.Ads.manager(function(_, $) {
       }
     };
 
-    var _cancelCurrentAd = _.bind(function() {
+    var _cancelCurrentAd = bind(function() {
       if (currentAd === null) return;
       if ((currentAd.adType === amc.ADTYPE.AD_REQUEST) ||
           (typeof(currentPlayingSlot.getCustomId) != "function")) {
@@ -645,7 +653,7 @@ OO.Ads.manager(function(_, $) {
 
       var id = currentPlayingSlot.getCustomId();
       var timePosition = currentPlayingSlot.getTimePositionClass();
-      if (_.isFunction(currentPlayingSlot.stop)) {
+      if (isFunction(currentPlayingSlot.stop)) {
         // This causes currentPlayingSlot to be set to null
         currentPlayingSlot.stop();
       }
@@ -656,11 +664,11 @@ OO.Ads.manager(function(_, $) {
       }
 
       // Call callbacks
-      if (_.isFunction(slotStartedCallbacks[id])) {
+      if (isFunction(slotStartedCallbacks[id])) {
         slotStartedCallbacks[id]();
         delete slotStartedCallbacks[id];
       }
-      if (_.isFunction(slotEndedCallbacks[id]))
+      if (isFunction(slotEndedCallbacks[id]))
       {
         slotEndedCallbacks[id]();
         delete slotEndedCallbacks[id];
@@ -673,10 +681,10 @@ OO.Ads.manager(function(_, $) {
 
     var onContentChanged = function() {
       // On Content Changed, need to dispose the context
-      // if (fwContext && _.isFunction(fwContext.dispose)) fwContext.dispose();
+      // if (fwContext && isFunction(fwContext.dispose)) fwContext.dispose();
     };
 
-    var updateOverlayPosition = _.bind(function() {
+    var updateOverlayPosition = bind(function() {
       //Overlay placement issue - PBI-1227 as of 12/9/2015
       //The main issue with Freewheel is when notifying their SDK of video size changes,
       //Freewheel only attempts to resize ads and not re-position ads.
@@ -777,7 +785,7 @@ OO.Ads.manager(function(_, $) {
 
     var setupAdsWrapper = function() {
       if (freeWheelCompanionAdsWrapper) {
-        freeWheelCompanionAdsWrapper.show();
+        freeWheelCompanionAdsWrapper.style.display = '';
       }
     };
 
@@ -811,7 +819,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#onPlay
      */
     var onPlay = function() {
-      if (!fwContext || !_.isFunction(fwContext.setVideoState)) return;
+      if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
     };
 
@@ -821,7 +829,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#onPause
      */
     var onPause = function() {
-      if (!fwContext || !_.isFunction(fwContext.setVideoState)) return;
+      if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PAUSED);
     };
 
@@ -831,7 +839,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#onResume
      */
     var onResume = function() {
-      if (!fwContext || !_.isFunction(fwContext.setVideoState)) return;
+      if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
     };
 
@@ -841,7 +849,7 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#onContentCompleted
      */
     var onContentCompleted = function() {
-      if (!fwContext || !_.isFunction(fwContext.setVideoState)) return;
+      if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_STOPPED);
     };
 
@@ -852,11 +860,11 @@ OO.Ads.manager(function(_, $) {
      * @method Freewheel#onAllCompleted
      */
     var onAllCompleted = function() {
-      if (!fwContext || !_.isFunction(fwContext.setVideoState)) return;
+      if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_COMPLETED);
 
       if (freeWheelCompanionAdsWrapper) {
-        freeWheelCompanionAdsWrapper.hide();
+        freeWheelCompanionAdsWrapper.style.display = 'none';
       }
     };
 
@@ -910,8 +918,8 @@ OO.Ads.manager(function(_, $) {
       var adSlot = adInstance.getSlot();
       var slotCustomId = (adSlot ? adSlot.getCustomId() : '') || event.slotCustomId;
 
-      if (_.isFunction(adStartedCallbacks[slotCustomId])) {
-        var clickEvents = _.filter(adInstance._eventCallbacks, function(callback) {
+      if (isFunction(adStartedCallbacks[slotCustomId])) {
+        var clickEvents = filter(adInstance._eventCallbacks, function(callback) {
           return callback._name === "defaultClick"
         });
         var hasClickUrl = clickEvents.length > 0;
@@ -960,7 +968,7 @@ OO.Ads.manager(function(_, $) {
         }
       }
       // TODO: inspect event for playback success or errors
-      if (_.isFunction(adEndedCallbacks[event.adInstance.getSlot().getCustomId()])) {
+      if (isFunction(adEndedCallbacks[event.adInstance.getSlot().getCustomId()])) {
         adEndedCallbacks[event.adInstance.getSlot().getCustomId()]();
       }
     };
@@ -979,7 +987,7 @@ OO.Ads.manager(function(_, $) {
       }
 
       // cancel timeout on load
-      if (_.isFunction(slotStartedCallbacks[currentPlayingSlot.getCustomId()])) {
+      if (isFunction(slotStartedCallbacks[currentPlayingSlot.getCustomId()])) {
         slotStartedCallbacks[currentPlayingSlot.getCustomId()]();
       }
       delete slotStartedCallbacks[currentPlayingSlot.getCustomId()];
@@ -1010,7 +1018,7 @@ OO.Ads.manager(function(_, $) {
 
       if (!event || !event.slot) return;
       _resetAdState();
-      if (_.isFunction(slotEndedCallbacks[event.slot.getCustomId()]))
+      if (isFunction(slotEndedCallbacks[event.slot.getCustomId()]))
         slotEndedCallbacks[event.slot.getCustomId()]();
       delete slotEndedCallbacks[event.slot.getCustomId()];
       delete adStartedCallbacks[event.slot.getCustomId()];
@@ -1022,7 +1030,7 @@ OO.Ads.manager(function(_, $) {
      * @private
      * @method Freewheel#_clearAdRequestTimeout
      */
-    var _clearAdRequestTimeout = _.bind(function() {
+    var _clearAdRequestTimeout = bind(function() {
       if (adRequestTimeout) {
         clearTimeout(adRequestTimeout);
         adRequestTimeout = null;
@@ -1080,7 +1088,7 @@ OO.Ads.manager(function(_, $) {
         overlayContainer = null;
       }
 
-      if (fwContext && _.isFunction(fwContext.dispose)) fwContext.dispose();
+      if (fwContext && isFunction(fwContext.dispose)) fwContext.dispose();
     };
   };
 

@@ -5,7 +5,9 @@
  * version 0.1
  */
 
-OO.Ads.manager(function(_, $) {
+const { bind } = require('underscore');
+
+OO.Ads.manager(function() {
   /**
    * @class AdManager
    * @classDesc The main Ad Manager class.
@@ -39,13 +41,13 @@ OO.Ads.manager(function(_, $) {
       amc = adManagerController;
 
       // Add any player event listeners now
-      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(_onContentChanged, this));
 
       //ID3 Tag example
-      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, _.bind(this.onVideoTagFound, this));
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, bind(this.onVideoTagFound, this));
 
       // Loads a remote file.  Use this function to load the client SDK for your ad module.
-      amc.loadAdModule(this.name, remoteModuleJs, _.bind(function(success) {
+      amc.loadAdModule(this.name, remoteModuleJs, bind(function(success) {
         adModuleJsReady = success;
       }, this));
 

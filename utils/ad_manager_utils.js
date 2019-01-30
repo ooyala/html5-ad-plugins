@@ -3,6 +3,14 @@
  * @class AdManagerUtils
  * @classdesc Provides utility/helper functions for ad managers.
  */
+
+const {
+  isString,
+  isNumber,
+  isFinite,
+  bind,
+} = require('underscore');
+
 var AdManagerUtils = function()
 {
 
@@ -18,7 +26,7 @@ var AdManagerUtils = function()
   {
     var milliseconds = null;
 
-    if (!_.isString(timeString) || !_isValidHms(timeString))
+    if (!isString(timeString) || !_isValidHms(timeString))
     {
       _logError("convertTimeStampToMilliseconds: invalid timeString received. Value was: "
                 + timeString);
@@ -48,14 +56,14 @@ var AdManagerUtils = function()
   {
     var milliseconds = null;
     var percent = null;
-    var validString = _.isString(timeString);
-    var validNumber = _.isNumber(totalDuration);
+    var validString = isString(timeString);
+    var validNumber = isNumber(totalDuration);
 
     if (validString)
     {
       percent = timeString.replace("%", "");
       percent = parseFloat(percent);
-      if (!_.isFinite(percent) || (percent < 0))
+      if (!isFinite(percent) || (percent < 0))
       {
         validString = false;
         _logError("convertPercentToMilliseconds: invalid percentage was received. Value was: "
@@ -89,7 +97,7 @@ var AdManagerUtils = function()
    * @param {string} hms The hh:mm:ss string
    * @returns {boolean} true if the hh:mm:ss string is valid. Returns false if otherwise.
    */
-  var _isValidHms = _.bind(function(hms)
+  var _isValidHms = bind(function(hms)
   {
     var result = false;
     if (hms)
@@ -101,7 +109,7 @@ var AdManagerUtils = function()
         for (var i = 0; i < hmsArray.length; i++)
         {
           var convertNum = parseInt(hmsArray[i]);
-          if (!_.isFinite(convertNum) || (convertNum < 0))
+          if (!isFinite(convertNum) || (convertNum < 0))
           {
             validHms = false;
             break;
@@ -119,7 +127,7 @@ var AdManagerUtils = function()
    * @method AdManagerUtils#_logError
    * @param {string} errorMessage The error message
    */
-  var _logError = _.bind(function(errorMessage)
+  var _logError = bind(function(errorMessage)
   {
     OO.log("AdManagerUtils: " + errorMessage);
   }, this);

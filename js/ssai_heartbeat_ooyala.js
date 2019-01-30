@@ -1,6 +1,8 @@
-OO.plugin('heartbeat', function(OO, _, $) {
-  var log = function() {
-    OO.log.apply(this, $.merge(['heartbeat:'], arguments));
+const { extend } = require('underscore');
+
+OO.plugin('heartbeat', function(OO) {
+  var log = function(...args) {
+    OO.log.apply(this, ['heartbeat:', ...args]);
   };
 
   var heartbeat = function(mb) {
@@ -62,23 +64,18 @@ OO.plugin('heartbeat', function(OO, _, $) {
       }
 
       var reportUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
-      
+
       var data = {
         playheadpos: parseInt(playheadPosition),
         pingfrequency: parseInt(config.Interval / 1000)
       };
 
-      $.ajax({
-        url: reportUrl,
-        type: 'POST',
-        data: JSON.stringify(data),
-        contentType: 'text/plain',
-        dataType: 'text',
-        success:function(){
-          log('Heartbeat was sent successfully');
-        }
-      });
-
+      fetch(reportUrl, {
+        method: 'post',
+        body: JSON.stringify(data),
+      }).then(() => {
+        log('Heartbeat was sent successfully');
+      })
     }
 
     function parseGuid(url) {
@@ -124,7 +121,7 @@ OO.plugin('heartbeat', function(OO, _, $) {
     }
 
     function buildConfig(configuration) {
-      var _config = $.extend($.extend({}, DEFAULT_CONFIG), configuration);
+      var _config = extend({}, DEFAULT_CONFIG, configuration);
 
       if (!_config.segmentLength) {
         _config.maxSegmentsToCheck = _config.maxSegmentsToCheck || DEFAULT_CONFIG.maxSegmentsToCheck;
@@ -146,6 +143,6 @@ OO.plugin('heartbeat', function(OO, _, $) {
       log('destroy');
     }
   };
-  
+
   return heartbeat;
 });

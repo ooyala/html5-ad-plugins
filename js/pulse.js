@@ -2,12 +2,14 @@
  * Pulse ad player ad manager
  */
 
-(function(_, $)
+const { bind, pairs } = require('underscore');
+
+(function()
 {
     var pulseAdManagers = {};
 
 
-    OO.Ads.manager(function(_, $) {
+    OO.Ads.manager(function() {
         function log() {
             var args = Array.prototype.slice.call(arguments);
             if(OO.Pulse) {
@@ -84,16 +86,16 @@
                 pulseAdManagers[playerId] = this;
 
                 // Add any player event listeners now
-                amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
-                amc.addPlayerListener(amc.EVENTS.PAUSED, _.bind(_onContentPause, this));
-                amc.addPlayerListener(amc.EVENTS.RESUME, _.bind(_onContentResume, this));
-                amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(_onInitialPlay, this));
-                amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(_onPlayStarted, this));
-                amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(_onContentFinished, this));
-                amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _.bind(_onSizeChanged, this));
-                amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
-                amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(_onReplay, this));
-                amc.addPlayerListener(amc.EVENTS.DEVICE_ID_SET, _.bind(_onDeviceIdSet, this));
+                amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(_onContentChanged, this));
+                amc.addPlayerListener(amc.EVENTS.PAUSED, bind(_onContentPause, this));
+                amc.addPlayerListener(amc.EVENTS.RESUME, bind(_onContentResume, this));
+                amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, bind(_onInitialPlay, this));
+                amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, bind(_onPlayStarted, this));
+                amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, bind(_onContentFinished, this));
+                amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, bind(_onSizeChanged, this));
+                amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, bind(_onFullscreenChanged, this));
+                amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, bind(_onReplay, this));
+                amc.addPlayerListener(amc.EVENTS.DEVICE_ID_SET, bind(_onDeviceIdSet, this));
             };
 
             this.getAdPlayer = function() {
@@ -324,9 +326,9 @@
                     }
 
                     for(var i = 0; i < adScreens.length; ++i) {
-                        adScreens[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';                        
+                        adScreens[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
                     }
-                    
+
                     for(var i = 0; i < skinClickLayers.length; ++i) {
                         skinClickLayers[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
                     }
@@ -385,7 +387,7 @@
                 if(!OO.Pulse) {
                     log('Pulse SDK not present; loading latest ..');
                     adModuleState = AD_MODULE_STATE.LOADING;
-                    amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, _.bind(function(success) {
+                    amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, bind(function(success) {
                         adModuleState = success ? AD_MODULE_STATE.READY : AD_MODULE_STATE.FAILED;
                         if(!success && podStarted) {
                             log('Failed to load Pulse SDK');
@@ -448,7 +450,7 @@
                 if(previewAdId) {
                     this._requestSettings.pulse_preview = previewAdId;
                 }
-                
+
                 //Then the parameters that always overriden by the custom metadata or the integration metadata are set
                 this._contentMetadata.category = getByPriority(
                     adManagerMetadata.pulse_category ,
@@ -489,7 +491,7 @@
 
                 this._contentMetadata.contentProviderInformation = {
                     embedCode: movieMetadata.embed_code,
-                    pcode: movieMetadata.asset_pcode                    
+                    pcode: movieMetadata.asset_pcode
                 };
 
                 this._requestSettings.vptpTicketData =  adManagerMetadata.pulse_vptp_data;
@@ -630,7 +632,7 @@
                         break;
                     case AD_MODULE_STATE.FAILED:
                         log('Aborting ad break as SDK failed to load');
-                        // SDK failed to load due to timeout or other issues; stop placeholder ad pod                
+                        // SDK failed to load due to timeout or other issues; stop placeholder ad pod
                         amc.notifyPodEnded(v4ad.id);
                         return;
                     default:
@@ -899,7 +901,7 @@
                 return muted;
             };
 
-            var playPlaceholder = _.bind(function () {
+            var playPlaceholder = bind(function () {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
                 amc.forceAdToPlay(
@@ -910,7 +912,7 @@
                 );
             }, this);
 
-            var _onMainVideoTimeUpdate = _.bind(function (event,playheadTime, duration) {
+            var _onMainVideoTimeUpdate = bind(function (event,playheadTime, duration) {
                 if(adPlayer)
                     adPlayer.contentPositionChanged(playheadTime);
             }, this);
@@ -971,20 +973,20 @@
                             }, this.sharedVideoElement);
 
                         //We register all the event listeners we will need
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _.bind(_onAdBreakStarted, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _.bind(_onAdFinished, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_ERROR, _.bind(_onAdError, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _.bind(_onAdSkipped, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _.bind(_onAdStarted, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _.bind(_onAdTimeUpdate, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, _.bind(_onAdVolumeChanged, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, _.bind(_onAdPlayPromiseRejected, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, bind(_onAdBreakFinished, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, bind(_onAdBreakStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, bind(_onAdFinished, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_ERROR, bind(_onAdError, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, bind(_onAdSkipped, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, bind(_onAdStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, bind(_onAdTimeUpdate, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, bind(_onAdClicked, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, bind(_onAdPaused, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, bind(_onAdPlaying, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, bind(_onSessionStarted, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, bind(_onOverlayShown, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, bind(_onAdVolumeChanged, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, bind(_onAdPlayPromiseRejected, this));
 
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
@@ -1133,7 +1135,7 @@
             };
 
             var _onOverlayShown = function(event, metadata) {
-                /* Impression is tracked by the SDK before this 
+                /* Impression is tracked by the SDK before this
                    handler is triggered, so nothing needs to be done here */
             };
         };
@@ -1173,7 +1175,7 @@
             var pulseAdManager = pulseAdManagers[playerId];
             var wrapper = new PulseVideoWrapper(pulseAdManager);
 
-            pulseAdManager.sharedVideoElement = $("#" + domId)[0];
+            pulseAdManager.sharedVideoElement = document.getElementById(domId);
             wrapper.controller = ooyalaVideoController;
             wrapper.subscribeAllEvents();
 
@@ -1258,7 +1260,7 @@
          * @private
          * @method PulseVideoWrapper#unsubscribeAllEvents
          */
-        var unsubscribeAllEvents = _.bind(function() {
+        var unsubscribeAllEvents = bind(function() {
 
         }, this);
 
@@ -1395,9 +1397,13 @@
          * @param {object} css The css to apply in key value pairs
          */
         this.applyCss = function(css) {
-            if(_adManager.sharedVideoElement) {
-                $(_adManager.sharedVideoElement).css(css);
+            var node = _adManager.sharedVideoElement;
+            if (!node) {
+                return;
             }
+            pairs(css).forEach(([key, value]) => {
+                node.style[key] = value;
+            });
         };
 
         /**
@@ -1534,7 +1540,7 @@
             this.raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, event);
         };
 
-        this.raisePlayhead = _.bind(function(eventname, event) {
+        this.raisePlayhead = bind(function(eventname, event) {
             this.controller.notify(eventname,
                 { "currentTime" : event.target.currentTime,
                     "duration" : event.target.duration,
@@ -1566,5 +1572,5 @@
     };
 
     OO.Video.plugin(new PulsePlayerFactory());
-}(OO._, OO.$));
+}());
 

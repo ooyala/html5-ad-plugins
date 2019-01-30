@@ -8,7 +8,13 @@
  *
  */
 
-OO.Ads.manager(function(_, $) {
+ const {
+  bind,
+  isFunction,
+  extend,
+ } = require('underscore');
+
+OO.Ads.manager(function() {
   // There are quite a few more of these events, see the linked VPAID docs above
   var VPAID_EVENTS = {
     AD_LOADED: "AdLoaded",
@@ -52,7 +58,7 @@ OO.Ads.manager(function(_, $) {
 
     ///// Helpers /////
     function log() {
-      if (_.isFunction(OO.log)) {
+      if (isFunction(OO.log)) {
         OO.log.apply(null, ["liverail-ads-manager:"].concat(Array.prototype.slice.apply(arguments)));
       } else {
         console.log(["liverail-ads-manager:"].concat(Array.prototype.slice.apply(arguments)));
@@ -76,7 +82,7 @@ OO.Ads.manager(function(_, $) {
       document.body.appendChild(liverailFrame);
     };
 
-    var _onIframeLoaded = _.bind(function() {
+    var _onIframeLoaded = bind(function() {
       log("iframe loaded");
       iframeLoaded = true;
       _tryLoadSdk();
@@ -88,7 +94,7 @@ OO.Ads.manager(function(_, $) {
       _tryLoadSdk();
     };
 
-    var _tryLoadSdk = _.bind(function() {
+    var _tryLoadSdk = bind(function() {
       if ((remoteModuleJs == null) || !iframeLoaded) return;
       var loader = liverailFrame.contentWindow.document.createElement("script");
       loader.src = remoteModuleJs;
@@ -98,7 +104,7 @@ OO.Ads.manager(function(_, $) {
       _tryInit();
     }, this);
 
-    var _onSdkLoaded = _.bind(function() {
+    var _onSdkLoaded = bind(function() {
       log("SDK loaded");
       adModuleJsReady = true;
 
@@ -107,7 +113,7 @@ OO.Ads.manager(function(_, $) {
 
       var eventName;
       for (eventName in VPAID_EVENTS) {
-        liverailVPAIDManager.subscribe(_.bind(_onAdEvent, this, VPAID_EVENTS[eventName]),
+        liverailVPAIDManager.subscribe(bind(_onAdEvent, this, VPAID_EVENTS[eventName]),
             VPAID_EVENTS[eventName]);
       }
 
@@ -158,7 +164,7 @@ OO.Ads.manager(function(_, $) {
         }
       }
 
-      this.environmentVariables = _.extend(params, this.environmentVariables);
+      this.environmentVariables = extend(params, this.environmentVariables);
       if (amc.movieDuration) {
         this.environmentVariables["LR_VIDEO_DURATION"] = Math.max(amc.movieDuration, 1);
       }
@@ -185,7 +191,7 @@ OO.Ads.manager(function(_, $) {
       ];
     };
 
-    var _tryInit = _.bind(function() {
+    var _tryInit = bind(function() {
       if (!adModuleJsReady || !metadataFetched) return;
       this.ready = true;
       amc.onAdManagerReady(this.name);
@@ -194,9 +200,9 @@ OO.Ads.manager(function(_, $) {
 
     ///// Playback /////
 
-    var _playbackBeginning = _.bind(function() {
+    var _playbackBeginning = bind(function() {
       var creativeData = {};
-      var environmentVariables = _.extend({
+      var environmentVariables = extend({
         slot: amc.ui.videoWrapper[0],
         //slot: amc.ui.adWrapper[0],
         videoSlot: amc.ui.adVideoElement[0],
@@ -258,7 +264,7 @@ OO.Ads.manager(function(_, $) {
       liverailVPAIDManager.resumeAd();
     };
 
-    var _onAdEvent = _.bind(function(eventName, logData) {
+    var _onAdEvent = bind(function(eventName, logData) {
       if (eventName !== VPAID_EVENTS.AD_LOG) {
         log(eventName, "fired with args", Array.prototype.slice.call(arguments, 1));
       }
@@ -279,7 +285,7 @@ OO.Ads.manager(function(_, $) {
           if (adStartedCallback) {
             adStartedCallback();
           }
-          countdownIntervalId = setInterval(_.bind(_updateCountdown, this), 500);
+          countdownIntervalId = setInterval(bind(_updateCountdown, this), 500);
           break;
         case VPAID_EVENTS.AD_CLICK_THRU:
           amc.adsClicked();
@@ -308,7 +314,7 @@ OO.Ads.manager(function(_, $) {
       }
     }, this);
 
-    var _resetAdState = _.bind(function() {
+    var _resetAdState = bind(function() {
       startAfterLoad      = false;
       adLoaded            = false;
       adPlaying           = false;
@@ -318,7 +324,7 @@ OO.Ads.manager(function(_, $) {
       adEndedCallback     = null;
     }, this);
 
-    var _updateCountdown = _.bind(function() {
+    var _updateCountdown = bind(function() {
       var remainingTime = liverailVPAIDManager.getAdRemainingTime();
       if (this.environmentVariables["LR_LAYOUT_SKIN_MESSAGE"]) {
         var message = ("Advertisement: Your video will resume in {COUNTDOWN} seconds.")
