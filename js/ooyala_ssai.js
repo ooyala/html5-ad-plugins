@@ -176,6 +176,11 @@ OO.Ads.manager(function()
       amc.addPlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, bind(this.onAdVolumeChanged, this));
       amc.addPlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, bind(this.onMuteStateChanged, this));
       amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, bind(this.onPlayStarted, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, bind(this.onContentTreeFetched, this));
+    };
+
+    this.onContentTreeFetched = function (event, content) {
+      currentOffset = content.duration;
     };
 
     this.onPlayStarted = function () {
@@ -1464,17 +1469,20 @@ OO.Ads.manager(function()
      */
     var _removeAMCListeners = bind(function()
     {
-      if (amc)
-      {
-        amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(_onContentChanged, this));
-        amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, bind(this.onVideoTagFound, this));
-        amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, bind(this.onContentUrlChanged, this));
-        amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, bind(this.onFullscreenChanged, this));
-        amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, bind(this.onAdVolumeChanged, this));
-        amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, bind(this.onMuteStateChanged, this));
-        amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , bind(this.onPlayheadTimeChanged, this));
-        amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, bind(this.onReplay, this));
+      if (!amc) {
+        return;
       }
+
+      amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(_onContentChanged, this));
+      amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, bind(this.onContentUrlChanged, this));
+      amc.removePlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , bind(this.onPlayheadTimeChanged, this));
+      amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, bind(this.onVideoTagFound, this));
+      amc.removePlayerListener(amc.EVENTS.REPLAY_REQUESTED, bind(this.onReplay, this));
+      amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, bind(this.onFullscreenChanged, this));
+      amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, bind(this.onAdVolumeChanged, this));
+      amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, bind(this.onMuteStateChanged, this));
+      amc.removePlayerListener(amc.EVENTS.PLAY_STARTED, bind(this.onPlayStarted, this));
+      amc.removePlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, bind(this.onContentTreeFetched, this));
     }, this);
   };
   return new OoyalaSsai();
