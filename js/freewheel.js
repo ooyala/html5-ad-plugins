@@ -12,7 +12,6 @@
  */
 
 const {
-  bind,
   isFunction,
   each,
   delay,
@@ -84,18 +83,18 @@ OO.Ads.manager(function() {
      * @method Freewheel#initialize
      * @param {object} amcIn A reference to the ad manager controller instance
      */
-    this.initialize = function(amcIn) {
+    this.initialize = (amcIn) => {
       amc = amcIn;
-      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, bind(onPlayRequested, this));
-      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, bind(onReplayRequested, this));
-      amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, bind(onPlay, this));
-      amc.addPlayerListener(amc.EVENTS.PAUSE, bind(onPause, this));
-      amc.addPlayerListener(amc.EVENTS.RESUME, bind(onResume, this));
-      amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, bind(onContentCompleted, this));
-      amc.addPlayerListener(amc.EVENTS.CONTENT_AND_ADS_COMPLETED, bind(onAllCompleted, this));
-      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(onContentChanged, this));
-      amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, bind(onResize, this));
-      amc.addPlayerListener(amc.EVENTS.MAIN_CONTENT_IN_FOCUS, bind(onMainContentInFocus, this));
+      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, onPlayRequested);
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, onReplayRequested);
+      amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, onPlay);
+      amc.addPlayerListener(amc.EVENTS.PAUSE, onPause);
+      amc.addPlayerListener(amc.EVENTS.RESUME, onResume);
+      amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, onContentCompleted);
+      amc.addPlayerListener(amc.EVENTS.CONTENT_AND_ADS_COMPLETED, onAllCompleted);
+      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, onContentChanged);
+      amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, onResize);
+      amc.addPlayerListener(amc.EVENTS.MAIN_CONTENT_IN_FOCUS, onMainContentInFocus);
     };
 
     /**
@@ -108,7 +107,7 @@ OO.Ads.manager(function() {
      * @param {object} baseMetadata Base level metadata from Backlot
      * @param {object} movieMetadata Metadata pertaining specifically to the movie being played
      */
-    this.loadMetadata = function(metadata, baseMetadata, movieMetadata) {
+    this.loadMetadata = (metadata, baseMetadata, movieMetadata) => {
       // initialize values
       this.ready = false;
       videoAssetId = null;
@@ -173,14 +172,14 @@ OO.Ads.manager(function() {
       // overridden in Backlot until now.  Since we only want to make this request once, this is the earliest we can
       // do it. The 'if' ensures that we do not reload the Freewheel SDK when the movie changes.
       if (!adModuleJsReady && !this.testMode) {
-        amc.loadAdModule(this.name, remoteModuleJs, bind(function (success) {
+        amc.loadAdModule(this.name, remoteModuleJs, (success) => {
           adModuleJsReady = success;
           if (adModuleJsReady) {
             this.ready = true;
             amc.onAdManagerReady(true);
             amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
           }
-        }, this));
+        });
       } else if (this.testMode) {
         this.ready = true;
         adModuleJsReady = true;
@@ -199,7 +198,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#_positionOverlays
      */
-    var _positionOverlays = bind(function() {
+    var _positionOverlays = () => {
       // Set the css for z-index
       // TODO: Set the z index of the overlay - PBI-658
       var css = '#' + amc.ui.videoWrapper.attr("id") + ' ',
@@ -213,7 +212,7 @@ OO.Ads.manager(function() {
         style.appendChild(document.createTextNode(css));
       }
       document.getElementsByTagName('head')[0].appendChild(style);
-    }, this);
+    };
 
     /**
      * Called when the UI has been setup.  Sets up the native element listeners and style for the overlay.
@@ -221,7 +220,7 @@ OO.Ads.manager(function() {
      * @public
      * @method Freewheel#registerUi
      */
-    this.registerUi = function() {
+    this.registerUi = () => {
       if (freeWheelCompanionAdsWrapperId) {
         freeWheelCompanionAdsWrapper = document.getElementById(freeWheelCompanionAdsWrapperId);
       }
@@ -234,7 +233,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#_sendFreewheelRequest
      */
-    var _sendFreewheelRequest = bind(function() {
+    var _sendFreewheelRequest = () => {
       if (!adModuleJsReady) return;
       shouldRequestAds = false;
 
@@ -261,20 +260,20 @@ OO.Ads.manager(function() {
       // Include dynamically set key value data
       // Note: Revisit this if customer data can include ";" or "=" characters
       if (FRMSegment) {
-        each(FRMSegment.split(";"), function(segment) {
+        each(FRMSegment.split(";"), (segment) => {
           segment = segment.split("=");
           fwContext.addKeyValue(segment[0], segment[1]);
-        }, this);
+        });
       }
 
       // Listen to AdManager Events
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, bind(fw_onAdImpression, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, bind(fw_onAdImpressionEnd, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, bind(fw_onSlotStarted, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_ENDED, bind(fw_onSlotEnded, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE, bind(fw_onAdRequestComplete, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_CLICK, bind(fw_onAdClick, this));
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_ERROR, bind(fw_onError, this));
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, fw_onAdImpression);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, fw_onAdImpressionEnd);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, fw_onSlotStarted);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_ENDED, fw_onSlotEnded);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE, fw_onAdRequestComplete);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_CLICK, fw_onAdClick);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_ERROR, fw_onError);
 
       // To make sure video ad playback in poor network condition, set video ad timeout parameters.
       fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_START_DETECT_TIMEOUT, 10000, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
@@ -322,7 +321,7 @@ OO.Ads.manager(function() {
       fwContext.submitRequest();
       fwAdDataRequested = true;
       _setAdRequestTimeout(_adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
-    }, this);
+    };
 
     /**
      * Set up function to log error if ad response is null after maximum duration allowed for ad request to respond
@@ -330,7 +329,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#_adRequestTimeout
      */
-    var _adRequestTimeout = bind(function(){
+    var _adRequestTimeout = () => {
       _clearAdRequestTimeout();
       if (!fwContext._adResponse) {
         fwContext.removeEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE);
@@ -340,7 +339,7 @@ OO.Ads.manager(function() {
         slotEndedCallbacks[amc.ADTYPE.AD_REQUEST]();
         delete slotEndedCallbacks[amc.ADTYPE.AD_REQUEST];
       }
-    }, this);
+    };
 
     /**
      * Set timeout for ad request. Will call the provided callback
@@ -350,7 +349,7 @@ OO.Ads.manager(function() {
      * @param callback The function to call when we time out
      * @param duration the time to wait before timing out
      */
-    var _setAdRequestTimeout = bind(function(callback, duration){
+    var _setAdRequestTimeout = (callback, duration) => {
       if (adRequestTimeout) {
         var error = "Ad Request Timeout already exists - bad state";
         fw_onError(null, error);
@@ -359,7 +358,7 @@ OO.Ads.manager(function() {
       else if (!this.testMode) {
         adRequestTimeout = delay(callback, duration);
       }
-    }, this);
+    };
 
     /**
      * Called when the Freewheel ad xml request has completed.  If the result was success, read the ad slots.
@@ -368,7 +367,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#fw_onAdRequestComplete
      * @param {object} event The requestComplete event indicating success or failure
      */
-    var fw_onAdRequestComplete = function(event) {
+    var fw_onAdRequestComplete = (event) => {
       // clear ad request timeout since fw_onAdRequestComplete was called
       _clearAdRequestTimeout();
       if (event.success) {
@@ -393,7 +392,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#buildTimeline
      * @returns {OO.AdManagerController#Ad[]} timeline A list of the ads to play for the current video
      */
-    this.buildTimeline = function() {
+    this.buildTimeline = () => {
       timeline = [];
       return [ new amc.Ad({
         position: 0,
@@ -411,7 +410,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#_prepareTimeline
      */
-    var _prepareTimeline = bind(function() {
+    var _prepareTimeline = () => {
       if (!slots) return [];
       if (timeline.length > 0) return;
       for (var i=0; i<slots.length; i++)
@@ -454,23 +453,23 @@ OO.Ads.manager(function() {
             break;
         }
       }
-    }, this);
+    };
 
     /**
      * Registers the video display base with freewheel to ensure that linear ads play in the ad video element.
      * @private
      * @method Freewheel#_registerDisplayForLinearAd
      */
-    var _registerDisplayForLinearAd = bind(function() {
+    var _registerDisplayForLinearAd = () => {
       fwContext.registerVideoDisplayBase(amc.ui.adWrapper.attr("id"));
-    }, this);
+    };
 
     /**
      * Sets the video elements with freewheel to ensure that nonlinear ads play in the main video element.
      * @private
      * @method Freewheel#_registerDisplayForNonlinearAd
      */
-    var _registerDisplayForNonlinearAd = bind(function() {
+    var _registerDisplayForNonlinearAd = () => {
       if (OO.requiresSingleVideoElement) {
         //on iOS and Android, FW expects the following to be our legit video element when
         //playing back video ads. If we attempt to use the fake video and then switch to
@@ -495,7 +494,7 @@ OO.Ads.manager(function() {
         }
         fwContext.setContentVideoElement(fakeVideo);
       }
-    }, this);
+    };
 
     /**
      * Called by the ad manager controller.  Plays an ad or triggers a the freewheel request for the list of ads.
@@ -503,7 +502,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#playAd
      * @param {object} ad The ad to play
      */
-    this.playAd = function(ad) {
+    this.playAd = (ad) => {
       _resetAdState();
       try {
         if (ad.adType == amc.ADTYPE.AD_REQUEST) {
@@ -511,7 +510,7 @@ OO.Ads.manager(function() {
             // Trigger the request for the list of ads;
             indexInPod = 0;
             amc.notifyPodStarted(ad.id, 1);
-            slotEndedCallbacks[amc.ADTYPE.AD_REQUEST] = bind(function(adId) { amc.notifyPodEnded(adId); }, this, ad.id);
+            slotEndedCallbacks[amc.ADTYPE.AD_REQUEST] = () => { amc.notifyPodEnded(ad.id) };
             _sendFreewheelRequest();
           } else {
             amc.notifyPodStarted(ad.id, 1);
@@ -526,27 +525,27 @@ OO.Ads.manager(function() {
           if (ad.isLinear) {
             _registerDisplayForLinearAd();
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-            slotStartedCallbacks[ad.ad.getCustomId()] = bind(function(ad) {
+            slotStartedCallbacks[ad.ad.getCustomId()] = () => {
               amc.focusAdVideo();
-              }, this, ad);
-            slotEndedCallbacks[ad.ad.getCustomId()] = bind(function(adId) {
-                amc.notifyPodEnded(adId);
-              }, this, ad.id);
-            adStartedCallbacks[ad.ad.getCustomId()] = bind(function(ad, details) {
-                //We need to remove the fake video element so that Alice
-                //can properly render the UI for a linear ad
-                if (fakeVideo && overlayContainer) {
-                  overlayContainer.removeChild(fakeVideo);
-                  fakeVideo = null;
-                }
-                if (indexInPod <= 1) {
-                  amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
-                }
-                amc.notifyLinearAdStarted(ad.id, details);
-              }, this, ad);
-            adEndedCallbacks[ad.ad.getCustomId()] = bind(function(adId) {
-                amc.notifyLinearAdEnded(adId);
-              }, this, ad.id);
+            };
+            slotEndedCallbacks[ad.ad.getCustomId()] = () => {
+              amc.notifyPodEnded(ad.id);
+            };
+            adStartedCallbacks[ad.ad.getCustomId()] = (details) => {
+              //We need to remove the fake video element so that Alice
+              //can properly render the UI for a linear ad
+              if (fakeVideo && overlayContainer) {
+                overlayContainer.removeChild(fakeVideo);
+                fakeVideo = null;
+              }
+              if (indexInPod <= 1) {
+                amc.notifyPodStarted(ad.id, ad.ad.getAdCount());
+              }
+              amc.notifyLinearAdStarted(ad.id, details);
+            };
+            adEndedCallbacks[ad.ad.getCustomId()] = () => {
+              amc.notifyLinearAdEnded(ad.od);
+            };
             //Freewheel has a limitation where it is not possible to skip a single ad in a pod.
             //Until this is resolved, we will only show the skip button for ad pods of size 1.
             if (currentPlayingSlot.getAdCount() == 1) {
@@ -558,7 +557,7 @@ OO.Ads.manager(function() {
           } else {
             _registerDisplayForNonlinearAd();
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-            adStartedCallbacks[ad.ad.getCustomId()] = bind(function(details) {
+            adStartedCallbacks[ad.ad.getCustomId()] = (details) => {
               //provide width and height values if available. Alice will use these to resize
               //the skin plugins div when a non linear overlay is on screen
               if (details) {
@@ -575,15 +574,15 @@ OO.Ads.manager(function() {
                 updateOverlayPosition();
               }
               amc.sendURLToLoadAndPlayNonLinearAd(ad, ad.id, null);
-            }, this);
+            };
 
-            adEndedCallbacks[ad.ad.getCustomId()] = bind(function(adId) {
+            adEndedCallbacks[ad.ad.getCustomId()] = () => {
               if (fakeVideo && overlayContainer) {
                 overlayContainer.removeChild(fakeVideo);
                 fakeVideo = null;
               }
-              amc.notifyNonlinearAdEnded(adId);
-            }, this, ad.id);
+              amc.notifyNonlinearAdEnded(ad.id);
+            };
             delete slotStartedCallbacks[ad.ad.getCustomId()];
             delete slotEndedCallbacks[ad.ad.getCustomId()];
           }
@@ -598,11 +597,11 @@ OO.Ads.manager(function() {
       }
     };
 
-    var _resetAdState = bind(function() {
+    var _resetAdState = () => {
       handlingClick = false;
       currentPlayingSlot = null;
       currentAd = null;
-    }, this);
+    };
 
     /**
      * Called by the ad manager controller.  Pauses the current ad.
@@ -612,7 +611,7 @@ OO.Ads.manager(function() {
      * @param {object} ad The ad to pause
      */
     /*
-    this.pauseAd = function(ad) {
+    this.pauseAd = (ad) => {
     };
     */
 
@@ -624,7 +623,7 @@ OO.Ads.manager(function() {
      * @param {object} ad The ad to resume
      */
     /*
-    this.resumeAd = function(ad) {
+    this.resumeAd = (ad) => {
     };
     */
 
@@ -634,7 +633,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#cancelAd
      * @param {object} ad The ad to cancel
      */
-    this.cancelAd = function(ad) {
+    this.cancelAd = (ad) => {
       // Only cancel the ad if it's current
       if (ad && ad.ad && currentPlayingSlot &&
           ((ad.adType === amc.ADTYPE.AD_REQUEST)) ||
@@ -643,7 +642,7 @@ OO.Ads.manager(function() {
       }
     };
 
-    var _cancelCurrentAd = bind(function() {
+    var _cancelCurrentAd = () => {
       if (currentAd === null) return;
       if ((currentAd.adType === amc.ADTYPE.AD_REQUEST) ||
           (typeof(currentPlayingSlot.getCustomId) != "function")) {
@@ -677,14 +676,14 @@ OO.Ads.manager(function() {
       delete adEndedCallbacks[id];
 
       _resetAdState();
-    }, this);
+    };
 
-    var onContentChanged = function() {
+    var onContentChanged = () => {
       // On Content Changed, need to dispose the context
       // if (fwContext && isFunction(fwContext.dispose)) fwContext.dispose();
     };
 
-    var updateOverlayPosition = bind(function() {
+    var updateOverlayPosition = () => {
       //Overlay placement issue - PBI-1227 as of 12/9/2015
       //The main issue with Freewheel is when notifying their SDK of video size changes,
       //Freewheel only attempts to resize ads and not re-position ads.
@@ -696,9 +695,9 @@ OO.Ads.manager(function() {
         //Update Freewheel of size changes. At this point Freewheel will attempt to resize any ads
         notifySizeChange();
       }
-    }, this);
+    };
 
-    var onResize = function() {
+    var onResize = () => {
       updateOverlayPosition();
     };
 
@@ -707,7 +706,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#notifySizeChange
      */
-    var notifySizeChange = function() {
+    var notifySizeChange = () => {
       //Freewheel SDK uses setContentVideoElement and registerVideoDisplayBase for size
       //change notifications for the main content and ad content respectively.
       //_registerDisplayForLinearAd calls registerVideoDisplayBase and
@@ -727,7 +726,7 @@ OO.Ads.manager(function() {
      * @public
      * @method Freewheel#playerClicked
      */
-    this.playerClicked = function() {
+    this.playerClicked = () => {
       if (currentAd && (currentAd.adType !== amc.ADTYPE.AD_REQUEST)) {
         var instance = currentPlayingSlot.getCurrentAdInstance();
         // handlingClick makes sure the click is only triggered once, rather than repeatedly in a loop.
@@ -751,7 +750,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#cancelOverlay
      * @param {object} currentAd The overlay ad object that is to be cancelled and removed
      */
-    this.cancelOverlay = function(currentAd) {
+    this.cancelOverlay = (currentAd) => {
       // Consider instead, hiding the span with _fw_ad_container_html
       this.cancelAd(currentAd);
     };
@@ -765,7 +764,7 @@ OO.Ads.manager(function() {
      * @public
      * @method Freewheel#showOverlay
      */
-    this.showOverlay = function() {
+    this.showOverlay = () => {
     };
 
     /**
@@ -773,7 +772,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onMainContentInFocus
      */
-    var onMainContentInFocus = function() {
+    var onMainContentInFocus = () => {
       // The Freewheel SDK does not like when the video elements passed in via _registerDisplayForLinearAd
       // and _registerDisplayForNonlinearAd have display set to none. This causes overlays to not
       // be positioned and sized correctly (PBI-1307). When we get notified that the main video content
@@ -783,7 +782,7 @@ OO.Ads.manager(function() {
       updateOverlayPosition();
     };
 
-    var setupAdsWrapper = function() {
+    var setupAdsWrapper = () => {
       if (freeWheelCompanionAdsWrapper) {
         freeWheelCompanionAdsWrapper.style.display = '';
       }
@@ -795,7 +794,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onPlayRequested
      */
-    var onPlayRequested = function() {
+    var onPlayRequested = () => {
       shouldRequestAds = true;
       setupAdsWrapper();
     };
@@ -807,7 +806,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onReplayRequested
      */
-    var onReplayRequested = function() {
+    var onReplayRequested = () => {
       _resetAdState();
       shouldRequestAds = true;
       setupAdsWrapper();
@@ -818,7 +817,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onPlay
      */
-    var onPlay = function() {
+    var onPlay = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
     };
@@ -828,7 +827,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onPause
      */
-    var onPause = function() {
+    var onPause = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PAUSED);
     };
@@ -838,7 +837,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onResume
      */
-    var onResume = function() {
+    var onResume = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
     };
@@ -848,7 +847,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onContentCompleted
      */
-    var onContentCompleted = function() {
+    var onContentCompleted = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_STOPPED);
     };
@@ -859,7 +858,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#onAllCompleted
      */
-    var onAllCompleted = function() {
+    var onAllCompleted = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_COMPLETED);
 
@@ -874,7 +873,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#fw_onAdClick
      */
-    var fw_onAdClick = function() {
+    var fw_onAdClick = () => {
       // handlingClick makes sure the click is only triggered once, rather than repeatedly in a loop.
       if (!handlingClick) {
         handlingClick = true;
@@ -898,7 +897,7 @@ OO.Ads.manager(function() {
     * @param {object} event The AD_ERROR event object
     * @param {string} error The error message
     */
-    var fw_onError = function(event, error) {
+    var fw_onError = (event, error) => {
       amc.raiseAdError("FW: An ad error has occurred. The error string reported was: " + error);
     };
 
@@ -909,7 +908,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#fw_onAdImpression
      * @param {object} event The ad impression object indicating which ad started
      */
-    var fw_onAdImpression = function(event) {
+    var fw_onAdImpression = (event) => {
       indexInPod++;
       if (!event || !event.adInstance) {
         return;
@@ -919,7 +918,7 @@ OO.Ads.manager(function() {
       var slotCustomId = (adSlot ? adSlot.getCustomId() : '') || event.slotCustomId;
 
       if (isFunction(adStartedCallbacks[slotCustomId])) {
-        var clickEvents = filter(adInstance._eventCallbacks, function(callback) {
+        var clickEvents = filter(adInstance._eventCallbacks, (callback) => {
           return callback._name === "defaultClick"
         });
         var hasClickUrl = clickEvents.length > 0;
@@ -953,7 +952,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#fw_onAdImpressionEnd
      * @param event {object} event The ad impression object indicating which ad ended
      */
-    var fw_onAdImpressionEnd = function(event) {
+    var fw_onAdImpressionEnd = (event) => {
       //FW has an issue where it resets the html5 video element's volume and muted attributes according to
       //FW's internal volume/mute state when moving to the next ad in an ad pod (but not the first ad in an ad pod).
       //This will break playback if muted autoplay is required and FW unmutes the video element. This internal state
@@ -978,7 +977,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#fw_onSlotStarted
      */
-    var fw_onSlotStarted = function() {
+    var fw_onSlotStarted = () => {
       // adVideoElement may be null for overlays
       if (currentPlayingSlot &&
           currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY &&
@@ -1000,7 +999,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#fw_onSlotEnded
      * @param {object} event The slotEnded event showing which ad ended
      */
-    var fw_onSlotEnded = function(event) {
+    var fw_onSlotEnded = (event) => {
       // Disable controls on the video element.  Freewheel seems to be turning it on
       // TODO: inspect event for playback success or errors
 
@@ -1030,12 +1029,12 @@ OO.Ads.manager(function() {
      * @private
      * @method Freewheel#_clearAdRequestTimeout
      */
-    var _clearAdRequestTimeout = bind(function() {
+    var _clearAdRequestTimeout = () => {
       if (adRequestTimeout) {
         clearTimeout(adRequestTimeout);
         adRequestTimeout = null;
       }
-    }, this);
+    };
 
     // Getters
 
@@ -1045,7 +1044,7 @@ OO.Ads.manager(function() {
      * @method Freewheel#getHandlingClick
      * @returns {boolean} true if player is handling click. Returns false, if otherwise.
      */
-    this.getHandlingClick = function() {
+    this.getHandlingClick = () => {
       return handlingClick;
     };
 
@@ -1054,7 +1053,7 @@ OO.Ads.manager(function() {
      * @public
      * @method Freewheel#destroy
      */
-    this.destroy = function() {
+    this.destroy = () => {
       _cancelCurrentAd();
       _clearAdRequestTimeout();
 

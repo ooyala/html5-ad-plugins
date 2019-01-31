@@ -8,7 +8,6 @@ const {
   isString,
   isNumber,
   isFinite,
-  bind,
 } = require('underscore');
 
 var AdManagerUtils = function()
@@ -22,8 +21,7 @@ var AdManagerUtils = function()
    * @returns {number|null} The number of milliseconds the timestamp represents. Returns null
    * if an error occurs.
    */
-  this.convertTimeStampToMilliseconds = function(timeString)
-  {
+  this.convertTimeStampToMilliseconds = (timeString) => {
     var milliseconds = null;
 
     if (!isString(timeString) || !_isValidHms(timeString))
@@ -52,8 +50,7 @@ var AdManagerUtils = function()
    * @param {number} totalDuration The duration of the video - represented in seconds
    * @returns {number} The number of milliseconds the percentage represents.
    */
-  this.convertPercentToMilliseconds = function(timeString, totalDuration)
-  {
+  this.convertPercentToMilliseconds = (timeString, totalDuration) => {
     var milliseconds = null;
     var percent = null;
     var validString = isString(timeString);
@@ -97,8 +94,7 @@ var AdManagerUtils = function()
    * @param {string} hms The hh:mm:ss string
    * @returns {boolean} true if the hh:mm:ss string is valid. Returns false if otherwise.
    */
-  var _isValidHms = bind(function(hms)
-  {
+  var _isValidHms = (hms) => {
     var result = false;
     if (hms)
     {
@@ -119,7 +115,7 @@ var AdManagerUtils = function()
       }
     }
     return result;
-  }, this);
+  };
 
   /**
    * Helper function to log AdManagerUtils errors.
@@ -127,10 +123,9 @@ var AdManagerUtils = function()
    * @method AdManagerUtils#_logError
    * @param {string} errorMessage The error message
    */
-  var _logError = bind(function(errorMessage)
-  {
+  var _logError = (errorMessage) => {
     OO.log("AdManagerUtils: " + errorMessage);
-  }, this);
+  };
 };
 
 // export as Singleton

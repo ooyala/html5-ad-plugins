@@ -5,8 +5,6 @@
  * version 0.1
  */
 
-const { bind } = require('underscore');
-
 OO.Ads.manager(function() {
   /**
    * @class AdManager
@@ -37,19 +35,19 @@ OO.Ads.manager(function() {
      * @param {object} adManagerController A reference to the Ad Manager Controller
      * @param {string} playerId The unique player identifier of the player initializing the class
      */
-    this.initialize = function(adManagerController, playerId) {
+    this.initialize = (adManagerController, playerId) => {
       amc = adManagerController;
 
       // Add any player event listeners now
-      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(_onContentChanged, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
 
       //ID3 Tag example
-      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, bind(this.onVideoTagFound, this));
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
 
       // Loads a remote file.  Use this function to load the client SDK for your ad module.
-      amc.loadAdModule(this.name, remoteModuleJs, bind(function(success) {
+      amc.loadAdModule(this.name, remoteModuleJs, (success) => {
         adModuleJsReady = success;
-      }, this));
+      });
 
       // Initialize the module here
     };
@@ -60,7 +58,7 @@ OO.Ads.manager(function() {
      * @method AdManager#registerUi
      * @public
      */
-    this.registerUi = function() {
+    this.registerUi = () => {
       // amc.ui.adVideoElement is now ready for use
     };
 
@@ -74,7 +72,7 @@ OO.Ads.manager(function() {
      * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
      * @param {object} movieMetadata Metadata for the main video
      */
-    this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata) {
+    this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
       this.ready = true;
       //Call the onAdManagerReady API after setting this.ready to true
       //to notify the Ad Manager Controller that this ad plugin is ready
@@ -91,7 +89,7 @@ OO.Ads.manager(function() {
      * @public
      * @returns {OO.AdManagerController#Ad[]} timeline A list of the ads to play for the current video
      */
-    this.buildTimeline = function() {
+    this.buildTimeline = () => {
       var ad1 = {}, ad2 = {};
       //Video restrictions can be provided at the ad level. If provided, the player will
       //attempt to create a video element that supports the given video restrictions.
@@ -127,7 +125,7 @@ OO.Ads.manager(function() {
      * @param {function} adStartedCallback Call this function each time an ad in the set starts
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
-    this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) {
+    this.playAd = (ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) => {
       // When the ad impression has started or when the first ad in a set of podded ads has begun,  trigger
       //   adStartedCallback
       // When the ad or group of podded ads are done, trigger adEndedCallback
@@ -147,7 +145,7 @@ OO.Ads.manager(function() {
      *                        following fields:
      *                 code : The amc.AD_CANCEL_CODE for the cancellation
      */
-    this.cancelAd = function(ad, params) {
+    this.cancelAd = (ad, params) => {
     };
 
     /**
@@ -157,7 +155,7 @@ OO.Ads.manager(function() {
      * @public
      * @param {object} ad The ad object to pause
      */
-    this.pauseAd = function(ad) {
+    this.pauseAd = (ad) => {
     };
 
     /**
@@ -167,7 +165,7 @@ OO.Ads.manager(function() {
      * @public
      * @param {object} ad The ad object to resume
      */
-    this.resumeAd = function(ad) {
+    this.resumeAd = (ad) => {
     };
 
     /**
@@ -179,7 +177,7 @@ OO.Ads.manager(function() {
      * @public
      * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
      */
-    //this.hideOverlay = function(currentAd) {
+    //this.hideOverlay = (currentAd) => {
     //};
 
     /**
@@ -191,7 +189,7 @@ OO.Ads.manager(function() {
      * @public
      * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
      */
-    //this.cancelOverlay = function(currentAd) {
+    //this.cancelOverlay = (currentAd) => {
     //};
 
     /**
@@ -202,7 +200,7 @@ OO.Ads.manager(function() {
      * @method AdManager#showOverlay
      * @public
      */
-    this.showOverlay = function() {
+    this.showOverlay = () => {
     };
 
     /**
@@ -212,7 +210,7 @@ OO.Ads.manager(function() {
      * @method AdManager#playerClicked
      * @public
     */
-    this.playerClicked = function(amcAd, showPage) {
+    this.playerClicked = (amcAd, showPage) => {
     };
 
     /**
@@ -221,7 +219,7 @@ OO.Ads.manager(function() {
      * @method AdManager#adVideoPlaying
      * @public
      */
-    this.adVideoPlaying = function() {
+    this.adVideoPlaying = () => {
 
     };
 
@@ -231,7 +229,7 @@ OO.Ads.manager(function() {
      * @method AdManager#adVideoFocused
      * @public
      */
-    this.adVideoFocused = function() {
+    this.adVideoFocused = () => {
 
     };
 
@@ -245,7 +243,7 @@ OO.Ads.manager(function() {
      * @param {string} tagType The type of tag that was detected.
      * @param {object} metadata Any metadata attached to the found tag.
      */
-    this.onVideoTagFound = function(event, videoId, tagType, metadata) {
+    this.onVideoTagFound = (event, videoId, tagType, metadata) => {
       OO.log("TAG FOUND w/ args: ", arguments);
     };
 
@@ -258,7 +256,7 @@ OO.Ads.manager(function() {
      * @param {object} adWrapper The current Ad's metadata
      * @param {number} errorCode The error code associated with the video playback error
      */
-    this.adVideoError = function(adWrapper, errorCode) {
+    this.adVideoError = (adWrapper, errorCode) => {
     };
 
     /**
@@ -267,7 +265,7 @@ OO.Ads.manager(function() {
      * @method AdManager#destroy
      * @public
      */
-    this.destroy = function() {
+    this.destroy = () => {
       // Stop any running ads
     };
 
@@ -282,11 +280,11 @@ OO.Ads.manager(function() {
      * @returns {string[]} An array of encoding types corresponding to the video elements that the Video Controller
      *                     should create. Return an empty array, null, or undefined if this is not required.
      */
-    this.createAdVideoElementOnPlayerInit = function() {
+    this.createAdVideoElementOnPlayerInit = () => {
       return [];
     };
 
-    var _onContentChanged = function() {
+    var _onContentChanged = () => {
       // Callback for example listener registered in this.initialize
     }
   };

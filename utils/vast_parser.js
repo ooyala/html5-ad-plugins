@@ -6,7 +6,6 @@ const {
   first,
   extend,
   contains,
-  bind,
   without,
 } = require('underscore')
 
@@ -44,7 +43,7 @@ var VastParser = function() {
    * @param {object} adLoaded The ad loaded object and metadata
    * @returns {object[]} An array containing the ad(s) if ads are found, otherwise it returns null.
    */
-  this.parser = function(vastXML, adLoaded) {
+  this.parser = (vastXML, adLoaded) => {
     if (!vastXML || !this.isValidVastXML(vastXML)) {
       return null;
     }
@@ -58,7 +57,7 @@ var VastParser = function() {
     //parse the ad objects from the XML
     var ads = this.parseAds(vastXML, adLoaded);
     //check to see if any ads are sequenced (are podded)
-    each(ads, function(ad) {
+    each(ads, (ad) => {
       var sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
       var version = typeof ad.version !== 'undefined' ? ad.version : null;
       if (supportsPoddedAds(version) && sequence) {
@@ -81,7 +80,7 @@ var VastParser = function() {
    * @return {object[]} An array of ad objects
    * @param {object} adLoaded The ad loaded object and metadata
    */
-  this.parseAds = function(vastXML, adLoaded) {
+  this.parseAds = (vastXML, adLoaded) => {
     var version = getVastVersion(vastXML);
     return compose(
       (ads) => map(ads, (ad) => vastAdSingleParser(ad, version)),
@@ -97,7 +96,7 @@ var VastParser = function() {
    * @param {number} version The Vast version
    * @returns {object} The ad object otherwise it returns 1.
    */
-  var vastAdSingleParser = function(xml, version) {
+  var vastAdSingleParser = (xml, version) => {
     var result = getVastTemplate();
     var inline = xml.querySelectorAll(AD_TYPE.INLINE);
     var wrapper = xml.querySelectorAll(AD_TYPE.WRAPPER);
@@ -161,7 +160,7 @@ var VastParser = function() {
    * @param {XMLDocument} linearXml The xml containing the ad data to be parsed
    * @returns {object} An object containing the ad data.
    */
-  var parseLinearAd = function(linearXml) {
+  var parseLinearAd = (linearXml) => {
     var result = {
       tracking: parseTrackingEvents(linearXml),
       // clickTracking needs to be remembered because it can exist in wrapper ads
@@ -204,7 +203,7 @@ var VastParser = function() {
    * @param {XMLDocument} nonLinearAdsXml Contains the ad data that needs to be parsed
    * @returns {object} An object that contains the ad data.
    */
-  var parseNonLinearAds = function(nonLinearAdsXml) {
+  var parseNonLinearAds = (nonLinearAdsXml) => {
     var result = {
       tracking: parseTrackingEvents(nonLinearAdsXml)
     };
@@ -264,7 +263,7 @@ var VastParser = function() {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
    */
-  this.isValidVastXML = function(vastXML) {
+  this.isValidVastXML = (vastXML) => {
     return this.isValidRootTagName(vastXML) && this.isValidVastVersion(vastXML);
   };
 
@@ -275,7 +274,7 @@ var VastParser = function() {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
    */
-  this.isValidRootTagName = function(vastXML) {
+  this.isValidRootTagName = (vastXML) => {
     if (!getVastRoot(vastXML)) {
       OO.log("VAST: Invalid VAST XML");
       //this.trackError(PARSE_ERRORS.SCHEMA_VALIDATION, this.wrapperParentId);
@@ -291,7 +290,7 @@ var VastParser = function() {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
    */
-  this.isValidVastVersion = function(vastXML) {
+  this.isValidVastVersion = (vastXML) => {
     var version = getVastVersion(vastXML);
     if (!supportsVersion(version)) {
       OO.log("VAST: Invalid VAST Version: " + version);
@@ -308,7 +307,7 @@ var VastParser = function() {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {string} The Vast version.
    */
-  var getVastVersion = function(vastXML) {
+  var getVastVersion = (vastXML) => {
     var vastTag = getVastRoot(vastXML);
     if (!vastTag) {
       return null;
@@ -324,7 +323,7 @@ var VastParser = function() {
    * @returns {object} null if a VAST tag is absent, or if there are multiple VAST tags. Otherwise,
    * returns the VAST root element.
    */
-  var getVastRoot = function(vastXML) {
+  var getVastRoot = (vastXML) => {
     try {
 
       var vastRootElement = vastXML.querySelectorAll("VAST");
@@ -349,7 +348,7 @@ var VastParser = function() {
    * @param {string} version The Vast version as parsed from the XML
    * @returns {string} The major version.
    */
-  var getMajorVersion = function(version) {
+  var getMajorVersion = (version) => {
     if(typeof version === 'string') {
       return version.split('.')[0];
     }
@@ -362,7 +361,7 @@ var VastParser = function() {
    * @param {string} version The Vast version as parsed from the XML
    * @returns {boolean} true if the version is supported by this ad manager, false otherwise.
    */
-  var supportsVersion = function(version) {
+  var supportsVersion = (version) => {
     return contains(SUPPORTED_VERSIONS, getMajorVersion(version));
   };
 
@@ -374,9 +373,9 @@ var VastParser = function() {
    * @returns {boolean} true if the podded ads functionality is supported in the specified Vast version,
    *                    false otherwise
    */
-  var supportsPoddedAds = bind(function(version) {
+  var supportsPoddedAds = (version) => {
     return contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.PODDED_ADS);
-  }, this);
+  };
 
   /**
    * Checks to see if the given Vast version supports the ad fallback functionality, as per Vast specs
@@ -386,9 +385,9 @@ var VastParser = function() {
    * @returns {boolean} true if the ad fallback functionality is supported in the specified Vast version,
    *                    false otherwise
    */
-  var supportsAdFallback = bind(function(version) {
+  var supportsAdFallback = (version) => {
     return contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.AD_FALLBACK);
-  }, this);
+  };
 
   /**
    * Default template to use when creating the vast ad object.
@@ -396,7 +395,7 @@ var VastParser = function() {
    * @method VastParser#getVastTemplate
    * @returns {object} The ad object that is formated to what we expect vast to look like.
    */
-  var getVastTemplate = bind(function() {
+  var getVastTemplate = () => {
     return {
       error: [],
       impression: [],
@@ -405,7 +404,7 @@ var VastParser = function() {
       nonLinear: {},
       companion: []
     };
-  }, this);
+  };
 
   /**
    * Helper function to map through array and filter empty items.
@@ -479,7 +478,7 @@ var VastParser = function() {
    * @param {XMLDocument} companionAdXML XML that contains the companion ad data
    * @returns {object} The ad object with companion ad.
    */
-  var parseCompanionAd = function(companionAdXml) {
+  var parseCompanionAd = (companionAdXml) => {
     var staticResource = _cleanString(getNodeTextContent(companionAdXml, 'StaticResource'));
     var iframeResource = _cleanString(getNodeTextContent(companionAdXml, 'IFrameResource'));
     var htmlResource = _cleanString(getNodeTextContent(companionAdXml, 'HTMLResource'));
@@ -544,7 +543,7 @@ var VastParser = function() {
    * @method VastParser#_cleanString
    * @return {string} String with no spaces
    */
-  var _cleanString = function(string) {
+  var _cleanString = (string) => {
     if (!string) {
       return '';
     }

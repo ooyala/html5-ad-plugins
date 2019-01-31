@@ -5,7 +5,6 @@
  */
 
 const {
-  bind,
   isBoolean,
   isNumber,
   isFinite,
@@ -151,39 +150,38 @@ OO.Ads.manager(function()
      * @param {object} adManagerController A reference to the Ad Manager Controller
      * @param {string} playerId The unique player identifier of the player initializing the class
      */
-    this.initialize = function(adManagerController, playerId)
-    {
+    this.initialize = (adManagerController, playerId) => {
       amc = adManagerController;
 
       // Request embed code provider metadata
       amc.willRequireEmbedCodeMetadata();
 
       // Add any player event listeners now
-      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(_onContentChanged, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
 
       // Stream URL
-      amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, bind(this.onContentUrlChanged, this));
-      amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , bind(this.onPlayheadTimeChanged, this));
+      amc.addPlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, this.onContentUrlChanged);
+      amc.addPlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , this.onPlayheadTimeChanged);
 
       // ID3 Tag
-      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, bind(this.onVideoTagFound, this));
+      amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
 
       // Replay for Live streams should not be available, but add this for precaution
-      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, bind(this.onReplay, this));
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, this.onReplay);
 
       // Listeners for tracking events
-      amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, bind(this.onFullscreenChanged, this));
-      amc.addPlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, bind(this.onAdVolumeChanged, this));
-      amc.addPlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, bind(this.onMuteStateChanged, this));
-      amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, bind(this.onPlayStarted, this));
-      amc.addPlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, bind(this.onContentTreeFetched, this));
+      amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, this.onFullscreenChanged);
+      amc.addPlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, this.onAdVolumeChanged);
+      amc.addPlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, this.onMuteStateChanged);
+      amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, this.onPlayStarted);
+      amc.addPlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, this.onContentTreeFetched);
     };
 
-    this.onContentTreeFetched = function (event, content) {
+    this.onContentTreeFetched = (event, content) => {
       currentOffset = content.duration;
     };
 
-    this.onPlayStarted = function () {
+    this.onPlayStarted = () => {
         _sendMetadataRequest();
     };
 
@@ -193,8 +191,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#registerUi
      * @public
      */
-    this.registerUi = function()
-    {
+    this.registerUi = () => {
       // amc.ui.adVideoElement is now ready for use
     };
 
@@ -208,8 +205,7 @@ OO.Ads.manager(function()
      * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
      * @param {object} movieMetadata Metadata for the main video
      */
-    this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata)
-    {
+    this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
       this.ready = true;
       this.timeline = {};
       firstAdFound = false;
@@ -251,8 +247,7 @@ OO.Ads.manager(function()
      * @public
      * @returns {OO.OoyalaSsaiController#Ad[]} timeline A list of the ads to play for the current video
      */
-    this.buildTimeline = function()
-    {
+    this.buildTimeline = () => {
       //Video restrictions can be provided at the ad level. If provided, the player will
       //attempt to create a video element that supports the given video restrictions.
       //If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
@@ -272,7 +267,7 @@ OO.Ads.manager(function()
      * @param {number} offset Current video time (seconds). Currently is obtained just for live stream from amc.
      */
 
-    this.onPlayheadTimeChanged = function(eventName, playhead, duration, offset) {
+    this.onPlayheadTimeChanged = (eventName, playhead, duration, offset) => {
       var offsetParam = 0;
       if (!amc.isLiveStream)
       {
@@ -306,7 +301,7 @@ OO.Ads.manager(function()
      * @param {function} adStartedCallback Call this function each time an ad in the set starts
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
-    this.playAd = function(ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) {
+    this.playAd = (ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) => {
       if (ad)
       {
         adMode = true;
@@ -341,8 +336,7 @@ OO.Ads.manager(function()
      *                        following fields:
      *                 code : The amc.AD_CANCEL_CODE for the cancellation
      */
-    this.cancelAd = function(ad, params)
-    {
+    this.cancelAd = (ad, params) => {
     };
 
     /**
@@ -352,8 +346,7 @@ OO.Ads.manager(function()
      * @public
      * @param {object} ad The ad object to pause
      */
-    this.pauseAd = function(ad)
-    {
+    this.pauseAd = (ad) => {
       //Removing the ad timeout since ad was paused
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ["pause"]);
@@ -370,8 +363,7 @@ OO.Ads.manager(function()
      * @public
      * @param {object} ad The ad object to resume
      */
-    this.resumeAd = function(ad)
-    {
+    this.resumeAd = (ad) => {
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ["resume"]);
         if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && isFinite(ad.duration)) {
@@ -393,7 +385,7 @@ OO.Ads.manager(function()
      * @public
      * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
      */
-    //this.hideOverlay = function(currentAd) {
+    //this.hideOverlay = (currentAd) => {
     //};
 
     /**
@@ -405,7 +397,7 @@ OO.Ads.manager(function()
      * @public
      * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
      */
-    //this.cancelOverlay = function(currentAd) {
+    //this.cancelOverlay = (currentAd) => {
     //};
 
     /**
@@ -416,8 +408,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#showOverlay
      * @public
      */
-    this.showOverlay = function()
-    {
+    this.showOverlay = () => {
     };
 
     /**
@@ -427,8 +418,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#playerClicked
      * @public
      */
-    this.playerClicked = function(amcAd, showPage)
-    {
+    this.playerClicked = (amcAd, showPage) => {
       if (amcAd && amcAd.ad)
       {
         _handleTrackingUrls(amcAd, ["linearClickTracking"]);
@@ -442,8 +432,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#adVideoPlaying
      * @public
      */
-    this.adVideoPlaying = function()
-    {
+    this.adVideoPlaying = () => {
     };
 
     /**
@@ -452,8 +441,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#onContentUrlChanged
      * @param {string} url The stream url
      */
-    this.onContentUrlChanged = function(eventName, url)
-    {
+    this.onContentUrlChanged = (eventName, url) => {
       // important that smart player parameter is set here
       baseRequestUrl = _makeSmartUrl(url);
       _parseUrl(url);
@@ -471,8 +459,7 @@ OO.Ads.manager(function()
      * @param {string} tagType The type of tag that was detected
      * @param {object} metadata Any metadata attached to the found tag
      */
-    this.onVideoTagFound = function(eventName, videoId, tagType, metadata)
-    {
+    this.onVideoTagFound = (eventName, videoId, tagType, metadata) => {
       if (!amc.isLiveStream && !currentOffset)
       {
         return null;
@@ -537,8 +524,7 @@ OO.Ads.manager(function()
      * @public
      * @method OoyalaSsai#onReplay
      */
-    this.onReplay = function()
-    {
+    this.onReplay = () => {
       currentOffset = 0;
       this.currentAd = null;
     };
@@ -549,8 +535,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#_handleId3Ad
      * @param {object} id3Object The ID3 object
      */
-    var _handleId3Ad = bind(function(id3Object)
-    {
+    var _handleId3Ad = (id3Object) => {
       // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
       if (!this.testMode)
       {
@@ -559,7 +544,7 @@ OO.Ads.manager(function()
       else {
         this.onResponse(id3Object, null);
       }
-    }, this);
+    };
 
     /**
      * Called if the ajax call succeeds
@@ -568,8 +553,7 @@ OO.Ads.manager(function()
      * @param {object} id3Object The ID3 object
      * @param {XMLDocument} xml The xml returned from loading the ad
      */
-    this.onResponse = function(id3Object, xml)
-    {
+    this.onResponse = (id3Object, xml) => {
       OO.log("Ooyala SSAI: Response");
       // Call VastParser code
       var vastAds = this.vastParser.parser(xml);
@@ -587,8 +571,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#onMetadataResponse
      * @param {object} metadata The ad metadata JSON
      */
-    this.onMetadataResponse = function(metadata)
-    {
+    this.onMetadataResponse = (metadata) => {
       this.timeline = metadata;
       amc.notifySSAIAdTimelineReceived(this.timeline);
     };
@@ -601,7 +584,7 @@ OO.Ads.manager(function()
      * @param adIdVastData
      * @returns {*}
      */
-    var _getAdObjectFromVast = function(id3Object, adIdVastData) {
+    var _getAdObjectFromVast = (id3Object, adIdVastData) => {
       if (has(adIdVastData, id3Object.adId))
       {
         return adIdVastData[id3Object.adId];
@@ -614,12 +597,12 @@ OO.Ads.manager(function()
      * @private
      * @method OoyalaSsai#_setVastDataToDictionary
      */
-    var _setVastDataToDictionary = bind(function(id3Object, adObject) {
+    var _setVastDataToDictionary = (id3Object, adObject) => {
       if (this.adIdDictionary[id3Object.adId])
       {
         this.adIdDictionary[id3Object.adId].vastData = adObject;
       }
-    }, this);
+    };
 
     /**
      * Configuring the ssai object to force an ad to play
@@ -628,7 +611,7 @@ OO.Ads.manager(function()
      * @param adObject
      * @returns {{clickthrough: string, name: string, ssai: boolean, isLive: boolean}}
      */
-    var _configureSsaiObject = function(adObject) {
+    var _configureSsaiObject = (adObject) => {
       var ssaiAd =
       {
         clickthrough: "",
@@ -649,7 +632,7 @@ OO.Ads.manager(function()
      * @private
      * @method OoyalaSsai#_notifyAmcToPlayAd
      */
-    var _notifyAmcToPlayAd = bind(function(id3Object, adObject) {
+    var _notifyAmcToPlayAd = (id3Object, adObject) => {
       if (adObject && id3Object)
       {
         var ssaiAd = _configureSsaiObject(adObject);
@@ -662,15 +645,14 @@ OO.Ads.manager(function()
       }
 
       amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
-    }, this);
+    };
 
     /**
      * Called if the ajax call fails
      * @public
      * @method OoyalaSsai#onRequestError
      */
-    this.onRequestError = function(currentId3Object)
-    {
+    this.onRequestError = (currentId3Object) => {
       OO.log("Ooyala SSAI: Error");
       if (isObject(currentId3Object) && has(this.adIdDictionary, currentId3Object.adId))
       {
@@ -684,8 +666,7 @@ OO.Ads.manager(function()
      * @public
      * @method OoyalaSsai#onMetadataError
      */
-    this.onMetadataError = function(url, error)
-    {
+    this.onMetadataError = (url, error) => {
       OO.log("SSAI Metadata Request: Error" + JSON.stringify(error));
       if (error !== null){
       	var code = error["status"];
@@ -702,8 +683,7 @@ OO.Ads.manager(function()
      * @param {string} eventName The name of the event for which this callback is called
      * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
      */
-    this.onFullscreenChanged = function(eventName, isFullscreen)
-    {
+    this.onFullscreenChanged = (eventName, isFullscreen) => {
       // only try to ping tracking urls if player is playing an ad
       if (adMode)
       {
@@ -725,8 +705,7 @@ OO.Ads.manager(function()
      * @param {string} eventName The name of the event for which this callback is called
      * @param {number} volume The current volume level
      */
-    this.onAdVolumeChanged = function(eventName, volume)
-    {
+    this.onAdVolumeChanged = (eventName, volume) => {
       var url = [];
       if (volume === 0 && volume !== lastVolume)
       {
@@ -752,8 +731,7 @@ OO.Ads.manager(function()
      * @param {string} eventName The name of the event for which this callback is called
      * @param {boolean} muteState True if ad was muted, false if ad was unmuted
      */
-    this.onMuteStateChanged = function(eventName, muteState)
-    {
+    this.onMuteStateChanged = (eventName, muteState) => {
       var url = []
 
       // If volume is zero mute events are not relevant
@@ -785,8 +763,7 @@ OO.Ads.manager(function()
      * @param {object} adWrapper The current Ad's metadata
      * @param {number} errorCode The error code associated with the video playback error
      */
-    this.adVideoError = function(adWrapper, errorCode)
-    {
+    this.adVideoError = (adWrapper, errorCode) => {
     };
 
     /**
@@ -795,8 +772,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#destroy
      * @public
      */
-    this.destroy = function()
-    {
+    this.destroy = () => {
       // reset parameters
       this.ready = false;
       this.currentAd = null;
@@ -804,8 +780,7 @@ OO.Ads.manager(function()
       _removeAMCListeners();
     };
 
-    var _onContentChanged = function()
-    {
+    var _onContentChanged = () => {
       currentOffset = 0;
     };
 
@@ -817,10 +792,9 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#getBustTheCache
      * @returns {boolean} the bustTheCache variable
      */
-    this.getBustTheCache = bind(function()
-    {
+    this.getBustTheCache = () => {
       return bustTheCache;
-    }, this);
+    };
 
     /**
      * Appends the smart player identifier to the request URL.
@@ -829,10 +803,9 @@ OO.Ads.manager(function()
      * @param {string} url The stream url
      * @returns {string} The modified stream url with the appended unique identifier.
      */
-    var _makeSmartUrl = bind(function(url)
-    {
+    var _makeSmartUrl = (url) => {
       return _appendParamToUrl(url, SMART_PLAYER);
-    }, this);
+    };
 
     /**
      * Parses the ad url to obtain the ssai guid, embed code and ssai api domain name
@@ -840,8 +813,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#_parseUrl
      * @param {string} url The stream url
      */
-    var _parseUrl = bind(function(url)
-    {
+    var _parseUrl = (url) => {
       if (typeof url !== "string") {
       	return;
       }
@@ -870,7 +842,7 @@ OO.Ads.manager(function()
           return;
         }
       }
-    }, this);
+    };
 
     /**
      * Helper function to append "offset" and "aid" query parameters to the request URL.
@@ -880,15 +852,14 @@ OO.Ads.manager(function()
      * @param {string} adId The ID of the ad
      * @returns {string} The request URL with the appended query parameters.
      */
-    var _appendAdsProxyQueryParameters = bind(function(url, adId)
-    {
+    var _appendAdsProxyQueryParameters = (url, adId) => {
       var offset = OFFSET_PARAM + currentOffset;
       var newUrl = _appendParamToUrl(url, offset);
 
       var adIdParam = AD_ID_PARAM + adId;
       newUrl = _appendParamToUrl(newUrl, adIdParam);
       return newUrl;
-    }, this);
+    };
 
     /**
      * Appends a parameter to a url.
@@ -897,8 +868,7 @@ OO.Ads.manager(function()
      * @param  {string} param The parameter to be appended
      * @returns {string}       The resulting url after appending the param
      */
-    var _appendParamToUrl = function(url, param)
-    {
+    var _appendParamToUrl = (url, param) => {
       if (isString(url) && isString(param))
       {
         if (url.indexOf("?") > -1)
@@ -921,7 +891,7 @@ OO.Ads.manager(function()
     * @param  {float} id3ObjectTime  Time value from currentId3Object
     * @returns {boolean}  True if ID3 tag time is 100
     */
-    var isId3ContainsCompletedTime = function(id3ObjectTime) {
+    var isId3ContainsCompletedTime = (id3ObjectTime) => {
       return id3ObjectTime === 100;
     };
 
@@ -933,7 +903,7 @@ OO.Ads.manager(function()
     * @param  {float} id3ObjectTime  Time value from currentId3Object
     * @returns {boolean}  True if ID3 tag time is 0
     */
-    var isId3ContainsStartedTime = function(id3ObjectTime) {
+    var isId3ContainsStartedTime = (id3ObjectTime) => {
       return id3ObjectTime === 0;
     };
 
@@ -945,13 +915,9 @@ OO.Ads.manager(function()
      * @param {string} url The request URL
      * @returns {string} The request URL with the formatted request URL.
      */
-    var _preformatUrl = bind(function(url)
-    {
-      return url.replace(/vhls|hls/gi, function(matched)
-      {
-        return ENDPOINTS_MAP_OBJECT[matched];
-      });
-    }, this);
+    var _preformatUrl = (url) => {
+      return url.replace(/vhls|hls/gi, (matched) => ENDPOINTS_MAP_OBJECT[matched]);
+    };
 
     /**
      * Attempts to load the Ad after normalizing the url.
@@ -1007,8 +973,7 @@ OO.Ads.manager(function()
      * @param {object} id3Object The ID3 metadata passed in
      * @returns {object} An object with "adId", "time", and "duration" as properties.
      */
-    var _parseId3Object = bind(function(id3Object)
-    {
+    var _parseId3Object = (id3Object) => {
       var parsedId3Object = null;
       if (id3Object)
       {
@@ -1023,7 +988,7 @@ OO.Ads.manager(function()
         }
       }
       return parsedId3Object;
-    }, this);
+    };
 
     /**
      * TODO: Improve return statement jsdoc
@@ -1033,8 +998,7 @@ OO.Ads.manager(function()
      * @param {string} id3String The string contained under the "TXXX" property to parse
      * @returns {object} An object with "adId", "time", and "duration" as properties.
      */
-    var _parseId3String = bind(function(id3String)
-    {
+    var _parseId3String = (id3String) => {
       var parsedId3Object = null;
       if (id3String)
       {
@@ -1078,7 +1042,7 @@ OO.Ads.manager(function()
         }
       }
       return parsedId3Object;
-    }, this);
+    };
 
     /**
      * Helper function to pretty print the ID3_QUERY_PARAMETERS object.
@@ -1086,16 +1050,14 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#_id3QueryParametersToString
      * @returns {string} The string: "adid, t, d".
      */
-    var _id3QueryParametersToString = bind(function()
-    {
+    var _id3QueryParametersToString = () => {
       var result = "";
-      each(values(ID3_QUERY_PARAMETERS), function(value)
-      {
+      each(values(ID3_QUERY_PARAMETERS), (value) => {
         result = result + value + ", ";
       });
       result = result.slice(0, -2);
       return result;
-    }, this);
+    };
 
     /**
      * Temporary mock function to force an ad to play until live team fixes ad proxy.
@@ -1103,8 +1065,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#_forceMockAd
      * @param {object} id3Object The ID3 object
      */
-    var _forceMockAd = bind(function(id3Object)
-    {
+    var _forceMockAd = (id3Object) => {
       var ad1 =
       {
         clickthrough: "http://www.google.com",
@@ -1113,7 +1074,7 @@ OO.Ads.manager(function()
         isLive: true
       };
       amc.forceAdToPlay(this.name, ad1, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
-    }, this);
+    };
 
     /**
      * Ping a list of tracking event names' URLs.
@@ -1122,9 +1083,9 @@ OO.Ads.manager(function()
      * @param {object} adObject The ad metadata
      * @param {string[]} trackingEventNames The array of tracking event names
      */
-    var _handleTrackingUrls = function(adObject, trackingEventNames) {
+    var _handleTrackingUrls = (adObject, trackingEventNames) => {
       if (adObject) {
-        each(trackingEventNames, function(trackingEventName) {
+        each(trackingEventNames, (trackingEventName) => {
           var urls;
           switch (trackingEventName) {
             case "impression":
@@ -1162,7 +1123,7 @@ OO.Ads.manager(function()
      * @param {object} adObject The ad metadata
      * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
      */
-    var _getImpressionUrls = function(adObject) {
+    var _getImpressionUrls = (adObject) => {
       var impressionUrls = null;
       if (adObject &&
           adObject.ad &&
@@ -1182,7 +1143,7 @@ OO.Ads.manager(function()
      * @return {string[]|null} The array of linear click tracking urls. Returns null if no
      * URLs exist.
      */
-    var _getLinearClickTrackingUrls = function(adObject) {
+    var _getLinearClickTrackingUrls = (adObject) => {
       var linearClickTrackingUrls = null;
       if (adObject &&
           adObject.ad &&
@@ -1203,7 +1164,7 @@ OO.Ads.manager(function()
      * @param {string} trackingEventName The name of the tracking event
      * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
      */
-    var _getLinearTrackingEventUrls = function(adObject, trackingEventName) {
+    var _getLinearTrackingEventUrls = (adObject, trackingEventName) => {
       var trackingUrls = null;
       if (adObject &&
           adObject.ad &&
@@ -1224,7 +1185,7 @@ OO.Ads.manager(function()
      * @param {object} adObject The ad metadata
      * @return {string|null} The title of the ad. Returns null if no title exists.
      */
-    var _getTitle = function(adObject) {
+    var _getTitle = (adObject) => {
       var title = null;
       if (adObject && adObject.title) {
         title = adObject.title;
@@ -1240,7 +1201,7 @@ OO.Ads.manager(function()
      * @return {string|null} The linear click through url. Returns null if no
      * URL exists.
      */
-    var _getLinearClickThroughUrl = function(adObject) {
+    var _getLinearClickThroughUrl = (adObject) => {
       var linearClickThroughUrl = null;
       if (adObject &&
           adObject.linear &&
@@ -1258,8 +1219,7 @@ OO.Ads.manager(function()
      * @param {object} vastAds The object containing the parsed ad data
      * @returns {object} The key-value pair object.
      */
-    var _parseVastAdsObject = bind(function(vastAds)
-    {
+    var _parseVastAdsObject = (vastAds) => {
       var _adIdVastData = {};
       if (vastAds)
       {
@@ -1287,7 +1247,7 @@ OO.Ads.manager(function()
         }
       }
       return _adIdVastData;
-    }, this);
+    };
 
     /**
      * Helper function to get the duration property within the Vast ad object.
@@ -1296,8 +1256,7 @@ OO.Ads.manager(function()
      * @param {object} vastAdData The Vast ad object
      * @returns {string} The Vast ad duration time stamp.
      */
-    var _getDuration = bind(function(vastAdData)
-    {
+    var _getDuration = (vastAdData) => {
       var duration = null;
       if (vastAdData &&
           vastAdData.linear &&
@@ -1306,7 +1265,7 @@ OO.Ads.manager(function()
         duration = vastAdData.linear.duration;
       }
       return duration;
-    }, this);
+    };
 
     /**
      * Helper function to retrieve how far (in seconds) the current playhead is from the end (VOD).
@@ -1316,10 +1275,9 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#getCurrentOffset
      * @returns {number} The value of the current offset from Live.
      */
-    this.getCurrentOffset = bind(function()
-    {
+    this.getCurrentOffset = () => {
       return currentOffset;
-    }, this);
+    };
 
     /**
      * Helper function to set how far (in seconds) the current playhead is from the end (VOD).
@@ -1329,8 +1287,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#setCurrentOffset
      * @param {}
      */
-    this.setCurrentOffset = function(offset)
-    {
+    this.setCurrentOffset = (offset) => {
       currentOffset = offset;
     }
 
@@ -1345,8 +1302,7 @@ OO.Ads.manager(function()
      * @param {object} vastAdData The object containing the parsed Vast ad data
      * @returns {number} The duration of the ad (in seconds).
      */
-    var _selectDuration = bind(function(id3Object, vastAdData)
-    {
+    var _selectDuration = (id3Object, vastAdData) => {
       var duration = FALLBACK_AD_DURATION;
 
       var vastDuration = _getDuration(vastAdData);
@@ -1361,7 +1317,7 @@ OO.Ads.manager(function()
         duration = vastDuration;
       }
       return duration;
-    }, this);
+    };
 
     /**
      * Helper function to ping URLs in each set of tracking event arrays.
@@ -1370,7 +1326,7 @@ OO.Ads.manager(function()
      * @param {object} urlObject An object with the tracking event names and their
      * associated URL array.
      */
-    var _pingTrackingUrls = bind(function(urlObject) {
+    var _pingTrackingUrls = (urlObject) => {
       for (var trackingName in urlObject) {
         if (!urlObject.hasOwnProperty(trackingName)) {
           return
@@ -1394,7 +1350,7 @@ OO.Ads.manager(function()
           }
         }
       }
-    }, this);
+    };
 
     /**
      * Replaces the %5BCACHEBUSTING%5D / [CACHEBUSTING] string in each URL in the array with a
@@ -1405,8 +1361,7 @@ OO.Ads.manager(function()
      * @param {string[]} urls The array of URLs
      * @returns {string[]} The new array of URLs.
      */
-    var _cacheBuster = bind(function(urls)
-    {
+    var _cacheBuster = (urls) => {
       for (var i = 0; i < urls.length; i++)
       {
         var searchString = "[CACHEBUSTING]";
@@ -1416,7 +1371,7 @@ OO.Ads.manager(function()
         urls[i] = urls[i].replace(regex, randString);
       }
       return urls;
-    }, this);
+    };
 
     /**
      * Helper function to call impressions.
@@ -1424,7 +1379,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#_handleImpressionCalls
      * @param {object} curId3Object An object with the impressions data
      */
-    var _handleImpressionCalls = bind(function(curId3Object) {
+    var _handleImpressionCalls = (curId3Object) => {
       if (!isId3ContainsStartedTime(curId3Object.time)) {
         var dataToExecutingImpressions = {
           ad: {
@@ -1434,56 +1389,54 @@ OO.Ads.manager(function()
 
         _handleTrackingUrls(dataToExecutingImpressions, TRACKING_CALL_NAMES[curId3Object.time]);
       }
-    }, this);
+    };
 
     /**
      * Callback used when the duration of an ad has passed.
      * @private
      * @method OoyalaSsai#_adEndedCallback
      */
-    var _adEndedCallback = bind(function(clearTimeoutId, objectId)
-    {
-      var self = this;
-      return function () {
+    var _adEndedCallback = (clearTimeoutId, objectId) =>{
+      // var self = this;
+      return () => {
         if (clearTimeoutId) {
           clearTimeout(clearTimeoutId);
         }
 
-        if (!isUndefined(self.adIdDictionary[objectId]))
+        if (!isUndefined(this.adIdDictionary[objectId]))
         {
-          amc.notifyLinearAdEnded(self.adIdDictionary[objectId].curAdId);
-          amc.notifyPodEnded(self.adIdDictionary[objectId].curAdId);
+          amc.notifyLinearAdEnded(this.adIdDictionary[objectId].curAdId);
+          amc.notifyPodEnded(this.adIdDictionary[objectId].curAdId);
 
           adMode = false;
-          self.currentAd = null;
+          this.currentAd = null;
           //We delete vast info for this ad, since was completed.
-          delete self.adIdDictionary[objectId];
+          delete this.adIdDictionary[objectId];
         }
       };
-    }, this);
+    };
 
     /**
      * Remove listeners from the Ad Manager Controller about playback.
      * @private
      * @method OoyalaSsai#_removeAMCListeners
      */
-    var _removeAMCListeners = bind(function()
-    {
+    var _removeAMCListeners = () => {
       if (!amc) {
         return;
       }
 
-      amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, bind(_onContentChanged, this));
-      amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, bind(this.onContentUrlChanged, this));
-      amc.removePlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , bind(this.onPlayheadTimeChanged, this));
-      amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, bind(this.onVideoTagFound, this));
-      amc.removePlayerListener(amc.EVENTS.REPLAY_REQUESTED, bind(this.onReplay, this));
-      amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, bind(this.onFullscreenChanged, this));
-      amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, bind(this.onAdVolumeChanged, this));
-      amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, bind(this.onMuteStateChanged, this));
-      amc.removePlayerListener(amc.EVENTS.PLAY_STARTED, bind(this.onPlayStarted, this));
-      amc.removePlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, bind(this.onContentTreeFetched, this));
-    }, this);
+      amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+      amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, this.onContentUrlChanged);
+      amc.removePlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED , this.onPlayheadTimeChanged);
+      amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
+      amc.removePlayerListener(amc.EVENTS.REPLAY_REQUESTED, this.onReplay);
+      amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, this.onFullscreenChanged);
+      amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, this.onAdVolumeChanged);
+      amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, this.onMuteStateChanged);
+      amc.removePlayerListener(amc.EVENTS.PLAY_STARTED, this.onPlayStarted);
+      amc.removePlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, this.onContentTreeFetched);
+    };
   };
   return new OoyalaSsai();
 });

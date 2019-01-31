@@ -1,4 +1,3 @@
-const { extend } = require('underscore');
 
   (function(OO, _){
     /*
@@ -40,7 +39,7 @@ const { extend } = require('underscore');
 
     };
 
-    extend(VastPings.prototype, {
+    Object.assign(VastPings.prototype, {
       onFullscreenChanged: function(event, isFullScreen) {
         if (this.currentVastAd == null) { return; }
         this._vastTrackings(isFullScreen ? 'fullscreen' : 'collapse');

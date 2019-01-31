@@ -1,5 +1,3 @@
-const { extend } = require('underscore');
-
 OO.plugin('heartbeat', function(OO) {
   var log = function(...args) {
     OO.log.apply(this, ['heartbeat:', ...args]);
@@ -121,7 +119,7 @@ OO.plugin('heartbeat', function(OO) {
     }
 
     function buildConfig(configuration) {
-      var _config = extend({}, DEFAULT_CONFIG, configuration);
+      var _config = Object.assign({}, DEFAULT_CONFIG, configuration);
 
       if (!_config.segmentLength) {
         _config.maxSegmentsToCheck = _config.maxSegmentsToCheck || DEFAULT_CONFIG.maxSegmentsToCheck;
