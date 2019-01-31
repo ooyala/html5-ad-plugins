@@ -445,6 +445,7 @@ OO.Ads.manager(function() {
         }
         return vastRootElement[0];
       } catch (error) {
+        console.warn(error);
         return null;
       }
     };
