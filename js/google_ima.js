@@ -2894,13 +2894,22 @@ require("../html5-common/js/utils/utils.js");
       _ima.setRequiresMutedAutoplay(false);
     };
 
-    var raisePlayhead = _.bind(function(eventname, currentTime, duration)
-    {
-      notifyIfInControl(eventname,
-        { "currentTime" : currentTime,
-          "duration" : duration,
-          "buffer" : 0,
-          "seekRange" : { "begin" : 0, "end" : 0 } });
+    /**
+     * While we can not know the value of "buffer"
+     * (
+     * for SDK, IMA representatives answer:
+     * > The IMA SDK for Android doesn’t support the buffer size
+     * )
+     * set it to 1 (use 1 instead of 0 to avoid the problem of displaying Spinner on the AdScreen)
+     * @param {String} eventname - event name
+     * @param {Number} currentTime - current time
+     * @param {Number} duration - a video duration
+     * @param {Number} buffer - value of buffer
+     * @link https://groups.google.com/forum/#!topic/ima-sdk/zRNKpKNSukM
+     */
+    const raisePlayhead = _.bind((eventname, currentTime, duration, buffer=1) => {
+      const seekRange = { begin: 0, end: 0 };
+      notifyIfInControl(eventname, { currentTime, duration, buffer, seekRange });
     }, this);
   };
 
