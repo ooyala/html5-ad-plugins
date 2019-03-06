@@ -2908,13 +2908,16 @@ require("../html5-common/js/utils/utils.js");
      * @link https://groups.google.com/forum/#!topic/ima-sdk/zRNKpKNSukM
      */
     const raisePlayhead = _.bind((eventname, currentTime, duration, buffer=1) => {
-      notifyIfInControl(eventname,
+      const seekRange = { begin: 0, end: 0 };
+      notifyIfInControl(
+        eventname,
         { "currentTime" : currentTime,
           "duration" : duration,
           "buffer" : buffer,
-          "seekRange" : { "begin" : 0, "end" : 0 } });
-  const seekRange = { begin: 0, end: 0};
-  notifyIfInControl(eventName, { currentTime, duration, buffer, seekRange });
+          "seekRange" : seekRange
+        }
+      );
+    }, this);
   };
 
   OO.Video.plugin(new GoogleIMAVideoFactory());
