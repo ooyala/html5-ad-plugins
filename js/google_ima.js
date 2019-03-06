@@ -2913,7 +2913,8 @@ require("../html5-common/js/utils/utils.js");
           "duration" : duration,
           "buffer" : buffer,
           "seekRange" : { "begin" : 0, "end" : 0 } });
-    }, this);
+  const seekRange = { begin: 0, end: 0};
+  notifyIfInControl(eventName, { currentTime, duration, buffer, seekRange });
   };
 
   OO.Video.plugin(new GoogleIMAVideoFactory());
