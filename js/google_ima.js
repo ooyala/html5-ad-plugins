@@ -2908,7 +2908,6 @@ require("../html5-common/js/utils/utils.js");
      * @link https://groups.google.com/forum/#!topic/ima-sdk/zRNKpKNSukM
      */
     const raisePlayhead = _.bind((eventname, currentTime, duration, buffer=1) => {
-      console.log('BBB buffer', buffer);
       notifyIfInControl(eventname,
         { "currentTime" : currentTime,
           "duration" : duration,
