@@ -2909,14 +2909,7 @@ require("../html5-common/js/utils/utils.js");
      */
     const raisePlayhead = _.bind((eventname, currentTime, duration, buffer=1) => {
       const seekRange = { begin: 0, end: 0 };
-      notifyIfInControl(
-        eventname,
-        { "currentTime" : currentTime,
-          "duration" : duration,
-          "buffer" : buffer,
-          "seekRange" : seekRange
-        }
-      );
+      notifyIfInControl(eventname, { currentTime, duration, buffer, seekRange });
     }, this);
   };
 
