@@ -2899,7 +2899,7 @@ require("../html5-common/js/utils/utils.js");
       notifyIfInControl(eventname,
         { "currentTime" : currentTime,
           "duration" : duration,
-          "buffer" : 0,
+          "buffer" : 1,
           "seekRange" : { "begin" : 0, "end" : 0 } });
     }, this);
   };
