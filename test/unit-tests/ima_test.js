@@ -1835,7 +1835,7 @@ describe('ad_manager_ima', function()
       {
         "currentTime" : CURRENT_TIME,
         "duration" : DURATION,
-        "buffer" : 0,
+        "buffer" : 1,
         "seekRange" :
         {
           "begin" : 0, "end" : 0
@@ -1856,7 +1856,7 @@ describe('ad_manager_ima', function()
     {
       "currentTime" : CURRENT_TIME,
       "duration" : DURATION,
-      "buffer" : 0,
+      "buffer" : 1,
       "seekRange" :
       {
         "begin" : 0, "end" : 0

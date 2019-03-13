@@ -5,6 +5,14 @@
   "engines": {
     "node": ">=8.11.3"
   },
+  "scripts": {
+    "test": "mocha test/unit-tests --require test/test_lib.js --exit",
+    "lint": "echo",
+    "build": "echo",
+    "build-prod": "echo",
+    "start": "echo",
+    "analysis": "echo"
+  },
   "keywords": [
     "ad manager",
     "ads",
