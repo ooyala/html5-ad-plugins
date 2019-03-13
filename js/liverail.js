@@ -8,7 +8,12 @@
  *
  */
 
-OO.Ads.manager(function(_, $) {
+ const {
+  isFunction,
+  extend,
+ } = require('underscore');
+
+OO.Ads.manager(function() {
   // There are quite a few more of these events, see the linked VPAID docs above
   var VPAID_EVENTS = {
     AD_LOADED: "AdLoaded",
@@ -51,21 +56,16 @@ OO.Ads.manager(function(_, $) {
     var countdownIntervalId = null;
 
     ///// Helpers /////
-    function log() {
-      if (_.isFunction(OO.log)) {
+    var log = () => {
+      if (isFunction(OO.log)) {
         OO.log.apply(null, ["liverail-ads-manager:"].concat(Array.prototype.slice.apply(arguments)));
       } else {
         console.log(["liverail-ads-manager:"].concat(Array.prototype.slice.apply(arguments)));
       }
     }
 
-    // A better typeOf: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
-    function typeOf(object) {
-      return ({}).toString.call(object).match(/\s([a-z|A-Z]+)/)[1].toLowerCase();
-    }
-
     ///// Setup /////
-    this.initialize = function(amcInterface) {
+    this.initialize = (amcInterface) => {
       amc = amcInterface;
       amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _playbackBeginning);
       amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _playbackBeginning);
@@ -76,19 +76,19 @@ OO.Ads.manager(function(_, $) {
       document.body.appendChild(liverailFrame);
     };
 
-    var _onIframeLoaded = _.bind(function() {
+    var _onIframeLoaded = () => {
       log("iframe loaded");
       iframeLoaded = true;
       _tryLoadSdk();
-    }, this);
+    };
 
-    this.registerUi = function() {
+    this.registerUi = () => {
       remoteModuleJs = (amc.ui.isSSL ? "https://cdn-static-secure.liverail.com/js/LiveRail.AdManager-1.0.js" :
                                        "http://cdn-static.liverail.com/js/LiveRail.AdManager-1.0.js");
       _tryLoadSdk();
     };
 
-    var _tryLoadSdk = _.bind(function() {
+    var _tryLoadSdk = () => {
       if ((remoteModuleJs == null) || !iframeLoaded) return;
       var loader = liverailFrame.contentWindow.document.createElement("script");
       loader.src = remoteModuleJs;
@@ -96,9 +96,9 @@ OO.Ads.manager(function(_, $) {
       loader.onerror = this.destroy;
       liverailFrame.contentWindow.document.body.appendChild(loader);
       _tryInit();
-    }, this);
+    };
 
-    var _onSdkLoaded = _.bind(function() {
+    var _onSdkLoaded = () => {
       log("SDK loaded");
       adModuleJsReady = true;
 
@@ -107,25 +107,29 @@ OO.Ads.manager(function(_, $) {
 
       var eventName;
       for (eventName in VPAID_EVENTS) {
-        liverailVPAIDManager.subscribe(_.bind(_onAdEvent, this, VPAID_EVENTS[eventName]),
-            VPAID_EVENTS[eventName]);
+        // liverailVPAIDManager.subscribe(() => {this._onAdEvent(VPAID_EVENTS[eventName])}),
+        liverailVPAIDManager.subscribe(() => {
+          this._onAdEvent(VPAID_EVENTS[eventName])
+        },
+          VPAID_EVENTS[eventName]
+        );
       }
 
       _tryInit();
-    }, this);
+    };
 
-    this.loadMetadata = function(pageAndBacklotMetadata, baseMetadata) {
+    this.loadMetadata = (pageAndBacklotMetadata, baseMetadata) => {
       metadataFetched = true;
 
       var key, tags, pair, i;
       var params = {};
 
-      function isLrParam(key) {
-        return (typeOf(key) === "string") && (key.indexOf("LR_") === 0);
+      var isLrParam = (key) => {
+        return (typeof key === "string") && (key.indexOf("LR_") === 0);
       }
 
       //load parameters from movie level custom metadata from backlot
-      if (baseMetadata && (typeOf(baseMetadata) === "object")) {
+      if (baseMetadata && (typeof baseMetadata === "object")) {
         // This is needed because the LiveRail ad source provides nonstandard means of incorporating
         // movie-level metadata and this is how it makes it into metadata
         for (key in baseMetadata) {
@@ -135,7 +139,7 @@ OO.Ads.manager(function(_, $) {
         }
       }
 
-      if (pageAndBacklotMetadata && (typeOf(pageAndBacklotMetadata) === "object")) {
+      if (pageAndBacklotMetadata && (typeof pageAndBacklotMetadata === "object")) {
         //load parameters set in backdoor 3rd party module settings
         for (key in pageAndBacklotMetadata) {
           if (isLrParam(key)) {
@@ -145,7 +149,7 @@ OO.Ads.manager(function(_, $) {
 
         //load parameters from backlot ad-set level
         // Ad tag url parameters override all
-        if (typeOf(pageAndBacklotMetadata["tagUrl"]) === "string") {
+        if (typeof pageAndBacklotMetadata["tagUrl"] === "string") {
           // If the parameter is a real URL, decode it
           var requiresDecode = (pageAndBacklotMetadata["tagUrl"].indexOf("http") == 0);
           tags = pageAndBacklotMetadata["tagUrl"].split("&");
@@ -158,7 +162,7 @@ OO.Ads.manager(function(_, $) {
         }
       }
 
-      this.environmentVariables = _.extend(params, this.environmentVariables);
+      this.environmentVariables = extend(params, this.environmentVariables);
       if (amc.movieDuration) {
         this.environmentVariables["LR_VIDEO_DURATION"] = Math.max(amc.movieDuration, 1);
       }
@@ -168,7 +172,7 @@ OO.Ads.manager(function(_, $) {
 
     // Currently we only support 1 ad
     // Currently we only support linear ads
-    this.buildTimeline = function() {
+    this.buildTimeline = () => {
       if (!this.environmentVariables["LR_VIDEO_POSITION"]) return [];
       var positionString = this.environmentVariables["LR_VIDEO_POSITION"].replace('%','');
       var positionPercent = parseInt(isNaN(positionString) ? 0 : positionString);
@@ -185,18 +189,18 @@ OO.Ads.manager(function(_, $) {
       ];
     };
 
-    var _tryInit = _.bind(function() {
+    var _tryInit = () => {
       if (!adModuleJsReady || !metadataFetched) return;
       this.ready = true;
       amc.onAdManagerReady(this.name);
       amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
-    }, this);
+    };
 
     ///// Playback /////
 
-    var _playbackBeginning = _.bind(function() {
+    var _playbackBeginning = () => {
       var creativeData = {};
-      var environmentVariables = _.extend({
+      var environmentVariables = extend({
         slot: amc.ui.videoWrapper[0],
         //slot: amc.ui.adWrapper[0],
         videoSlot: amc.ui.adVideoElement[0],
@@ -209,20 +213,21 @@ OO.Ads.manager(function(_, $) {
       // http://www.iab.net/media/file/VPAIDFINAL51109.pdf
       liverailVPAIDManager.initAd(amc.ui.adVideoElement[0].offsetWidth, amc.ui.adVideoElement[0].offsetHeight,
           "normal", 600, creativeData, environmentVariables);
-    }, this);
+    };
 
-    this.playAd = function(ad) {
-      slotStartedCallback = (function(ad){ return function() { amc.notifyPodStarted(ad.id, null); } })(ad);
-      slotEndedCallback = (function(ad){ return function() { amc.notifyPodEnded(ad.id); } })(ad);
-      adStartedCallback = (function(ad, context){ return function() {
-        amc.notifyLinearAdStarted(context.name, {
+    this.playAd = (ad) => {
+      slotStartedCallback = () => amc.notifyPodStarted(ad.id, null);
+      slotEndedCallback = () => amc.notifyPodEnded(ad.id);
+      adStartedCallback = () => {
+        amc.notifyLinearAdStarted(this.name, {
           name: null,
           duration : ad.ad.getAdDuration(),
           clickUrl: null,
           indexInPod : 1,
           skippable : ad.ad.getAdSkippableState()
-        }); } })(ad, this);
-      adEndedCallback = (function(ad){ return function() { amc.notifyLinearAdEnded(ad.id); } })(ad);
+        });
+      }
+      adEndedCallback = () => amc.notifyLinearAdEnded(ad.id);
       adPlaying = true;
 
       // On iOS and Android devices, playback will not start if LiveRail dispatches an ad error event. The
@@ -240,7 +245,7 @@ OO.Ads.manager(function(_, $) {
       }
     };
 
-    this.cancelAd = function() {
+    this.cancelAd = () => {
       // if the input is null, cancel the current ad
       if (!adPlaying) return;
       liverailVPAIDManager.stopAd();
@@ -250,15 +255,15 @@ OO.Ads.manager(function(_, $) {
       _resetAdState();
     };
 
-    this.pauseAd = function() {
+    this.pauseAd = () => {
       liverailVPAIDManager.pauseAd();
     };
 
-    this.resumeAd = function() {
+    this.resumeAd = () => {
       liverailVPAIDManager.resumeAd();
     };
 
-    var _onAdEvent = _.bind(function(eventName, logData) {
+    var _onAdEvent = (eventName, logData) => {
       if (eventName !== VPAID_EVENTS.AD_LOG) {
         log(eventName, "fired with args", Array.prototype.slice.call(arguments, 1));
       }
@@ -279,7 +284,7 @@ OO.Ads.manager(function(_, $) {
           if (adStartedCallback) {
             adStartedCallback();
           }
-          countdownIntervalId = setInterval(_.bind(_updateCountdown, this), 500);
+          countdownIntervalId = setInterval(() => {this._updateCountdown}, 500);
           break;
         case VPAID_EVENTS.AD_CLICK_THRU:
           amc.adsClicked();
@@ -306,9 +311,9 @@ OO.Ads.manager(function(_, $) {
           log("LIVERAIL AD LOG -", logData);
           break;
       }
-    }, this);
+    };
 
-    var _resetAdState = _.bind(function() {
+    var _resetAdState = () => {
       startAfterLoad      = false;
       adLoaded            = false;
       adPlaying           = false;
@@ -316,9 +321,9 @@ OO.Ads.manager(function(_, $) {
       slotEndedCallback   = null;
       adStartedCallback   = null;
       adEndedCallback     = null;
-    }, this);
+    };
 
-    var _updateCountdown = _.bind(function() {
+    var _updateCountdown = () => {
       var remainingTime = liverailVPAIDManager.getAdRemainingTime();
       if (this.environmentVariables["LR_LAYOUT_SKIN_MESSAGE"]) {
         var message = ("Advertisement: Your video will resume in {COUNTDOWN} seconds.")
@@ -328,9 +333,9 @@ OO.Ads.manager(function(_, $) {
       } else {
         amc.ui.updateAdMarqueeTime(remainingTime);
       }
-    }, this);
+    };
 
-    this.destroy = function() {
+    this.destroy = () => {
       this.cancelAd();
       // TODO: reset all variables
     };

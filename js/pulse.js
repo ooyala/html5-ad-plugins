@@ -2,13 +2,13 @@
  * Pulse ad player ad manager
  */
 
-(function(_, $)
+(function()
 {
     var pulseAdManagers = {};
 
 
-    OO.Ads.manager(function(_, $) {
-        function log() {
+    OO.Ads.manager(function() {
+        var log = () => {
             var args = Array.prototype.slice.call(arguments);
             if(OO.Pulse) {
                 if(OO.Pulse.Utils.logTagged) {
@@ -79,31 +79,31 @@
              * @param adManagerController
              * @param playerId
              */
-            this.initialize = function(adManagerController, playerId) {
+            this.initialize = (adManagerController, playerId) => {
                 amc = adManagerController; // the AMC is how the code interacts with the player
                 pulseAdManagers[playerId] = this;
 
                 // Add any player event listeners now
-                amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _.bind(_onContentChanged, this));
-                amc.addPlayerListener(amc.EVENTS.PAUSED, _.bind(_onContentPause, this));
-                amc.addPlayerListener(amc.EVENTS.RESUME, _.bind(_onContentResume, this));
-                amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _.bind(_onInitialPlay, this));
-                amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _.bind(_onPlayStarted, this));
-                amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _.bind(_onContentFinished, this));
-                amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _.bind(_onSizeChanged, this));
-                amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _.bind(_onFullscreenChanged, this));
-                amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _.bind(_onReplay, this));
-                amc.addPlayerListener(amc.EVENTS.DEVICE_ID_SET, _.bind(_onDeviceIdSet, this));
+                amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+                amc.addPlayerListener(amc.EVENTS.PAUSED, _onContentPause);
+                amc.addPlayerListener(amc.EVENTS.RESUME, _onContentResume);
+                amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _onInitialPlay);
+                amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _onPlayStarted);
+                amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _onContentFinished);
+                amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
+                amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _onFullscreenChanged);
+                amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _onReplay);
+                amc.addPlayerListener(amc.EVENTS.DEVICE_ID_SET, _onDeviceIdSet);
             };
 
-            this.getAdPlayer = function() {
+            this.getAdPlayer = () => {
                 return adPlayer;
             };
 
             /**
              * Called by the AMF when the UI is ready.
              */
-            this.registerUi = function() {
+            this.registerUi = () => {
                 this.ui = amc.ui;
                 //Set the CSS overlay so it's responsive
 
@@ -126,7 +126,7 @@
             };
 
 
-            function mergeCommaSeparatedListsBase(a, b) {
+            var mergeCommaSeparatedListsBase = (a, b) => {
                 if(a) {
                     if(b) {
                         return a +"," + b;
@@ -138,7 +138,7 @@
                 }
             }
 
-            function removeUndefinedElements(args) {
+            var removeUndefinedElements = (args) => {
                 var retArray = [];
                 for(var i = 0, n = args.length; i < n; i++) {
                     if(args[i]) {
@@ -148,7 +148,7 @@
                 return retArray;
             }
 
-            function mergeCommaSeparatedStrings() {
+            var mergeCommaSeparatedStrings = () => {
                 //Remove the undefined element first
                 var params = removeUndefinedElements(arguments);
                 var argsLentgh = params.length;
@@ -169,7 +169,7 @@
                 }
             }
 
-            function getInsertionPointTypeFromAdPosition(position) {
+            var getInsertionPointTypeFromAdPosition = (position) => {
                 var PREROLL = 1;
                 var INSTREAM = 2;
                 var POSTROLL = 4;
@@ -196,7 +196,7 @@
                 return (insertionPointFilter.length !== 0 ? insertionPointFilter.join(",") : null);
             }
 
-            function safeSplit(array, char) {
+            var safeSplit = (array, char) => {
                 if(array) {
                     return array.split(char)
                 } else {
@@ -204,7 +204,7 @@
                 }
             }
 
-            function safeMap(array, func) {
+            var safeMap = (array, func) => {
                 if(array) {
                     return array.map(func);
                 } else {
@@ -212,7 +212,7 @@
                 }
             }
 
-            function cleanObject(obj) {
+            var cleanObject = (obj) => {
                 for (var prop in obj) {
                     if(obj[prop] === null || obj[prop] === undefined) {
                         delete  obj[prop];
@@ -220,7 +220,7 @@
                 }
             }
 
-            function safeParseInt(string) {
+            var safeParseInt = (string) => {
                 var val = parseInt(string);
                 if(!val || isNaN(val)) {
                     return null;
@@ -229,7 +229,7 @@
                 }
             }
 
-            function getFlashVersion() {
+            var getFlashVersion = () => {
                 // ie
                 try
                 {
@@ -261,7 +261,7 @@
                 return '0,0,0';
             }
 
-            function getByPriority() {
+            var getByPriority = () => {
                 for (var i = 0,n = arguments.length; i < n; i++) {
                     if(arguments[i] || arguments[i] === "") {
                         return arguments[i];
@@ -271,7 +271,7 @@
                 return null;
             }
 
-            function getProtocolFromPulseHost(host) {
+            var getProtocolFromPulseHost = (host) => {
                 if(host.indexOf("https") === 0) { //Then it starts with https
                     return "https://"
                 } else {
@@ -279,13 +279,13 @@
                 }
             }
 
-            function getPulseAccount(host) {
+            var getPulseAccount = (host) => {
                 var regEx = /(?:https?:\/\/)?(.*)\/?/;
                 return host.match(regEx)[1];
 
             }
 
-            function getCategoryFromPlayerLevelShares(shares) {
+            var getCategoryFromPlayerLevelShares = (shares) => {
                 //Category is the first element
                 var values = safeSplit(shares,",");
                 if(values && values.length !== 0) {
@@ -293,7 +293,7 @@
                 }
             }
 
-            function getContentPartnerFromPlayerLevelShares(shares) {
+            var getContentPartnerFromPlayerLevelShares = (shares) => {
                 //Category is the first element
                 var values = safeSplit(shares,",");
                 if(values && values.length === 2) {
@@ -301,13 +301,13 @@
                 }
             }
 
-            var updateAdScreenPointerEventsEnabled = (function() {
+            var updateAdScreenPointerEventsEnabled = () => {
                 var adScreens = document.getElementsByClassName('oo-ad-screen');
                 var skinClickLayers = document.getElementsByClassName('oo-player-skin-plugins-click-layer');
 
                 if(adScreens.length === 0) {
                     if(!this.adScreenPointerEventsEnabled && !this.adScreenIntervalId) {
-                        this.adScreenIntervalId = setInterval((function() {
+                        this.adScreenIntervalId = setInterval((() => {
                             // Ad screen may disappear before we hit this, so clear if we are not in an ad break anymore
                             if(this._currentAdBreak === null) {
                                 clearInterval(this.adScreenIntervalId);
@@ -315,7 +315,7 @@
                             } else {
                                 updateAdScreenPointerEventsEnabled();
                             }
-                        }).bind(this), 100);
+                        }), 100);
                     }
                 } else {
                     if(this.adScreenIntervalId) {
@@ -324,24 +324,24 @@
                     }
 
                     for(var i = 0; i < adScreens.length; ++i) {
-                        adScreens[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';                        
+                        adScreens[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
                     }
-                    
+
                     for(var i = 0; i < skinClickLayers.length; ++i) {
                         skinClickLayers[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
                     }
                 }
-            }).bind(this);
+            };
 
-            var enableAdScreenPointerEvents = (function() {
+            var enableAdScreenPointerEvents = () => {
                 this.adScreenPointerEventsEnabled = true;
                 updateAdScreenPointerEventsEnabled();
-            }).bind(this);
+            };
 
-            var disableAdScreenPointerEvents = (function() {
+            var disableAdScreenPointerEvents = () => {
                 this.adScreenPointerEventsEnabled = false;
                 updateAdScreenPointerEventsEnabled();
-            }).bind(this);
+            };
 
 
             /**
@@ -354,7 +354,7 @@
              * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
              * @param {object} movieMetadata Metadata for the main video
              */
-            this.loadMetadata = function(adManagerMetadata, backlotBaseMetadata, movieMetadata) {
+            this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
                 preferredRenderingMode = adManagerMetadata.pulse_rendering_mode || "HTML5_FIRST";
                 var protocol, pulse_account_name;
                 this._pulseHost = adManagerMetadata.pulse_host || backlotBaseMetadata.pulse_host || backlotBaseMetadata.vpHost || adManagerMetadata.vpDomain;
@@ -385,7 +385,7 @@
                 if(!OO.Pulse) {
                     log('Pulse SDK not present; loading latest ..');
                     adModuleState = AD_MODULE_STATE.LOADING;
-                    amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, _.bind(function(success) {
+                    amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, (success) => {
                         adModuleState = success ? AD_MODULE_STATE.READY : AD_MODULE_STATE.FAILED;
                         if(!success && podStarted) {
                             log('Failed to load Pulse SDK');
@@ -395,7 +395,7 @@
                             log('Pulse SDK loaded, trying to play prerolls ..');
                             _onInitialPlay.call(this);
                         }
-                    }, this));
+                    });
                 } else {
                     log('Using Pulse SDK already present on page');
                     adModuleState = AD_MODULE_STATE.READY;
@@ -448,7 +448,7 @@
                 if(previewAdId) {
                     this._requestSettings.pulse_preview = previewAdId;
                 }
-                
+
                 //Then the parameters that always overriden by the custom metadata or the integration metadata are set
                 this._contentMetadata.category = getByPriority(
                     adManagerMetadata.pulse_category ,
@@ -489,7 +489,7 @@
 
                 this._contentMetadata.contentProviderInformation = {
                     embedCode: movieMetadata.embed_code,
-                    pcode: movieMetadata.asset_pcode                    
+                    pcode: movieMetadata.asset_pcode
                 };
 
                 this._requestSettings.vptpTicketData =  adManagerMetadata.pulse_vptp_data;
@@ -561,11 +561,11 @@
              * the SDK to start the session and return if actual ads are present or not
              * @returns {array}
              */
-            this.buildTimeline = function() {
+            this.buildTimeline = () => {
                 return noPulseConfiguration ? [] : [ makePlaceholderAd.call(this,"adRequest", 0)];
             };
 
-            function makePlaceholderAd(type,position) {
+            var makePlaceholderAd = (type,position) => {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
                 return new amc.Ad({
@@ -580,20 +580,20 @@
 
 
             //When the overlay shoule be removed
-            function onOverlayFinished() {
+            var onOverlayFinished = () => {
                 clearTimeout(overlayTimer);
                 amc.notifyNonlinearAdEnded(currentOverlayAd.id);
                 currentOverlayAd = null;
             }
 
             //
-            function startOverlayCountdown() {
+            var startOverlayCountdown = () => {
                 lastOverlayAdStart = Date.now();
                 overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
             }
 
             //Called when the overlay is displayed
-            function onOverlayShown() {
+            var onOverlayShown = () => {
                 if(currentOverlayAd) {
                     overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
                     adPlayer.overlayAdShown(currentOverlayAd.ad);
@@ -602,7 +602,7 @@
             }
 
             //Save the current display time of the overlay so it can be resumed later
-            function overlayPause() {
+            var overlayPause = () => {
                 if(currentOverlayAd) {
                     overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
                     clearTimeout(overlayTimer);
@@ -613,7 +613,7 @@
              * Mandatory method. Called by the AMF when an ad play has been requested
              * @param v4ad
              */
-            this.playAd = function(v4ad) {
+            this.playAd = (v4ad) => {
                 if (v4ad === null) {
                     return;
                 }
@@ -630,7 +630,7 @@
                         break;
                     case AD_MODULE_STATE.FAILED:
                         log('Aborting ad break as SDK failed to load');
-                        // SDK failed to load due to timeout or other issues; stop placeholder ad pod                
+                        // SDK failed to load due to timeout or other issues; stop placeholder ad pod
                         amc.notifyPodEnded(v4ad.id);
                         return;
                     default:
@@ -682,7 +682,7 @@
              * @param ad v4ad
              * @param params error code
              */
-            this.cancelAd = function(ad,params) {
+            this.cancelAd = (ad,params) => {
                 //Only skip can happen
                 if(params.code === "skipped") {
                     adPlayer.skipButtonClicked();
@@ -693,7 +693,7 @@
                 }
             };
 
-            this.cancelOverlay = function (v4ad) {
+            this.cancelOverlay = (v4ad) => {
                 adPlayer.overlayAdClosed(v4ad.ad);
                 clearTimeout(overlayTimer);
                 currentOverlayAd = null;
@@ -703,7 +703,7 @@
              * Pause the ad player
              * @param ad v4 ad
              */
-            this.pauseAd = function(ad) {
+            this.pauseAd = (ad) => {
                 if(adPlayer) {
                     adPlayer.pause();
                 }
@@ -714,7 +714,7 @@
              * Resume the v4ad
              * @param ad
              */
-            this.resumeAd = function(ad) {
+            this.resumeAd = (ad) => {
                 if(adPlayer) {
                     adPlayer.play();
                 }
@@ -727,7 +727,7 @@
              * @method AdManager#playerClicked
              * @public
              */
-            this.playerClicked = function(amcAd, showPage) {
+            this.playerClicked = (amcAd, showPage) => {
                 if(this._currentAd) {
                     var clickThroughURL = this._currentAd.getClickthroughURL();
                     if (clickThroughURL) {
@@ -746,23 +746,22 @@
              * @method AdManager#destroy
              * @public
              */
-            this.destroy = function() {
+            this.destroy = () => {
                 // Stop any running ads
                 if(adPlayer) {
                     adPlayer.destroy();
                 }
             };
 
-            this.registerVideoControllerWrapper = function(videoPlugin)
-            {
+            this.registerVideoControllerWrapper = (videoPlugin) => {
                 this.videoControllerWrapper = videoPlugin;
             };
 
-            var _onContentChanged = function() {
+            var _onContentChanged = () => {
                 //Not needed rn
             };
 
-            var _onContentPause = function () {
+            var _onContentPause = () => {
                 contentPaused = true;
                 if(adPlayer) {
                     adPlayer.contentPaused();
@@ -770,7 +769,7 @@
             };
 
 
-            var _onContentResume = function () {
+            var _onContentResume = () => {
                 contentPaused = false;
 
                 if(currentPauseAd) {
@@ -783,20 +782,20 @@
             };
 
 
-            this.notifyAdPodStarted = function(id, adCount) {
+            this.notifyAdPodStarted = (id, adCount) => {
                 if(!podStarted) {
                     podStarted = id;
                 }
                 amc.notifyPodStarted(podStarted, adCount);
             };
 
-            this.notifyAdPodEnded = function() {
+            this.notifyAdPodEnded = () => {
                 var podEndedId = podStarted;
                 podStarted = null;
                 amc.notifyPodEnded(podEndedId);
             };
 
-            this.startContentPlayback = function() {
+            this.startContentPlayback = () => {
                 isWaitingForPrerolls = false;
 
                 if(isInAdMode) {
@@ -814,7 +813,7 @@
                 }
             };
 
-            this.pauseContentPlayback = function () {
+            this.pauseContentPlayback = () => {
                 //ui.ooyalaVideoElement.off("timeupdate",_onMainVideoTimeUpdate);
                 amc.removePlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED, _onMainVideoTimeUpdate);
 
@@ -838,7 +837,7 @@
              * Called by the Pulse SDK when an overlay should shown
              * @param pulseOverlayAd
              */
-            this.showOverlayAd = function (pulseOverlayAd) {
+            this.showOverlayAd = (pulseOverlayAd) => {
                 if (currentOverlayAd) {
                     onOverlayFinished();
                 }
@@ -855,30 +854,30 @@
              * Called by the Pulse SDK to show a pause ad.
              * @param pulsePauseAd
              */
-            this.showPauseAd = function (pulsePauseAd) {
+            this.showPauseAd = (pulsePauseAd) => {
                 /* not implemented */
             };
 
             //This method is called by the V4 AMF
-            this.showOverlay = function () {
+            this.showOverlay =  () => {
                 if (currentOverlayAd) {
                     startOverlayCountdown();
                 }
             };
 
-            this.hideOverlay = function (ad) {
+            this.hideOverlay = (ad) => {
                 overlayTimeLeftMillis = overlayTimeLeftMillis - (Date.now() - lastOverlayAdStart);
             };
 
-            this.illegalOperationOccurred = function(msg) {
+            this.illegalOperationOccurred = (msg) => {
 
             };
 
-            this.sessionEnded = function () {
+            this.sessionEnded = () => {
                 amc.adManagerDoneControllingAds();
             };
 
-            this.openClickThrough = function(url) {
+            this.openClickThrough = (url) => {
                 window.open(url);
                 if(adPlayer) {
                     adPlayer.adClickThroughOpened();
@@ -891,7 +890,7 @@
              * @method Pulse#muted
              * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
              */
-            this.muted = function () {
+            this.muted = () => {
                 var muted = true;
                 if (adPlayer) {
                     muted = adPlayer._muted;
@@ -899,7 +898,7 @@
                 return muted;
             };
 
-            var playPlaceholder = _.bind(function () {
+            var playPlaceholder = () => {
                 var streams = {};
                 streams[OO.VIDEO.ENCODING.PULSE] = "";
                 amc.forceAdToPlay(
@@ -908,55 +907,53 @@
                     amc.ADTYPE.LINEAR_VIDEO,
                     streams
                 );
-            }, this);
+            };
 
-            var _onMainVideoTimeUpdate = _.bind(function (event,playheadTime, duration) {
+            var _onMainVideoTimeUpdate = (event,playheadTime, duration) => {
                 if(adPlayer)
                     adPlayer.contentPositionChanged(playheadTime);
-            }, this);
+            };
 
-            var _onPlayStarted = function() {
+            var _onPlayStarted = () => {
                 if(adPlayer) {
                     adPlayer.contentStarted();
                 }
             };
 
-            var _onContentFinished = function() {
+            var _onContentFinished = () => {
                 this._contentFinished = true;
                 if(adPlayer) {
                     adPlayer.contentFinished();
                 }
             };
 
-            var _onDeviceIdSet = function(event, deviceId) {
+            var _onDeviceIdSet = (event, deviceId) => {
                 if (!this._persistentId) {
                   this._persistentId = deviceId;
                 }
             };
 
-            var _onFullscreenChanged = function(event, shouldEnterFullscreen)
-            {
+            var _onFullscreenChanged = (event, shouldEnterFullscreen) => {
                 isFullscreen = shouldEnterFullscreen;
                 _onSizeChanged();
             };
 
-            var _onReplay = function() {
+            var _onReplay = () => {
                 this._contentFinished = false;
                 _onInitialPlay.call(this);
             };
 
-            var _onSizeChanged = function(event, width, height) {
+            var _onSizeChanged = (event, width, height) => {
                 if(adPlayer) {
                     adPlayer.resize(-1,
                         -1, isFullscreen);
-                    setTimeout(function() {
-                        adPlayer.resize(-1,
-                            -1, isFullscreen);
+                    setTimeout(() => {
+                        adPlayer.resize(-1, -1, isFullscreen);
                     },500);
                 }
             };
 
-            this.tryInitAdPlayer = function() {
+            this.tryInitAdPlayer = () => {
                 var flashVersion = getFlashVersion().split(',').shift();
 
                 if(this.ui && adModuleState === AD_MODULE_STATE.READY) {
@@ -971,20 +968,20 @@
                             }, this.sharedVideoElement);
 
                         //We register all the event listeners we will need
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _.bind(_onAdBreakFinished, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _.bind(_onAdBreakStarted, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _.bind(_onAdFinished, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_ERROR, _.bind(_onAdError, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _.bind(_onAdSkipped, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _.bind(_onAdStarted, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _.bind(_onAdTimeUpdate, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _.bind(_onAdClicked, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _.bind(_onAdPaused, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _.bind(_onAdPlaying, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _.bind(_onSessionStarted, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _.bind(_onOverlayShown, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, _.bind(_onAdVolumeChanged, this));
-                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, _.bind(_onAdPlayPromiseRejected, this));
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _onAdBreakFinished);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _onAdBreakStarted);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _onAdFinished);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_ERROR, _onAdError);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_SKIPPED, _onAdSkipped);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_STARTED, _onAdStarted);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PROGRESS, _onAdTimeUpdate);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_CLICKED, _onAdClicked);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PAUSED, _onAdPaused);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_PLAYING, _onAdPlaying);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.SESSION_STARTED, _onSessionStarted);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _onOverlayShown);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, _onAdVolumeChanged);
+                        adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, _onAdPlayPromiseRejected);
 
                         if(pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
                             pluginCallbacks.onAdPlayerCreated(adPlayer);
@@ -994,7 +991,7 @@
             };
 
 
-            var _onInitialPlay = function() {
+            var _onInitialPlay = () => {
                 if(!this.ready || noPulseConfiguration) {
                     // Do not wait for prerolls, do not control ads
                     return;
@@ -1017,42 +1014,42 @@
                 }
             };
 
-            var _onAdFinished = function() {
+            var _onAdFinished = () => {
                 amc.notifyLinearAdEnded(1);
                 enableAdScreenPointerEvents();
                 this._currentAd = null;
             };
 
-            var _onAdError = function() {
+            var _onAdError = () => {
                 enableAdScreenPointerEvents();
             };
 
-            var _onAdSkipped = function() {
+            var _onAdSkipped = () => {
                 amc.notifyLinearAdEnded(1);
                 enableAdScreenPointerEvents();
                 this._currentAd = null;
             };
 
-            var _onAdBreakFinished = function() {
+            var _onAdBreakFinished = () => {
                 this._currentAdBreak = null;
                 this.notifyAdPodEnded();
             };
 
-            var _onAdBreakStarted = function(event,eventData) {
+            var _onAdBreakStarted = (event,eventData) => {
                 adPlayer.resize(-1,
                     -1, isFullscreen);
                 this._currentAdBreak = eventData.adBreak;
                 this.notifyAdPodStarted(this._adBreakId,this._currentAdBreak.getPlayableAdsTotal());
             };
 
-            var _onAdClicked = function (event,eventData) {
+            var _onAdClicked =  (event,eventData) => {
                 this.videoControllerWrapper.togglePlayPause();
             };
-            var _onAdPaused = function(event,metadata) {
+            var _onAdPaused = (event,metadata) => {
                 this.videoControllerWrapper.raisePauseEvent();
             };
 
-            var _onAdPlaying = function(event,metadata) {
+            var _onAdPlaying = (event,metadata) => {
                 this.videoControllerWrapper.raisePlayingEvent();
             };
 
@@ -1064,7 +1061,7 @@
              * @param {String} event The event name
              * @param {Object} metadata The metadata associated with the event
              */
-            var _onAdVolumeChanged = function(event, metadata) {
+            var _onAdVolumeChanged = (event, metadata) => {
                 this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
             };
 
@@ -1076,7 +1073,7 @@
              * @param {String} event The event name
              * @param {Object} metadata The metadata associated with the event
              */
-            var _onAdPlayPromiseRejected = function(event, metadata) {
+            var _onAdPlayPromiseRejected = (event, metadata) => {
                 if (this.muted()) {
                     this.videoControllerWrapper.raiseMutedPlaybackFailed();
                 } else {
@@ -1084,18 +1081,18 @@
                 }
             };
 
-            var _onSessionStarted = function(event, metadata) {
+            var _onSessionStarted = (event, metadata) => {
                 if(pluginCallbacks && pluginCallbacks.onSessionCreated) {
                     pluginCallbacks.onSessionCreated(session);
                 }
             };
 
-            var _onAdTimeUpdate = function(event, eventData) {
+            var _onAdTimeUpdate = (event, eventData) => {
                 var duration = eventData.duration ? eventData.duration :this.currentAd.getCoreAd().creatives[0].duration;
                 this.videoControllerWrapper.raiseTimeUpdate(eventData.position, duration);
             };
 
-            var _onAdStarted = function(event, eventData) {
+            var _onAdStarted = (event, eventData) => {
                 this._currentAd = eventData.ad;
 
                 // If we're playing a VPAID, don't let the player eat the pointer events
@@ -1132,8 +1129,8 @@
                     -1, isFullscreen);
             };
 
-            var _onOverlayShown = function(event, metadata) {
-                /* Impression is tracked by the SDK before this 
+            var _onOverlayShown = (event, metadata) => {
+                /* Impression is tracked by the SDK before this
                    handler is triggered, so nothing needs to be done here */
             };
         };
@@ -1160,7 +1157,7 @@
          * @param {string} playerId The unique player identifier of the player creating this instance
          * @returns {object} A reference to the wrapper for the newly created element
          */
-        this.create = function(parentContainer, domId, ooyalaVideoController, css, playerId) {
+        this.create = (parentContainer, domId, ooyalaVideoController, css, playerId) => {
             var pulseAdManager = pulseAdManagers[playerId];
             var wrapper = new PulseVideoWrapper(pulseAdManager);
             wrapper.controller = ooyalaVideoController;
@@ -1168,12 +1165,11 @@
             return wrapper;
         };
 
-        this.createFromExisting = function(domId, ooyalaVideoController, playerId)
-        {
+        this.createFromExisting = (domId, ooyalaVideoController, playerId) => {
             var pulseAdManager = pulseAdManagers[playerId];
             var wrapper = new PulseVideoWrapper(pulseAdManager);
 
-            pulseAdManager.sharedVideoElement = $("#" + domId)[0];
+            pulseAdManager.sharedVideoElement = document.getElementById(domId);
             wrapper.controller = ooyalaVideoController;
             wrapper.subscribeAllEvents();
 
@@ -1184,9 +1180,9 @@
          * @public
          * @method TemplateVideoFactory#destroy
          */
-        this.destroy = function() {
+        this.destroy = () => {
             this.encodings = [];
-            this.create = function() {};
+            this.create = () => {};
         };
 
         /**
@@ -1217,8 +1213,8 @@
          * @public
          * @method PulseVideoWrapper#sharedElementGive
          */
-        this.sharedElementGive = function() {
-            setTimeout(function() {
+        this.sharedElementGive = () => {
+            setTimeout(() => {
                 _adManager.sharedVideoElement.style.display = "block";
                 _adManager.sharedVideoElement.play();
             }, 100);
@@ -1233,7 +1229,7 @@
          * @public
          * @method PulseVideoWrapper#sharedElementTake
          */
-        this.sharedElementTake = function() {
+        this.sharedElementTake = () => {
             _adManager.sharedVideoElement.crossorigin = null;
             _adManager._isControllingVideo = true;
             _adManager.sharedVideoElement.style.visibility ="visible";
@@ -1248,7 +1244,7 @@
          * @public
          * @method PulseVideoWrapper#subscribeAllEvents
          */
-        this.subscribeAllEvents = function() {
+        this.subscribeAllEvents = () => {
             _adManager.registerVideoControllerWrapper(this);
         };
 
@@ -1258,9 +1254,7 @@
          * @private
          * @method PulseVideoWrapper#unsubscribeAllEvents
          */
-        var unsubscribeAllEvents = _.bind(function() {
-
-        }, this);
+        var unsubscribeAllEvents = () => {};
 
         /**
          * Sets the url of the video.
@@ -1271,7 +1265,7 @@
          * @param {boolean} live True if it is a live asset, false otherwise (unused here)
          * @returns {boolean} True or false indicating success
          */
-        this.setVideoUrl = function(url) {
+        this.setVideoUrl = (url) => {
             return true;
         };
 
@@ -1285,7 +1279,7 @@
          *   true, if initial time has not been set, or if the stream has already been played, set the stream
          *   position to 0.
          */
-        this.load = function(rewind) {
+        this.load = (rewind) => {
         };
 
         /**
@@ -1294,11 +1288,11 @@
          * @method PulseVideoWrapper#setInitialTime
          * @param {number} initialTime The initial time of the video (seconds)
          */
-        this.setInitialTime = function(initialTime) {
+        this.setInitialTime = (initialTime) => {
         };
 
 
-        this.togglePlayPause = function() {
+        this.togglePlayPause = () => {
             if(this.isPlaying)
                 this.pause();
             else
@@ -1310,7 +1304,7 @@
          * @public
          * @method PulseVideoWrapper#play
          */
-        this.play = function() {
+        this.play = () => {
             if(_adManager) {
                 _adManager.resumeAd();
                 this.isPlaying = true;
@@ -1324,7 +1318,7 @@
          * @public
          * @method PulseVideoWrapper#pause
          */
-        this.pause = function() {
+        this.pause = () => {
             if(_adManager) {
                 _adManager.pauseAd();
                 this.isPlaying = false;
@@ -1338,7 +1332,7 @@
          * @method PulseVideoWrapper#seek
          * @param {number} time The time to seek the video to (in seconds)
          */
-        this.seek = function(time) {
+        this.seek = (time) => {
             if(_adManager && _adManager.getAdPlayer()) {
                 _adManager.getAdPlayer().seek(time);
             }
@@ -1350,7 +1344,7 @@
          * @method PulseVideoWrapper#setVolume
          * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
          */
-        this.setVolume = function(volume) {
+        this.setVolume = (volume) => {
             //Do not set the volume if the Pulse ad player is muted since that will unmute the ad player
             if(_adManager && _adManager.getAdPlayer() && !_adManager.muted()) {
                 _adManager.getAdPlayer().setVolume(volume);
@@ -1362,7 +1356,7 @@
          * @public
          * @method PulseVideoWrapper#mute
          */
-        this.mute = function() {
+        this.mute = () => {
             if(_adManager && _adManager.getAdPlayer()) {
                 _adManager.getAdPlayer().mute();
             }
@@ -1373,7 +1367,7 @@
          * @public
          * @method PulseVideoWrapper#unmute
          */
-        this.unmute = function() {
+        this.unmute = () => {
             if(_adManager && _adManager.getAdPlayer()) {
                 _adManager.getAdPlayer().unmute();
             }
@@ -1385,7 +1379,7 @@
          * @method PulseVideoWrapper#getCurrentTime
          * @returns {number} The current time position of the video (seconds)
          */
-        this.getCurrentTime = function() {
+        this.getCurrentTime = () => {
         };
 
         /**
@@ -1394,10 +1388,14 @@
          * @method PulseVideoWrapper#applyCss
          * @param {object} css The css to apply in key value pairs
          */
-        this.applyCss = function(css) {
-            if(_adManager.sharedVideoElement) {
-                $(_adManager.sharedVideoElement).css(css);
+        this.applyCss = (css) => {
+            var node = _adManager.sharedVideoElement;
+            if (!node) {
+                return;
             }
+            Object.keys(css).forEach((prop) => {
+                node.style[prop] = css[prop];
+            });
         };
 
         /**
@@ -1405,7 +1403,7 @@
          * @public
          * @method PulseVideoWrapper#destroy
          */
-        this.destroy = function() {
+        this.destroy = () => {
             // Pause the video
             // Reset the source
             // Unsubscribe all events
@@ -1421,7 +1419,7 @@
          * @param {object} closedCaptions The closedCaptions object
          * @param {object} params The params to set with closed captions
          */
-        this.setClosedCaptions = function(language, closedCaptions, params) {
+        this.setClosedCaptions = (language, closedCaptions, params) => {
         };
 
         /**
@@ -1430,7 +1428,7 @@
          * @method PulseVideoWrapper#setClosedCaptionsMode
          * @param {string} mode The mode to set the text tracks element. One of ("disabled", "hidden", "showing").
          */
-        this.setClosedCaptionsMode = function(mode) {
+        this.setClosedCaptionsMode = (mode) => {
         };
 
         /**
@@ -1439,47 +1437,47 @@
          * @method PulseVideoWrapper#setCrossorigin
          * @param {string} crossorigin The value to set the crossorigin attribute.
          */
-        this.setCrossorigin = function(crossorigin) {
+        this.setCrossorigin = (crossorigin) => {
         };
 
         // **********************************************************************************/
         // Example callback methods
         // **********************************************************************************/
 
-        this.raisePlayEvent = function(event) {
+        this.raisePlayEvent = (event) => {
             this.controller.notify(this.controller.EVENTS.PLAY, { url: event.target.src });
         };
 
-        this.raisePlayingEvent = function() {
+        this.raisePlayingEvent = () => {
             this.controller.notify(this.controller.EVENTS.PLAYING);
         };
 
-        this.raiseEndedEvent = function() {
+        this.raiseEndedEvent = () => {
             this.controller.notify(this.controller.EVENTS.ENDED);
         };
 
-        this.raiseErrorEvent = function(event) {
+        this.raiseErrorEvent = (event) => {
             var code = event.target.error ? event.target.error.code : -1;
             this.controller.notify(this.controller.EVENTS.ERROR, { "errorcode" : code });
         };
 
-        this.raiseSeekingEvent = function() {
+        this.raiseSeekingEvent = () => {
             this.controller.notify(this.controller.EVENTS.SEEKING);
         };
 
-        this.raiseSeekedEvent = function() {
+        this.raiseSeekedEvent = () => {
             this.controller.notify(this.controller.EVENTS.SEEKED);
         };
 
-        this.raisePauseEvent = function() {
+        this.raisePauseEvent = () => {
             this.controller.notify(this.controller.EVENTS.PAUSED);
         };
 
-        this.raiseRatechangeEvent = function() {
+        this.raiseRatechangeEvent = () => {
             this.controller.notify(this.controller.EVENTS.RATE_CHANGE);
         };
 
-        this.raiseStalledEvent = function() {
+        this.raiseStalledEvent = () => {
             this.controller.notify(this.controller.EVENTS.STALLED);
         };
 
@@ -1490,7 +1488,7 @@
          * @param {Number} volume The current volume
          * @param {boolean} muted The current mute state
          */
-        this.raiseVolumeEvent = function(volume, muted) {
+        this.raiseVolumeEvent = (volume, muted) => {
             if (volume === 0 || muted) {
                 this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
             } else {
@@ -1504,7 +1502,7 @@
          * @private
          * @method PulseVideoWrapper#raiseUnmutedPlaybackFailed
          */
-        this.raiseUnmutedPlaybackFailed = function() {
+        this.raiseUnmutedPlaybackFailed = () => {
             this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
         };
 
@@ -1513,15 +1511,15 @@
          * @private
          * @method PulseVideoWrapper#raiseMutedPlaybackFailed
          */
-        this.raiseMutedPlaybackFailed = function() {
+        this.raiseMutedPlaybackFailed = () => {
             this.controller.notify(this.controller.EVENTS.MUTED_PLAYBACK_FAILED);
         };
 
-        this.raiseWaitingEvent = function() {
+        this.raiseWaitingEvent = () => {
             this.controller.notify(this.controller.EVENTS.WAITING);
         };
 
-        this.raiseTimeUpdate = function(position, duration) {
+        this.raiseTimeUpdate = (position, duration) => {
 
             this.controller.notify(this.controller.EVENTS.TIME_UPDATE,
                 { "currentTime" : position,
@@ -1530,19 +1528,19 @@
                     "seekRange" : { "begin" : 0, "end" : 10 } });
         };
 
-        this.raiseDurationChange = function(event) {
+        this.raiseDurationChange = (event) => {
             this.raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, event);
         };
 
-        this.raisePlayhead = _.bind(function(eventname, event) {
+        this.raisePlayhead = (eventname, event) => {
             this.controller.notify(eventname,
                 { "currentTime" : event.target.currentTime,
                     "duration" : event.target.duration,
                     "buffer" : 10,
                     "seekRange" : { "begin" : 0, "end" : 10 } });
-        }, this);
+        };
 
-        this.raiseProgress = function(event) {
+        this.raiseProgress = (event) => {
             this.controller.notify(this.controller.EVENTS.PROGRESS,
                 { "currentTime": event.target.currentTime,
                     "duration": event.target.duration,
@@ -1550,21 +1548,21 @@
                     "seekRange": { "begin": 0, "end": 10 } });
         };
 
-        this.raiseCanPlayThrough = function() {
+        this.raiseCanPlayThrough = () => {
             this.controller.notify(this.controller.EVENTS.BUFFERED);
         };
 
-        this.raiseFullScreenBegin = function(event) {
+        this.raiseFullScreenBegin = (event) => {
             this.controller.notify(this.controller.EVENTS.FULLSCREEN_CHANGED,
                 { "_isFullScreen" : true, "paused" : event.target.paused });
         };
 
-        this.raiseFullScreenEnd = function(event) {
+        this.raiseFullScreenEnd = (event) => {
             this.controller.notify(this.controller.EVENTS.FULLSCREEN_CHANGED,
                 { "_isFullScreen" : false, "paused" : event.target.paused });
         };
     };
 
     OO.Video.plugin(new PulsePlayerFactory());
-}(OO._, OO.$));
+}());
 

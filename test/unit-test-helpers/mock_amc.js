@@ -1,3 +1,5 @@
+var sinon = require('sinon');
+
 fake_amc = function() {
   this.timeline = [];
   this.callbacks = {};
@@ -97,7 +99,7 @@ fake_amc = function() {
   this.onAdSdkImpression = function() {};
   this.onAdImpression = function() {};
   this.onAdCompleted = function() {};
-  this.adsClickthroughOpened = function() {};
+  this.adsClickthroughOpened = sinon.spy();
   this.notifyPodStarted = function() {};
   this.notifyPodEnded = function() {};
   this.notifyLinearAdStarted = function() {};
