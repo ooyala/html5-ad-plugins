@@ -11,7 +11,6 @@ global.document = dom.window.document;
 
 global.$ = require("jquery");
 global.window.$ = global.$;
-OO.$ = global.window.$;
 global.window.open = function() {};
 global.expect = require('expect.js');
 require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");

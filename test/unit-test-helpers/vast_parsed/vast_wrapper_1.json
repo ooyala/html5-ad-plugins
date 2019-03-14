@@ -1,0 +1,39 @@
+{
+  "podded": [],
+  "standalone": [{
+    "error": ["errorWrapper1Url"],
+    "impression": ["impressionWrapper1Url"],
+    "linear": {
+      "tracking": {
+        "creativeView": [],
+        "start": ["startWrapper1Url"],
+        "midpoint": ["midpointWrapper1Url"],
+        "firstQuartile": ["firstQuartileWrapper1Url"],
+        "thirdQuartile": ["thirdQuartileWrapper1Url"],
+        "complete": ["completeWrapper1Url"],
+        "mute": [],
+        "unmute": [],
+        "pause": [],
+        "rewind": [],
+        "resume": [],
+        "fullscreen": [],
+        "exitFullscreen": [],
+        "expand": [],
+        "collapse": [],
+        "acceptInvitation": [],
+        "close": [],
+        "skip": []
+      },
+      "clickTracking": ["clickTrackingWrapper1Url"],
+      "clickThrough": "clickThroughWrapper1Url",
+      "customClick": ["customClickWrapper1Url"]
+    },
+    "nonLinear": {},
+    "companion": [],
+    "type": "Wrapper",
+    "version": "2.0",
+    "vastAdTagUri": "vastad.xml",
+    "title": "wrapperParentAd1",
+    "id": "wrapper-parent-1"
+  }]
+}

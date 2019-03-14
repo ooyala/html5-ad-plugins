@@ -1,7 +1,15 @@
-var VastParser = function($) {
+const {
+  each,
+  isNumber,
+  compose,
+  map,
+  first,
+  extend,
+  contains,
+  without,
+} = require('underscore')
 
-  this.errorInfo = {};
-  this.wrapperParentId = null;
+var VastParser = function() {
 
   var VERSION_MAJOR_2 = '2';
   var VERSION_MAJOR_3 = '3';
@@ -23,7 +31,7 @@ var VastParser = function($) {
   /**
    * Used to keep track of what events that are tracked for vast.
    */
-  var TrackingEvents = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
+  var TRACKING_EVENTS = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
   'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'exitFullscreen', 'expand', 'collapse', 'acceptInvitation',
   'close', 'skip' ];
 
@@ -35,17 +43,13 @@ var VastParser = function($) {
    * @param {object} adLoaded The ad loaded object and metadata
    * @returns {object[]} An array containing the ad(s) if ads are found, otherwise it returns null.
    */
-  this.parser = function(vastXML, adLoaded) {
-    var jqueryAds =  $(vastXML).find("Ad");
-    if (!this.checkNoAds(vastXML, jqueryAds)){
-      // need to get error tracking information early in case error events need to be reported
-      // before the ad object is created
-      this.getErrorTrackingInfo(vastXML, jqueryAds);
-    }
-
-    if (!this.isValidVastXML(vastXML)) {
+  this.parser = (vastXML, adLoaded) => {
+    if (!vastXML || !this.isValidVastXML(vastXML)) {
       return null;
     }
+
+    var ads = vastXML.querySelectorAll("Ad");
+
     var result = {
       podded : [],
       standalone : []
@@ -53,8 +57,8 @@ var VastParser = function($) {
     //parse the ad objects from the XML
     var ads = this.parseAds(vastXML, adLoaded);
     //check to see if any ads are sequenced (are podded)
-    _.each(ads, _.bind(function(ad) {
-      var sequence = typeof ad.sequence !== 'undefined' && _.isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
+    each(ads, (ad) => {
+      var sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
       var version = typeof ad.version !== 'undefined' ? ad.version : null;
       if (supportsPoddedAds(version) && sequence) {
         //Assume sequences will start from 1
@@ -63,7 +67,7 @@ var VastParser = function($) {
         //store ad as a standalone ad
         result.standalone.push(ad);
       }
-    }, this));
+    });
 
     return result;
   };
@@ -76,22 +80,12 @@ var VastParser = function($) {
    * @return {object[]} An array of ad objects
    * @param {object} adLoaded The ad loaded object and metadata
    */
-  this.parseAds = function(vastXML, adLoaded) {
-    var result = [];
+  this.parseAds = (vastXML, adLoaded) => {
     var version = getVastVersion(vastXML);
-    $(vastXML).find("Ad").each(function() {
-      //no vpaid for ssai yet
-      //var singleAd = _getVpaidCreative(this, version, adLoaded);
-      var singleAd = null;
-      //if there is no vpaid creative, parse as regular vast
-      if (!singleAd) {
-        singleAd = vastAdSingleParser(this, version);
-      }
-      if (singleAd) {
-        result.push(singleAd);
-      }
-    });
-    return result;
+    return compose(
+      (ads) => map(ads, (ad) => vastAdSingleParser(ad, version)),
+      Array.from,
+    )(vastXML.querySelectorAll("Ad"));
   };
 
   /**
@@ -102,11 +96,10 @@ var VastParser = function($) {
    * @param {number} version The Vast version
    * @returns {object} The ad object otherwise it returns 1.
    */
-  var vastAdSingleParser = _.bind(function(xml, version) {
+  var vastAdSingleParser = (xml, version) => {
     var result = getVastTemplate();
-    var jqueryXML = $(xml);
-    var inline = jqueryXML.find(AD_TYPE.INLINE);
-    var wrapper = jqueryXML.find(AD_TYPE.WRAPPER);
+    var inline = xml.querySelectorAll(AD_TYPE.INLINE);
+    var wrapper = xml.querySelectorAll(AD_TYPE.WRAPPER);
 
     if (inline.length > 0) {
       result.type = AD_TYPE.INLINE;
@@ -119,44 +112,46 @@ var VastParser = function($) {
 
     result.version = version;
 
-    var linear = jqueryXML.find("Linear").eq(0);
-    var nonLinearAds = jqueryXML.find("NonLinearAds");
+    var linear = xml.querySelector("Linear");
+    var nonLinearAds = xml.querySelector("NonLinearAds");
 
     if (result.type === AD_TYPE.WRAPPER) {
-      result.VASTAdTagURI = jqueryXML.find("VASTAdTagURI").text();
+      result.vastAdTagUri = getNodeTextContent(xml, "VASTAdTagURI");
     }
 
-    result.error = filterEmpty(jqueryXML.find("Error").map(function() {
-      return $(this).text();
-    }));
+    result.error = compose(
+      mapWithoutEmpty(node => node.textContent),
+      Array.from,
+    )(xml.querySelectorAll("Error"));
 
-    result.impression = filterEmpty(jqueryXML.find("Impression").map(function () {
-      return $(this).text();
-    }));
+    result.impression = compose(
+      mapWithoutEmpty(node => node.textContent),
+      Array.from,
+    )(xml.querySelectorAll("Impression"));
 
-    result.title = _.first(filterEmpty(jqueryXML.find("AdTitle").map(function () {
-      return $(this).text();
-    })));
+    result.title = compose(
+      first,
+      mapWithoutEmpty(node => node.textContent),
+      Array.from,
+    )(xml.querySelectorAll("AdTitle"));
 
-    if (linear.length > 0) { result.linear = parseLinearAd(linear); }
-    if (nonLinearAds.length > 0) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
-    jqueryXML.find("Companion").map(function(i, v){
-      result.companion.push(parseCompanionAd($(v)));
-      return 1;
-    });
+    if (linear) { result.linear = parseLinearAd(linear); }
+    if (nonLinearAds) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
 
-    var sequence = jqueryXML.attr("sequence");
+    result.companion = compose(
+      (array) => map(array, node => parseCompanionAd(node)),
+      Array.from,
+    )(xml.querySelectorAll('Companion'))
+
+    var sequence = safeGetAttribute(xml, 'sequence');
     if (typeof sequence !== 'undefined') {
       result.sequence = sequence;
     }
 
-    var id = jqueryXML.attr("id");
-    if (typeof id !== 'undefined') {
-      result.id = id;
-    }
+    result.id = safeGetAttribute(xml, 'id');
 
     return result;
-  }, this);
+  };
 
   /**
    * The xml needs to be parsed to grab all the linear data of the ad and create an object.
@@ -165,36 +160,41 @@ var VastParser = function($) {
    * @param {XMLDocument} linearXml The xml containing the ad data to be parsed
    * @returns {object} An object containing the ad data.
    */
-  var parseLinearAd = _.bind(function(linearXml) {
+  var parseLinearAd = (linearXml) => {
     var result = {
-      tracking: {},
+      tracking: parseTrackingEvents(linearXml),
       // clickTracking needs to be remembered because it can exist in wrapper ads
-      clickTracking: filterEmpty($(linearXml).find("ClickTracking").map(function() { return $(this).text(); })),
+      clickTracking: compose(
+        mapWithoutEmpty(node => node.textContent),
+        Array.from,
+      )(linearXml.querySelectorAll('ClickTracking')),
       //There can only be one clickthrough as per Vast 2.0/3.0 specs and XSDs
-      clickThrough: $(linearXml).find("ClickThrough").text(),
-      customClick: filterEmpty($(linearXml).find("CustomClick").map(function() { return $(this).text(); }))
+      clickThrough: getNodeTextContent(linearXml, 'ClickThrough'),
+      customClick: compose(
+        mapWithoutEmpty(node => node.textContent),
+        Array.from,
+      )(linearXml.querySelectorAll('CustomClick')),
+      skipOffset: safeGetAttribute(linearXml, 'skipoffset'),
     };
 
-    result.skipOffset = $(linearXml).attr("skipoffset");
+    var mediaFiles = linearXml.querySelectorAll("MediaFile");
 
-    var mediaFile = linearXml.find("MediaFile");
-
-    parseTrackingEvents(result.tracking, linearXml);
-    if (mediaFile.length > 0) {
-      result.mediaFiles = filterEmpty(mediaFile.map(function(i,v) {
-        return {
-          type: $(v).attr("type").toLowerCase(),
-          url: $.trim($(v).text()),
-          bitrate: $(v).attr("bitrate"),
-          width: $(v).attr("width"),
-          height: $(v).attr("height")
-        };
-      }));
-      result.duration = linearXml.find("Duration").text();
+    if (mediaFiles.length > 0) {
+      result.mediaFiles = compose(
+        mapWithoutEmpty((mediaFile) => ({
+          type: mediaFile.getAttribute("type").toLowerCase(),
+          url: mediaFile.textContent.trim(),
+          bitrate: mediaFile.getAttribute("bitrate"),
+          width: mediaFile.getAttribute("width"),
+          height: mediaFile.getAttribute("height")
+        }),
+        Array.from,
+      ))(mediaFiles);
+      result.duration = getNodeTextContent(linearXml, "Duration");
     }
 
     return result;
-  }, this);
+  };
 
   /**
    * The xml needs to be parsed in order to grab all the non-linear ad data.
@@ -203,113 +203,57 @@ var VastParser = function($) {
    * @param {XMLDocument} nonLinearAdsXml Contains the ad data that needs to be parsed
    * @returns {object} An object that contains the ad data.
    */
-  var parseNonLinearAds = _.bind(function(nonLinearAdsXml) {
-    var result = { tracking: {} };
-    var nonLinear = nonLinearAdsXml.find("NonLinear").eq(0);
+  var parseNonLinearAds = (nonLinearAdsXml) => {
+    var result = {
+      tracking: parseTrackingEvents(nonLinearAdsXml)
+    };
 
-    parseTrackingEvents(result.tracking, nonLinearAdsXml);
+    var nonLinear = nonLinearAdsXml.querySelector("NonLinear");
 
-    if (nonLinear.length > 0) {
-      var staticResource = nonLinear.find("StaticResource");
-      var iframeResource = nonLinear.find("IFrameResource");
-      var htmlResource = nonLinear.find("HTMLResource");
-      result.width = nonLinear.attr("width");
-      result.height = nonLinear.attr("height");
-      result.expandedWidth = nonLinear.attr("expandedWidth");
-      result.expandedHeight = nonLinear.attr("expandedHeight");
-      result.scalable = nonLinear.attr("scalable");
-      result.maintainAspectRatio = nonLinear.attr("maintainAspectRatio");
-      result.minSuggestedDuration = nonLinear.attr("minSuggestedDuration");
-      result.nonLinearClickThrough = nonLinear.find("NonLinearClickThrough").text();
-      result.nonLinearClickTracking = filterEmpty($(nonLinearAdsXml).
-                                      find("NonLinearClickTracking").
-                                      map(function() { return $(this).text(); }));
+    if (!nonLinear) {
+      return result;
+    }
+    var staticResource = nonLinear.querySelector("StaticResource");
+    var iframeResource = nonLinear.querySelector("IFrameResource");
+    var htmlResource = nonLinear.querySelector("HTMLResource");
 
-      if (staticResource.length > 0) {
-        _.extend(result, { type: "static", data: staticResource.text(), url: staticResource.text() });
-      } else if (iframeResource.length > 0) {
-        _.extend(result, { type: "iframe", data: iframeResource.text(), url: iframeResource.text() });
-      } else if (htmlResource.length > 0) {
-        _.extend(result, { type: "html", data: htmlResource.text(), htmlCode: htmlResource.text() });
-      }
+    result.width = safeGetAttribute(nonLinear, "width");
+    result.height = safeGetAttribute(nonLinear, "height");
+    result.expandedWidth = safeGetAttribute(nonLinear, "expandedWidth");
+    result.expandedHeight = safeGetAttribute(nonLinear, "expandedHeight");
+    result.scalable = safeGetAttribute(nonLinear, "scalable");
+    result.maintainAspectRatio = safeGetAttribute(nonLinear, "maintainAspectRatio");
+    result.minSuggestedDuration = safeGetAttribute(nonLinear, "minSuggestedDuration");
+    result.nonLinearClickThrough = getNodeTextContent(nonLinear, "NonLinearClickThrough");
+
+    result.nonLinearClickTracking = compose(
+      mapWithoutEmpty(node => node.textContent),
+      Array.from,
+    )(nonLinearAdsXml.querySelectorAll('NonLinearClickTracking'))
+
+    if (staticResource) {
+      extend(result, {
+        type: "static",
+        data: staticResource.textContent,
+        url: staticResource.textContent
+      });
+    }
+    if (iframeResource) {
+      extend(result, {
+        type: "iframe",
+        data: iframeResource.textContent,
+        url: iframeResource.textContent
+      });
+    }
+    if (htmlResource) {
+      extend(result, {
+        type: "html",
+        data: htmlResource.textContent,
+        htmlCode: htmlResource.textContent
+      });
     }
 
     return result;
-  }, this);
-  /**
-   * This should be the first thing that happens in the parser function: check if the vast XML has no ads.
-   * If it does not have ads, track error urls
-   * @public
-   * @method VastParser#checkNoAds
-   * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-   * @param {object} ads A jQuery object which contains the collection of ad elements found
-   * @returns {boolean} true if there are no ads, false otherwise.
-   */
-  this.checkNoAds = function(vastXML, ads) {
-    // if there are no ads in ad response then track error
-    if (ads.length === 0) {
-      OO.log("VAST: No ads in XML");
-      // there could be an <Error> element in the vast response
-      var noAdsErrorURL = $(vastXML).find("Error").text();
-      if (noAdsErrorURL) {
-        this.pingErrorURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
-      }
-      // if the ad response came from a wrapper, then go up the chain and ping those error urls
-      //this.trackError(this.ERROR_CODES.WRAPPER_NO_ADS, this.wrapperParentId);
-      return true;
-    }
-    return false;
-  };
-
-  /**
-   * Helper function to ping error URL. Replaces error macro if it exists.
-   * @public
-   * @method VastParser#pingErrorURL
-   * @param {number} code Error code
-   * @param {string} url URL to ping
-   */
-  this.pingErrorURL = function(code, url) {
-    url = url.replace(/\[ERRORCODE\]/, code);
-    OO.pixelPing(url);
-  };
-
-  /**
-   * Helper function to ping error URLs.
-   * @public
-   * @method VastParser#pingErrorURLs
-   * @param {number} code Error code
-   * @param {string[]} urls URLs to ping
-   */
-  this.pingErrorURLs = function(code, urls) {
-    _.each(urls, function() {
-      this.pingErrorURL(code, url);
-    }, this);
-  };
-
-  /**
-   * Helper function to grab error information. vastAdSingleParser already grabs error data while
-   * creating ad object, but some errors may occur before the object is created.
-   * Note: <Error> can only live in three places: directly under <VAST>, <Ad>, or <Wrapper> elements.
-   * <Error> tags are also optional so they may not always exist.
-   * @public
-   * @method VastParser#getErrorTrackingInfo
-   * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-   * @param {object} ads A jQuery object which contains the collection of ad elements found
-   */
-  this.getErrorTrackingInfo = function(vastXML, ads) {
-    _.each(ads, function(ad) {
-      var error = {
-        errorURLs: [],
-        wrapperParentId: this.wrapperParentId || null
-      };
-
-      var errorElement = $(ad).find("Error");
-      if (errorElement.length > 0){
-        error.errorURLs = [errorElement.text()];
-      }
-      var adId = $(ad).prop("id");
-      this.errorInfo[adId] = error;
-    }, this);
   };
 
   /**
@@ -319,7 +263,7 @@ var VastParser = function($) {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
    */
-  this.isValidVastXML = function(vastXML) {
+  this.isValidVastXML = (vastXML) => {
     return this.isValidRootTagName(vastXML) && this.isValidVastVersion(vastXML);
   };
 
@@ -330,10 +274,10 @@ var VastParser = function($) {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
    */
-  this.isValidRootTagName = function(vastXML) {
+  this.isValidRootTagName = (vastXML) => {
     if (!getVastRoot(vastXML)) {
       OO.log("VAST: Invalid VAST XML");
-      //this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
+      //this.trackError(PARSE_ERRORS.SCHEMA_VALIDATION, this.wrapperParentId);
       return false;
     }
     return true;
@@ -346,11 +290,11 @@ var VastParser = function($) {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
    */
-  this.isValidVastVersion = function(vastXML) {
+  this.isValidVastVersion = (vastXML) => {
     var version = getVastVersion(vastXML);
     if (!supportsVersion(version)) {
       OO.log("VAST: Invalid VAST Version: " + version);
-      //this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, this.wrapperParentId);
+      //this.trackError(PARSE_ERRORS.VERSION_UNSUPPORTED, this.wrapperParentId);
       return false;
     }
     return true;
@@ -363,10 +307,13 @@ var VastParser = function($) {
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
    * @returns {string} The Vast version.
    */
-  var getVastVersion = _.bind(function(vastXML) {
+  var getVastVersion = (vastXML) => {
     var vastTag = getVastRoot(vastXML);
-    return $(vastTag).attr('version');
-  }, this);
+    if (!vastTag) {
+      return null;
+    }
+    return safeGetAttribute(vastTag, 'version');
+  };
 
   /**
    * Helper function to get the VAST root element.
@@ -376,18 +323,23 @@ var VastParser = function($) {
    * @returns {object} null if a VAST tag is absent, or if there are multiple VAST tags. Otherwise,
    * returns the VAST root element.
    */
-  var getVastRoot = _.bind(function(vastXML) {
-    var vastRootElement = $(vastXML).find("VAST");
-    if (vastRootElement.length === 0) {
-      OO.log("VAST: No VAST tags in XML");
+  var getVastRoot = (vastXML) => {
+    try {
+
+      var vastRootElement = vastXML.querySelectorAll("VAST");
+      if (vastRootElement.length === 0) {
+        OO.log("VAST: No VAST tags in XML");
+        return null;
+      }
+      if (vastRootElement.length > 1) {
+        OO.log("VAST: Multiple VAST tags in XML");
+        return null;
+      }
+      return vastRootElement[0];
+    } catch (error) {
       return null;
     }
-    else if (vastRootElement.length > 1) {
-      OO.log("VAST: Multiple VAST tags in XML");
-      return null;
-    }
-    return vastRootElement[0];
-  }, this);
+  };
 
   /**
    * Returns the Vast major version. For example, the '3' in 3.0.
@@ -396,11 +348,11 @@ var VastParser = function($) {
    * @param {string} version The Vast version as parsed from the XML
    * @returns {string} The major version.
    */
-  var getMajorVersion = _.bind(function(version) {
+  var getMajorVersion = (version) => {
     if(typeof version === 'string') {
       return version.split('.')[0];
     }
-  }, this);
+  };
 
   /**
    * Checks to see if this ad manager supports a given Vast version.
@@ -409,9 +361,9 @@ var VastParser = function($) {
    * @param {string} version The Vast version as parsed from the XML
    * @returns {boolean} true if the version is supported by this ad manager, false otherwise.
    */
-  var supportsVersion = _.bind(function(version) {
-    return _.contains(SUPPORTED_VERSIONS, getMajorVersion(version));
-  }, this);
+  var supportsVersion = (version) => {
+    return contains(SUPPORTED_VERSIONS, getMajorVersion(version));
+  };
 
   /**
    * Checks to see if the given Vast version supports the podded ads functionality, as per Vast specs
@@ -421,9 +373,9 @@ var VastParser = function($) {
    * @returns {boolean} true if the podded ads functionality is supported in the specified Vast version,
    *                    false otherwise
    */
-  var supportsPoddedAds = _.bind(function(version) {
-    return _.contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.PODDED_ADS);
-  }, this);
+  var supportsPoddedAds = (version) => {
+    return contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.PODDED_ADS);
+  };
 
   /**
    * Checks to see if the given Vast version supports the ad fallback functionality, as per Vast specs
@@ -433,9 +385,9 @@ var VastParser = function($) {
    * @returns {boolean} true if the ad fallback functionality is supported in the specified Vast version,
    *                    false otherwise
    */
-  var supportsAdFallback = _.bind(function(version) {
-    return _.contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.AD_FALLBACK);
-  }, this);
+  var supportsAdFallback = (version) => {
+    return contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.AD_FALLBACK);
+  };
 
   /**
    * Default template to use when creating the vast ad object.
@@ -443,7 +395,7 @@ var VastParser = function($) {
    * @method VastParser#getVastTemplate
    * @returns {object} The ad object that is formated to what we expect vast to look like.
    */
-  var getVastTemplate = _.bind(function() {
+  var getVastTemplate = () => {
     return {
       error: [],
       impression: [],
@@ -452,7 +404,22 @@ var VastParser = function($) {
       nonLinear: {},
       companion: []
     };
-  }, this);
+  };
+
+  /**
+   * Helper function to map through array and filter empty items.
+   * @private
+   * @method VastParser#mapWithoutEmpty
+   * @param {Array} array
+   * @param {Function} mapperFn mapper function
+   * @returns {Array} The filtered array.
+   */
+  var mapWithoutEmpty = mapperFn => array => {
+    return compose(
+      filterEmpty,
+      (arr) => map(arr, mapperFn),
+    )(array);
+  };
 
   /**
    * Helper function to remove empty items.
@@ -461,9 +428,48 @@ var VastParser = function($) {
    * @param {Array} array An array that is the be checked if it is empty
    * @returns {Array} The filtered array.
    */
-  var filterEmpty = _.bind(function(array) {
-    return _.without(array, null, "");
-  }, this);
+  var filterEmpty = array => {
+    return without(array, null, "");
+  };
+
+  /**
+   * Helper function to get node attribute value.
+   * @private
+   * @method VastParser#safeGetAttribute
+   * @param {HTMLElement} parentNode DOM element object
+   * @param {String} attribute Attribute name
+   * @returns {String | void} Attribute value
+   */
+  var safeGetAttribute = (node, attribute) => {
+    if (!node) {
+      return;
+    }
+    const attributeValue = node.getAttribute(attribute);
+    if (attributeValue === null) {
+      return;
+    }
+
+    return node.getAttribute(attribute);
+  };
+
+  /**
+   * Helper function to get text content of node.
+   * @private
+   * @method VastParser#getNodeTextContent
+   * @param {HTMLElement} parentNode Parent DOM element object
+   * @param {String | void} selector Selector to find
+   * @returns {String | void} Text content
+   */
+  var getNodeTextContent = (parentNode, selector) => {
+    if (!selector) {
+      return parentNode.textContent || undefined;
+    }
+    var childNode = parentNode.querySelector(selector);
+    if (!childNode) {
+      return;
+    }
+    return childNode.textContent || undefined;
+  };
 
   /**
    * While getting the ad data the manager needs to parse the companion ad data as well and add it to the object.
@@ -472,55 +478,41 @@ var VastParser = function($) {
    * @param {XMLDocument} companionAdXML XML that contains the companion ad data
    * @returns {object} The ad object with companion ad.
    */
-  var parseCompanionAd = _.bind(function(companionAdXml) {
-    var result = { tracking: {} };
-    var staticResource = _cleanString(companionAdXml.find('StaticResource').text());
-    var iframeResource = _cleanString(companionAdXml.find('IFrameResource').text());
-    var htmlResource = _cleanString(companionAdXml.find('HTMLResource').text());
+  var parseCompanionAd = (companionAdXml) => {
+    var staticResource = _cleanString(getNodeTextContent(companionAdXml, 'StaticResource'));
+    var iframeResource = _cleanString(getNodeTextContent(companionAdXml, 'IFrameResource'));
+    var htmlResource = _cleanString(getNodeTextContent(companionAdXml, 'HTMLResource'));
 
-    parseTrackingEvents(result.tracking, companionAdXml, ["creativeView"]);
-
-    result = {
-      tracking: result.tracking,
-      width: companionAdXml.attr('width'),
-      height: companionAdXml.attr('height'),
-      expandedWidth: companionAdXml.attr('expandedWidth'),
-      expandedHeight: companionAdXml.attr('expandedHeight'),
-      companionClickThrough: companionAdXml.find('CompanionClickThrough').text()
+    var result = {
+      tracking: parseTrackingEvents(companionAdXml, ["creativeView"]),
+      width: safeGetAttribute(companionAdXml, 'width'),
+      height: safeGetAttribute(companionAdXml, 'height'),
+      expandedWidth: safeGetAttribute(companionAdXml, 'expandedWidth'),
+      expandedHeight: safeGetAttribute(companionAdXml, 'expandedHeight'),
+      companionClickThrough: getNodeTextContent(companionAdXml, 'CompanionClickThrough'),
     };
 
-    if (staticResource.length) {
-      _.extend(result, { type: 'static', data: staticResource, url: staticResource });
-    } else if (iframeResource.length) {
-      _.extend(result, { type: 'iframe', data: iframeResource, url: iframeResource });
-    } else if (htmlResource.length) {
-      _.extend(result, { type: 'html', data: htmlResource, htmlCode: htmlResource });
+    if (staticResource) {
+      extend(result, {
+        type: 'static',
+        data: staticResource,
+        url: staticResource
+      });
+    } else if (iframeResource) {
+      extend(result, {
+        type: 'iframe',
+        data: iframeResource,
+        url: iframeResource
+      });
+    } else if (htmlResource) {
+      extend(result, {
+        type: 'html',
+        data: htmlResource,
+        htmlCode: htmlResource
+      });
     }
 
     return result;
-  }, this);
-
-  /**
-   * Checks if there is any companion ads associated with the ad and if one is found, it will call the Ad Manager
-   * Controller to show it.
-   * @public
-   * @method VastParser#checkCompanionAds
-   * @param {object} adInfo The Ad metadata
-   */
-  this.checkCompanionAds = function(adInfo) {
-    var data = adInfo.data,
-        adUnitCompanions = currentAd.vpaidAd ? _safeFunctionCall(currentAd.vpaidAd, "getAdCompanions") : null,
-        companions;
-
-    // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
-    // This rules is only for VPaid, it will take data.companion otherwise anyway
-    companions = data && !_.isEmpty(data.companion) ? data.companion : adUnitCompanions;
-
-    if (_.isEmpty(companions)) {
-      return;
-    }
-
-    this.amc.showCompanion(companions);
   };
 
   /**
@@ -532,13 +524,18 @@ var VastParser = function($) {
    * @param {string[]} trackingEvents List of events that are tracked, if null then it uses the global one
    * @returns {object} An array of tracking items.
    */
-  var parseTrackingEvents = _.bind(function(tracking, xml, trackingEvents) {
-    var events = trackingEvents || TrackingEvents;
-    _.each(events, function(item) {
-      var sel = "Tracking[event=" + item + "]";
-      tracking[item] = filterEmpty(xml.find(sel).map(function(i, v) { return $(v).text(); }));
+  var parseTrackingEvents = (xml, events = TRACKING_EVENTS) => {
+    var result = events.reduce((acc, event) => {
+      var sel = "Tracking[event=" + event + "]";
+      var item = compose(
+        mapWithoutEmpty(node => node.textContent),
+        Array.from,
+      )(xml.querySelectorAll(sel));
+      return {...acc, [event]: item};
     }, {});
-  }, this);
+
+    return result;
+  };
 
   /**
    * Remove any new lines, line breaks and spaces from string.
@@ -546,7 +543,10 @@ var VastParser = function($) {
    * @method VastParser#_cleanString
    * @return {string} String with no spaces
    */
-  var _cleanString = function(string) {
+  var _cleanString = (string) => {
+    if (!string) {
+      return '';
+    }
     return string.replace(/\r?\n|\r/g, '').trim();
   };
 };

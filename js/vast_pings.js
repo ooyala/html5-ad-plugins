@@ -1,4 +1,5 @@
-  (function(OO, _, $){
+
+  (function(OO, _){
     /*
      *  AdsManager will manage the Ads config load and notify playback controller when they are ready.
      *  It will intercept willFetchAds event, and send adFetched event to notify playbck to continue.
@@ -38,7 +39,7 @@
 
     };
 
-    _.extend(VastPings.prototype, {
+    Object.assign(VastPings.prototype, {
       onFullscreenChanged: function(event, isFullScreen) {
         if (this.currentVastAd == null) { return; }
         this._vastTrackings(isFullScreen ? 'fullscreen' : 'collapse');
@@ -150,4 +151,4 @@
       return new VastPings(messageBus, id);
     });
 
-  }(OO, OO._, OO.$));
+  }(OO));

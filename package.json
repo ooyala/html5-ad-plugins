@@ -5,6 +5,14 @@
   "engines": {
     "node": ">=8.11.3"
   },
+  "scripts": {
+    "test": "mocha test/unit-tests --require test/test_lib.js --exit",
+    "lint": "echo",
+    "build": "echo",
+    "build-prod": "echo",
+    "start": "echo",
+    "analysis": "echo"
+  },
   "keywords": [
     "ad manager",
     "ads",
@@ -16,14 +24,15 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1.49",
-    "mime": "^2.3.1"
+    "mime": "^2.3.1",
+    "underscore": "^1.9.1"
   },
   "devDependencies": {
-    "browserify": "16.2.2",
-    "babelify": "^9.0.0",
     "@babel/core": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.0.0-beta.51",
     "babel-core": "^7.0.0-bridge.0",
+    "babelify": "^9.0.0",
+    "browserify": "16.2.2",
     "expect.js": "0.3.1",
     "file-lister": "^1.1.0",
     "gulp": "3.9.1",
@@ -38,7 +47,7 @@
     "jquery": "3.3.1",
     "jsdom": "11.11.0",
     "mocha": "~5.2.0",
-    "underscore": "1.9.1",
+    "sinon": "^7.2.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^2.0.0"
   },
