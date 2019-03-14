@@ -950,7 +950,7 @@ OO.Ads.manager(function()
      * @method OoyalaSsai#_sendMetadataRequest
      */
     var _sendMetadataRequest = () => {
-      var url = "http://"+this.domainName+ "/v1/metadata/" + this.currentEmbed + "?ssai_guid=" + this.ssaiGuid;
+      var url = window.location.protocol + "//" + this.domainName + "/v1/metadata/" + this.currentEmbed + "?ssai_guid=" + this.ssaiGuid;
       fetch(url, {
         method: 'get',
         credentials: 'omit',
