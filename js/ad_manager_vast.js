@@ -26,18 +26,18 @@ const {
   isFunction,
 } = require('underscore');
 
-require("../html5-common/js/utils/InitModules/InitOO.js");
-require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
-require("../html5-common/js/utils/InitModules/InitOOHazmat.js");
-require("../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js");
+require('../html5-common/js/utils/InitModules/InitOO.js');
+require('../html5-common/js/utils/InitModules/InitOOUnderscore.js');
+require('../html5-common/js/utils/InitModules/InitOOHazmat.js');
+require('../html5-common/js/utils/InitModules/InitOOPlayerParamsDefault.js');
 
-require("../html5-common/js/utils/constants.js");
-require("../html5-common/js/utils/utils.js");
-require("../html5-common/js/utils/environment.js");
+require('../html5-common/js/utils/constants.js');
+require('../html5-common/js/utils/utils.js');
+require('../html5-common/js/utils/environment.js');
 
-var adManagerUtils = require("../utils/ad_manager_utils.js");
+const adManagerUtils = require('../utils/ad_manager_utils.js');
 
-OO.Ads.manager(function() {
+OO.Ads.manager(() => {
   /**
    * @class Vast
    * @classDesc The Vast Ads Manager class, registered as an ads manager with the ad manager controller.
@@ -63,13 +63,13 @@ OO.Ads.manager(function() {
    * @property {string} wrapperParentId Used to keep track of ad's wrapper parent ID
    * @property {object} ERROR_CODES Used to define the VAST 3.0 error codes
    */
-  var Vast = function() {
+  const Vast = function () {
     // this.name should match the key in metadata form the server
-    this.name = "vast";
-    this.amc  = null;
+    this.name = 'vast';
+    this.amc = null;
     this.testMode = false;
-    this.ADTYPE = "vast";
-    this.ready  = false;
+    this.ADTYPE = 'vast';
+    this.ready = false;
     this.initTime = Date.now();
     this.currentDepth = 0;
     this.loaded = false;
@@ -83,77 +83,79 @@ OO.Ads.manager(function() {
     this.adBreaks = [];
 
     // VPAID Variables
-    var vpaidVideoRestrictions          = { technology: OO.VIDEO.TECHNOLOGY.HTML5,
-                                            features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] };
-    this.mainContentDuration            = -1;
-    this.testMode                       = false;
+    const vpaidVideoRestrictions = {
+      technology: OO.VIDEO.TECHNOLOGY.HTML5,
+      features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE],
+    };
+    this.mainContentDuration = -1;
+    this.testMode = false;
 
-    this.allAdInfo                      = null;
-    this.adTagUrlOverride               = null;
-    this.showLinearAdSkipButton         = false;
-    var vpaidIframe                          = null;
-    var timeline                        = [];
+    this.allAdInfo = null;
+    this.adTagUrlOverride = null;
+    this.showLinearAdSkipButton = false;
+    let vpaidIframe = null;
+    const timeline = [];
 
     // ad settings
-    var transitionFromNonLinearVideo    = false;
+    let transitionFromNonLinearVideo = false;
 
-    var vpaidIframeLoaded               = false;
-    var vpaidAdLoaded                   = false;
-    var vpaidAdStarted                  = false;
-    var vpaidAdStopped                  = false;
+    let vpaidIframeLoaded = false;
+    let vpaidAdLoaded = false;
+    let vpaidAdStarted = false;
+    let vpaidAdStopped = false;
 
-    var vpaidIframeLoadedTimeout        = null;
-    var vpaidAdLoadedTimeout            = null;
-    var vpaidAdStartedTimeout           = null;
-    var vpaidAdStoppedTimeout           = null;
+    let vpaidIframeLoadedTimeout = null;
+    let vpaidAdLoadedTimeout = null;
+    let vpaidAdStartedTimeout = null;
+    let vpaidAdStoppedTimeout = null;
 
-    this.VPAID_AD_IFRAME_TIMEOUT         = 5000;
-    this.VPAID_AD_LOADED_TIMEOUT         = 5000;
-    this.VPAID_AD_STARTED_TIMEOUT        = 5000;
-    this.VPAID_AD_STOPPED_TIMEOUT        = 5000;
+    this.VPAID_AD_IFRAME_TIMEOUT = 5000;
+    this.VPAID_AD_LOADED_TIMEOUT = 5000;
+    this.VPAID_AD_STARTED_TIMEOUT = 5000;
+    this.VPAID_AD_STOPPED_TIMEOUT = 5000;
 
 
     // VPAID variables
-    this._slot                          = null;
-    this._videoSlot                     = null;
-    this._videoSlotCanAutoPlay          = true;
-    this.environmentVariables           = {};
-    this._eventsCallbacks               = {};
-    this._parameters                    = {};
+    this._slot = null;
+    this._videoSlot = null;
+    this._videoSlotCanAutoPlay = true;
+    this.environmentVariables = {};
+    this._eventsCallbacks = {};
+    this._parameters = {};
 
-    var VPAID_EVENTS                    = {
-                                            AD_LOADED                 : 'AdLoaded',
-                                            AD_STARTED                : 'AdStarted',
-                                            AD_STOPPED                : 'AdStopped',
-                                            AD_SKIPPED                : 'AdSkipped',
-                                            AD_SKIPPABLE_STATE_CHANGE : 'AdSkippableStateChange',
-                                            AD_DURATION_CHANGE        : 'AdDurationChange',
-                                            AD_SIZE_CHANGE            : 'AdSizeChange',
-                                            AD_LINEAR_CHANGE          : 'AdLinearChange',
-                                            AD_INTERACTION            : 'AdInteraction',
-                                            AD_IMPRESSION             : 'AdImpression',
-                                            AD_CLICK_THRU             : 'AdClickThru',
-                                            AD_PAUSED                 : 'AdPaused',
-                                            AD_PLAYING                : 'AdPlaying',
-                                            AD_VIDEO_START            : 'AdVideoStart',
-                                            AD_VIDEO_COMPLETE         : 'AdVideoComplete',
-                                            AD_ERROR                  : 'AdError',
-                                            AD_LOG                    : 'AdLog',
-                                            AD_REMAINING_TIME_CHANGE  : 'AdRemainingTimeChange',
-                                            AD_VIDEO_FIRST_QUARTILE   : 'AdVideoFirstQuartile',
-                                            AD_VIDEO_MIDPOINT         : 'AdVideoMidpoint',
-                                            AD_VIDEO_THIRD_QUARTILE   : 'AdVideoThirdQuartile',
-                                            AD_USER_ACCEPT_INVITATION : 'AdUserAcceptInvitation',
-                                            AD_VOLUME_CHANGE          : 'AdVolumeChange',
-                                            AD_USER_MINIMIZE          : 'AdUserMinimize'
-                                          };
+    const VPAID_EVENTS = {
+      AD_LOADED: 'AdLoaded',
+      AD_STARTED: 'AdStarted',
+      AD_STOPPED: 'AdStopped',
+      AD_SKIPPED: 'AdSkipped',
+      AD_SKIPPABLE_STATE_CHANGE: 'AdSkippableStateChange',
+      AD_DURATION_CHANGE: 'AdDurationChange',
+      AD_SIZE_CHANGE: 'AdSizeChange',
+      AD_LINEAR_CHANGE: 'AdLinearChange',
+      AD_INTERACTION: 'AdInteraction',
+      AD_IMPRESSION: 'AdImpression',
+      AD_CLICK_THRU: 'AdClickThru',
+      AD_PAUSED: 'AdPaused',
+      AD_PLAYING: 'AdPlaying',
+      AD_VIDEO_START: 'AdVideoStart',
+      AD_VIDEO_COMPLETE: 'AdVideoComplete',
+      AD_ERROR: 'AdError',
+      AD_LOG: 'AdLog',
+      AD_REMAINING_TIME_CHANGE: 'AdRemainingTimeChange',
+      AD_VIDEO_FIRST_QUARTILE: 'AdVideoFirstQuartile',
+      AD_VIDEO_MIDPOINT: 'AdVideoMidpoint',
+      AD_VIDEO_THIRD_QUARTILE: 'AdVideoThirdQuartile',
+      AD_USER_ACCEPT_INVITATION: 'AdUserAcceptInvitation',
+      AD_VOLUME_CHANGE: 'AdVolumeChange',
+      AD_USER_MINIMIZE: 'AdUserMinimize',
+    };
 
     // VAST Parsed variables
-    this.node                             = null;
-    this.ads                              = {};
+    this.node = null;
+    this.ads = {};
 
-    var fromPause                         = false;
-    //END VPAID VARIABLES
+    let fromPause = false;
+    // END VPAID VARIABLES
 
     /**
      * TODO: Support all error codes. Not all error events are tracked in our code.
@@ -163,48 +165,48 @@ OO.Ads.manager(function() {
       /**
        * XML Parsing Error.
        */
-      XML_PARSING:                        100,
+      XML_PARSING: 100,
 
       /**
        * VAST Schema Validation Error.
        */
-      SCHEMA_VALIDATION:                  101,
+      SCHEMA_VALIDATION: 101,
 
       /**
        * VAST Version of response not supported.
        */
-      VERSION_UNSUPPORTED:                102,
+      VERSION_UNSUPPORTED: 102,
 
       /**
        * TODO: Add support
        * Trafficking error. Video Player received an ad type that it was not
        * expecting and/or cannot display.
        */
-      AD_TYPE_UNSUPPORTED:                200,
+      AD_TYPE_UNSUPPORTED: 200,
 
       /**
        * TODO: Add support
        * Video player expecting different linearity.
        */
-      VIDEO_EXPECT_DIFFERENT_LINEARITY:   201,
+      VIDEO_EXPECT_DIFFERENT_LINEARITY: 201,
 
       /**
        * TODO: Add support
        * Video player expecting different duration.
        */
-      VIDEO_EXPECT_DIFFERENT_DURATION:    202,
+      VIDEO_EXPECT_DIFFERENT_DURATION: 202,
 
       /**
        * TODO: Add support
        * Video player expecting different size.
        */
-      VIDEO_EXPECT_DIFFERENT_SIZE:        203,
+      VIDEO_EXPECT_DIFFERENT_SIZE: 203,
 
       /**
        * TODO: Add support
        * General Wrapper Error.
        */
-      GENERAL_WRAPPER:                    300,
+      GENERAL_WRAPPER: 300,
 
       /**
        * TODO: Add support
@@ -213,68 +215,68 @@ OO.Ads.manager(function() {
        * such as invalid URI, unreachable or request timeout for URI, and
        * security or other exceptions related to requesting a VAST URI.
        */
-      WRAPPER_URI_TIMEOUT:                301,
+      WRAPPER_URI_TIMEOUT: 301,
 
       /**
        * TODO: Add support
        * Wrapper limit reached, as defined by the video player. Too many
        * Wrapper responses have been received with no inLine response.
        */
-      WRAPPER_LIMIT_REACHED:              302,
+      WRAPPER_LIMIT_REACHED: 302,
 
       /**
        * No ads VAST response after one or more Wrappers. Also includes
        * number of empty VAST responses from fallback.
        */
-      WRAPPER_NO_ADS:                     303,
+      WRAPPER_NO_ADS: 303,
 
       /**
        * General linear error. Video player is unable to display the linear ad.
        */
-      GENERAL_LINEAR_ADS:                 400,
+      GENERAL_LINEAR_ADS: 400,
 
       /**
        * TODO: Add support
        * File not found. Unable to find Linear/MediaFile from URI.
        */
-      FILE_NOT_FOUND:                     401,
+      FILE_NOT_FOUND: 401,
 
       /**
        * TODO: Add support
        * Timeout of MediaFile URI.
        */
-      MEDIAFILE_TIMEOUT:                  402,
+      MEDIAFILE_TIMEOUT: 402,
 
       /**
        * TODO: Add support
        * Could not find MediaFile that is supported by this video player, based
        * on the attributes of the MediaFile element.
        */
-      MEDIAFILE_UNSUPPORTED:              403,
+      MEDIAFILE_UNSUPPORTED: 403,
 
       /**
        * TODO: Add support
        * Problem displaying MediaFile.
        */
-      MEDIAFILE_DISPLAY_PROBLEM:          405,
+      MEDIAFILE_DISPLAY_PROBLEM: 405,
 
       /**
        * General NonLinearAds error.
        */
-      GENERAL_NONLINEAR_ADS:              500,
+      GENERAL_NONLINEAR_ADS: 500,
 
       /**
        * TODO: Add support
        * Unable to display NonLinear Ad because creative dimensions do not
        * align with creative display area(i.e., creative dimension too large).
        */
-      NONLINEAR_ADS_DIMENSIONS:           501,
+      NONLINEAR_ADS_DIMENSIONS: 501,
 
       /**
        * TODO: Add support
        * Unable to fetch NonLinearAds/NonLinear resource.
        */
-      NONLINEAR_ADS_UNABLE_TO_FETCH:      502,
+      NONLINEAR_ADS_UNABLE_TO_FETCH: 502,
 
       /**
        * TODO: Add support
@@ -286,26 +288,26 @@ OO.Ads.manager(function() {
        * TODO: Add support
        * General CompanionAds error.
        */
-      GENERAL_COMPANION_ADS:              600,
+      GENERAL_COMPANION_ADS: 600,
 
       /**
        * TODO: Add support
        * Unable to display companion because creative dimensions do not fit
        * within Companion display area (i.e., no available space).
        */
-      COMPANION_ADS_DIMENSIONS:           601,
+      COMPANION_ADS_DIMENSIONS: 601,
 
       /**
        * TODO: Add support
        * Unable to display Required Companion.
        */
-      COMPANION_ADS_UNABLE_TO_DISPLAY:    602,
+      COMPANION_ADS_UNABLE_TO_DISPLAY: 602,
 
       /**
        * TODO: Add support
        * Unable to fetch CompanionAds/Companion resource.
        */
-      COMPANION_ADS_UNABLE_TO_FETCH:      603,
+      COMPANION_ADS_UNABLE_TO_FETCH: 603,
 
       /**
        * TODO: Add support
@@ -317,50 +319,50 @@ OO.Ads.manager(function() {
        * TODO: Add support
        * Undefined error.
        */
-      UNDEFINED:                          900,
+      UNDEFINED: 900,
 
       /**
        * TODO: Add support
        * General VPAID error.
        */
-      GENERAL_VPAID:                      901
+      GENERAL_VPAID: 901,
     };
 
-    var currentAd = null;
-    var nextAd = null;
-    var prevAd = null;
-    var adPodPrimary = null;
-    var adMode = false;
+    let currentAd = null;
+    let nextAd = null;
+    let prevAd = null;
+    let adPodPrimary = null;
+    let adMode = false;
 
-    var VERSION_MAJOR_2 = '2';
-    var VERSION_MAJOR_3 = '3';
-    var SUPPORTED_VERSIONS = [VERSION_MAJOR_2, VERSION_MAJOR_3];
-    var FEATURES = {
-      SKIP_AD : "skipAd",
-      PODDED_ADS : "poddedAds",
-      AD_FALLBACK : "adFallback"
+    const VERSION_MAJOR_2 = '2';
+    const VERSION_MAJOR_3 = '3';
+    const SUPPORTED_VERSIONS = [VERSION_MAJOR_2, VERSION_MAJOR_3];
+    const FEATURES = {
+      SKIP_AD: 'skipAd',
+      PODDED_ADS: 'poddedAds',
+      AD_FALLBACK: 'adFallback',
     };
-    var SUPPORTED_FEATURES = {};
+    const SUPPORTED_FEATURES = {};
     SUPPORTED_FEATURES[VERSION_MAJOR_2] = [];
     SUPPORTED_FEATURES[VERSION_MAJOR_3] = [FEATURES.SKIP_AD, FEATURES.PODDED_ADS, FEATURES.AD_FALLBACK];
 
-    var AD_TYPE = {
-      INLINE : "InLine",
-      WRAPPER : "Wrapper"
+    const AD_TYPE = {
+      INLINE: 'InLine',
+      WRAPPER: 'Wrapper',
     };
 
     // Used to keep track of whether an ad's firstQuartile, midpoint, or thirdQuartile has been passed.
-    var trackingEventQuartiles = {};
+    let trackingEventQuartiles = {};
 
-    var isMuted = false;
-    var lastVolume;
+    let isMuted = false;
+    let lastVolume;
 
     /**
      * Used to keep track of what events that are tracked for vast.
      */
-    var TRACKING_EVENTS = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
-    'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'exitFullscreen', 'expand', 'collapse', 'acceptInvitation',
-    'close', 'skip' ];
+    const TRACKING_EVENTS = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
+      'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'exitFullscreen', 'expand', 'collapse', 'acceptInvitation',
+      'close', 'skip'];
 
     /**
      * Helper function to verify that XML is valid
@@ -385,7 +387,7 @@ OO.Ads.manager(function() {
      */
     this.isValidRootTagName = (vastXML) => {
       if (!getVastRoot(vastXML)) {
-        _tryRaiseAdError("VAST: Invalid VAST XML");
+        _tryRaiseAdError('VAST: Invalid VAST XML');
         this.trackError(this.ERROR_CODES.SCHEMA_VALIDATION, this.wrapperParentId);
         return false;
       }
@@ -400,9 +402,9 @@ OO.Ads.manager(function() {
      * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
      */
     this.isValidVastVersion = (vastXML) => {
-      var version = getVastVersion(vastXML);
+      const version = getVastVersion(vastXML);
       if (!supportsVersion(version)) {
-        _tryRaiseAdError("VAST: Invalid VAST Version: " + version);
+        _tryRaiseAdError(`VAST: Invalid VAST Version: ${version}`);
         this.trackError(this.ERROR_CODES.VERSION_UNSUPPORTED, this.wrapperParentId);
         return false;
       }
@@ -417,7 +419,7 @@ OO.Ads.manager(function() {
      * @returns {string} The Vast version.
      */
     var getVastVersion = (vastXML) => {
-      var vastTag = getVastRoot(vastXML);
+      const vastTag = getVastRoot(vastXML);
       if (!vastTag) {
         return null;
       }
@@ -434,13 +436,13 @@ OO.Ads.manager(function() {
      */
     var getVastRoot = (vastXML) => {
       try {
-        var vastRootElement = vastXML.querySelectorAll("VAST");
+        const vastRootElement = vastXML.querySelectorAll('VAST');
         if (vastRootElement.length === 0) {
-          _tryRaiseAdError("VAST: No VAST tags in XML");
+          _tryRaiseAdError('VAST: No VAST tags in XML');
           return null;
         }
         if (vastRootElement.length > 1) {
-          _tryRaiseAdError("VAST: Multiple VAST tags in XML");
+          _tryRaiseAdError('VAST: Multiple VAST tags in XML');
           return null;
         }
         return vastRootElement[0];
@@ -457,8 +459,8 @@ OO.Ads.manager(function() {
      * @param {string} version The Vast version as parsed from the XML
      * @returns {string} The major version.
      */
-    var getMajorVersion = (version) => {
-      if(typeof version === 'string') {
+    const getMajorVersion = (version) => {
+      if (typeof version === 'string') {
         return version.split('.')[0];
       }
     };
@@ -470,9 +472,7 @@ OO.Ads.manager(function() {
      * @param {string} version The Vast version as parsed from the XML
      * @returns {boolean} true if the version is supported by this ad manager, false otherwise.
      */
-    var supportsVersion = (version) => {
-      return contains(SUPPORTED_VERSIONS, getMajorVersion(version));
-    };
+    var supportsVersion = version => contains(SUPPORTED_VERSIONS, getMajorVersion(version));
 
     /**
      * Checks to see if the given Vast version supports the skip ad functionality, as per Vast specs
@@ -483,9 +483,7 @@ OO.Ads.manager(function() {
      * @returns {boolean} true if the skip ad functionality is supported in the specified Vast version,
      *                    false otherwise.
      */
-    var supportsSkipAd = (version) => {
-      return contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.SKIP_AD);
-    };
+    const supportsSkipAd = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.SKIP_AD);
 
     /**
      * Helper function to grab error information. vastAdSingleParser already grabs error data while
@@ -498,19 +496,19 @@ OO.Ads.manager(function() {
      * @param {object} ads A jQuery object which contains the collection of ad elements found
      */
     this.getErrorTrackingInfo = (vastXML) => {
-      var ads = vastXML.querySelectorAll("Ad");
+      const ads = vastXML.querySelectorAll('Ad');
       each(ads, (ad) => {
-        var error = {
+        const error = {
           vastAdObject: null,
           errorURLs: [],
-          wrapperParentId: this.wrapperParentId || null
+          wrapperParentId: this.wrapperParentId || null,
         };
 
-        var errorElement = ad.querySelector("Error");
-        if (errorElement){
+        const errorElement = ad.querySelector('Error');
+        if (errorElement) {
           error.errorURLs = [errorElement.textContent];
         }
-        var adId = safeGetAttribute(ad, "id");
+        const adId = safeGetAttribute(ad, 'id');
         this.adTrackingInfo[adId] = error;
       });
     };
@@ -525,12 +523,12 @@ OO.Ads.manager(function() {
      * @returns {boolean} true if there are no ads, false otherwise.
      */
     this.checkNoAds = (vastXML) => {
-      var ads = vastXML.querySelectorAll("Ad");
+      const ads = vastXML.querySelectorAll('Ad');
       // if there are no ads in ad response then track error
       if (ads.length === 0) {
-        _tryRaiseAdError("VAST: No ads in XML");
+        _tryRaiseAdError('VAST: No ads in XML');
         // there could be an <Error> element in the vast response
-        var noAdsErrorURL = getNodeTextContent(vastXML, "Error");
+        const noAdsErrorURL = getNodeTextContent(vastXML, 'Error');
 
         if (noAdsErrorURL) {
           this.pingURL(this.ERROR_CODES.WRAPPER_NO_ADS, noAdsErrorURL);
@@ -550,9 +548,7 @@ OO.Ads.manager(function() {
      * @returns {boolean} true if the podded ads functionality is supported in the specified Vast version,
      *                    false otherwise
      */
-    var supportsPoddedAds = (version) => {
-      return contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.PODDED_ADS);
-    };
+    const supportsPoddedAds = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.PODDED_ADS);
 
     /**
      * Checks to see if the given Vast version supports the ad fallback functionality, as per Vast specs
@@ -562,9 +558,7 @@ OO.Ads.manager(function() {
      * @returns {boolean} true if the ad fallback functionality is supported in the specified Vast version,
      *                    false otherwise
      */
-    var supportsAdFallback = (version) => {
-      return contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.AD_FALLBACK);
-    };
+    const supportsAdFallback = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.AD_FALLBACK);
 
     /**
      * Default template to use when creating the vast ad object.
@@ -572,16 +566,14 @@ OO.Ads.manager(function() {
      * @method Vast#getVastTemplate
      * @returns {object} The ad object that is formated to what we expect vast to look like.
      */
-    var getVastTemplate = () => {
-      return {
-        error: [],
-        impression: [],
-        // Note: This means we only support at most 1 linear and 1 non-linear ad
-        linear: {},
-        nonLinear: {},
-        companion: []
-      };
-    };
+    const getVastTemplate = () => ({
+      error: [],
+      impression: [],
+      // Note: This means we only support at most 1 linear and 1 non-linear ad
+      linear: {},
+      nonLinear: {},
+      companion: [],
+    });
 
     /**
      * Initialize the vast ad manager. For the Vast Ad Manager it will set the local
@@ -609,17 +601,17 @@ OO.Ads.manager(function() {
      * @public
      */
     this.initializeAd = () => {
-      var eventName,
-          environmentVariables,
-          viewMode,
-          creativeData = {};
+      let eventName;
+      let environmentVariables;
+      let viewMode;
+      let creativeData = {};
 
       vpaidIframeLoaded = true;
 
       if (_isVpaidAd(currentAd)) {
         currentAd.data = currentAd.ad.data;
 
-        var mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
+        const mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
         if (!mediaFileUrl) {
           return null;
         }
@@ -629,55 +621,55 @@ OO.Ads.manager(function() {
           return;
         }
 
-        try{
+        try {
           currentAd.vpaidAd = this.testMode ? global.vpaid.getVPAIDAd() : vpaidIframe.contentWindow.getVPAIDAd();
         } catch (e) {
-          _tryRaiseAdError("VPAID 2.0: error while getting vpaid creative - " + e)
+          _tryRaiseAdError(`VPAID 2.0: error while getting vpaid creative - ${e}`);
         }
 
 
         // Subscribe to ad unit events
         for (eventName in VPAID_EVENTS) {
-          try{
+          try {
             currentAd.vpaidAd.subscribe(bind(_onVpaidAdEvent, this, VPAID_EVENTS[eventName]),
               VPAID_EVENTS[eventName], this);
           } catch (e) {
-            _tryRaiseAdError("VPAID 2.0: error while subscribing to creative events - " + e)
+            _tryRaiseAdError(`VPAID 2.0: error while subscribing to creative events - ${e}`);
           }
         }
 
         this._slot = _createUniqueElement();
         this._videoSlot = this.amc.ui.adVideoElement[0];
 
-        //PBI-1609: Midroll VPAID 2.0 ads get stuck buffering on Mac Safari if
-        //the VPAID creative does not call load() on the video. This is not
-        //observed when using the Video Suite Inspector
+        // PBI-1609: Midroll VPAID 2.0 ads get stuck buffering on Mac Safari if
+        // the VPAID creative does not call load() on the video. This is not
+        // observed when using the Video Suite Inspector
 
-        //Setting preload to auto seems to address this issue with our player
-        //TODO: Find the root cause behind this issue and address it
+        // Setting preload to auto seems to address this issue with our player
+        // TODO: Find the root cause behind this issue and address it
         if (!OO.requiresSingleVideoElement && OO.isSafari) {
-          this._videoSlot.preload = "auto";
+          this._videoSlot.preload = 'auto';
         }
 
         environmentVariables = extend({
           slot: this._slot,
           videoSlot: this._videoSlot,
-          videoSlotCanAutoPlay: true
+          videoSlotCanAutoPlay: true,
         }, this.environmentVariables);
 
         this._properties = {
           adWidth: this._slot.offsetWidth,
           adHeight: this._slot.offsetHeight,
-          adDesiredBitrate: 600
+          adDesiredBitrate: 600,
         };
 
         viewMode = _getFsState() ? 'fullscreen' : 'normal';
         creativeData = {
-          AdParameters: currentAd.ad.adParams
+          AdParameters: currentAd.ad.adParams,
         };
 
-        this.initVpaidAd(this._properties['adWidth'], this._properties['adHeight'], viewMode,
-                         this._properties['adDesiredBitrate'], creativeData, environmentVariables);
+        this.initVpaidAd(this._properties.adWidth, this._properties.adHeight, viewMode,
+          this._properties.adDesiredBitrate, creativeData, environmentVariables);
       }
     };
 
@@ -702,7 +694,7 @@ OO.Ads.manager(function() {
 
       _clearVpaidTimeouts();
       vpaidAdLoadedTimeout = delay(_checkVpaidAdLoaded, this.VPAID_AD_LOADED_TIMEOUT);
-      _safeFunctionCall(currentAd.vpaidAd, "initAd", [width, height, viewMode, desiredBitrate, creativeData, environmentVars]);
+      _safeFunctionCall(currentAd.vpaidAd, 'initAd', [width, height, viewMode, desiredBitrate, creativeData, environmentVars]);
     };
 
     var _clearVpaidTimeouts = () => {
@@ -719,7 +711,7 @@ OO.Ads.manager(function() {
       vpaidAdStoppedTimeout = null;
     };
 
-    var _checkVpaidIframeLoaded = () => {
+    const _checkVpaidIframeLoaded = () => {
       if (!vpaidIframeLoaded) {
         _tryRaiseAdError('VPAID: iframe did not load');
         _endAd(currentAd, true);
@@ -733,14 +725,14 @@ OO.Ads.manager(function() {
       }
     };
 
-    var _checkVpaidAdStarted = () => {
+    const _checkVpaidAdStarted = () => {
       if (!vpaidAdStarted) {
         _tryRaiseAdError('VPAID: Did not receive AD_STARTED event from creative');
         _stopVpaidAd();
       }
     };
 
-    var _checkVpaidAdStopped = () => {
+    const _checkVpaidAdStopped = () => {
       if (!vpaidAdStopped) {
         _tryRaiseAdError('VPAID: Did not receive AD_STOPPED event from creative');
         _endAd(currentAd, true);
@@ -766,7 +758,7 @@ OO.Ads.manager(function() {
      * @param {object} movieMetadata Contains the movie metadata that is currently loaded
      */
     this.loadMetadata = (pbMetadata, baseBacklotMetadata, movieMetadata) => {
-      this.mainContentDuration = movieMetadata.duration/1000;
+      this.mainContentDuration = movieMetadata.duration / 1000;
       this.embedCode = this.amc.currentEmbedCode;
       // We want to prioritize the page level setting over the movie metadata
       this.allAdInfo = (pbMetadata ? pbMetadata.all_ads : null) || (movieMetadata ? movieMetadata.ads : {});
@@ -807,7 +799,7 @@ OO.Ads.manager(function() {
      * @method Vast#loadPreRolls[DEPRECATED]
      */
     this.loadPreRolls = () => {
-      //deprecated
+      // deprecated
     };
 
     /**
@@ -817,7 +809,7 @@ OO.Ads.manager(function() {
      * @method Vast#loadAllVastAds[DEPRECATED]
      */
     this.loadAllVastAds = () => {
-      //deprecated
+      // deprecated
 
     };
 
@@ -826,28 +818,28 @@ OO.Ads.manager(function() {
      * @private
      * @method vast#failedAd
      */
-    var failedAd = () => {
-      var metadata = null;
-      var badAd = currentAd;
+    const failedAd = () => {
+      let metadata = null;
+      const badAd = currentAd;
       currentAd = null;
 
       if (badAd) {
-        if(badAd.ad && badAd.ad.fallbackAd) {
+        if (badAd.ad && badAd.ad.fallbackAd) {
           metadata = badAd.ad.fallbackAd;
         }
         _endAd(badAd, true);
-        //force fallback ad to play if it exists
-        //otherwise end the ad pod
+        // force fallback ad to play if it exists
+        // otherwise end the ad pod
         if (metadata) {
-          var ad = generateAd(metadata);
+          const ad = generateAd(metadata);
           this.amc.forceAdToPlay(this.name, ad.ad, ad.adType, ad.streams);
         } else {
-          var adPod = adPodPrimary;
+          const adPod = adPodPrimary;
           adPodPrimary = null;
-          if(adPod) {
-             this.amc.notifyPodEnded(adPod.id);
-           } else {
-             this.amc.notifyPodEnded(badAd.id);
+          if (adPod) {
+            this.amc.notifyPodEnded(adPod.id);
+          } else {
+            this.amc.notifyPodEnded(badAd.id);
           }
         }
       }
@@ -862,9 +854,9 @@ OO.Ads.manager(function() {
      * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
      * unit tests.
      */
-    var loadAd = (amcAd) => {
-      var loadedAds = false;
-      var ad = amcAd.ad;
+    const loadAd = (amcAd) => {
+      let loadedAds = false;
+      const { ad } = amcAd;
 
       this.currentAdBeingLoaded = amcAd;
       this.loadUrl(ad.tag_url);
@@ -882,20 +874,18 @@ OO.Ads.manager(function() {
      * @param {number} duration Duration of the current video (seconds)
      */
     this.onAdPlayheadTimeChanged = (eventName, playhead, duration) => {
-      var firstQuartileTime = duration / 4;
-      var midpointTime = duration / 2;
-      var thirdQuartileTime = (3 * duration) / 4;
+      const firstQuartileTime = duration / 4;
+      const midpointTime = duration / 2;
+      const thirdQuartileTime = (3 * duration) / 4;
 
       if (!trackingEventQuartiles.firstQuartile && playhead >= firstQuartileTime) {
-        _handleTrackingUrls(currentAd, ["firstQuartile"]);
+        _handleTrackingUrls(currentAd, ['firstQuartile']);
         trackingEventQuartiles.firstQuartile = true;
-      }
-      else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
-        _handleTrackingUrls(currentAd, ["midpoint"]);
+      } else if (!trackingEventQuartiles.midpoint && playhead >= midpointTime) {
+        _handleTrackingUrls(currentAd, ['midpoint']);
         trackingEventQuartiles.midpoint = true;
-      }
-      else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
-        _handleTrackingUrls(currentAd, ["thirdQuartile"]);
+      } else if (!trackingEventQuartiles.thirdQuartile && playhead >= thirdQuartileTime) {
+        _handleTrackingUrls(currentAd, ['thirdQuartile']);
         trackingEventQuartiles.thirdQuartile = true;
       }
     };
@@ -907,9 +897,7 @@ OO.Ads.manager(function() {
      * @public
      * @method Vast#initialPlay
      */
-    this.initialPlay = () => {
-      return this.loadAllVastAds();
-    };
+    this.initialPlay = () => this.loadAllVastAds();
 
     /**
      * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
@@ -931,25 +919,22 @@ OO.Ads.manager(function() {
      * @method Vast#buildTimeline
      */
     this.buildTimeline = () => {
-      var timeline = [];
-      if (this.allAdInfo && isArray(this.allAdInfo))
-      {
-        for (var i = 0; i < this.allAdInfo.length; i++)
-        {
-          var adMetadata = clone(this.allAdInfo[i]);
-          //use linear overlay as fake ad so we don't have to specify stream type.
-          var adData = {
+      const timeline = [];
+      if (this.allAdInfo && isArray(this.allAdInfo)) {
+        for (let i = 0; i < this.allAdInfo.length; i++) {
+          const adMetadata = clone(this.allAdInfo[i]);
+          // use linear overlay as fake ad so we don't have to specify stream type.
+          const adData = {
             adManager: this.name,
             ad: adMetadata,
             duration: 0,
             adType: this.amc.ADTYPE.AD_REQUEST,
-            mainContentDuration: this.mainContentDuration
+            mainContentDuration: this.mainContentDuration,
           };
 
           if (adMetadata.position_type === 't') {
-            //Movie metadata uses time, page level metadata uses position
+            // Movie metadata uses time, page level metadata uses position
             if (_isValidPosition(adMetadata.time)) {
-
               adData.position = +adMetadata.time / 1000;
             } else if (_isValidPosition(adMetadata.position)) {
               adData.position = +adMetadata.position / 1000;
@@ -963,19 +948,19 @@ OO.Ads.manager(function() {
 
           adMetadata.position = adData.position;
 
-          //Movie metadata uses url, page level metadata uses tag_url
+          // Movie metadata uses url, page level metadata uses tag_url
           if (!adMetadata.tag_url) {
             adMetadata.tag_url = adMetadata.url;
           }
 
-          //Force usage of the ad tag url override if it is valid
+          // Force usage of the ad tag url override if it is valid
           if (isString(this.adTagUrlOverride)) {
             adMetadata.tag_url = this.adTagUrlOverride;
           }
 
-          //Only add to timeline if the tag url and position are valid
+          // Only add to timeline if the tag url and position are valid
           if (isString(adMetadata.tag_url) && _isValidPosition(adMetadata.position)) {
-            var amcAd = new this.amc.Ad(adData);
+            const amcAd = new this.amc.Ad(adData);
             timeline.push(amcAd);
           }
         }
@@ -990,11 +975,10 @@ OO.Ads.manager(function() {
      * @param {*} position The position metadata to check
      * @returns {boolean} True if the position is valid, false otherwise
      */
-    var _isValidPosition = (position) => {
-      //Unary + returns 1 for true and 0 for false and null
-      //To avoid this, we check to see if position is a number or a string
-      return (typeof position === 'string' || typeof position === 'number') && isFinite(+position);
-    };
+    // Unary + returns 1 for true and 0 for false and null
+    // To avoid this, we check to see if position is a number or a string
+    var _isValidPosition = position => (typeof position === 'string' || typeof position === 'number') && isFinite(+position)
+    ;
 
     /**
      * Called when the ad starts playback.
@@ -1003,19 +987,19 @@ OO.Ads.manager(function() {
      */
     this.adVideoPlaying = () => {
       if (currentAd && currentAd.ad && currentAd.ad.nextAdInPod && !fromPause) {
-        var metadata = currentAd.ad.nextAdInPod;
+        const metadata = currentAd.ad.nextAdInPod;
         if (metadata) {
-          var ad = generateAd(metadata);
+          const ad = generateAd(metadata);
 
-          if (metadata.streamUrl != null ||
-              (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams)) ||
-              _isVpaidAd(currentAd)) {
+          if (metadata.streamUrl != null
+              || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
+              || _isVpaidAd(currentAd)) {
             nextAd = ad;
           }
         }
       }
       fromPause = false;
-      //TODO: VPAID: Figure out why this is called when resuming video from clicking to non video
+      // TODO: VPAID: Figure out why this is called when resuming video from clicking to non video
     };
 
     /**
@@ -1027,10 +1011,10 @@ OO.Ads.manager(function() {
     this.adVideoEnded = () => {
       prevAd = currentAd;
 
-      //VPAID 2.0 ads will end after notifying the ad of stopAd
+      // VPAID 2.0 ads will end after notifying the ad of stopAd
       if (!_isVpaidAd(currentAd)) {
         _endAd(currentAd, false);
-        _handleTrackingUrls(prevAd, ["complete"]);
+        _handleTrackingUrls(prevAd, ['complete']);
       }
 
       adMode = false;
@@ -1085,44 +1069,43 @@ OO.Ads.manager(function() {
      */
     var _handleTrackingUrls = (amcAd, trackingEventNames) => {
       if (!_isVpaidAd(amcAd)) {
-        var adId = _getAdId(amcAd);
+        const adId = _getAdId(amcAd);
 
         if (amcAd) {
           each(trackingEventNames, (trackingEventName) => {
-            var urls;
+            let urls;
             switch (trackingEventName) {
-              case "impression":
+              case 'impression':
                 urls = _getImpressionUrls(amcAd);
                 break;
-              case "linearClickTracking":
+              case 'linearClickTracking':
                 urls = _getLinearClickTrackingUrls(amcAd);
                 break;
-              case "nonLinearClickTracking":
+              case 'nonLinearClickTracking':
                 urls = _getNonLinearClickTrackingUrls(amcAd);
                 break;
               default:
                 urls = _getTrackingEventUrls(amcAd, trackingEventName);
             }
-            var urlObject = {};
+            const urlObject = {};
             urlObject[trackingEventName] = urls;
             _pingTrackingUrls(urlObject, adId);
           });
-        }
-        else {
+        } else {
           OO.log(
-              "VAST: Tried to ping URLs: [" + trackingEventNames +
-              "] but ad object passed in was: " + amcAd
+            `VAST: Tried to ping URLs: [${trackingEventNames
+            }] but ad object passed in was: ${amcAd}`,
           );
         }
 
         // Try to ping parent tracking events as well
-        if (this.adTrackingInfo &&
-            this.adTrackingInfo[adId] &&
-            this.adTrackingInfo[adId].wrapperParentId) {
-          var parentId = this.adTrackingInfo[adId].wrapperParentId;
-          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+        if (this.adTrackingInfo
+            && this.adTrackingInfo[adId]
+            && this.adTrackingInfo[adId].wrapperParentId) {
+          const parentId = this.adTrackingInfo[adId].wrapperParentId;
+          const parentAdTrackingObject = this.adTrackingInfo[parentId];
           if (parentAdTrackingObject) {
-            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            const parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
             _handleTrackingUrls(parentAdObject, trackingEventNames);
           }
         }
@@ -1137,18 +1120,16 @@ OO.Ads.manager(function() {
      * object itself
      * @returns {object} The VAST ad object.
      */
-    var _getVastAdObject = (amcAd) => {
-      var vastAdObject = null;
-      if (amcAd &&
-          amcAd.ad &&
-          amcAd.ad.data) {
+    const _getVastAdObject = (amcAd) => {
+      let vastAdObject = null;
+      if (amcAd
+          && amcAd.ad
+          && amcAd.ad.data) {
         vastAdObject = amcAd.ad.data;
-      }
-      else if (amcAd &&
-               amcAd.data) {
+      } else if (amcAd
+               && amcAd.data) {
         vastAdObject = amcAd.data;
-      }
-      else {
+      } else {
         vastAdObject = amcAd;
       }
       return vastAdObject;
@@ -1162,11 +1143,11 @@ OO.Ads.manager(function() {
      * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
      */
     var _getImpressionUrls = (amcAd) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var impressionUrls = null;
-      if (vastAdObject &&
-          vastAdObject.impression &&
-          vastAdObject.impression.length > 0) {
+      const vastAdObject = _getVastAdObject(amcAd);
+      let impressionUrls = null;
+      if (vastAdObject
+          && vastAdObject.impression
+          && vastAdObject.impression.length > 0) {
         impressionUrls = vastAdObject.impression;
       }
       return impressionUrls;
@@ -1181,18 +1162,18 @@ OO.Ads.manager(function() {
      * URLs exist.
      */
     var _getLinearClickTrackingUrls = (amcAd) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var linearClickTrackingUrls = [];
-      if (vastAdObject){
-        if (vastAdObject.linear &&
-            vastAdObject.linear.clickTracking &&
-            vastAdObject.linear.clickTracking.length > 0) {
+      const vastAdObject = _getVastAdObject(amcAd);
+      let linearClickTrackingUrls = [];
+      if (vastAdObject) {
+        if (vastAdObject.linear
+            && vastAdObject.linear.clickTracking
+            && vastAdObject.linear.clickTracking.length > 0) {
           linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.clickTracking);
         }
 
-        if (vastAdObject.linear &&
-          vastAdObject.linear.customClick &&
-          vastAdObject.linear.customClick.length > 0) {
+        if (vastAdObject.linear
+          && vastAdObject.linear.customClick
+          && vastAdObject.linear.customClick.length > 0) {
           linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.customClick);
         }
       }
@@ -1212,12 +1193,12 @@ OO.Ads.manager(function() {
      * @return {string|null} The linear click through url. Returns null if no
      * URL exists.
      */
-    var _getLinearClickThroughUrl = (amcAd) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var linearClickThroughUrl = null;
-      if (vastAdObject &&
-          vastAdObject.linear &&
-          vastAdObject.linear.clickThrough) {
+    const _getLinearClickThroughUrl = (amcAd) => {
+      const vastAdObject = _getVastAdObject(amcAd);
+      let linearClickThroughUrl = null;
+      if (vastAdObject
+          && vastAdObject.linear
+          && vastAdObject.linear.clickThrough) {
         linearClickThroughUrl = vastAdObject.linear.clickThrough;
       }
       return linearClickThroughUrl;
@@ -1231,12 +1212,12 @@ OO.Ads.manager(function() {
      * @return {string|null} The nonlinear click through url. Returns null if no
      * URL exists.
      */
-    var _getNonLinearClickThroughUrl = (amcAd) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var nonLinearClickThroughUrl = null;
-      if (vastAdObject &&
-          vastAdObject.nonLinear &&
-          vastAdObject.nonLinear.nonLinearClickThrough) {
+    const _getNonLinearClickThroughUrl = (amcAd) => {
+      const vastAdObject = _getVastAdObject(amcAd);
+      let nonLinearClickThroughUrl = null;
+      if (vastAdObject
+          && vastAdObject.nonLinear
+          && vastAdObject.nonLinear.nonLinearClickThrough) {
         nonLinearClickThroughUrl = vastAdObject.nonLinear.nonLinearClickThrough;
       }
       return nonLinearClickThroughUrl;
@@ -1251,12 +1232,12 @@ OO.Ads.manager(function() {
      * URLs exist.
      */
     var _getNonLinearClickTrackingUrls = (amcAd) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var nonLinearClickTrackingUrls = null;
-      if (vastAdObject &&
-          vastAdObject.nonLinear &&
-          vastAdObject.nonLinear.nonLinearClickTracking &&
-          vastAdObject.nonLinear.nonLinearClickTracking.length > 0) {
+      const vastAdObject = _getVastAdObject(amcAd);
+      let nonLinearClickTrackingUrls = null;
+      if (vastAdObject
+          && vastAdObject.nonLinear
+          && vastAdObject.nonLinear.nonLinearClickTracking
+          && vastAdObject.nonLinear.nonLinearClickTracking.length > 0) {
         nonLinearClickTrackingUrls = vastAdObject.nonLinear.nonLinearClickTracking;
       }
       return nonLinearClickTrackingUrls;
@@ -1269,11 +1250,11 @@ OO.Ads.manager(function() {
      * @param {object} amcAd The AMC ad object
      * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
      */
-    var _getHighLevelClickThroughUrl = (amcAd) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var highLevelClickThroughUrl = null;
-      if (vastAdObject &&
-          vastAdObject.clickThrough) {
+    const _getHighLevelClickThroughUrl = (amcAd) => {
+      const vastAdObject = _getVastAdObject(amcAd);
+      let highLevelClickThroughUrl = null;
+      if (vastAdObject
+          && vastAdObject.clickThrough) {
         highLevelClickThroughUrl = vastAdObject.clickThrough;
       }
       return highLevelClickThroughUrl;
@@ -1286,10 +1267,10 @@ OO.Ads.manager(function() {
      * @param {object} amcAd The AMC ad object
      * @returns {string|null} The clickthrough URL string. Returns null if one does not exist.
      */
-    var _getOoyalaClickThroughUrl = (amcAd) => {
-      var ooyalaClickThroughUrl = null;
-      if (amcAd &&
-          amcAd.click_url) {
+    const _getOoyalaClickThroughUrl = (amcAd) => {
+      let ooyalaClickThroughUrl = null;
+      if (amcAd
+          && amcAd.click_url) {
         ooyalaClickThroughUrl = amcAd.click_url;
       }
       return ooyalaClickThroughUrl;
@@ -1304,26 +1285,26 @@ OO.Ads.manager(function() {
      * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
      */
     var _getTrackingEventUrls = (amcAd, trackingEventName) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var trackingUrls = null;
+      const vastAdObject = _getVastAdObject(amcAd);
+      let trackingUrls = null;
 
       // get tracking urls from both the linear and nonLinear object
-      var linearTrackingUrls = [];
-      var nonLinearTrackingUrls = [];
+      let linearTrackingUrls = [];
+      let nonLinearTrackingUrls = [];
 
-      if (vastAdObject &&
-          vastAdObject.linear &&
-          vastAdObject.linear.tracking &&
-          vastAdObject.linear.tracking[trackingEventName] &&
-          vastAdObject.linear.tracking[trackingEventName].length > 0) {
+      if (vastAdObject
+          && vastAdObject.linear
+          && vastAdObject.linear.tracking
+          && vastAdObject.linear.tracking[trackingEventName]
+          && vastAdObject.linear.tracking[trackingEventName].length > 0) {
         linearTrackingUrls = vastAdObject.linear.tracking[trackingEventName];
       }
 
-      if (vastAdObject &&
-          vastAdObject.nonLinear &&
-          vastAdObject.nonLinear.tracking &&
-          vastAdObject.nonLinear.tracking[trackingEventName] &&
-          vastAdObject.nonLinear.tracking[trackingEventName].length > 0) {
+      if (vastAdObject
+          && vastAdObject.nonLinear
+          && vastAdObject.nonLinear.tracking
+          && vastAdObject.nonLinear.tracking[trackingEventName]
+          && vastAdObject.nonLinear.tracking[trackingEventName].length > 0) {
         nonLinearTrackingUrls = vastAdObject.nonLinear.tracking[trackingEventName];
       }
 
@@ -1343,10 +1324,10 @@ OO.Ads.manager(function() {
      * @returns {string|null} The ad's ID attribute. Returns null if the ID does not exist.
      */
     var _getAdId = (amcAd) => {
-      var vastAdObject = _getVastAdObject(amcAd);
-      var adId = null;
-      if (vastAdObject &&
-          vastAdObject.id) {
+      const vastAdObject = _getVastAdObject(amcAd);
+      let adId = null;
+      if (vastAdObject
+          && vastAdObject.id) {
         adId = vastAdObject.id;
       }
       return adId;
@@ -1361,20 +1342,18 @@ OO.Ads.manager(function() {
      * @param {object} adId The ad ID
      */
     var _pingTrackingUrls = (urlObject, adId) => {
-      for (var trackingName in urlObject) {
+      for (const trackingName in urlObject) {
         if (urlObject.hasOwnProperty(trackingName)) {
           try {
-            var urls = urlObject[trackingName];
+            const urls = urlObject[trackingName];
             if (urls) {
               OO.pixelPings(urls);
-              OO.log("VAST: \"" + trackingName + "\" tracking URLs pinged for VAST Ad Id: " + adId);
+              OO.log(`VAST: "${trackingName}" tracking URLs pinged for VAST Ad Id: ${adId}`);
+            } else {
+              OO.log(`VAST: No "${trackingName}" tracking URLs provided to ping for VAST Ad Id: ${adId}`);
             }
-            else {
-              OO.log("VAST: No \"" + trackingName + "\" tracking URLs provided to ping for VAST Ad Id: " + adId);
-            }
-          }
-          catch(e) {
-            _tryRaiseAdError("VAST: Failed to ping \"" + trackingName + "\" tracking URLs for VAST Ad Id: " + adId);
+          } catch (e) {
+            _tryRaiseAdError(`VAST: Failed to ping "${trackingName}" tracking URLs for VAST Ad Id: ${adId}`);
           }
         }
       }
@@ -1388,45 +1367,42 @@ OO.Ads.manager(function() {
      * @param  {object} adWrapper An object of type AdManagerController.Ad containing ad metadata
      */
     var _playLoadedAd = (adWrapper) => {
-
-
-      var isVPaid = _isVpaidAd(currentAd);
+      const isVPaid = _isVpaidAd(currentAd);
 
       // When the ad is done, trigger callback
       if (adWrapper.isLinear) {
         if (adWrapper.ad.adPodIndex === 1) {
-          //Only handle primary if it is null, to prevent fallback ad from staring
-          //another ad pod
+          // Only handle primary if it is null, to prevent fallback ad from staring
+          // another ad pod
           if (adPodPrimary === null) {
             adPodPrimary = adWrapper;
             this.amc.notifyPodStarted(adWrapper.id, adWrapper.ad.adPodLength);
           }
         }
 
-        var hasClickUrl = !!adWrapper.ad.data.linear.clickThrough;
+        const hasClickUrl = !!adWrapper.ad.data.linear.clickThrough;
         this.amc.notifyLinearAdStarted(adWrapper.id, {
           name: adWrapper.ad.data.title,
-          duration: adWrapper.ad.durationInMilliseconds/1000,
-          hasClickUrl: hasClickUrl,
+          duration: adWrapper.ad.durationInMilliseconds / 1000,
+          hasClickUrl,
           indexInPod: adWrapper.ad.adPodIndex,
-          skippable: false
+          skippable: false,
         });
       } else {
-        var streamUrl;
+        let streamUrl;
         if (adWrapper.ad && adWrapper.ad.streamUrl) {
           streamUrl = adWrapper.ad.streamUrl;
-        }
-        else if (adWrapper.streamUrl) {
+        } else if (adWrapper.streamUrl) {
           streamUrl = adWrapper.streamUrl;
         } else {
-          //TODO: What happens when streamUrl is the empty string? Will AMC get notified of an error?
+          // TODO: What happens when streamUrl is the empty string? Will AMC get notified of an error?
           streamUrl = '';
         }
 
         this.amc.sendURLToLoadAndPlayNonLinearAd(adWrapper, adWrapper.id, streamUrl);
       }
       if (isVPaid) {
-        //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
+        // Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
         this.amc.hidePlayerUi();
         _getFrame();
       } else {
@@ -1436,7 +1412,7 @@ OO.Ads.manager(function() {
       }
 
       // try and ping tracking URLs
-      _handleTrackingUrls(adWrapper, ["creativeView", "start", "impression"]);
+      _handleTrackingUrls(adWrapper, ['creativeView', 'start', 'impression']);
     };
 
     /**
@@ -1447,14 +1423,14 @@ OO.Ads.manager(function() {
      * @param {object} adWrapper The current Ad's metadata
      */
     var initSkipAdOffset = (adWrapper) => {
-      var isVPaid = _isVpaidAd(adWrapper);
-      var adSkippableState = false;
-      var skipOffset = '';
+      const isVPaid = _isVpaidAd(adWrapper);
+      let adSkippableState = false;
+      let skipOffset = '';
       if (isVPaid) {
-        adSkippableState = _safeFunctionCall(adWrapper.vpaidAd, "getAdSkippableState");
+        adSkippableState = _safeFunctionCall(adWrapper.vpaidAd, 'getAdSkippableState');
       }
 
-      var canSkipAds = false;
+      let canSkipAds = false;
       if (adWrapper && adWrapper.ad && adWrapper.ad.data) {
         canSkipAds = supportsSkipAd(adWrapper.ad.data.version);
       }
@@ -1466,39 +1442,37 @@ OO.Ads.manager(function() {
           if (skipOffset.indexOf('%') === skipOffset.length - 1) {
             this.amc.showSkipVideoAdButton(true, skipOffset, true);
           } else {
-            //Vast format: HH:MM:SS.mmm
-            var splits = skipOffset.split(':');
-            var hh = splits[0];
-            var mm = splits[1];
-            var ss = splits[2];
-            var ms = 0;
-            var secondsSplits = ss.split('.');
+            // Vast format: HH:MM:SS.mmm
+            const splits = skipOffset.split(':');
+            const hh = splits[0];
+            const mm = splits[1];
+            let ss = splits[2];
+            let ms = 0;
+            const secondsSplits = ss.split('.');
             if (secondsSplits.length === 2) {
               ss = secondsSplits[0];
               ms = secondsSplits[1];
             }
-            var offset = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
-            //Provide the offset to the AMC in seconds
+            let offset = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
+            // Provide the offset to the AMC in seconds
             offset = Math.round(offset / 1000);
             this.amc.showSkipVideoAdButton(true, offset.toString(), true);
           }
+        } else if (!isVPaid) {
+          this.amc.showSkipVideoAdButton(false);
         } else {
-          if (!isVPaid) {
-            this.amc.showSkipVideoAdButton(false);
-          } else {
-            this.amc.showSkipVideoAdButton(adSkippableState,
-                            this.amc.adManagerSettings['linearAdSkipButtonStartTime'].toString());
-          }
+          this.amc.showSkipVideoAdButton(adSkippableState,
+            this.amc.adManagerSettings.linearAdSkipButtonStartTime.toString());
         }
       } else {
-        //For Vast versions that don't support the skipoffset attribute, we
-        //want to use Ooyala's settings for displaying the skip ad button
-          if (!isVPaid) {
-            this.amc.showSkipVideoAdButton(true);
-          } else {
-            this.amc.showSkipVideoAdButton(adSkippableState,
-                            this.amc.adManagerSettings['linearAdSkipButtonStartTime'].toString());
-          }
+        // For Vast versions that don't support the skipoffset attribute, we
+        // want to use Ooyala's settings for displaying the skip ad button
+        if (!isVPaid) {
+          this.amc.showSkipVideoAdButton(true);
+        } else {
+          this.amc.showSkipVideoAdButton(adSkippableState,
+            this.amc.adManagerSettings.linearAdSkipButtonStartTime.toString());
+        }
       }
     };
 
@@ -1511,20 +1485,18 @@ OO.Ads.manager(function() {
      *                        code : The amc.AD_CANCEL_CODE for the cancellation
      */
     this.cancelAd = (ad, params) => {
-      //TODO: add timout logic if needed here as well.
+      // TODO: add timout logic if needed here as well.
       if (!this.amc || !this.amc.ui || !ad) {
         return;
       }
       if (params) {
         if (params.code === this.amc.AD_CANCEL_CODE.TIMEOUT) {
           failedAd();
-        }
-        else if (params.code === this.amc.AD_CANCEL_CODE.SKIPPED && currentAd) {
+        } else if (params.code === this.amc.AD_CANCEL_CODE.SKIPPED && currentAd) {
           if (currentAd.vpaidAd) {
             // Notify Ad Unit that we are skipping the ad
-            _safeFunctionCall(currentAd.vpaidAd, "skipAd");
-          }
-          else if (ad.isLinear) {
+            _safeFunctionCall(currentAd.vpaidAd, 'skipAd');
+          } else if (ad.isLinear) {
             _skipAd(currentAd);
           }
         }
@@ -1534,8 +1506,7 @@ OO.Ads.manager(function() {
         else if (!ad.isLinear && params.code === this.amc.AD_CANCEL_CODE.STREAM_ENDED) {
           _endAd(ad, false);
         }
-      }
-      else {
+      } else {
         _endAd(ad, false);
       }
     };
@@ -1549,7 +1520,7 @@ OO.Ads.manager(function() {
     var _skipAd = () => {
       prevAd = currentAd;
       _endAd(currentAd, false);
-      _handleTrackingUrls(prevAd, ["skip"]);
+      _handleTrackingUrls(prevAd, ['skip']);
       adMode = false;
     };
 
@@ -1573,17 +1544,17 @@ OO.Ads.manager(function() {
 
       if (currentAd && ad) {
         currentAd = null;
-        var isLinear = (ad.vpaidAd ? _safeFunctionCall(ad.vpaidAd, "getAdLinear") : false) || ad.isLinear;
+        const isLinear = (ad.vpaidAd ? _safeFunctionCall(ad.vpaidAd, 'getAdLinear') : false) || ad.isLinear;
         if (isLinear) {
           this.amc.notifyLinearAdEnded(ad.id);
-          //TODO: What does this block do?
+          // TODO: What does this block do?
           if (transitionFromNonLinearVideo) {
             this.amc.ui.transitionToMainContent(true, false);
             transitionFromNonLinearVideo = false;
             this.amc.notifyNonlinearAdEnded(ad.id);
           }
-          if((ad.ad.adPodIndex === ad.ad.adPodLength && !failed) || !nextAd) {
-            var adPod = adPodPrimary || ad;
+          if ((ad.ad.adPodIndex === ad.ad.adPodLength && !failed) || !nextAd) {
+            const adPod = adPodPrimary || ad;
             adPodPrimary = null;
             this.amc.notifyPodEnded(adPod.id);
           }
@@ -1594,7 +1565,7 @@ OO.Ads.manager(function() {
       }
 
       if (nextAd) {
-        var next = nextAd;
+        const next = nextAd;
         nextAd = null;
         this.amc.forceAdToPlay(this.name, next.ad, next.adType, next.streams);
       }
@@ -1624,22 +1595,24 @@ OO.Ads.manager(function() {
      */
     var generateAd = (metadata) => {
       if (!metadata) return false;
-      var duration;
+      let duration;
 
       if (!isEmpty(metadata.data.linear.mediaFiles)) {
         duration = OO.timeStringToSeconds(metadata.data.linear.duration);
-      }
-      else
-      {
-        duration = metadata.data.nonLinear.duration ?  OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
+      } else {
+        duration = metadata.data.nonLinear.duration ? OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
       }
 
-      var ad = new this.amc.Ad({
-        position: metadata.positionSeconds, duration: duration, adManager: this.name,
-        ad: metadata, adType: metadata.data.type, streams: metadata.streams
+      const ad = new this.amc.Ad({
+        position: metadata.positionSeconds,
+        duration,
+        adManager: this.name,
+        ad: metadata,
+        adType: metadata.data.type,
+        streams: metadata.streams,
       });
 
-      if (metadata.data.adType === "vpaid") {
+      if (metadata.data.adType === 'vpaid') {
         ad.videoRestrictions = vpaidVideoRestrictions;
       }
 
@@ -1654,17 +1627,17 @@ OO.Ads.manager(function() {
      * @param {object} metadata The ad metadata that is being added to the timeline
      * @returns {boolean} True if the ad was added to the timeline successfully, false otherwise.
      */
-    var addToTimeline = (metadata) => {
+    const addToTimeline = (metadata) => {
       if (!metadata) return;
-      var timeline = [];
-      var ad = generateAd(metadata);
-      var isVPaid = metadata.data && metadata.data.adType === 'vpaid';
+      const timeline = [];
+      const ad = generateAd(metadata);
+      const isVPaid = metadata.data && metadata.data.adType === 'vpaid';
 
-      //TODO: This might need to get integrated with Doug's error handling changes.
-      //I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
-      if (metadata.streamUrl != null ||
-          (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams)) ||
-          (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
+      // TODO: This might need to get integrated with Doug's error handling changes.
+      // I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
+      if (metadata.streamUrl != null
+          || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
+          || (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
         timeline.push(ad);
         this.amc.appendToTimeline(timeline);
         return true;
@@ -1691,19 +1664,19 @@ OO.Ads.manager(function() {
         method: 'get',
         credentials: 'include',
         headers: {
-          'pragma': 'no-cache',
+          pragma: 'no-cache',
           'cache-control': 'no-cache',
         },
       })
-      .then(res => res.text())
-      .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
-      .then(xml => {
-        this.onResponse(wrapperParentId, loadingAd || this.currentAdBeingLoaded, xml)
-      })
-      .catch(errorCallback)
-      .then(() => {
-        this.currentAdBeingLoaded = null;
-      })
+        .then(res => res.text())
+        .then(str => (new window.DOMParser()).parseFromString(str, 'text/xml'))
+        .then((xml) => {
+          this.onResponse(wrapperParentId, loadingAd || this.currentAdBeingLoaded, xml);
+        })
+        .catch(errorCallback)
+        .then(() => {
+          this.currentAdBeingLoaded = null;
+        });
     };
 
     /**
@@ -1717,10 +1690,10 @@ OO.Ads.manager(function() {
       if (!amcAd || !showPage) {
         return;
       }
-      var urlOpened = false;
-      var highLevelClickThroughUrl = _getHighLevelClickThroughUrl(amcAd);
-      var ooyalaClickUrl = _getOoyalaClickThroughUrl(amcAd);
-      var adSpecificClickThroughUrl;
+      let urlOpened = false;
+      const highLevelClickThroughUrl = _getHighLevelClickThroughUrl(amcAd);
+      const ooyalaClickUrl = _getOoyalaClickThroughUrl(amcAd);
+      let adSpecificClickThroughUrl;
 
       if (highLevelClickThroughUrl) {
         urlOpened = urlOpened || this.openUrl(highLevelClickThroughUrl);
@@ -1730,15 +1703,15 @@ OO.Ads.manager(function() {
         urlOpened = urlOpened || this.openUrl(ooyalaClickUrl);
       }
 
-      //TODO: Why was this amcAd.ad.data in the else removed? Was it causing an issue?
+      // TODO: Why was this amcAd.ad.data in the else removed? Was it causing an issue?
       if (amcAd.isLinear) {
         adSpecificClickThroughUrl = _getLinearClickThroughUrl(amcAd);
         urlOpened = urlOpened || this.openUrl(adSpecificClickThroughUrl);
-        _handleTrackingUrls(amcAd, ["linearClickTracking"]);
+        _handleTrackingUrls(amcAd, ['linearClickTracking']);
       } else {
         adSpecificClickThroughUrl = _getNonLinearClickThroughUrl(amcAd);
         urlOpened = urlOpened || this.openUrl(adSpecificClickThroughUrl);
-        _handleTrackingUrls(amcAd, ["nonLinearClickTracking"]);
+        _handleTrackingUrls(amcAd, ['nonLinearClickTracking']);
       }
 
       if (urlOpened) {
@@ -1755,9 +1728,9 @@ OO.Ads.manager(function() {
     this.pauseAd = (amcAd) => {
       // Need to notify the ad unit that the player was paused
       if (currentAd && currentAd.vpaidAd) {
-        _safeFunctionCall(currentAd.vpaidAd, "pauseAd");
+        _safeFunctionCall(currentAd.vpaidAd, 'pauseAd');
       }
-      _handleTrackingUrls(amcAd, ["pause"]);
+      _handleTrackingUrls(amcAd, ['pause']);
     };
 
     /**
@@ -1769,9 +1742,9 @@ OO.Ads.manager(function() {
     this.resumeAd = (amcAd) => {
       // Need to notify the ad unit that the player was resumed
       if (currentAd && currentAd.vpaidAd) {
-        _safeFunctionCall(currentAd.vpaidAd, "resumeAd");
+        _safeFunctionCall(currentAd.vpaidAd, 'resumeAd');
       }
-      _handleTrackingUrls(amcAd, ["resume"]);
+      _handleTrackingUrls(amcAd, ['resume']);
     };
 
     /**
@@ -1805,7 +1778,7 @@ OO.Ads.manager(function() {
      * @method Vast#cancelOverlay
      */
     this.cancelOverlay = () => {
-      _handleTrackingUrls(currentAd, ["close"]);
+      _handleTrackingUrls(currentAd, ['close']);
     };
 
     /**
@@ -1819,7 +1792,7 @@ OO.Ads.manager(function() {
       if (!url || typeof url !== 'string') {
         return false;
       }
-      var newWindow = window.open(url);
+      const newWindow = window.open(url);
       newWindow.opener = null;
       return true;
     };
@@ -1843,7 +1816,7 @@ OO.Ads.manager(function() {
      *  @method Vast#onVastError
      */
     this.onVastError = () => {
-      _tryRaiseAdError("VAST: Ad failed to load");
+      _tryRaiseAdError('VAST: Ad failed to load');
       failedAd();
     };
 
@@ -1859,7 +1832,7 @@ OO.Ads.manager(function() {
     this.trackError = (code, currentAdId) => {
       if (currentAdId && currentAdId in this.adTrackingInfo) {
         this.pingURLs(code, this.adTrackingInfo[currentAdId].errorURLs);
-        var parentId = this.adTrackingInfo[currentAdId].wrapperParentId;
+        const parentId = this.adTrackingInfo[currentAdId].wrapperParentId;
 
         // ping parent wrapper's error urls too if ad had parent
         if (parentId) {
@@ -1902,21 +1875,19 @@ OO.Ads.manager(function() {
      * @returns {string} The creative url if it finds one, otherwise null.
      */
     this.extractStreamForType = (streams, type) => {
-      var filter = [];
+      const filter = [];
       // TODO: Add MIME types for the other encoding types that we support
       switch (type) {
-        case "hls":
-          filter.push("application/x-mpegurl");
-          filter.push("application/mpegurl");
-          filter.push("audio/mpegurl");
-          filter.push("audio/x-mpegurl");
+        case 'hls':
+          filter.push('application/x-mpegurl');
+          filter.push('application/mpegurl');
+          filter.push('audio/mpegurl');
+          filter.push('audio/x-mpegurl');
           break;
         default:
-          filter.push("video/" +type);
+          filter.push(`video/${type}`);
       }
-      var stream = find(streams, (stream) => {
-        return (filter.indexOf(stream.type) >= 0);
-      });
+      const stream = find(streams, stream => (filter.indexOf(stream.type) >= 0));
       return stream ? stream.url : null;
     };
 
@@ -1927,9 +1898,7 @@ OO.Ads.manager(function() {
      * @param {object} ad The ad object
      * @returns {boolean} true if the ad is a linear ad, false otherwise.
      */
-    var _hasLinearAd = (ad) => {
-      return (!isEmpty(ad.linear));
-    };
+    const _hasLinearAd = ad => (!isEmpty(ad.linear));
 
     /**
      * Helper function to determine if the ad is a nonlinear ad.
@@ -1938,9 +1907,7 @@ OO.Ads.manager(function() {
      * @param {object} ad The ad object
      * @returns {boolean} true if the ad is a nonlinear ad, false otherwise.
      */
-    var _hasNonLinearAd = (ad) => {
-      return (!isEmpty(ad.nonLinear));
-    };
+    const _hasNonLinearAd = ad => (!isEmpty(ad.nonLinear));
 
     /**
      *  If a linear ad is found, then it is parsed and sent to be added to the time via addToTimeLine.
@@ -1953,18 +1920,18 @@ OO.Ads.manager(function() {
      *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
      */
-    var _handleLinearAd = (ad, adLoaded, params) => {
+    const _handleLinearAd = (ad, adLoaded, params) => {
       if (!ad || isEmpty(ad.linear.mediaFiles)) {
-        _tryRaiseAdError("VAST: General Linear Ads Error; No Mediafiles in Ad ", ad);
+        _tryRaiseAdError('VAST: General Linear Ads Error; No Mediafiles in Ad ', ad);
         // Want to ping error URLs at current depth if there are any available
         this.trackError(this.ERROR_CODES.GENERAL_LINEAR_ADS, ad.id);
         return null;
       }
 
-      params = params ? params : {};
-      var mediaFiles = ad.linear.mediaFiles;
-      var maxMedia = max(mediaFiles, (v) => parseInt(v.bitrate, 10));
-      var vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
+      params = params || {};
+      const { mediaFiles } = ad.linear;
+      const maxMedia = max(mediaFiles, v => parseInt(v.bitrate, 10));
+      const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.maxBitrateStream = maxMedia && maxMedia.url;
       vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(ad.linear.duration) * 1000;
       extend(vastAdUnit.data, ad);
@@ -1976,13 +1943,13 @@ OO.Ads.manager(function() {
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
       // Save the stream data for use by VideoController
-      var streams = {};
-      var linearAd = ad.linear;
+      const streams = {};
+      const linearAd = ad.linear;
       if (linearAd && linearAd.mediaFiles) {
-        var vastStreams = linearAd.mediaFiles;
-        var videoEncodingsSupported = OO.VIDEO.ENCODING;
-        var streamData;
-        for (var encoding in videoEncodingsSupported) {
+        const vastStreams = linearAd.mediaFiles;
+        const videoEncodingsSupported = OO.VIDEO.ENCODING;
+        let streamData;
+        for (const encoding in videoEncodingsSupported) {
           streamData = null;
           streamData = this.extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
           if (streamData) {
@@ -2006,17 +1973,17 @@ OO.Ads.manager(function() {
      *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
      */
-    var _handleNonLinearAd = (ad, adLoaded, params) => {
+    const _handleNonLinearAd = (ad, adLoaded, params) => {
       // filter our playable stream:
       if (!ad || isEmpty(ad.nonLinear.url)) {
-        _tryRaiseAdError("VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Ad ", ad);
+        _tryRaiseAdError('VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Ad ', ad);
         // Want to ping error URLs at current depth if there are any available
         this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, ad.id);
         return null;
       }
-      params = params ? params : {};
-      var adURL = ad.nonLinear.url;
-      var vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
+      params = params || {};
+      const adURL = ad.nonLinear.url;
+      const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.streamUrl = adURL;
       extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.nonLinear.tracking;
@@ -2044,7 +2011,7 @@ OO.Ads.manager(function() {
         ad.linear.clickTracking = wrapperAds.linear.clickTracking.concat(ad.linear.clickTracking || []);
       }
       if (wrapperAds.linear.tracking) {
-        if (!ad.linear.tracking) { ad.linear.tracking  = {}; }
+        if (!ad.linear.tracking) { ad.linear.tracking = {}; }
         each(wrapperAds.linear.tracking, (value, key) => {
           ad.linear.tracking[key] = ad.linear.tracking[key] ? value.concat(ad.linear.tracking[key]) : value;
         });
@@ -2065,9 +2032,9 @@ OO.Ads.manager(function() {
      * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = (adInfo) => {
-      var data = adInfo.data,
-          adUnitCompanions = currentAd.vpaidAd ? _safeFunctionCall(currentAd.vpaidAd, "getAdCompanions") : null,
-          companions;
+      const { data } = adInfo;
+      const adUnitCompanions = currentAd.vpaidAd ? _safeFunctionCall(currentAd.vpaidAd, 'getAdCompanions') : null;
+      let companions;
 
       // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
       // This rules is only for VPaid, it will take data.companion otherwise anyway
@@ -2089,14 +2056,14 @@ OO.Ads.manager(function() {
      * @param {string[]} trackingEvents List of events that are tracked, if null then it uses the global one
      * @returns {object} An array of tracking items.
      */
-    var parseTrackingEvents = (xml, events = TRACKING_EVENTS) => {
-      var result = events.reduce((acc, event) => {
-        var sel = "Tracking[event=" + event + "]";
-        var item = compose(
+    const parseTrackingEvents = (xml, events = TRACKING_EVENTS) => {
+      const result = events.reduce((acc, event) => {
+        const sel = `Tracking[event=${event}]`;
+        const item = compose(
           mapWithoutEmpty(node => node.textContent),
           Array.from,
         )(xml.querySelectorAll(sel));
-        return {...acc, [event]: item};
+        return { ...acc, [event]: item };
       }, {});
 
       return result;
@@ -2110,12 +2077,10 @@ OO.Ads.manager(function() {
      * @param {Function} mapperFn mapper function
      * @returns {Array} The filtered array.
      */
-    var mapWithoutEmpty = mapperFn => array => {
-      return compose(
-        filterEmpty,
-        (arr) => map(arr, mapperFn),
-      )(array);
-    };
+    var mapWithoutEmpty = mapperFn => array => compose(
+      filterEmpty,
+      arr => map(arr, mapperFn),
+    )(array);
 
     /**
      * Helper function to remove empty items.
@@ -2124,9 +2089,7 @@ OO.Ads.manager(function() {
      * @param {Array} array An array that is the be checked if it is empty
      * @returns {Array} The filtered array.
      */
-    var filterEmpty = (array) => {
-      return without(array, null, "");
-    };
+    var filterEmpty = array => without(array, null, '');
 
     /**
      * Helper function to get node attribute value.
@@ -2160,7 +2123,7 @@ OO.Ads.manager(function() {
       if (!selector) {
         return parentNode.textContent || undefined;
       }
-      var childNode = parentNode.querySelector(selector);
+      const childNode = parentNode.querySelector(selector);
       if (!childNode) {
         return;
       }
@@ -2174,13 +2137,13 @@ OO.Ads.manager(function() {
      * @param {XMLDocument} companionAdXML XML that contains the companion ad data
      * @returns {object} The ad object with companion ad.
      */
-    var parseCompanionAd = (companionAdXml) => {
-      var staticResource = _cleanString(getNodeTextContent(companionAdXml, 'StaticResource'));
-      var iframeResource = _cleanString(getNodeTextContent(companionAdXml, 'IFrameResource'));
-      var htmlResource = _cleanString(getNodeTextContent(companionAdXml, 'HTMLResource'));
+    const parseCompanionAd = (companionAdXml) => {
+      const staticResource = _cleanString(getNodeTextContent(companionAdXml, 'StaticResource'));
+      const iframeResource = _cleanString(getNodeTextContent(companionAdXml, 'IFrameResource'));
+      const htmlResource = _cleanString(getNodeTextContent(companionAdXml, 'HTMLResource'));
 
-      var result = {
-        tracking: parseTrackingEvents(companionAdXml, ["creativeView"]),
+      const result = {
+        tracking: parseTrackingEvents(companionAdXml, ['creativeView']),
         width: safeGetAttribute(companionAdXml, 'width'),
         height: safeGetAttribute(companionAdXml, 'height'),
         expandedWidth: safeGetAttribute(companionAdXml, 'expandedWidth'),
@@ -2192,19 +2155,19 @@ OO.Ads.manager(function() {
         extend(result, {
           type: 'static',
           data: staticResource,
-          url: staticResource
+          url: staticResource,
         });
       } else if (iframeResource) {
         extend(result, {
           type: 'iframe',
           data: iframeResource,
-          url: iframeResource
+          url: iframeResource,
         });
       } else if (htmlResource) {
         extend(result, {
           type: 'html',
           data: htmlResource,
-          htmlCode: htmlResource
+          htmlCode: htmlResource,
         });
       }
 
@@ -2218,15 +2181,15 @@ OO.Ads.manager(function() {
      * @param {XMLDocument} linearXml The xml containing the ad data to be parsed
      * @returns {object} An object containing the ad data.
      */
-    var parseLinearAd = (linearXml) => {
-      var result = {
+    const parseLinearAd = (linearXml) => {
+      const result = {
         tracking: parseTrackingEvents(linearXml),
         // clickTracking needs to be remembered because it can exist in wrapper ads
         clickTracking: compose(
           mapWithoutEmpty(node => node.textContent),
           Array.from,
         )(linearXml.querySelectorAll('ClickTracking')),
-        //There can only be one clickthrough as per Vast 2.0/3.0 specs and XSDs
+        // There can only be one clickthrough as per Vast 2.0/3.0 specs and XSDs
         clickThrough: getNodeTextContent(linearXml, 'ClickThrough'),
         customClick: compose(
           mapWithoutEmpty(node => node.textContent),
@@ -2235,20 +2198,20 @@ OO.Ads.manager(function() {
         skipOffset: safeGetAttribute(linearXml, 'skipoffset'),
       };
 
-      var mediaFiles = linearXml.querySelectorAll("MediaFile");
+      const mediaFiles = linearXml.querySelectorAll('MediaFile');
 
       if (mediaFiles.length > 0) {
         result.mediaFiles = compose(
-          mapWithoutEmpty((mediaFile) => ({
-            type: mediaFile.getAttribute("type").toLowerCase(),
+          mapWithoutEmpty(mediaFile => ({
+            type: mediaFile.getAttribute('type').toLowerCase(),
             url: mediaFile.textContent.trim(),
-            bitrate: mediaFile.getAttribute("bitrate"),
-            width: mediaFile.getAttribute("width"),
-            height: mediaFile.getAttribute("height")
+            bitrate: mediaFile.getAttribute('bitrate'),
+            width: mediaFile.getAttribute('width'),
+            height: mediaFile.getAttribute('height'),
           }),
-          Array.from,
-        ))(mediaFiles);
-        result.duration = getNodeTextContent(linearXml, "Duration");
+          Array.from),
+        )(mediaFiles);
+        result.duration = getNodeTextContent(linearXml, 'Duration');
       }
 
       return result;
@@ -2261,53 +2224,53 @@ OO.Ads.manager(function() {
      * @param {XMLDocument} nonLinearAdsXml Contains the ad data that needs to be parsed
      * @returns {object} An object that contains the ad data.
      */
-    var parseNonLinearAds = (nonLinearAdsXml) => {
-      var result = {
-        tracking: parseTrackingEvents(nonLinearAdsXml)
+    const parseNonLinearAds = (nonLinearAdsXml) => {
+      const result = {
+        tracking: parseTrackingEvents(nonLinearAdsXml),
       };
 
-      var nonLinear = nonLinearAdsXml.querySelector("NonLinear");
+      const nonLinear = nonLinearAdsXml.querySelector('NonLinear');
 
       if (!nonLinear) {
         return result;
       }
-      var staticResource = nonLinear.querySelector("StaticResource");
-      var iframeResource = nonLinear.querySelector("IFrameResource");
-      var htmlResource = nonLinear.querySelector("HTMLResource");
+      const staticResource = nonLinear.querySelector('StaticResource');
+      const iframeResource = nonLinear.querySelector('IFrameResource');
+      const htmlResource = nonLinear.querySelector('HTMLResource');
 
-      result.width = safeGetAttribute(nonLinear, "width");
-      result.height = safeGetAttribute(nonLinear, "height");
-      result.expandedWidth = safeGetAttribute(nonLinear, "expandedWidth");
-      result.expandedHeight = safeGetAttribute(nonLinear, "expandedHeight");
-      result.scalable = safeGetAttribute(nonLinear, "scalable");
-      result.maintainAspectRatio = safeGetAttribute(nonLinear, "maintainAspectRatio");
-      result.minSuggestedDuration = safeGetAttribute(nonLinear, "minSuggestedDuration");
-      result.nonLinearClickThrough = getNodeTextContent(nonLinear, "NonLinearClickThrough");
+      result.width = safeGetAttribute(nonLinear, 'width');
+      result.height = safeGetAttribute(nonLinear, 'height');
+      result.expandedWidth = safeGetAttribute(nonLinear, 'expandedWidth');
+      result.expandedHeight = safeGetAttribute(nonLinear, 'expandedHeight');
+      result.scalable = safeGetAttribute(nonLinear, 'scalable');
+      result.maintainAspectRatio = safeGetAttribute(nonLinear, 'maintainAspectRatio');
+      result.minSuggestedDuration = safeGetAttribute(nonLinear, 'minSuggestedDuration');
+      result.nonLinearClickThrough = getNodeTextContent(nonLinear, 'NonLinearClickThrough');
 
       result.nonLinearClickTracking = compose(
         mapWithoutEmpty(node => node.textContent),
         Array.from,
-      )(nonLinearAdsXml.querySelectorAll('NonLinearClickTracking'))
+      )(nonLinearAdsXml.querySelectorAll('NonLinearClickTracking'));
 
       if (staticResource) {
         extend(result, {
-          type: "static",
+          type: 'static',
           data: staticResource.textContent,
-          url: staticResource.textContent
+          url: staticResource.textContent,
         });
       }
       if (iframeResource) {
         extend(result, {
-          type: "iframe",
+          type: 'iframe',
           data: iframeResource.textContent,
-          url: iframeResource.textContent
+          url: iframeResource.textContent,
         });
       }
       if (htmlResource) {
         extend(result, {
-          type: "html",
+          type: 'html',
           data: htmlResource.textContent,
-          htmlCode: htmlResource.textContent
+          htmlCode: htmlResource.textContent,
         });
       }
 
@@ -2322,59 +2285,59 @@ OO.Ads.manager(function() {
      * @param {number} version The Vast version
      * @returns {object} The ad object otherwise it returns 1.
      */
-    var vastAdSingleParser = (xml, version) => {
-      var result = getVastTemplate();
-      var inline = xml.querySelectorAll(AD_TYPE.INLINE);
-      var wrapper = xml.querySelectorAll(AD_TYPE.WRAPPER);
+    const vastAdSingleParser = (xml, version) => {
+      const result = getVastTemplate();
+      const inline = xml.querySelectorAll(AD_TYPE.INLINE);
+      const wrapper = xml.querySelectorAll(AD_TYPE.WRAPPER);
 
       if (inline.length > 0) {
         result.type = AD_TYPE.INLINE;
       } else if (wrapper.length > 0) {
         result.type = AD_TYPE.WRAPPER;
       } else {
-        //TODO: See if returning null here is valid
+        // TODO: See if returning null here is valid
         return null;
       }
 
       result.version = version;
 
-      var linear = xml.querySelector("Linear");
-      var nonLinearAds = xml.querySelector("NonLinearAds");
+      const linear = xml.querySelector('Linear');
+      const nonLinearAds = xml.querySelector('NonLinearAds');
 
       if (result.type === AD_TYPE.WRAPPER) {
-        result.vastAdTagUri = getNodeTextContent(xml, "VASTAdTagURI");
+        result.vastAdTagUri = getNodeTextContent(xml, 'VASTAdTagURI');
       }
 
       result.error = compose(
         mapWithoutEmpty(node => node.textContent),
         Array.from,
-      )(xml.querySelectorAll("Error"));
+      )(xml.querySelectorAll('Error'));
 
       result.impression = compose(
         mapWithoutEmpty(node => node.textContent),
         Array.from,
-      )(xml.querySelectorAll("Impression"));
+      )(xml.querySelectorAll('Impression'));
 
       result.title = compose(
         first,
         mapWithoutEmpty(node => node.textContent),
         Array.from,
-      )(xml.querySelectorAll("AdTitle"));
+      )(xml.querySelectorAll('AdTitle'));
 
       if (linear) { result.linear = parseLinearAd(linear); }
       if (nonLinearAds) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
 
       result.companion = compose(
-        (array) => map(array, node => parseCompanionAd(node)),
+        array => map(array, node => parseCompanionAd(node)),
         Array.from,
-      )(xml.querySelectorAll('Companion'))
+      )(xml.querySelectorAll('Companion'));
 
-      var sequence = safeGetAttribute(xml, "sequence");
+      const sequence = safeGetAttribute(xml, 'sequence');
       if (typeof sequence !== 'undefined') {
         result.sequence = sequence;
       }
 
-      result.id = safeGetAttribute(xml, "id");
+      result.id = safeGetAttribute(xml, 'id');
 
       return result;
     };
@@ -2391,21 +2354,21 @@ OO.Ads.manager(function() {
       if (!this.isValidVastXML(vastXML)) {
         return null;
       }
-      var result = {
-        podded : [],
-        standalone : []
+      const result = {
+        podded: [],
+        standalone: [],
       };
-      //parse the ad objects from the XML
-      var ads = this.parseAds(vastXML, adLoaded);
-      //check to see if any ads are sequenced (are podded)
+      // parse the ad objects from the XML
+      const ads = this.parseAds(vastXML, adLoaded);
+      // check to see if any ads are sequenced (are podded)
       each(ads, (ad) => {
-        var sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
-        var version = typeof ad.version !== 'undefined' ? ad.version : null;
+        const sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
+        const version = typeof ad.version !== 'undefined' ? ad.version : null;
         if (supportsPoddedAds(version) && sequence) {
-          //Assume sequences will start from 1
+          // Assume sequences will start from 1
           result.podded[+sequence - 1] = ad;
         } else {
-          //store ad as a standalone ad
+          // store ad as a standalone ad
           result.standalone.push(ad);
         }
       });
@@ -2422,19 +2385,19 @@ OO.Ads.manager(function() {
      * @param {object} adLoaded The ad loaded object and metadata
      */
     this.parseAds = (vastXML, adLoaded) => {
-      var version = getVastVersion(vastXML);
+      const version = getVastVersion(vastXML);
 
       return compose(
-        (ads) => map(ads, (ad) => {
-          var singleAd = _getVpaidCreative(ad, version, adLoaded);
-          //if there is no vpaid creative, parse as regular vast
+        ads => map(ads, (ad) => {
+          let singleAd = _getVpaidCreative(ad, version, adLoaded);
+          // if there is no vpaid creative, parse as regular vast
           if (!singleAd) {
             singleAd = vastAdSingleParser(ad, version);
           }
           return singleAd;
         }),
         Array.from,
-      )(vastXML.querySelectorAll("Ad"));
+      )(vastXML.querySelectorAll('Ad'));
     };
 
     /**
@@ -2444,13 +2407,13 @@ OO.Ads.manager(function() {
      * @private
      * @return {boolean} VPaid validated value
      */
-    var _isValidVpaidCreative = (node, isLinear) => {
-      var apiFramework = (safeGetAttribute(node, 'apiFramework') || safeGetAttribute(node, 'apiframework')) === 'VPAID';
-      var creativeType = isLinear ?
-        safeGetAttribute(node, 'type') :
-        (
-          safeGetAttribute(node.querySelector('StaticResource'), 'creativeType') ||
-          safeGetAttribute(node.querySelector('StaticResource'), 'creativetype')
+    const _isValidVpaidCreative = (node, isLinear) => {
+      const apiFramework = (safeGetAttribute(node, 'apiFramework') || safeGetAttribute(node, 'apiframework')) === 'VPAID';
+      const creativeType = isLinear
+        ? safeGetAttribute(node, 'type')
+        : (
+          safeGetAttribute(node.querySelector('StaticResource'), 'creativeType')
+          || safeGetAttribute(node.querySelector('StaticResource'), 'creativetype')
         );
       return apiFramework && creativeType === 'application/javascript';
     };
@@ -2463,53 +2426,54 @@ OO.Ads.manager(function() {
      * @param {object} adLoaded The ad loaded object and metadata
      * @param {object} fallbackAd The ad to fallback to if playback for an ad in this pod fails
      */
-    var handleAds = (ads, adLoaded, fallbackAd) => {
-      //find out how many non linear ads we have so as to not count them
-      //when determining ad pod length
-      var linearAdCount = 0;
+    const handleAds = (ads, adLoaded, fallbackAd) => {
+      // find out how many non linear ads we have so as to not count them
+      // when determining ad pod length
+      let linearAdCount = 0;
       each(ads, (ad) => {
         if (!isEmpty(ad.linear)) {
           linearAdCount++;
         }
       });
 
-      var handled = false;
-      var handlingWrapperAd = false;
+      let handled = false;
+      let handlingWrapperAd = false;
 
-      var adUnits = [];
-      var wrapperAds = {};
-      var processedFallbackAd = null;
+      const adUnits = [];
+      let wrapperAds = {};
+      let processedFallbackAd = null;
 
-      //Process each of the ads in the pod
+      // Process each of the ads in the pod
       each(ads, (ad, index) => {
         if (ad.type === AD_TYPE.INLINE) {
-          wrapperAds = { error: [],
+          wrapperAds = {
+            error: [],
             impression: [],
             companion: [],
             linear: {},
-            nonLinear: {}
+            nonLinear: {},
           };
-          var params = {
-            adPodIndex : index + 1,
-            adPodLength : linearAdCount
+          const params = {
+            adPodIndex: index + 1,
+            adPodLength: linearAdCount,
           };
           this.mergeVastAdResult(ad, wrapperAds);
           if (!ad.data || ad.data.adType !== 'vpaid') {
             if (_hasLinearAd(ad)) {
-              var linearAdUnit = _handleLinearAd(ad, adLoaded, params);
+              let linearAdUnit = _handleLinearAd(ad, adLoaded, params);
               if (linearAdUnit) {
-                //The ad can have both a linear and non linear creative. We'll
-                //split these up into separate objects for ad playback
+                // The ad can have both a linear and non linear creative. We'll
+                // split these up into separate objects for ad playback
                 linearAdUnit = clone(linearAdUnit);
                 linearAdUnit.data.nonLinear = {};
                 adUnits.push(linearAdUnit);
               }
             }
             if (_hasNonLinearAd(ad)) {
-              var nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
+              let nonLinearAdUnit = _handleNonLinearAd(ad, adLoaded, params);
               if (nonLinearAdUnit) {
-                //The ad can have both a linear and non linear creative. We'll
-                //split these up into separate objects for ad playback
+                // The ad can have both a linear and non linear creative. We'll
+                // split these up into separate objects for ad playback
                 nonLinearAdUnit = clone(nonLinearAdUnit);
                 nonLinearAdUnit.data.linear = {};
                 adUnits.push(nonLinearAdUnit);
@@ -2519,7 +2483,7 @@ OO.Ads.manager(function() {
             adUnits.push(ad);
           }
         } else if (ad.type === AD_TYPE.WRAPPER) {
-          //TODO: Add wrapper ad depth limit
+          // TODO: Add wrapper ad depth limit
           _handleWrapperAd(ad, adLoaded);
           handlingWrapperAd = true;
           handled = true;
@@ -2527,18 +2491,18 @@ OO.Ads.manager(function() {
       });
 
       if (fallbackAd) {
-        //TODO: Add wrapper ad depth limit
+        // TODO: Add wrapper ad depth limit
         if (fallbackAd.type === AD_TYPE.INLINE) {
           wrapperAds = {
             error: [],
             impression: [],
             companion: [],
             linear: {},
-            nonLinear: {}
+            nonLinear: {},
           };
           this.mergeVastAdResult(fallbackAd, wrapperAds);
           if (!fallbackAd.data || fallbackAd.data.adType !== 'vpaid') {
-            //Prefer to show linear fallback ad
+            // Prefer to show linear fallback ad
             processedFallbackAd = _handleLinearAd(fallbackAd, adLoaded);
             if (!processedFallbackAd) {
               processedFallbackAd = _handleNonLinearAd(fallbackAd, adLoaded);
@@ -2546,8 +2510,7 @@ OO.Ads.manager(function() {
           } else {
             processedFallbackAd = fallbackAd;
           }
-        }
-        else if (ad.type === AD_TYPE.WRAPPER) {
+        } else if (ad.type === AD_TYPE.WRAPPER) {
           _handleWrapperAd(ad, adLoaded);
           handlingWrapperAd = true;
           handled = true;
@@ -2555,9 +2518,9 @@ OO.Ads.manager(function() {
       }
 
       if (adUnits.length > 0) {
-        var previousAdUnit;
-        //Set fallback ad and next ad for each ad unit. Depending on if an ad plays successfully
-        //or fails to play, the next ad or fallback ad will be forced to play
+        let previousAdUnit;
+        // Set fallback ad and next ad for each ad unit. Depending on if an ad plays successfully
+        // or fails to play, the next ad or fallback ad will be forced to play
         each(adUnits, (adUnit) => {
           adUnit.fallbackAd = processedFallbackAd;
           if (previousAdUnit) {
@@ -2575,12 +2538,10 @@ OO.Ads.manager(function() {
         failedAd();
       }
 
-      if (currentAd && currentAd.adType === this.amc.ADTYPE.AD_REQUEST && !handlingWrapperAd)
-      {
-        //notify the amc of the pod ending
+      if (currentAd && currentAd.adType === this.amc.ADTYPE.AD_REQUEST && !handlingWrapperAd) {
+        // notify the amc of the pod ending
         this.amc.notifyPodEnded(currentAd.id);
       }
-
     };
 
     /**
@@ -2592,7 +2553,7 @@ OO.Ads.manager(function() {
      */
     var _handleWrapperAd = (vastAdObject, adLoaded) => {
       if (vastAdObject.vastAdTagUri) {
-        var adId = _getAdId(vastAdObject);
+        const adId = _getAdId(vastAdObject);
         // Store the ad object
         if (has(this.adTrackingInfo, adId)) {
           this.adTrackingInfo[adId].vastAdObject = vastAdObject;
@@ -2602,9 +2563,9 @@ OO.Ads.manager(function() {
         // should have already added the ad id to the adTrackingInfo dictionary.
         else {
           this.adTrackingInfo[adId] = {
-            vastAdObject: vastAdObject,
+            vastAdObject,
             errorURLs: [],
-            wrapperParentId: this.wrapperParentId || null
+            wrapperParentId: this.wrapperParentId || null,
           };
         }
         if (!this.testMode) {
@@ -2621,9 +2582,7 @@ OO.Ads.manager(function() {
      * @returns {boolean} true, if an element with the VMAP tag name is found. Otherwise,
      * returns false.
      */
-    var _isVMAPResponse = (xml) => {
-      return xml.querySelectorAll("vmap\\:VMAP, VMAP").length > 0;
-    };
+    const _isVMAPResponse = xml => xml.querySelectorAll('vmap\\:VMAP, VMAP').length > 0;
 
     /**
      * When the ad tag url comes back with a response.
@@ -2639,8 +2598,7 @@ OO.Ads.manager(function() {
       this.amc.notifyPodStarted(adLoaded.id, 1);
       if (_isVMAPResponse(xml)) {
         this.onVMAPResponse(xml);
-      }
-      else {
+      } else {
         this.onVastResponse(adLoaded, xml, wrapperParentId);
       }
     };
@@ -2658,38 +2616,38 @@ OO.Ads.manager(function() {
      */
     this.onVastResponse = (adLoaded, xml, wrapperParentIdArg) => {
       this.wrapperParentId = wrapperParentIdArg;
-      var vastAds = this.parser(xml, adLoaded);
+      const vastAds = this.parser(xml, adLoaded);
 
       if (!vastAds || !adLoaded) {
-        _tryRaiseAdError("VAST: XML Parsing Error");
+        _tryRaiseAdError('VAST: XML Parsing Error');
         this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
         failedAd();
         return;
       }
 
-      if (!this.checkNoAds(xml)){
+      if (!this.checkNoAds(xml)) {
         // need to get error tracking information early in case error events need to be reported
         // before the ad object is created
         this.getErrorTrackingInfo(xml);
       }
 
       if (isEmpty(vastAds.podded) && isEmpty(vastAds.standalone)) {
-        _tryRaiseAdError("VAST: XML Parsing Error");
+        _tryRaiseAdError('VAST: XML Parsing Error');
         this.trackError(this.ERROR_CODES.XML_PARSING, this.wrapperParentId);
         failedAd();
         return;
       }
 
-      var vastVersion = getVastVersion(xml);
-      var fallbackAd;
-      if(supportsAdFallback(vastVersion) && vastAds.standalone.length > 0) {
+      const vastVersion = getVastVersion(xml);
+      let fallbackAd;
+      if (supportsAdFallback(vastVersion) && vastAds.standalone.length > 0) {
         fallbackAd = vastAds.standalone[0];
       }
-      var ad;
+      let ad;
       if (supportsPoddedAds(vastVersion)) {
-        //If there are no podded ads
-        if(isEmpty(vastAds.podded)) {
-          //show the first standalone ad
+        // If there are no podded ads
+        if (isEmpty(vastAds.podded)) {
+          // show the first standalone ad
           ad = vastAds.standalone[0];
           if (ad) {
             handleAds([ad], adLoaded);
@@ -2701,12 +2659,12 @@ OO.Ads.manager(function() {
             handleAds(vastAds.podded, adLoaded, fallbackAd);
           }
         }
-        //else show the podded ads
+        // else show the podded ads
         else {
           handleAds(vastAds.podded, adLoaded, fallbackAd);
         }
       } else {
-        //show all standalone ads if podded ads are not supported
+        // show all standalone ads if podded ads are not supported
         handleAds(vastAds.standalone, adLoaded);
       }
     };
@@ -2718,17 +2676,17 @@ OO.Ads.manager(function() {
      * @param {XMLDocument} xml The xml returned from loading the ad
      */
     this.onVMAPResponse = (xml) => {
-      var adBreakElements = xml.querySelectorAll("vmap\\:AdBreak, AdBreak");
+      const adBreakElements = xml.querySelectorAll('vmap\\:AdBreak, AdBreak');
       adBreakElements.forEach((adBreakElement) => {
-        var adBreak = _parseAdBreak(adBreakElement);
+        const adBreak = _parseAdBreak(adBreakElement);
         if (isEmpty(adBreak)) {
           return;
         }
         this.adBreaks.push(adBreak);
-        var adSourceElement = adBreakElement.querySelector("vmap\\:AdSource, AdSource");
-        var trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
+        const adSourceElement = adBreakElement.querySelector('vmap\\:AdSource, AdSource');
+        const trackingEventsElement = _findVMAPTrackingEvents(adBreakElement);
         if (trackingEventsElement) {
-          var trackingEvents = _parseVMAPTrackingEvents(trackingEventsElement);
+          const trackingEvents = _parseVMAPTrackingEvents(trackingEventsElement);
           if (!isEmpty(trackingEvents)) {
             adBreak.trackingEvents = trackingEvents;
           }
@@ -2736,33 +2694,32 @@ OO.Ads.manager(function() {
         if (!adSourceElement) {
           return;
         }
-        var adSource = _parseAdSource(adSourceElement);
+        const adSource = _parseAdSource(adSourceElement);
         if (isEmpty(adSource)) {
           return;
         }
         adBreak.adSource = adSource;
-        var adObject = _convertToAdObject(adBreak);
+        const adObject = _convertToAdObject(adBreak);
         if (!adObject) {
-          _tryRaiseAdError("VAST, VMAP: Error creating Ad Object");
+          _tryRaiseAdError('VAST, VMAP: Error creating Ad Object');
           return;
         }
-        var adTagURIElement = adSourceElement.querySelector("vmap\\:AdTagURI, AdTagURI");
-        var vastAdDataElement = adSourceElement.querySelector("vmap\\:VASTAdData, VASTAdData");
+        const adTagURIElement = adSourceElement.querySelector('vmap\\:AdTagURI, AdTagURI');
+        let vastAdDataElement = adSourceElement.querySelector('vmap\\:VASTAdData, VASTAdData');
 
         // VMAP 1.0.1 fixed a typo where the inline vast data tag was named VASTData instead of
         // VASTAdData. To ensure backwards compatibility with VMAP 1.0 XMLs, if the code cannot
         // find the VASTAdData tag, try to search for the VASTData tag.
         if (!vastAdDataElement) {
-          vastAdDataElement = adSourceElement.querySelector("vmap\\:VASTData, VASTData");
+          vastAdDataElement = adSourceElement.querySelector('vmap\\:VASTData, VASTData');
         }
 
         if (vastAdDataElement) {
           adSource.vastAdData = vastAdDataElement;
           this.onVastResponse(adObject, vastAdDataElement);
-        }
-        else if (adTagURIElement) {
+        } else if (adTagURIElement) {
           adSource.adTagURI = getNodeTextContent(adTagURIElement);
-          if (!this.testMode){
+          if (!this.testMode) {
             this.ajax(adSource.adTagURI, this.onVastError, 'xml', adObject);
           }
         }
@@ -2780,10 +2737,8 @@ OO.Ads.manager(function() {
      * @returns {object[]} The filtered array with only vmap tracking events.
      */
     var _findVMAPTrackingEvents = (adBreakElement) => {
-      var trackingEventsElement = adBreakElement.querySelectorAll("vmap\\:TrackingEvents, TrackingEvents");
-      var VMAPTrackingEventsElement = find(Array.from(trackingEventsElement), (trackingEventElement) => {
-        return (trackingEventElement.tagName.toLowerCase().indexOf("vmap:") > -1);
-      });
+      const trackingEventsElement = adBreakElement.querySelectorAll('vmap\\:TrackingEvents, TrackingEvents');
+      const VMAPTrackingEventsElement = find(Array.from(trackingEventsElement), trackingEventElement => (trackingEventElement.tagName.toLowerCase().indexOf('vmap:') > -1));
       return VMAPTrackingEventsElement;
     };
 
@@ -2795,18 +2750,17 @@ OO.Ads.manager(function() {
      * @returns {object[]} The array of tracking event objects.
      */
     var _parseVMAPTrackingEvents = (trackingEventsElement) => {
-      var trackingEvents = [];
+      const trackingEvents = [];
 
-      var trackingElements = trackingEventsElement.querySelectorAll("vmap\\:Tracking, Tracking");
+      const trackingElements = trackingEventsElement.querySelectorAll('vmap\\:Tracking, Tracking');
       if (!trackingElements.length) {
         return [];
       }
       return Array.from(trackingElements)
-        .map((trackingElement) => ({
+        .map(trackingElement => ({
           url: getNodeTextContent(trackingElement),
-          eventName: safeGetAttribute(trackingElement, "event"),
-        })
-      );
+          eventName: safeGetAttribute(trackingElement, 'event'),
+        }));
     };
 
     /**
@@ -2818,7 +2772,7 @@ OO.Ads.manager(function() {
      * ad object is returned.
      */
     var _convertToAdObject = (adBreak) => {
-      var adObject = {
+      let adObject = {
         /*
          *ad_set_code: "",
          *click_url: "",
@@ -2834,16 +2788,16 @@ OO.Ads.manager(function() {
         vmap: true,
         allowMultipleAds: true,
         time: 0,
-        position_type: "t",
+        position_type: 't',
       };
       if (!adBreak) {
         return null;
       }
       if (adBreak.adSource && adBreak.adSource.allowMultipleAds) {
         // parse the attribute, and convert string to boolean if it is "true"/"false"
-        var allowMultipleAds = adBreak.adSource.allowMultipleAds;
-        if (allowMultipleAds == "true" || allowMultipleAds == "false") {
-          adObject.allowMultipleAds = (allowMultipleAds == "true");
+        const { allowMultipleAds } = adBreak.adSource;
+        if (allowMultipleAds == 'true' || allowMultipleAds == 'false') {
+          adObject.allowMultipleAds = (allowMultipleAds == 'true');
         }
       }
       if (adBreak.repeatAfter) {
@@ -2857,7 +2811,6 @@ OO.Ads.manager(function() {
         // case: "end"
         else if (/^end$/.test(adBreak.timeOffset)) {
           adObject.position = (this.amc.movieDuration + 1);
-
         }
         // case: hh:mm:ss.mmm | hh:mm:ss
         else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
@@ -2867,8 +2820,7 @@ OO.Ads.manager(function() {
         else if (/^\d{1,3}%$/.test(adBreak.timeOffset)) {
           // TODO: test percentage > 100
           adObject.position = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset) / 1000;
-        }
-        else {
+        } else {
           _tryRaiseAdError("VAST, VMAP: No Matching 'timeOffset' Attribute format");
           adObject = null;
         }
@@ -2883,14 +2835,12 @@ OO.Ads.manager(function() {
      * @param {object} adBreakElement The adBreak element to parse
      * @returns {object} The formatted adBreak object.
      */
-    var _parseAdBreak = (adBreakElement) => {
-      return {
-        timeOffset: safeGetAttribute(adBreakElement, "timeOffset"),
-        breakType: safeGetAttribute(adBreakElement, "breakType"),
-        breakId: safeGetAttribute(adBreakElement, "breakId"),
-        repeatAfter: safeGetAttribute(adBreakElement, "repeatAfter"),
-      }
-    };
+    var _parseAdBreak = adBreakElement => ({
+      timeOffset: safeGetAttribute(adBreakElement, 'timeOffset'),
+      breakType: safeGetAttribute(adBreakElement, 'breakType'),
+      breakId: safeGetAttribute(adBreakElement, 'breakId'),
+      repeatAfter: safeGetAttribute(adBreakElement, 'repeatAfter'),
+    });
 
     /**
      * Create the adSource object with its attributes as properties.
@@ -2899,13 +2849,11 @@ OO.Ads.manager(function() {
      * @param {object} adSourceElement The adSource element to parse
      * @returns {object} The formatted adSource object.
      */
-    var _parseAdSource = (adSourceElement) => {
-      return {
-        id: safeGetAttribute(adSourceElement, "id"),
-        allowMultipleAds: safeGetAttribute(adSourceElement, "allowMultipleAds"),
-        followRedirects: safeGetAttribute(adSourceElement, "followRedirects"),
-      }
-    };
+    var _parseAdSource = adSourceElement => ({
+      id: safeGetAttribute(adSourceElement, 'id'),
+      allowMultipleAds: safeGetAttribute(adSourceElement, 'allowMultipleAds'),
+      followRedirects: safeGetAttribute(adSourceElement, 'followRedirects'),
+    });
 
     /**
      * Generates a parsed VPaid ad to load.
@@ -2918,23 +2866,23 @@ OO.Ads.manager(function() {
      * @return {object} Parsed vpaid's metadata ad
      */
     var _getVpaidCreative = (adXml, version, adLoaded) => {
-      //TODO: Add more comments in the function
-      var adParams = '{}';
+      // TODO: Add more comments in the function
+      let adParams = '{}';
 
-      var format = _getVpaidFormat(adXml);
-      var isLinear = format === 'Linear';
+      const format = _getVpaidFormat(adXml);
+      const isLinear = format === 'Linear';
 
-      var node = adXml.querySelector(format);
+      const node = adXml.querySelector(format);
       if (!node) {
         return;
       }
 
-      var paramsNode = node.querySelector('AdParameters');
-      //PBI-1828 there have been cases where ads have multiple mediafile tags and it results in a bad url.
-      //so make sure we just pick one of the files. Otherwise, they all get appended to each other later in the code.
-      var mediaNode = isLinear ? node.querySelector('MediaFile') : node.querySelector('StaticResource');
-      var companionsNode = adXml.querySelector('CompanionAds');
-      var validNode = isLinear ? mediaNode : node;
+      const paramsNode = node.querySelector('AdParameters');
+      // PBI-1828 there have been cases where ads have multiple mediafile tags and it results in a bad url.
+      // so make sure we just pick one of the files. Otherwise, they all get appended to each other later in the code.
+      let mediaNode = isLinear ? node.querySelector('MediaFile') : node.querySelector('StaticResource');
+      const companionsNode = adXml.querySelector('CompanionAds');
+      const validNode = isLinear ? mediaNode : node;
 
 
       if (!mediaNode || !_isValidVpaidCreative(validNode, isLinear)) {
@@ -2946,59 +2894,59 @@ OO.Ads.manager(function() {
         adParams = _cleanString(getNodeTextContent(paramsNode));
       }
 
-      //TODO: Should we use _cleanString on this?
-      var mediaFile = {
+      // TODO: Should we use _cleanString on this?
+      let mediaFile = {
         url: mediaNode.textContent,
-        type: safeGetAttribute(mediaNode, 'type') || safeGetAttribute(mediaNode, 'creativeType')
+        type: safeGetAttribute(mediaNode, 'type') || safeGetAttribute(mediaNode, 'creativeType'),
       };
 
       mediaNode = isLinear ? mediaNode : mediaNode.parentNode;
       mediaFile = extend(mediaFile, {
         width: Number(mediaNode.getAttribute('width')),
         height: Number(mediaNode.getAttribute('height')),
-        tracking: this.getVpaidTracking(mediaNode)
+        tracking: this.getVpaidTracking(mediaNode),
       });
 
-      var impressions = this.getVpaidImpressions(adXml);
-      var tracking = this.getVpaidTracking(isLinear ? node : node.parentNode);
-      var errorTracking = _cleanString(getNodeTextContent(adXml, 'Error'));
-      var videoClickTracking;
+      const impressions = this.getVpaidImpressions(adXml);
+      const tracking = this.getVpaidTracking(isLinear ? node : node.parentNode);
+      const errorTracking = _cleanString(getNodeTextContent(adXml, 'Error'));
+      let videoClickTracking;
       if (isLinear) {
         videoClickTracking = {
           clickTracking: _cleanString(getNodeTextContent(adXml, 'ClickTracking')),
           clickThrough: _cleanString(getNodeTextContent(adXml, 'ClickThrough')),
-          customClick: _cleanString(getNodeTextContent(adXml, 'CustomClick'))
+          customClick: _cleanString(getNodeTextContent(adXml, 'CustomClick')),
         };
       } else {
         videoClickTracking = {
-          nonLinearClickThrough: _cleanString(getNodeTextContent(adXml, 'NonLinearClickThrough'))
-        }
+          nonLinearClickThrough: _cleanString(getNodeTextContent(adXml, 'NonLinearClickThrough')),
+        };
       }
 
-      var sequence = safeGetAttribute(adXml, 'sequence');
-      var adPodLength = adXml.parentNode.querySelectorAll('[sequence] Linear').length;
+      let sequence = safeGetAttribute(adXml, 'sequence');
+      const adPodLength = adXml.parentNode.querySelectorAll('[sequence] Linear').length;
 
       if (!supportsPoddedAds(version) || !isNumber(parseInt(sequence))) {
         sequence = null;
       }
 
-      var companionAds = [];
-      var companions = companionsNode ? companionsNode.querySelectorAll('Companion') : [];
+      const companionAds = [];
+      const companions = companionsNode ? companionsNode.querySelectorAll('Companion') : [];
       if (companions.length) {
         companions.forEach((v) => {
           companionAds.push(parseCompanionAd(v));
         });
       }
       // this is for linear/nonlinear
-      var ad = {
+      const ad = {
         mediaFiles: mediaFile,
-        tracking: tracking,
+        tracking,
         duration: isLinear ? getNodeTextContent(adXml, 'Duration') : 0,
         skipOffset: safeGetAttribute(node, 'skipoffset'),
       };
       extend(ad, videoClickTracking);
 
-      var data = {
+      const data = {
         id: safeGetAttribute(adXml, 'id'),
         adType: 'vpaid',
         companion: companionAds,
@@ -3007,25 +2955,25 @@ OO.Ads.manager(function() {
         linear: ad,
         nonLinear: ad,
         title: _cleanString(getNodeTextContent(adXml, 'AdTitle')),
-        tracking: tracking,
+        tracking,
         type: isLinear ? this.amc.ADTYPE.LINEAR_VIDEO : this.amc.ADTYPE.NONLINEAR_OVERLAY,
-        version: version,
-        videoClickTracking: videoClickTracking
+        version,
+        videoClickTracking,
       };
 
-      var result = {
+      const result = {
         adPodIndex: parseInt(sequence) || 1,
         sequence: sequence || null,
-        adPodLength: adPodLength ? adPodLength : 1,
-        data: data,
+        adPodLength: adPodLength || 1,
+        data,
         fallbackAd: null,
         positionSeconds: adLoaded.position,
-        adParams: adParams,
-        streams: {'mp4': ''},
+        adParams,
+        streams: { mp4: '' },
         type: AD_TYPE.INLINE,
-        mediaFile: mediaFile,
-        version: version,
-        durationInMilliseconds: OO.timeStringToSeconds(ad.duration) * 1000
+        mediaFile,
+        version,
+        durationInMilliseconds: OO.timeStringToSeconds(ad.duration) * 1000,
       };
 
       return result;
@@ -3037,24 +2985,24 @@ OO.Ads.manager(function() {
      * @private
      * @method Vast#_beginVpaidAd
      */
-    var _beginVpaidAd = () => {
+    const _beginVpaidAd = () => {
       if (_isVpaidAd(currentAd)) {
-        var ad = currentAd.vpaidAd;
-        var clickthru = currentAd.ad.data.nonLinear ? currentAd.ad.data.nonLinear.nonLinearClickThrough : '';
-        //TODO: Is this used for anything?
-        var adLinear = _safeFunctionCall(ad, "getAdLinear");
+        const ad = currentAd.vpaidAd;
+        const clickthru = currentAd.ad.data.nonLinear ? currentAd.ad.data.nonLinear.nonLinearClickThrough : '';
+        // TODO: Is this used for anything?
+        const adLinear = _safeFunctionCall(ad, 'getAdLinear');
 
         initSkipAdOffset(currentAd);
-        //Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
+        // Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
         this.amc.hidePlayerUi();
         this.amc.notifyPodStarted(currentAd.id, currentAd.ad.adPodLength);
 
         this.amc.notifyLinearAdStarted(currentAd.id, {
           name: currentAd.data.title,
-          duration : _safeFunctionCall(ad, "getAdDuration"),
+          duration: _safeFunctionCall(ad, 'getAdDuration'),
           clickUrl: clickthru.length > 0,
           indexInPod: currentAd.ad.sequence,
-          skippable : _safeFunctionCall(ad, "getAdSkippableState")
+          skippable: _safeFunctionCall(ad, 'getAdSkippableState'),
         });
       }
     };
@@ -3069,7 +3017,7 @@ OO.Ads.manager(function() {
       if (currentAd && currentAd.vpaidAd) {
         _clearVpaidTimeouts();
         vpaidAdStoppedTimeout = delay(_checkVpaidAdStopped, this.VPAID_AD_STOPPED_TIMEOUT);
-        _safeFunctionCall(currentAd.vpaidAd, "stopAd");
+        _safeFunctionCall(currentAd.vpaidAd, 'stopAd');
       }
     };
 
@@ -3081,7 +3029,8 @@ OO.Ads.manager(function() {
      * @return {object} Ad format
      */
     var _getVpaidFormat = (node) => {
-      var format, name, child;
+      let format; let name; let
+        child;
       child = node.getElementsByTagName('Linear')[0];
       if (!child) {
         child = node.getElementsByTagName('NonLinear')[0];
@@ -3101,11 +3050,9 @@ OO.Ads.manager(function() {
      * @method Vast#getVpaidImpressions
      * @return {array} Array with impressions urls
      */
-    this.getVpaidImpressions = (adXml) => {
-      return Array.from(adXml.getElementsByTagName('Impression')).map(node => ({
-        url: node.textContent
-      }))
-    };
+    this.getVpaidImpressions = adXml => Array.from(adXml.getElementsByTagName('Impression')).map(node => ({
+      url: node.textContent,
+    }));
 
     /**
      * Get tracking events.
@@ -3116,18 +3063,19 @@ OO.Ads.manager(function() {
      * @return {array} Array with tracking events and urls
      */
     this.getVpaidTracking = (parent) => {
-      var node, nodes, tracking, _i, _len;
+      let node; let nodes; let tracking; let _i; let
+        _len;
       tracking = [];
       nodes = parent.getElementsByTagName('Tracking');
       if (!nodes) {
-        //TODO: Would returning an empty array here be better?
+        // TODO: Would returning an empty array here be better?
         return;
       }
       for (_i = 0, _len = nodes.length; _i < _len; _i++) {
         node = nodes[_i];
         tracking.push({
           event: node.getAttribute('event'),
-          url: node.textContent
+          url: node.textContent,
         });
       }
       return tracking;
@@ -3141,18 +3089,18 @@ OO.Ads.manager(function() {
      */
     this.sendVpaidError = () => {
       if (currentAd && currentAd.data) {
-        var error = currentAd.data.error;
+        const { error } = currentAd.data;
         if (error) {
           OO.pixelPing(error);
         }
 
-        var adId = _getAdId(currentAd);
+        const adId = _getAdId(currentAd);
 
         // Try to ping parent tracking events as well
-        if (this.adTrackingInfo &&
-          this.adTrackingInfo[adId] &&
-          this.adTrackingInfo[adId].wrapperParentId) {
-          var parentId = this.adTrackingInfo[adId].wrapperParentId;
+        if (this.adTrackingInfo
+          && this.adTrackingInfo[adId]
+          && this.adTrackingInfo[adId].wrapperParentId) {
+          const parentId = this.adTrackingInfo[adId].wrapperParentId;
           this.trackError(this.ERROR_CODES.GENERAL_VPAID, parentId);
         }
       }
@@ -3166,24 +3114,24 @@ OO.Ads.manager(function() {
      */
     this.sendVpaidImpressions = () => {
       if (currentAd && currentAd.data) {
-        var impressions = currentAd.data.impression;
+        const impressions = currentAd.data.impression;
         each(impressions, (impression) => {
           if (impression && impression.url) {
             OO.pixelPing(impression.url);
           }
         });
 
-        var adId = _getAdId(currentAd);
+        const adId = _getAdId(currentAd);
 
         // Try to ping parent tracking events as well
-        if (this.adTrackingInfo &&
-          this.adTrackingInfo[adId] &&
-          this.adTrackingInfo[adId].wrapperParentId) {
-          var parentId = this.adTrackingInfo[adId].wrapperParentId;
-          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+        if (this.adTrackingInfo
+          && this.adTrackingInfo[adId]
+          && this.adTrackingInfo[adId].wrapperParentId) {
+          const parentId = this.adTrackingInfo[adId].wrapperParentId;
+          const parentAdTrackingObject = this.adTrackingInfo[parentId];
           if (parentAdTrackingObject) {
-            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
-            _handleTrackingUrls(parentAdObject, ["impression"]);
+            const parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            _handleTrackingUrls(parentAdObject, ['impression']);
           }
         }
       }
@@ -3197,32 +3145,30 @@ OO.Ads.manager(function() {
      * @param {string} type Event name to be send
      */
     this.sendVpaidTracking = (type) => {
-      //TODO: Why was this fetching previous ad if it existed?
-      //var ad = prevAd ? prevAd : currentAd;
-      var ad = currentAd;
+      // TODO: Why was this fetching previous ad if it existed?
+      // var ad = prevAd ? prevAd : currentAd;
+      const ad = currentAd;
       if (ad && ad.data) {
-        var tracking = ad.data.tracking,
-            currentEvent;
+        const { tracking } = ad.data;
+        let currentEvent;
         if (tracking) {
-          currentEvent = find(tracking, (item, index) => {
-            return item.event == type;
-          });
+          currentEvent = find(tracking, (item, index) => item.event == type);
 
           if (currentEvent && currentEvent.url) {
             OO.pixelPing(currentEvent.url);
           }
         }
 
-        var adId = _getAdId(ad);
+        const adId = _getAdId(ad);
 
         // Try to ping parent tracking events as well
-        if (this.adTrackingInfo &&
-          this.adTrackingInfo[adId] &&
-          this.adTrackingInfo[adId].wrapperParentId) {
-          var parentId = this.adTrackingInfo[adId].wrapperParentId;
-          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+        if (this.adTrackingInfo
+          && this.adTrackingInfo[adId]
+          && this.adTrackingInfo[adId].wrapperParentId) {
+          const parentId = this.adTrackingInfo[adId].wrapperParentId;
+          const parentAdTrackingObject = this.adTrackingInfo[parentId];
           if (parentAdTrackingObject) {
-            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            const parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
             _handleTrackingUrls(parentAdObject, [type]);
           }
         }
@@ -3236,39 +3182,39 @@ OO.Ads.manager(function() {
      * @method Vast#sendVpaidClickTracking
      */
     this.sendVpaidClickTracking = () => {
-      var ad = currentAd;
+      const ad = currentAd;
       if (ad && ad.data) {
         if (ad.data.videoClickTracking) {
-          var clickTracking = ad.data.videoClickTracking.clickTracking;
-          if (clickTracking){
+          const { clickTracking } = ad.data.videoClickTracking;
+          if (clickTracking) {
             OO.pixelPing(clickTracking);
           }
 
-          var customClick = ad.data.videoClickTracking.customClick;
-          if (customClick){
+          const { customClick } = ad.data.videoClickTracking;
+          if (customClick) {
             OO.pixelPing(customClick);
           }
 
-          var nonLinearClickThrough = ad.data.videoClickTracking.nonLinearClickThrough;
-          if (nonLinearClickThrough){
+          const { nonLinearClickThrough } = ad.data.videoClickTracking;
+          if (nonLinearClickThrough) {
             OO.pixelPing(nonLinearClickThrough);
           }
         }
 
-        var adId = _getAdId(ad);
+        const adId = _getAdId(ad);
 
         // Try to ping parent tracking events as well
-        if (this.adTrackingInfo &&
-          this.adTrackingInfo[adId] &&
-          this.adTrackingInfo[adId].wrapperParentId) {
-          var parentId = this.adTrackingInfo[adId].wrapperParentId;
-          var parentAdTrackingObject = this.adTrackingInfo[parentId];
+        if (this.adTrackingInfo
+          && this.adTrackingInfo[adId]
+          && this.adTrackingInfo[adId].wrapperParentId) {
+          const parentId = this.adTrackingInfo[adId].wrapperParentId;
+          const parentAdTrackingObject = this.adTrackingInfo[parentId];
           if (parentAdTrackingObject) {
-            var parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
+            const parentAdObject = this.adTrackingInfo[parentId].vastAdObject;
             if (ad.data.type === this.amc.ADTYPE.NONLINEAR_OVERLAY) {
-              _handleTrackingUrls(parentAdObject, ["nonLinearClickTracking"]);
+              _handleTrackingUrls(parentAdObject, ['nonLinearClickTracking']);
             } else {
-              _handleTrackingUrls(parentAdObject, ["linearClickTracking"]);
+              _handleTrackingUrls(parentAdObject, ['linearClickTracking']);
             }
           }
         }
@@ -3282,17 +3228,17 @@ OO.Ads.manager(function() {
      * @method Vast#_onVpaidAdEvent
      * @param {string} eventName Name of the event to process
      */
-    var _onVpaidAdEvent = function(eventName) {
+    var _onVpaidAdEvent = function (eventName) {
       switch (eventName) {
         case VPAID_EVENTS.AD_LOADED:
           vpaidAdLoaded = true;
-          //For VPAID we need to check for companions after ad is created
+          // For VPAID we need to check for companions after ad is created
           if (_isVpaidAd(currentAd)) {
             this.checkCompanionAds(currentAd.ad);
           }
           _clearVpaidTimeouts();
           vpaidAdStartedTimeout = delay(_checkVpaidAdStarted, this.VPAID_AD_STARTED_TIMEOUT);
-          _safeFunctionCall(currentAd.vpaidAd, "startAd");
+          _safeFunctionCall(currentAd.vpaidAd, 'startAd');
           initSkipAdOffset(currentAd);
           // Added to make sure we display videoSlot correctly
           this._videoSlot.style.zIndex = 10001;
@@ -3301,11 +3247,11 @@ OO.Ads.manager(function() {
         case VPAID_EVENTS.AD_STARTED:
           vpaidAdStarted = true;
           _onSizeChanged();
-          prevAd = currentAd ? currentAd : null;
+          prevAd = currentAd || null;
           this.sendVpaidTracking('creativeView');
 
           // If a timing issue with VTC causes the VPAID ad to not load, force load and play once the ad is started
-          var isLinear = _safeFunctionCall(currentAd.vpaidAd, "getAdLinear");
+          var isLinear = _safeFunctionCall(currentAd.vpaidAd, 'getAdLinear');
           if (isLinear && this._videoSlot && this._videoSlot.buffered && (this._videoSlot.buffered.length < 1)) {
             this._videoSlot.load();
             this._videoSlot.play();
@@ -3363,14 +3309,14 @@ OO.Ads.manager(function() {
           break;
 
         case VPAID_EVENTS.AD_ERROR:
-          _tryRaiseAdError('VPaid: Ad unit error: ' + arguments[1]);
+          _tryRaiseAdError(`VPaid: Ad unit error: ${arguments[1]}`);
           this.sendVpaidTracking('error');
           this.sendVpaidError();
           failedAd();
           break;
 
         case VPAID_EVENTS.AD_DURATION_CHANGE:
-          var remainingTime = _safeFunctionCall(currentAd.vpaidAd, "getAdRemainingTime");
+          var remainingTime = _safeFunctionCall(currentAd.vpaidAd, 'getAdRemainingTime');
           if (remainingTime <= 0) {
             _stopVpaidAd();
           }
@@ -3384,12 +3330,12 @@ OO.Ads.manager(function() {
           break;
 
         case VPAID_EVENTS.AD_SKIPPABLE_STATE_CHANGE:
-          var skipState = _safeFunctionCall(currentAd.vpaidAd, "getAdSkippableState");
+          var skipState = _safeFunctionCall(currentAd.vpaidAd, 'getAdSkippableState');
           this.amc.showSkipVideoAdButton(skipState, '0');
           break;
 
         case VPAID_EVENTS.AD_LINEAR_CHANGE:
-          var adLinear = _safeFunctionCall(currentAd.vpaidAd, "getAdLinear");
+          var adLinear = _safeFunctionCall(currentAd.vpaidAd, 'getAdLinear');
           transitionFromNonLinearVideo = true;
           if (adLinear) {
             _beginVpaidAd();
@@ -3398,7 +3344,7 @@ OO.Ads.manager(function() {
           break;
 
         case VPAID_EVENTS.AD_VOLUME_CHANGE:
-          var volume = _safeFunctionCall(currentAd.vpaidAd, "getAdVolume");
+          var volume = _safeFunctionCall(currentAd.vpaidAd, 'getAdVolume');
           if (volume) {
             this.sendVpaidTracking('unmute');
           } else {
@@ -3434,7 +3380,7 @@ OO.Ads.manager(function() {
      * @private
      * @method Vast#_resetAdState
      */
-    var _resetAdState = () => {
+    const _resetAdState = () => {
       _removeListeners(currentAd.vpaidAd);
       currentAd = null;
       this.currentAdBeingLoaded = null;
@@ -3465,9 +3411,9 @@ OO.Ads.manager(function() {
      * @method Vast#_hasClickUrl
      * @return {object} Ad to look for the clickthrough
      */
-    var _hasClickUrl = (ad) => {
+    const _hasClickUrl = (ad) => {
       if (ad && ad.data) {
-        var  videoClickTracking = ad.data.videoClickTracking;
+        const { videoClickTracking } = ad.data;
         if (videoClickTracking.clickThrough) {
           return videoClickTracking.clickThrough.length > 0;
         }
@@ -3483,27 +3429,27 @@ OO.Ads.manager(function() {
      * @return {boolean} VPaid validated value
      */
     var _isValidVPaid = () => {
-      var vpaidVersion = null;
-      try{
-        //TODO: Do we want int here? If so, consider var name vpaidMajorVersion
+      let vpaidVersion = null;
+      try {
+        // TODO: Do we want int here? If so, consider var name vpaidMajorVersion
         vpaidVersion = parseInt(currentAd.vpaidAd.handshakeVersion('2.0'));
       } catch (e) {
-        OO.log("VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - " + e)
+        OO.log(`VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - ${e}`);
       }
 
-      var isValid = true;
+      let isValid = true;
 
       if (vpaidVersion !== 2) {
         OO.log('VPaid Ad Unit version is not supported.');
         isValid = false;
       }
 
-      var requiredFunctions = ['handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd',
-                               'pauseAd', 'resumeAd', 'expandAd', 'collapseAd', 'subscribe', 'unsubscribe'];
+      const requiredFunctions = ['handshakeVersion', 'initAd', 'startAd', 'stopAd', 'skipAd', 'resizeAd',
+        'pauseAd', 'resumeAd', 'expandAd', 'collapseAd', 'subscribe', 'unsubscribe'];
       each(requiredFunctions, (fn) => {
         if (currentAd && currentAd.vpaidAd && typeof currentAd.vpaidAd[fn] !== 'function') {
           isValid = false;
-          OO.log('VPaid Ad Unit is missing function: ' + fn);
+          OO.log(`VPaid Ad Unit is missing function: ${fn}`);
         }
       });
 
@@ -3517,11 +3463,11 @@ OO.Ads.manager(function() {
      * @return {object} A DOM element with unique id.
      */
     var _createUniqueElement = () => {
-      var parent = this.amc.ui.playerSkinPluginsElement ?
-                              this.amc.ui.playerSkinPluginsElement[0] : this.amc.ui.pluginsElement[0];
+      const parent = this.amc.ui.playerSkinPluginsElement
+        ? this.amc.ui.playerSkinPluginsElement[0] : this.amc.ui.pluginsElement[0];
 
-      //TODO: Does this element get disposed of properly when the ad is finished?
-      var element = document.createElement('div');
+      // TODO: Does this element get disposed of properly when the ad is finished?
+      const element = document.createElement('div');
       element.id = uniqueId('pluginElement_');
       element.style.width = '100%';
       element.style.height = '100%';
@@ -3535,9 +3481,9 @@ OO.Ads.manager(function() {
      * @private
      */
     var _getFrame = () => {
-     _clearVpaidTimeouts();
-     vpaidIframeLoadedTimeout = delay(_checkVpaidIframeLoaded, this.VPAID_AD_IFRAME_TIMEOUT);
-      //TODO: Do iframes created by this function get disposed of properly after the ad is finished?
+      _clearVpaidTimeouts();
+      vpaidIframeLoadedTimeout = delay(_checkVpaidIframeLoaded, this.VPAID_AD_IFRAME_TIMEOUT);
+      // TODO: Do iframes created by this function get disposed of properly after the ad is finished?
       vpaidIframe = document.createElement('iframe');
       vpaidIframe.style.display = 'none';
       vpaidIframe.onload = _onIframeLoaded;
@@ -3550,12 +3496,12 @@ OO.Ads.manager(function() {
      * @private
      */
     var _onIframeLoaded = () => {
-      var loader = vpaidIframe.contentWindow.document.createElement('script');
+      const loader = vpaidIframe.contentWindow.document.createElement('script');
       loader.src = _cleanString(currentAd.ad.mediaFile.url);
       loader.onload = this.initializeAd;
       loader.onerror = (e) => {
         _clearVpaidTimeouts();
-        _tryRaiseAdError('VPAID: iframe load threw an error: ' + e);
+        _tryRaiseAdError(`VPAID: iframe load threw an error: ${e}`);
         _endAd(currentAd, true);
       };
       vpaidIframe.contentWindow.document.body.appendChild(loader);
@@ -3568,7 +3514,7 @@ OO.Ads.manager(function() {
      * @method Vast#_getFsState
      */
     var _getFsState = () => {
-      var fs;
+      let fs;
 
       if (document.fullscreen != null) {
         fs = document.fullscreen;
@@ -3603,12 +3549,12 @@ OO.Ads.manager(function() {
      */
     var _updateCreativeSize = () => {
       if (this._slot) {
-        var clientRect = this._slot.getBoundingClientRect();
-        var offsetWidth = this._slot.offsetWidth ? this._slot.offsetWidth : clientRect.width;
-        var offsetHeight = this._slot.offsetHeight ? this._slot.offsetHeight : clientRect.height;
-        var viewMode = _getFsState() ? 'fullscreen' : 'normal';
-        var width = viewMode === 'fullscreen' ? window.screen.width : offsetWidth;
-        var height = viewMode === 'fullscreen' ? window.screen.height : offsetHeight;
+        const clientRect = this._slot.getBoundingClientRect();
+        const offsetWidth = this._slot.offsetWidth ? this._slot.offsetWidth : clientRect.width;
+        const offsetHeight = this._slot.offsetHeight ? this._slot.offsetHeight : clientRect.height;
+        const viewMode = _getFsState() ? 'fullscreen' : 'normal';
+        const width = viewMode === 'fullscreen' ? window.screen.width : offsetWidth;
+        const height = viewMode === 'fullscreen' ? window.screen.height : offsetHeight;
         this.resize(width, height, viewMode);
       }
     };
@@ -3627,10 +3573,9 @@ OO.Ads.manager(function() {
       // only try to ping tracking urls if player is playing an ad
       if (adMode) {
         if (isFullscreen) {
-          _handleTrackingUrls(currentAd, ["fullscreen"]);
-        }
-        else if (!isFullscreen) {
-          _handleTrackingUrls(currentAd, ["exitFullscreen"]);
+          _handleTrackingUrls(currentAd, ['fullscreen']);
+        } else if (!isFullscreen) {
+          _handleTrackingUrls(currentAd, ['exitFullscreen']);
         }
       }
     };
@@ -3647,12 +3592,11 @@ OO.Ads.manager(function() {
         if (volume === 0 && volume !== lastVolume) {
           isMuted = true;
           lastVolume = volume;
-          _handleTrackingUrls(currentAd, ["mute"]);
-        }
-        else if (isMuted && volume !== lastVolume) {
+          _handleTrackingUrls(currentAd, ['mute']);
+        } else if (isMuted && volume !== lastVolume) {
           isMuted = false;
           lastVolume = volume;
-          _handleTrackingUrls(currentAd, ["unmute"]);
+          _handleTrackingUrls(currentAd, ['unmute']);
         }
       }
     };
@@ -3664,7 +3608,7 @@ OO.Ads.manager(function() {
      * @method Vast#_removeListeners
      */
     var _removeListeners = (currentAd) => {
-      var eventName;
+      let eventName;
       for (eventName in VPAID_EVENTS) {
         currentAd.unsubscribe(eventName);
       }
@@ -3681,7 +3625,7 @@ OO.Ads.manager(function() {
      */
     this.resize = (width, height, viewMode) => {
       if (currentAd && currentAd.vpaidAd) {
-        _safeFunctionCall(currentAd.vpaidAd, "resizeAd", [width, height, viewMode]);
+        _safeFunctionCall(currentAd.vpaidAd, 'resizeAd', [width, height, viewMode]);
       }
     };
 
@@ -3693,22 +3637,22 @@ OO.Ads.manager(function() {
      * @returns {boolean}
      */
     var _isVpaidAd = (ad) => {
-      var vastAdObject = _getVastAdObject(ad);
+      const vastAdObject = _getVastAdObject(ad);
       return vastAdObject.adType === 'vpaid';
     };
 
     // Helpers
     // Safely trigger an ad manager function
-    //TODO: consider error message override
+    // TODO: consider error message override
     var _safeFunctionCall = (vpaidAd, funcName, params) => {
       try {
         if (isFunction(vpaidAd[funcName])) {
           return vpaidAd[funcName].apply(vpaidAd, params);
         }
       } catch (err) {
-        _tryRaiseAdError("VPAID 2.0: " +
-          "function '" + funcName + "' threw exception -",
-          err);
+        _tryRaiseAdError(`${'VPAID 2.0: '
+          + "function '"}${funcName}' threw exception -`,
+        err);
       }
       return null;
     };
@@ -3720,7 +3664,7 @@ OO.Ads.manager(function() {
      * @param {string} errorMessage The error message
      */
     var _tryRaiseAdError = (errorMessage) => {
-      var _errorMessage = errorMessage;
+      let _errorMessage = errorMessage;
 
       // if arguments are comma separated we want to leverage console.log's ability to
       // pretty print objects rather than printing an object's toStr representation.
@@ -3730,18 +3674,16 @@ OO.Ads.manager(function() {
 
         // converts the arguments keyword to an Array.
         // arguments looks like an Array, but isn't.
-        var convertArgs = [].slice.call(arguments);
-        _errorMessage = convertArgs.join("");
-      }
-      else {
+        const convertArgs = [].slice.call(arguments);
+        _errorMessage = convertArgs.join('');
+      } else {
         OO.log(_errorMessage);
       }
 
       if (this.amc) {
         this.amc.raiseAdError(_errorMessage);
-      }
-      else {
-        OO.log("VAST: Failed to raise ad error. amc undefined.");
+      } else {
+        OO.log('VAST: Failed to raise ad error. amc undefined.');
       }
     };
   };

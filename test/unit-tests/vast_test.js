@@ -3,117 +3,120 @@
  * https://github.com/Automattic/expect.js
  */
 
-//stubs
-OO.log = function() {};
-require(COMMON_SRC_ROOT + "utils/utils.js");
-require(COMMON_SRC_ROOT + "utils/environment.js");
-require(COMMON_SRC_ROOT + "classes/emitter.js");
+// stubs
+OO.log = function () {};
+require(`${COMMON_SRC_ROOT}utils/utils.js`);
+require(`${COMMON_SRC_ROOT}utils/environment.js`);
+require(`${COMMON_SRC_ROOT}classes/emitter.js`);
 
-var sinon = require('sinon');
-var fs = require("fs");
+const sinon = require('sinon');
+const fs = require('fs');
 
-describe('ad_manager_vast', function() {
-  var amc, vastAdManager;
-  var name = "vast";
-  var originalOoAds = _.clone(OO.Ads);
-  require(TEST_ROOT + "unit-test-helpers/mock_amc.js");
-  require(TEST_ROOT + 'unit-test-helpers/mock_vpaid.js');
+describe('ad_manager_vast', function () {
+  let amc; let
+    vastAdManager;
+  const name = 'vast';
+  const originalOoAds = _.clone(OO.Ads);
+  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
+  require(`${TEST_ROOT}unit-test-helpers/mock_vpaid.js`);
 
-  var linearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear.xml"), "utf8");
-  var linearXMLNoClickthroughString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml"), "utf8");
-  var linearXML2AdsString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_linear_2_ads.xml"), "utf8");
-  var linear3_0XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_linear.xml"), "utf8");
-  var linear3_0PoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml"), "utf8");
-  var linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml"), "utf8");
-  var nonLinearXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay.xml"), "utf8");
-  var nonLinearXMLMissingURLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml"), "utf8");
-  var wrapper1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper_1.xml"), "utf8");
-  var wrapper2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_wrapper_2.xml"), "utf8");
-  var vmapAdTagPreXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_adtag_pre.xml"), "utf8");
-  var vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml"), "utf8");
-  var vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml"), "utf8");
-  var vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml"), "utf8");
-  var vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml"), "utf8");
-  var vmapInlinePoddedXMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vmap_inline_podded.xml"), "utf8");
-  var vpaidLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear.xml'), 'utf8');
-  var vpaidLinearNoValuesXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_novalues.xml'), 'utf8');
-  var vpaidNonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_nonlinear.xml'), 'utf8');
-  var vpaidNoCompanionXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_nocompanions.xml'), 'utf8');
-  var contentTypeHLS1XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_1.xml"), "utf8");
-  var contentTypeHLS2XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_2.xml"), "utf8");
-  var contentTypeHLS3XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_3.xml"), "utf8");
-  var contentTypeHLS4XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_4.xml"), "utf8");
+  const linearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear.xml'), 'utf8');
+  const linearXMLNoClickthroughString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml'), 'utf8');
+  const linearXML2AdsString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear_2_ads.xml'), 'utf8');
+  const linear3_0XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_3_0_linear.xml'), 'utf8');
+  const linear3_0PoddedXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_3_0_inline_podded.xml'), 'utf8');
+  const linear3_0MissingMediaFilesString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_3_0_missing_media_files.xml'), 'utf8');
+  const nonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_overlay.xml'), 'utf8');
+  const nonLinearXMLMissingURLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_overlay_missing_url.xml'), 'utf8');
+  const wrapper1XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_wrapper_1.xml'), 'utf8');
+  const wrapper2XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_wrapper_2.xml'), 'utf8');
+  const vmapAdTagPreXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vmap_adtag_pre.xml'), 'utf8');
+  const vmapInlinePreAdTagPostXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vmap_inline_pre_adtag_post.xml'), 'utf8');
+  const vmapInlineRepeatAdXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vmap_inline_repeatad.xml'), 'utf8');
+  const vmapInlineRepeatAdBadInput1XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input1.xml'), 'utf8');
+  const vmapInlineRepeatAdBadInput2XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vmap_inline_repeatad_bad_input2.xml'), 'utf8');
+  const vmapInlinePoddedXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vmap_inline_podded.xml'), 'utf8');
+  const vpaidLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear.xml'), 'utf8');
+  const vpaidLinearNoValuesXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_novalues.xml'), 'utf8');
+  const vpaidNonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_nonlinear.xml'), 'utf8');
+  const vpaidNoCompanionXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vpaid_linear_nocompanions.xml'), 'utf8');
+  const contentTypeHLS1XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_content_type_HLS_1.xml'), 'utf8');
+  const contentTypeHLS2XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_content_type_HLS_2.xml'), 'utf8');
+  const contentTypeHLS3XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_content_type_HLS_3.xml'), 'utf8');
+  const contentTypeHLS4XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_content_type_HLS_4.xml'), 'utf8');
 
-  var linearXML = $.parseXML(linearXMLString);
-  var linearNoClickthroughXML = $.parseXML(linearXMLNoClickthroughString);
-  var linearXML2Ads = $.parseXML(linearXML2AdsString);
-  var linear3_0XML = $.parseXML(linear3_0XMLString);
-  var linear3_0XMLPodded = $.parseXML(linear3_0PoddedXMLString);
-  var linear3_0MissingMediaFiles = $.parseXML(linear3_0MissingMediaFilesString);
-  var nonLinearXML = $.parseXML(nonLinearXMLString);
-  var nonLinearXMLMissingURL = $.parseXML(nonLinearXMLMissingURLString);
-  var vmapAdTagPre = $.parseXML(vmapAdTagPreXMLString);
-  var vmapInlinePreAdTagPost = $.parseXML(vmapInlinePreAdTagPostXMLString);
-  var vmapInlinePodded = $.parseXML(vmapInlinePoddedXMLString);
-  var vmapInlineRepeatAd = $.parseXML(vmapInlineRepeatAdXMLString);
-  var vmapInlineRepeatAdBadInput1 = $.parseXML(vmapInlineRepeatAdBadInput1XMLString);
-  var vmapInlineRepeatAdBadInput2 = $.parseXML(vmapInlineRepeatAdBadInput2XMLString);
-  var vpaidLinearXML = $.parseXML(vpaidLinearXMLString);
-  var vpaidLinearNoValuesXML = $.parseXML(vpaidLinearNoValuesXMLString);
-  var vpaidNonLinearXML = $.parseXML(vpaidNonLinearXMLString);
-  var vpaidNoCompanionXML = $.parseXML(vpaidNoCompanionXMLString);
-  var contentTypeHLS1 = $.parseXML(contentTypeHLS1XMLString);
-  var contentTypeHLS2 = $.parseXML(contentTypeHLS2XMLString);
-  var contentTypeHLS3 = $.parseXML(contentTypeHLS3XMLString);
-  var contentTypeHLS4 = $.parseXML(contentTypeHLS4XMLString);
+  const linearXML = $.parseXML(linearXMLString);
+  const linearNoClickthroughXML = $.parseXML(linearXMLNoClickthroughString);
+  const linearXML2Ads = $.parseXML(linearXML2AdsString);
+  const linear3_0XML = $.parseXML(linear3_0XMLString);
+  const linear3_0XMLPodded = $.parseXML(linear3_0PoddedXMLString);
+  const linear3_0MissingMediaFiles = $.parseXML(linear3_0MissingMediaFilesString);
+  const nonLinearXML = $.parseXML(nonLinearXMLString);
+  const nonLinearXMLMissingURL = $.parseXML(nonLinearXMLMissingURLString);
+  const vmapAdTagPre = $.parseXML(vmapAdTagPreXMLString);
+  const vmapInlinePreAdTagPost = $.parseXML(vmapInlinePreAdTagPostXMLString);
+  const vmapInlinePodded = $.parseXML(vmapInlinePoddedXMLString);
+  const vmapInlineRepeatAd = $.parseXML(vmapInlineRepeatAdXMLString);
+  const vmapInlineRepeatAdBadInput1 = $.parseXML(vmapInlineRepeatAdBadInput1XMLString);
+  const vmapInlineRepeatAdBadInput2 = $.parseXML(vmapInlineRepeatAdBadInput2XMLString);
+  const vpaidLinearXML = $.parseXML(vpaidLinearXMLString);
+  const vpaidLinearNoValuesXML = $.parseXML(vpaidLinearNoValuesXMLString);
+  const vpaidNonLinearXML = $.parseXML(vpaidNonLinearXMLString);
+  const vpaidNoCompanionXML = $.parseXML(vpaidNoCompanionXMLString);
+  const contentTypeHLS1 = $.parseXML(contentTypeHLS1XMLString);
+  const contentTypeHLS2 = $.parseXML(contentTypeHLS2XMLString);
+  const contentTypeHLS3 = $.parseXML(contentTypeHLS3XMLString);
+  const contentTypeHLS4 = $.parseXML(contentTypeHLS4XMLString);
 
-  var wrapper1XML = $.parseXML(wrapper1XMLString);
-  var wrapper2XML = $.parseXML(wrapper2XMLString);
-  var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
-  var errorType = [];
-  var adsClickthroughOpenedCalled = 0;
+  const wrapper1XML = $.parseXML(wrapper1XMLString);
+  const wrapper2XML = $.parseXML(wrapper2XMLString);
+  const playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
+  let errorType = [];
+  let adsClickthroughOpenedCalled = 0;
 
-  var initialize = function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  const initialize = function () {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t",
-      position:0,
-      url: "http://blahurl"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
+      position: 0,
+      url: 'http://blahurl',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
   };
 
-  var vpaidInitialize = function(xml) {
-    var embed_code = "embed_code",
-        preroll = {
-          type: "vast",
-          first_shown: 0,
-          frequency: 2,
-          ad_set_code: "ad_set_code",
-          time:0,
-          position_type:"t",
-          position:0,
-          url: "http://blahurl"
-        },
-        content = {
-          embed_code: embed_code,
-          ads: [preroll]
-        },
-        server = {
-          html5_ssl_ad_server: "https://blah",
-          html5_ad_server: "http://blah"
-        };
+  const vpaidInitialize = function (xml) {
+    const embed_code = 'embed_code';
+    const preroll = {
+      type: 'vast',
+      first_shown: 0,
+      frequency: 2,
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
+      position: 0,
+      url: 'http://blahurl',
+    };
+    const content = {
+      embed_code,
+      ads: [preroll],
+    };
+    const server = {
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    };
 
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata(server, {}, content);
@@ -123,40 +126,39 @@ describe('ad_manager_vast', function() {
     vastAdManager.onVastResponse(preroll, xml);
   };
 
-  var initialPlay = function() {
+  var initialPlay = function () {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
 
-  before(_.bind(function() {
+  before(_.bind(() => {
     OO.Ads = {
-      manager: function(adManager){
+      manager(adManager) {
         vastAdManager = adManager(_, $);
         vastAdManager.testMode = true;
-      }
+      },
     };
-    delete require.cache[require.resolve(SRC_ROOT + "ad_manager_vast.js")];
-    require(SRC_ROOT + "ad_manager_vast.js");
+    delete require.cache[require.resolve(`${SRC_ROOT}ad_manager_vast.js`)];
+    require(`${SRC_ROOT}ad_manager_vast.js`);
 
-    var originalTrackError = _.bind(vastAdManager.trackError, vastAdManager);
+    const originalTrackError = _.bind(vastAdManager.trackError, vastAdManager);
 
     // mock trackError function to test error tracking
     vastAdManager.trackError = function (code, currentAdId) {
       errorType.push(code);
-      if (typeof originalTrackError === "function") {
+      if (typeof originalTrackError === 'function') {
         originalTrackError(code, currentAdId);
       }
     };
-
   }, this));
 
-  after(function() {
+  after(() => {
     OO.Ads = originalOoAds;
   });
 
-  beforeEach(function() {
+  beforeEach(() => {
     amc = new fake_amc();
     amc.adManagerList = [];
-    amc.onAdManagerReady = function() {this.timeline = this.adManagerList[0].buildTimeline()};
+    amc.onAdManagerReady = function () { this.timeline = this.adManagerList[0].buildTimeline(); };
     amc.adManagerList.push(vastAdManager);
     OO.playerParams.maxVastWrapperDepth = 2;
     errorType = [];
@@ -166,17 +168,17 @@ describe('ad_manager_vast', function() {
 
     OO.pixelPing = sinon.spy();
 
-    //VPAID specifics
+    // VPAID specifics
     global.vpaid.adInit = false;
     global.vpaid.adStarted = false;
     global.vpaid.adStopped = false;
     global.vpaid.adSkipped = false;
-    global.vpaid.getVPAIDAd = function() { return new global.vpaid.VpaidAd(); };
+    global.vpaid.getVPAIDAd = function () { return new global.vpaid.VpaidAd(); };
 
     window.open = () => ({});
   });
 
-  afterEach(_.bind(function() {
+  afterEach(_.bind(() => {
     amc.timeline = [];
     vastAdManager.destroy();
     OO.playerParams.maxVastWrapperDepth = playerParamWrapperDepth;
@@ -184,44 +186,43 @@ describe('ad_manager_vast', function() {
 
   //   ------   TESTS   ------
 
-  it('Init: mock amc is ready', function(){
-    expect(typeof amc).to.be("object");
+  it('Init: mock amc is ready', () => {
+    expect(typeof amc).to.be('object');
   });
 
-  it('Init: ad manager is registered', function(){
+  it('Init: ad manager is registered', () => {
     expect(vastAdManager).to.not.be(null);
   });
 
-  it('Init: ad manager has the expected name', function(){
+  it('Init: ad manager has the expected name', () => {
     expect(vastAdManager.name).to.be(name);
   });
 
-  it('Init: ad manager handles the initialize function', function(){
-    expect(function() { vastAdManager.initialize(amc); }).to.not.throwException();
+  it('Init: ad manager handles the initialize function', () => {
+    expect(() => { vastAdManager.initialize(amc); }).to.not.throwException();
   });
 
-  it('Init: ad manager notifies amc after loading metadata', function() {
-
+  it('Init: ad manager notifies amc after loading metadata', () => {
     amc.onAdManagerReady = sinon.spy();
     amc.reportPluginLoaded = sinon.spy();
 
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
 
-    var movieMetadata = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const movieMetadata = {
+      embed_code,
+      ads: [vast_ad],
     };
-    var pbMetadata = {
-      "html5_ssl_ad_server": "https://blah",
-      "html5_ad_server": "http://blah"
+    const pbMetadata = {
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
     };
 
     vastAdManager.initialize(amc);
@@ -233,112 +234,120 @@ describe('ad_manager_vast', function() {
 
     // TODO: mock Date to always return the same value
     sinon.assert.calledOnce(amc.reportPluginLoaded);
-    const reportPluginLoadedCalls = amc.reportPluginLoaded.getCall(0)
+    const reportPluginLoadedCalls = amc.reportPluginLoaded.getCall(0);
     expect(reportPluginLoadedCalls.args[0]).to.be.a('number');
     expect(reportPluginLoadedCalls.args[1]).to.eql('vast');
   });
 
-  it('Init: ad manager is ready', function(){
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Init: ad manager is ready', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
     expect(vastAdManager.ready).to.be(false);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     expect(vastAdManager.ready).to.be(true);
   });
 
-  it('Init: preroll returned in buildTimeline()', function(){
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Init: preroll returned in buildTimeline()', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t",
-      url:"http://blahurl"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
+      url: 'http://blahurl',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
 
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
-    var timeline = amc.timeline;
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
+    const { timeline } = amc;
     expect(timeline.length).to.be(1);
     expect(timeline[0].position).to.be(0);
     expect(timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
 
-  it('Init: test midroll return in buildTimeline', function(){
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Init: test midroll return in buildTimeline', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10000,
-      position_type:"t",
-      url:"http://blahurl"
+      ad_set_code: 'ad_set_code',
+      time: 10000,
+      position_type: 't',
+      url: 'http://blahurl',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
 
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
-    var timeline = amc.timeline;
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
+    const { timeline } = amc;
     expect(timeline.length).to.be(1);
     expect(timeline[0].position).to.be(10);
-        expect(timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
+    expect(timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
 
-  it('Init: test preroll and midroll appear in buildTimeline() and prerolls loads on initialPlay', function(){
-    var embed_code = "embed_code";
-    var vast_ad_pre = {
-      type: "vast",
+  it('Init: test preroll and midroll appear in buildTimeline() and prerolls loads on initialPlay', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_pre = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t",
-      url:"0.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
+      url: '0.mp4',
     };
-    var vast_ad_mid = {
-      type: "vast",
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_pre, vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_pre, vast_ad_mid],
     };
 
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
 
-    //vastAdManager.onVastResponse(vast_ad_pre, linearXML);
+    // vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(errorType.length).to.be(0);
     expect(amc.timeline.length).to.be(2);
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
@@ -348,67 +357,71 @@ describe('ad_manager_vast', function() {
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_pre, linearXML);
     expect(errorType.length).to.be(0);
-    //test that real ad gets added to timeline when it's loaded.
+    // test that real ad gets added to timeline when it's loaded.
     expect(amc.timeline.length).to.be(3);
-    //test assumes the timeline isn't being sorted by the amc. If that changes, this will need to change accordingly.
+    // test assumes the timeline isn't being sorted by the amc. If that changes, this will need to change accordingly.
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
     expect(amc.timeline[1].adType).to.be(amc.ADTYPE.AD_REQUEST);
     expect(amc.timeline[2].adType).to.be(amc.ADTYPE.LINEAR_VIDEO);
     expect(amc.timeline[2].ad.type).to.be(undefined);
   });
 
-  it('Init: test postroll appears in buildTimeline', function(){
-    var embed_code = "embed_code";
-    var vast_ad_post = {
-      type: "vast",
+  it('Init: test postroll appears in buildTimeline', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_post = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:1000000000,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 1000000000,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_post]
+    const content = {
+      embed_code,
+      ads: [vast_ad_post],
     };
 
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     expect(amc.timeline.length).to.be(1);
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
 
-  it('should invalid vast', function(){
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('should invalid vast', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     expect(amc.timeline.length).to.be(1);
 
     initialPlay();
     vastAdManager.initialPlay();
-    vastAdManager.onVastResponse(vast_ad,'<VAST></VAST>');
+    vastAdManager.onVastResponse(vast_ad, '<VAST></VAST>');
 
     expect(errorType.length > 0).to.be(true);
     expect(amc.timeline.length).to.be(1);
     errorType = [];
 
-    vastAdManager.onVastResponse(null,linearXML);
+    vastAdManager.onVastResponse(null, linearXML);
     expect(errorType.length > 0).to.be(true);
     expect(amc.timeline.length).to.be(1);
     errorType = [];
@@ -423,34 +436,36 @@ describe('ad_manager_vast', function() {
     expect(amc.timeline.length).to.be(1);
   });
 
-  it('should parse inline linear ads', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('should parse inline linear ads', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
 
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.videoRestrictions).to.be(undefined);
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionUrl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionUrl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.linear.tracking.start).to.eql(['startUrl']);
     expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(['firstQuartileUrl']);
@@ -483,34 +498,36 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
   });
 
-  it('should parse inline non linear ads', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('should parse inline non linear ads', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql([]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionOverlayUrl', 'impressionOverlay2Url',
-        'impressionOverlay3Url', 'impressionOverlay4Url', 'impressionOverlay5Url',
-        'impressionOverlay6Url' ]);
+    expect(vastAd.ad.data.impression).to.eql(['impressionOverlayUrl', 'impressionOverlay2Url',
+      'impressionOverlay3Url', 'impressionOverlay4Url', 'impressionOverlay5Url',
+      'impressionOverlay6Url']);
     expect(vastAd.ad.data.nonLinear).not.to.be(null);
     expect(vastAd.ad.data.linear).to.eql({});
     expect(vastAd.ad.data.nonLinear.width).to.be('300');
@@ -553,8 +570,8 @@ describe('ad_manager_vast', function() {
     expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
   });
 
-  //TODO: Fix wrapper ads test
-  //it('should parse wrapper ads', function(){
+  // TODO: Fix wrapper ads test
+  // it('should parse wrapper ads', function(){
   //  var embed_code = "embed_code";
   //  var vast_ad_mid = {
   //    type: "vast",
@@ -594,246 +611,258 @@ describe('ad_manager_vast', function() {
   //  expect(vastAd.ad.data.companion[1].height).to.be('250');
   //  expect(vastAd.ad.data.companion[1].companionClickThrough).to.be('companion2ClickThroughUrl');
   //  expect(vastAd.ad.data.companion[1].tracking.creativeView).to.eql(['companion2CreativeViewUrl']);
-  //});
-  //TODO: Need to cover overlays and companions once v4 is integrated.
+  // });
+  // TODO: Need to cover overlays and companions once v4 is integrated.
 
-  //Vast 3.0 Tests
+  // Vast 3.0 Tests
 
-  //Skip Ad functionality
-  it('Vast 3.0: should provide skip ad parameters to AMC on playAd', function(){
-    var allowSkipButton = false;
-    var skipOffset = 0;
-    amc.showSkipVideoAdButton = function(allowButton, offset) {
+  // Skip Ad functionality
+  it('Vast 3.0: should provide skip ad parameters to AMC on playAd', () => {
+    let allowSkipButton = false;
+    let skipOffset = 0;
+    amc.showSkipVideoAdButton = function (allowButton, offset) {
       allowSkipButton = allowButton;
       skipOffset = offset;
     };
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
-    //value in MS. vast_3_0_linear.xml mock response has value of 00:00:05, which is 5 seconds
+    // value in MS. vast_3_0_linear.xml mock response has value of 00:00:05, which is 5 seconds
     expect(skipOffset).to.be('5');
   });
 
-  it('Vast 2.0: should not provide skip ad parameters to AMC on playAd', function(){
-    var allowSkipButton = false;
-    var skipOffset = 0;
-    amc.showSkipVideoAdButton = function(allowButton, offset) {
+  it('Vast 2.0: should not provide skip ad parameters to AMC on playAd', () => {
+    let allowSkipButton = false;
+    let skipOffset = 0;
+    amc.showSkipVideoAdButton = function (allowButton, offset) {
       allowSkipButton = allowButton;
       skipOffset = offset;
     };
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(allowSkipButton).to.be(true);
     expect(skipOffset).to.be(undefined);
   });
 
-  //TODO: Unit test for testing skipoffset with percentage value
+  // TODO: Unit test for testing skipoffset with percentage value
 
-  it('Vast 2.0: should provide ad pod position and length of 1 to AMC on playAd', function(){
-    var allowSkipButton = false;
-    var skipOffset = 0;
-    var adPodLength = -1;
-    var indexInPod = -1;
-    var adPodStartedCalled = 0;
-    amc.showSkipVideoAdButton = function(allowButton, offset) {
+  it('Vast 2.0: should provide ad pod position and length of 1 to AMC on playAd', () => {
+    let allowSkipButton = false;
+    let skipOffset = 0;
+    let adPodLength = -1;
+    let indexInPod = -1;
+    let adPodStartedCalled = 0;
+    amc.showSkipVideoAdButton = function (allowButton, offset) {
       allowSkipButton = allowButton;
       skipOffset = offset;
     };
-    amc.notifyPodStarted = function(id, podLength) {
+    amc.notifyPodStarted = function (id, podLength) {
       adPodStartedCalled++;
       adPodLength = podLength;
     };
-    amc.notifyLinearAdStarted = function(name, props) {
+    amc.notifyLinearAdStarted = function (name, props) {
       if (props) {
         indexInPod = props.indexInPod;
       }
     };
 
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     expect(adPodStartedCalled).to.be(0);
     vastAdManager.onResponse('', vast_ad_mid, linearXML);
     expect(adPodStartedCalled).to.be(1);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(1);
     expect(indexInPod).to.be(1);
   });
 
-  it('Vast 2.0: should open clickthrough url if player is clicked', function(){
-    //Vast Ad Manager regularly calls window.open here.
-    //Will instead track what we are trying to open
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('Vast 2.0: should open clickthrough url if player is clicked', () => {
+    // Vast Ad Manager regularly calls window.open here.
+    // Will instead track what we are trying to open
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
-    //1 clickthrough url is defined in vast_linear.xml
+    // 1 clickthrough url is defined in vast_linear.xml
     sinon.mock(window).expects('open').once();
     sinon.assert.calledOnce(amc.adsClickthroughOpened);
   });
 
-  it('Vast 2.0: should not open a clickthrough url if one is not defined', function(){
-    //Vast Ad Manager regularly calls window.open here.
-    //Will instead track what we are trying to open
-    var openedUrls = [];
-    vastAdManager.openUrl = function(url) {
+  it('Vast 2.0: should not open a clickthrough url if one is not defined', () => {
+    // Vast Ad Manager regularly calls window.open here.
+    // Will instead track what we are trying to open
+    const openedUrls = [];
+    vastAdManager.openUrl = function (url) {
       if (url) {
         openedUrls.push(url);
         return true;
       }
       return false;
     };
-    amc.adsClickthroughOpened = function() {
+    amc.adsClickthroughOpened = function () {
       adsClickthroughOpenedCalled += 1;
     };
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linearNoClickthroughXML);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     expect(openedUrls.length).to.be(0);
     expect(adsClickthroughOpenedCalled).to.be(0);
   });
 
-  it('Vast 2.0: should play multiple ads if multiple ads are defined', function(){
-    var adQueue = [];
-    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
-      var adData = {
-        "adManager": adManager,
-        "adType": adType,
-        "ad": ad,
-        "streams":streams,
-        "position": -1 //we want it to play immediately
+  it('Vast 2.0: should play multiple ads if multiple ads are defined', () => {
+    const adQueue = [];
+    amc.forceAdToPlay = function (adManager, ad, adType, streams) {
+      const adData = {
+        adManager,
+        adType,
+        ad,
+        streams,
+        position: -1, // we want it to play immediately
       };
-      var newAd = new amc.Ad(adData);
+      const newAd = new amc.Ad(adData);
       adQueue.push(newAd);
     };
 
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linearXML2Ads);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    let vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654644');
     vastAdManager.playAd(vastAd);
@@ -842,8 +871,8 @@ describe('ad_manager_vast', function() {
     vastAdManager.adVideoEnded();
     vastAd = adQueue[0];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654645');
     vastAdManager.playAd(vastAd);
@@ -852,46 +881,48 @@ describe('ad_manager_vast', function() {
     vastAdManager.adVideoEnded();
   });
 
-  it('Vast 3.0: should parse inline linear podded ads', function(){
-    var adQueue = [];
-    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
-      var adData = {
-        "adManager": adManager,
-        "adType": adType,
-        "ad": ad,
-        "streams":streams,
-        "position": -1 //we want it to play immediately
+  it('Vast 3.0: should parse inline linear podded ads', () => {
+    const adQueue = [];
+    amc.forceAdToPlay = function (adManager, ad, adType, streams) {
+      const adData = {
+        adManager,
+        adType,
+        ad,
+        streams,
+        position: -1, // we want it to play immediately
       };
-      var newAd = new amc.Ad(adData);
+      const newAd = new amc.Ad(adData);
       adQueue.push(newAd);
     };
 
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
-    var vastAd = amc.timeline[1];
+    let vastAd = amc.timeline[1];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654646');
     vastAdManager.playAd(vastAd);
@@ -900,8 +931,8 @@ describe('ad_manager_vast', function() {
     vastAdManager.adVideoEnded();
     vastAd = adQueue[0];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654645');
     vastAdManager.playAd(vastAd);
@@ -910,8 +941,8 @@ describe('ad_manager_vast', function() {
     vastAdManager.adVideoEnded();
     vastAd = adQueue[1];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654644');
     vastAdManager.playAd(vastAd);
@@ -920,55 +951,57 @@ describe('ad_manager_vast', function() {
     vastAdManager.adVideoEnded();
   });
 
-  it('Vast 3.0: should provide proper ad pod positions and length to AMC on playAd', function(){
-    var adPodLength = -1;
-    var indexInPod = -1;
-    var adQueue = [];
+  it('Vast 3.0: should provide proper ad pod positions and length to AMC on playAd', () => {
+    let adPodLength = -1;
+    let indexInPod = -1;
+    const adQueue = [];
 
-    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
-      var adData = {
-        "adManager": adManager,
-        "adType": adType,
-        "ad": ad,
-        "streams":streams,
-        "position": -1 //we want it to play immediately
+    amc.forceAdToPlay = function (adManager, ad, adType, streams) {
+      const adData = {
+        adManager,
+        adType,
+        ad,
+        streams,
+        position: -1, // we want it to play immediately
       };
-      var newAd = new amc.Ad(adData);
+      const newAd = new amc.Ad(adData);
       adQueue.push(newAd);
     };
 
-    amc.notifyPodStarted = function(id, podLength) {
+    amc.notifyPodStarted = function (id, podLength) {
       adPodLength = podLength;
     };
-    amc.notifyLinearAdStarted = function(name, props) {
+    amc.notifyLinearAdStarted = function (name, props) {
       if (props) {
         indexInPod = props.indexInPod;
       }
     };
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[1];
+    let vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(3);
     expect(indexInPod).to.be(1);
@@ -991,65 +1024,67 @@ describe('ad_manager_vast', function() {
     vastAdManager.adVideoEnded();
   });
 
-  it('Vast 3.0: AMC is notified of linear/nonlinear ad start/end and pod start/end', function(){
-    var nonLinearStartNotified = 0;
-    var podStartNotified = 0;
-    var podEndNotified = 0;
-    var linearStartNotified = 0;
-    var linearEndNotified = 0;
-    var adQueue = [];
+  it('Vast 3.0: AMC is notified of linear/nonlinear ad start/end and pod start/end', () => {
+    let nonLinearStartNotified = 0;
+    let podStartNotified = 0;
+    let podEndNotified = 0;
+    let linearStartNotified = 0;
+    let linearEndNotified = 0;
+    const adQueue = [];
 
-    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
-      var adData = {
-        "adManager": adManager,
-        "adType": adType,
-        "ad": ad,
-        "streams":streams,
-        "position": -1 //we want it to play immediately
+    amc.forceAdToPlay = function (adManager, ad, adType, streams) {
+      const adData = {
+        adManager,
+        adType,
+        ad,
+        streams,
+        position: -1, // we want it to play immediately
       };
-      var newAd = new amc.Ad(adData);
+      const newAd = new amc.Ad(adData);
       adQueue.push(newAd);
     };
 
-    amc.notifyPodStarted = function() {
+    amc.notifyPodStarted = function () {
       podStartNotified++;
     };
-    amc.notifyPodEnded = function() {
+    amc.notifyPodEnded = function () {
       podEndNotified++;
     };
-    amc.notifyLinearAdStarted = function() {
+    amc.notifyLinearAdStarted = function () {
       linearStartNotified++;
     };
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function () {
       linearEndNotified++;
     };
-    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+    amc.sendURLToLoadAndPlayNonLinearAd = function () {
       nonLinearStartNotified++;
     };
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[1];
+    let vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(0);
@@ -1097,7 +1132,7 @@ describe('ad_manager_vast', function() {
     expect(linearEndNotified).to.be(3);
     expect(nonLinearStartNotified).to.be(0);
 
-    //overlay
+    // overlay
     vastAd = adQueue[2];
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
@@ -1107,168 +1142,172 @@ describe('ad_manager_vast', function() {
     expect(nonLinearStartNotified).to.be(1);
   });
 
-  it('Vast 3.0: On ad timeout, fallback ad will be shown', function(){
-    var nonLinearStartNotified = 0;
-    var podStartNotified = 0;
-    var podEndNotified = 0;
-    var linearStartNotified = 0;
-    var linearEndNotified = 0;
-    var adQueue = [];
+  it('Vast 3.0: On ad timeout, fallback ad will be shown', () => {
+    let nonLinearStartNotified = 0;
+    let podStartNotified = 0;
+    let podEndNotified = 0;
+    let linearStartNotified = 0;
+    let linearEndNotified = 0;
+    const adQueue = [];
 
-    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
-      var adData = {
-        "adManager": adManager,
-        "adType": adType,
-        "ad": ad,
-        "streams":streams,
-        "position": -1 //we want it to play immediately
+    amc.forceAdToPlay = function (adManager, ad, adType, streams) {
+      const adData = {
+        adManager,
+        adType,
+        ad,
+        streams,
+        position: -1, // we want it to play immediately
       };
-      var newAd = new amc.Ad(adData);
+      const newAd = new amc.Ad(adData);
       adQueue.push(newAd);
     };
 
-    amc.notifyPodStarted = function() {
+    amc.notifyPodStarted = function () {
       podStartNotified++;
     };
-    amc.notifyPodEnded = function() {
+    amc.notifyPodEnded = function () {
       podEndNotified++;
     };
-    amc.notifyLinearAdStarted = function() {
+    amc.notifyLinearAdStarted = function () {
       linearStartNotified++;
     };
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function () {
       linearEndNotified++;
     };
-    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+    amc.sendURLToLoadAndPlayNonLinearAd = function () {
       nonLinearStartNotified++;
     };
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[1];
+    let vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654646');
 
     vastAdManager.cancelAd(vastAd, {
-      code : amc.AD_CANCEL_CODE.TIMEOUT
+      code: amc.AD_CANCEL_CODE.TIMEOUT,
     });
     vastAd = adQueue[0];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654600');
   });
 
-  it('Vast 3.0: On ad playback error, fallback ad will be shown', function(){
-    var nonLinearStartNotified = 0;
-    var podStartNotified = 0;
-    var podEndNotified = 0;
-    var linearStartNotified = 0;
-    var linearEndNotified = 0;
-    var adQueue = [];
+  it('Vast 3.0: On ad playback error, fallback ad will be shown', () => {
+    let nonLinearStartNotified = 0;
+    let podStartNotified = 0;
+    let podEndNotified = 0;
+    let linearStartNotified = 0;
+    let linearEndNotified = 0;
+    const adQueue = [];
 
-    amc.forceAdToPlay = function(adManager, ad, adType, streams) {
-      var adData = {
-        "adManager": adManager,
-        "adType": adType,
-        "ad": ad,
-        "streams":streams,
-        "position": -1 //we want it to play immediately
+    amc.forceAdToPlay = function (adManager, ad, adType, streams) {
+      const adData = {
+        adManager,
+        adType,
+        ad,
+        streams,
+        position: -1, // we want it to play immediately
       };
-      var newAd = new amc.Ad(adData);
+      const newAd = new amc.Ad(adData);
       adQueue.push(newAd);
     };
 
-    amc.notifyPodStarted = function() {
+    amc.notifyPodStarted = function () {
       podStartNotified++;
     };
-    amc.notifyPodEnded = function() {
+    amc.notifyPodEnded = function () {
       podEndNotified++;
     };
-    amc.notifyLinearAdStarted = function() {
+    amc.notifyLinearAdStarted = function () {
       linearStartNotified++;
     };
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function () {
       linearEndNotified++;
     };
-    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+    amc.sendURLToLoadAndPlayNonLinearAd = function () {
       nonLinearStartNotified++;
     };
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0XMLPodded);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[1];
+    let vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654646');
 
     vastAdManager.adVideoError();
     vastAd = adQueue[0];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql([ 'errorurl' ]);
-    expect(vastAd.ad.data.impression).to.eql([ 'impressionurl' ]);
+    expect(vastAd.ad.data.error).to.eql(['errorurl']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
     expect(vastAd.ad.data.linear).not.to.be(null);
     expect(vastAd.ad.data.id).to.be('6654600');
   });
 
-  it('Vast 3.0, Error Reporting: adTrackingInfo should parse the correct number of errorURLs and ads', function(){
-    var jqueryAds = $(linearXML).find("Ad");
+  it('Vast 3.0, Error Reporting: adTrackingInfo should parse the correct number of errorURLs and ads', () => {
+    let jqueryAds = $(linearXML).find('Ad');
     vastAdManager.getErrorTrackingInfo(linearXML, jqueryAds);
     // should have one ad
-    var adIDs = _.keys(vastAdManager.adTrackingInfo);
+    let adIDs = _.keys(vastAdManager.adTrackingInfo);
     expect(adIDs.length).to.be(1);
     // should have only one errorurl
-    var adErrorInfo = vastAdManager.adTrackingInfo[adIDs[0]];
+    let adErrorInfo = vastAdManager.adTrackingInfo[adIDs[0]];
     expect(adErrorInfo.errorURLs.length).to.be(1);
     vastAdManager.adTrackingInfo = {};
 
-    jqueryAds = $(nonLinearXML).find("Ad");
+    jqueryAds = $(nonLinearXML).find('Ad');
     vastAdManager.getErrorTrackingInfo(nonLinearXML, jqueryAds);
     // should have one ad
     adIDs = _.keys(vastAdManager.adTrackingInfo);
@@ -1345,29 +1384,29 @@ describe('ad_manager_vast', function() {
    *  });
    */
 
-  it('Vast 3.0, Error Reporting: should report XML parsing error', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('Vast 3.0, Error Reporting: should report XML parsing error', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg",
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
 
-    var vast_ad_request = {
-      adManager:"vast",
+    const vast_ad_request = {
+      adManager: 'vast',
       ad: {
-        type:vastAdManager.AD_REQUEST_TYPE,
-        url:"1.jpg"
-        }
+        type: vastAdManager.AD_REQUEST_TYPE,
+        url: '1.jpg',
+      },
     };
 
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
 
     vastAdManager.initialize(amc);
@@ -1380,45 +1419,45 @@ describe('ad_manager_vast', function() {
     expect(_.contains(errorType, vastAdManager.ERROR_CODES.XML_PARSING)).to.be(true);
   });
 
-  it('Vast 3.0, Error Reporting: Should report unsupported vast version error', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('Vast 3.0, Error Reporting: Should report unsupported vast version error', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
 
-    vastAdManager.isValidVastVersion("");
+    vastAdManager.isValidVastVersion('');
     expect(_.contains(errorType, vastAdManager.ERROR_CODES.VERSION_UNSUPPORTED)).to.be(true);
   });
 
-  it('Vast 3.0, Error Reporting: Should report schema validation error', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('Vast 3.0, Error Reporting: Should report schema validation error', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
 
-    vastAdManager.isValidRootTagName("");
+    vastAdManager.isValidRootTagName('');
     expect(_.contains(errorType, vastAdManager.ERROR_CODES.SCHEMA_VALIDATION)).to.be(true);
   });
 
@@ -1452,73 +1491,72 @@ describe('ad_manager_vast', function() {
    *  });
    */
 
-  it('Vast 3.0, Error Reporting: Should report general linear ads error', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('Vast 3.0, Error Reporting: Should report general linear ads error', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
 
     // setup parameters so nonlinear ad fails because there are no mediaFiles in XML
     // but still pings error url if there is an error tag
     vastAdManager.adTrackingInfo = {
-      "linearAd1": {}
+      linearAd1: {},
     };
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0MissingMediaFiles);
     sinon.assert.calledOnce(OO.pixelPing);
-    sinon.assert.calledWith(OO.pixelPing, `errorurl`);
+    sinon.assert.calledWith(OO.pixelPing, 'errorurl');
   });
 
-  it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', function(){
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', () => {
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
 
     // setup parameters so nonlinear ad fails because there is no ad url
     // but still pings error url if there is an error tag
     vastAdManager.adTrackingInfo = {
-      "nonLinearAd1": {}
+      nonLinearAd1: {},
     };
 
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXMLMissingURL);
     sinon.assert.calledOnce(OO.pixelPing);
-    sinon.assert.calledWith(OO.pixelPing, `errorurl`);
+    sinon.assert.calledWith(OO.pixelPing, 'errorurl');
   });
 
-  it('Vast 3.0, VMAP: Should call onVMAPResponse if there is a VMAP XML response', function() {
-    var onVMAPResponseCalled = false;
-    var onVastResponseCalled = false;
+  it('Vast 3.0, VMAP: Should call onVMAPResponse if there is a VMAP XML response', () => {
+    let onVMAPResponseCalled = false;
+    let onVastResponseCalled = false;
 
-    vastAdManager.onResponse = function(adLoaded, xml) {
-      var jqueryXML = $(xml);
-      var vmap = jqueryXML.find("vmap\\:VMAP, VMAP");
+    vastAdManager.onResponse = function (adLoaded, xml) {
+      const jqueryXML = $(xml);
+      const vmap = jqueryXML.find('vmap\\:VMAP, VMAP');
       if (vmap.length > 0) {
         onVMAPResponseCalled = true;
-      }
-      else {
+      } else {
         onVastResponseCalled = true;
       }
     };
@@ -1528,945 +1566,949 @@ describe('ad_manager_vast', function() {
     expect(onVastResponseCalled).to.be(false);
   });
 
-  it('Vast 3.0, VMAP, AdTag Pre-roll: Should parse AdTagURI and TrackingEvents properly', function() {
+  it('Vast 3.0, VMAP, AdTag Pre-roll: Should parse AdTagURI and TrackingEvents properly', () => {
     vastAdManager.onVMAPResponse(vmapAdTagPre);
-    var adBreaks = vastAdManager.adBreaks;
+    const { adBreaks } = vastAdManager;
     expect(adBreaks.length).to.be(1);
 
-    var adBreak = adBreaks[0];
-    expect(adBreak.timeOffset).to.be("start");
-    expect(adBreak.breakType).to.be("linear");
-    expect(adBreak.breakId).to.be("preroll");
+    const adBreak = adBreaks[0];
+    expect(adBreak.timeOffset).to.be('start');
+    expect(adBreak.breakType).to.be('linear');
+    expect(adBreak.breakId).to.be('preroll');
 
     expect(adBreak.adSource).not.to.be(null);
 
-    var adSource = adBreak.adSource;
-    expect(adSource.id).to.be("preroll-ad-1");
-    expect(adSource.allowMultipleAds).to.be("false");
-    expect(adSource.followRedirects).to.be("true");
-    expect(adSource.adTagURI).to.be("adTagURI");
+    const { adSource } = adBreak;
+    expect(adSource.id).to.be('preroll-ad-1');
+    expect(adSource.allowMultipleAds).to.be('false');
+    expect(adSource.followRedirects).to.be('true');
+    expect(adSource.adTagURI).to.be('adTagURI');
 
-    var trackingEvents = adBreak.trackingEvents;
-    expect(trackingEvents[0].eventName).to.be("breakStart");
-    expect(trackingEvents[1].eventName).to.be("error");
-    expect(trackingEvents[0].url).to.be("trackingURL");
-    expect(trackingEvents[1].url).to.be("errorURL");
+    const { trackingEvents } = adBreak;
+    expect(trackingEvents[0].eventName).to.be('breakStart');
+    expect(trackingEvents[1].eventName).to.be('error');
+    expect(trackingEvents[0].url).to.be('trackingURL');
+    expect(trackingEvents[1].url).to.be('errorURL');
   });
 
-  it('Vast 3.0, VMAP, Inline Pre-roll Overlay, Post-roll: Should parse overlay and post-roll properly', function() {
+  it('Vast 3.0, VMAP, Inline Pre-roll Overlay, Post-roll: Should parse overlay and post-roll properly', () => {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlinePreAdTagPost);
-    var adBreaks = vastAdManager.adBreaks;
+    const { adBreaks } = vastAdManager;
     expect(adBreaks.length).to.be(2);
 
-    var prerollAdBreak = adBreaks[0];
-    expect(prerollAdBreak.timeOffset).to.be("start");
-    expect(prerollAdBreak.breakType).to.be("linear");
-    expect(prerollAdBreak.breakId).to.be("preroll");
+    const prerollAdBreak = adBreaks[0];
+    expect(prerollAdBreak.timeOffset).to.be('start');
+    expect(prerollAdBreak.breakType).to.be('linear');
+    expect(prerollAdBreak.breakId).to.be('preroll');
 
     expect(prerollAdBreak.adSource).not.to.be(null);
 
-    var prerollAdSource = prerollAdBreak.adSource;
-    expect(prerollAdSource.id).to.be("preroll-ad-1");
-    expect(prerollAdSource.allowMultipleAds).to.be("true");
-    expect(prerollAdSource.followRedirects).to.be("true");
+    const prerollAdSource = prerollAdBreak.adSource;
+    expect(prerollAdSource.id).to.be('preroll-ad-1');
+    expect(prerollAdSource.allowMultipleAds).to.be('true');
+    expect(prerollAdSource.followRedirects).to.be('true');
     expect(prerollAdSource.adTagURI).to.be(undefined);
     expect(prerollAdSource.VASTAdData).not.to.be(null);
 
-    var trackingEvents = prerollAdBreak.trackingEvents;
-    expect(trackingEvents[0].eventName).to.be("breakStart");
-    expect(trackingEvents[1].eventName).to.be("error");
-    expect(trackingEvents[0].url).to.be("trackingURL");
-    expect(trackingEvents[1].url).to.be("errorURL");
+    const { trackingEvents } = prerollAdBreak;
+    expect(trackingEvents[0].eventName).to.be('breakStart');
+    expect(trackingEvents[1].eventName).to.be('error');
+    expect(trackingEvents[0].url).to.be('trackingURL');
+    expect(trackingEvents[1].url).to.be('errorURL');
 
-    var vastAd = amc.timeline[0];
+    const vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');
-    expect(vastAd.ad.data.error).to.eql(["Error URL"]);
-    expect(vastAd.ad.data.impression).to.eql(["Impression"]);
+    expect(vastAd.ad.data.error).to.eql(['Error URL']);
+    expect(vastAd.ad.data.impression).to.eql(['Impression']);
     expect(vastAd.ad.data.nonLinear).not.to.be(null);
     expect(vastAd.ad.data.linear).to.eql({});
-    expect(vastAd.ad.data.nonLinear.width).to.be("480");
-    expect(vastAd.ad.data.nonLinear.height).to.be("70");
-    expect(vastAd.ad.data.nonLinear.minSuggestedDuration).to.be("00:00:05");
-    expect(vastAd.ad.data.nonLinear.scalable).to.be("true");
-    expect(vastAd.ad.data.nonLinear.maintainAspectRatio).to.be("true");
+    expect(vastAd.ad.data.nonLinear.width).to.be('480');
+    expect(vastAd.ad.data.nonLinear.height).to.be('70');
+    expect(vastAd.ad.data.nonLinear.minSuggestedDuration).to.be('00:00:05');
+    expect(vastAd.ad.data.nonLinear.scalable).to.be('true');
+    expect(vastAd.ad.data.nonLinear.maintainAspectRatio).to.be('true');
     expect(vastAd.ad.data.nonLinear.nonLinearClickThrough).to.be('nonLinearClickThroughURL');
-    expect(vastAd.ad.data.nonLinear.type).to.be("static");
-    expect(vastAd.ad.data.nonLinear.data).to.be("staticResourceURL");
-    expect(vastAd.ad.data.nonLinear.url).to.be("staticResourceURL");
-    expect(vastAd.ad.data.nonLinear.tracking.start).to.eql(["startEventURL"]);
-    expect(vastAd.ad.data.nonLinear.tracking.firstQuartile).to.eql(["firstQuartileEventURL"]);
-    expect(vastAd.ad.data.nonLinear.tracking.midpoint).to.eql(["midpointEventURL"]);
+    expect(vastAd.ad.data.nonLinear.type).to.be('static');
+    expect(vastAd.ad.data.nonLinear.data).to.be('staticResourceURL');
+    expect(vastAd.ad.data.nonLinear.url).to.be('staticResourceURL');
+    expect(vastAd.ad.data.nonLinear.tracking.start).to.eql(['startEventURL']);
+    expect(vastAd.ad.data.nonLinear.tracking.firstQuartile).to.eql(['firstQuartileEventURL']);
+    expect(vastAd.ad.data.nonLinear.tracking.midpoint).to.eql(['midpointEventURL']);
 
-    var postrollAdBreak = adBreaks[1];
-    expect(postrollAdBreak.timeOffset).to.be("end");
-    expect(postrollAdBreak.breakType).to.be("linear");
-    expect(postrollAdBreak.breakId).to.be("postroll");
+    const postrollAdBreak = adBreaks[1];
+    expect(postrollAdBreak.timeOffset).to.be('end');
+    expect(postrollAdBreak.breakType).to.be('linear');
+    expect(postrollAdBreak.breakId).to.be('postroll');
 
     expect(postrollAdBreak.adSource).not.to.be(null);
 
-    var postrollAdSource = postrollAdBreak.adSource;
-    expect(postrollAdSource.id).to.be("postroll-ad-1");
-    expect(postrollAdSource.allowMultipleAds).to.be("false");
-    expect(postrollAdSource.followRedirects).to.be("true");
-    expect(postrollAdSource.adTagURI).to.be("adTagURI");
+    const postrollAdSource = postrollAdBreak.adSource;
+    expect(postrollAdSource.id).to.be('postroll-ad-1');
+    expect(postrollAdSource.allowMultipleAds).to.be('false');
+    expect(postrollAdSource.followRedirects).to.be('true');
+    expect(postrollAdSource.adTagURI).to.be('adTagURI');
   });
 
-  it('Vast 3.0, VMAP: Should parse AdBreak with repeatAfter attribute properly', function() {
+  it('Vast 3.0, VMAP: Should parse AdBreak with repeatAfter attribute properly', () => {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlineRepeatAd);
-    var adBreaks = vastAdManager.adBreaks;
+    const { adBreaks } = vastAdManager;
     expect(adBreaks.length).to.be(3);
 
-    var firstRepeatAdBreak = adBreaks[0];
-    expect(firstRepeatAdBreak.timeOffset).to.be("start");
-    expect(firstRepeatAdBreak.breakType).to.be("linear");
-    expect(firstRepeatAdBreak.breakId).to.be("repeat");
-    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:05");
+    const firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.timeOffset).to.be('start');
+    expect(firstRepeatAdBreak.breakType).to.be('linear');
+    expect(firstRepeatAdBreak.breakId).to.be('repeat');
+    expect(firstRepeatAdBreak.repeatAfter).to.be('00:00:05');
 
     expect(firstRepeatAdBreak.adSource).not.to.be(null);
 
-    var firstRepeatAdSource = firstRepeatAdBreak.adSource;
-    expect(firstRepeatAdSource.id).to.be("repeat-ad-1");
-    expect(firstRepeatAdSource.allowMultipleAds).to.be("true");
-    expect(firstRepeatAdSource.followRedirects).to.be("true");
+    const firstRepeatAdSource = firstRepeatAdBreak.adSource;
+    expect(firstRepeatAdSource.id).to.be('repeat-ad-1');
+    expect(firstRepeatAdSource.allowMultipleAds).to.be('true');
+    expect(firstRepeatAdSource.followRedirects).to.be('true');
     expect(firstRepeatAdSource.adTagURI).to.be(undefined);
     expect(firstRepeatAdSource.VASTAdData).not.to.be(null);
 
-    var trackingEvents = firstRepeatAdBreak.trackingEvents;
-    expect(trackingEvents[0].eventName).to.be("breakStart");
-    expect(trackingEvents[1].eventName).to.be("error");
-    expect(trackingEvents[0].url).to.be("trackingurl1");
-    expect(trackingEvents[1].url).to.be("errorurl1");
+    let { trackingEvents } = firstRepeatAdBreak;
+    expect(trackingEvents[0].eventName).to.be('breakStart');
+    expect(trackingEvents[1].eventName).to.be('error');
+    expect(trackingEvents[0].url).to.be('trackingurl1');
+    expect(trackingEvents[1].url).to.be('errorurl1');
 
-    var vastAd = amc.timeline[0];
-    expect(vastAd.ad).to.be.an("object");
-    expect(vastAd.ad.data.error).to.eql(["errorurl1"]);
-    expect(vastAd.ad.data.impression).to.eql(["impressionurl1"]);
+    let vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql(['errorurl1']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl1']);
     expect(vastAd.ad.data.linear).not.to.be(null);
-    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
-    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
-    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl1"]);
-    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl1"]);
-    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl1"]);
-    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl1");
+    expect(vastAd.ad.data.linear.duration).to.eql('00:00:52');
+    expect(vastAd.ad.data.linear.skipOffset).to.be('00:00:05');
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(['starturl1']);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(['firstquartileurl1']);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(['midpointurl1']);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql('clickthroughurl1');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
     expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
-    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
-    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
-    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
-    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be('330');
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be('640');
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be('360');
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('video/mp4');
     expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
-    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be('1.mp4');
     expect(vastAd.ad.repeatAfter).to.be(5);
 
-    var secondRepeatAdBreak = adBreaks[1];
-    expect(secondRepeatAdBreak.timeOffset).to.be("start");
-    expect(secondRepeatAdBreak.breakType).to.be("linear");
-    expect(secondRepeatAdBreak.breakId).to.be("repeat");
-    expect(secondRepeatAdBreak.repeatAfter).to.be("00:00:10");
+    const secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.timeOffset).to.be('start');
+    expect(secondRepeatAdBreak.breakType).to.be('linear');
+    expect(secondRepeatAdBreak.breakId).to.be('repeat');
+    expect(secondRepeatAdBreak.repeatAfter).to.be('00:00:10');
 
     expect(secondRepeatAdBreak.adSource).not.to.be(null);
 
-    var secondRepeatAdSource = secondRepeatAdBreak.adSource;
-    expect(secondRepeatAdSource.id).to.be("repeat-ad-2");
-    expect(secondRepeatAdSource.allowMultipleAds).to.be("true");
-    expect(secondRepeatAdSource.followRedirects).to.be("true");
+    const secondRepeatAdSource = secondRepeatAdBreak.adSource;
+    expect(secondRepeatAdSource.id).to.be('repeat-ad-2');
+    expect(secondRepeatAdSource.allowMultipleAds).to.be('true');
+    expect(secondRepeatAdSource.followRedirects).to.be('true');
     expect(secondRepeatAdSource.adTagURI).to.be(undefined);
     expect(secondRepeatAdSource.VASTAdData).not.to.be(null);
 
     trackingEvents = secondRepeatAdBreak.trackingEvents;
-    expect(trackingEvents[0].eventName).to.be("breakStart");
-    expect(trackingEvents[1].eventName).to.be("error");
-    expect(trackingEvents[0].url).to.be("trackingurl2");
-    expect(trackingEvents[1].url).to.be("errorurl2");
+    expect(trackingEvents[0].eventName).to.be('breakStart');
+    expect(trackingEvents[1].eventName).to.be('error');
+    expect(trackingEvents[0].url).to.be('trackingurl2');
+    expect(trackingEvents[1].url).to.be('errorurl2');
 
     vastAd = amc.timeline[1];
-    expect(vastAd.ad).to.be.an("object");
-    expect(vastAd.ad.data.error).to.eql(["errorurl2"]);
-    expect(vastAd.ad.data.impression).to.eql(["impressionurl2"]);
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql(['errorurl2']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl2']);
     expect(vastAd.ad.data.linear).not.to.be(null);
-    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
-    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
-    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl2"]);
-    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl2"]);
-    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl2"]);
-    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl2");
+    expect(vastAd.ad.data.linear.duration).to.eql('00:00:52');
+    expect(vastAd.ad.data.linear.skipOffset).to.be('00:00:05');
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(['starturl2']);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(['firstquartileurl2']);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(['midpointurl2']);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql('clickthroughurl2');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
     expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
-    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
-    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
-    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
-    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be('330');
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be('640');
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be('360');
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('video/mp4');
     expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
-    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be('1.mp4');
     expect(vastAd.ad.repeatAfter).to.be(10);
 
-    var thirdAdBreak = adBreaks[2];
-    expect(thirdAdBreak.timeOffset).to.be("00:00:15");
-    expect(thirdAdBreak.breakType).to.be("linear");
-    expect(thirdAdBreak.breakId).to.be("midroll");
+    const thirdAdBreak = adBreaks[2];
+    expect(thirdAdBreak.timeOffset).to.be('00:00:15');
+    expect(thirdAdBreak.breakType).to.be('linear');
+    expect(thirdAdBreak.breakId).to.be('midroll');
     expect(thirdAdBreak.repeatAfter).to.be(undefined);
 
     expect(thirdAdBreak.adSource).not.to.be(null);
 
-    var thirdAdSource = thirdAdBreak.adSource;
-    expect(thirdAdSource.id).to.be("midroll-ad-1");
-    expect(thirdAdSource.allowMultipleAds).to.be("false");
-    expect(thirdAdSource.followRedirects).to.be("false");
+    const thirdAdSource = thirdAdBreak.adSource;
+    expect(thirdAdSource.id).to.be('midroll-ad-1');
+    expect(thirdAdSource.allowMultipleAds).to.be('false');
+    expect(thirdAdSource.followRedirects).to.be('false');
     expect(thirdAdSource.adTagURI).to.be(undefined);
     expect(thirdAdSource.VASTAdData).not.to.be(null);
 
     trackingEvents = thirdAdBreak.trackingEvents;
-    expect(trackingEvents[0].eventName).to.be("breakStart");
-    expect(trackingEvents[1].eventName).to.be("error");
-    expect(trackingEvents[0].url).to.be("trackingurl3");
-    expect(trackingEvents[1].url).to.be("errorurl3");
+    expect(trackingEvents[0].eventName).to.be('breakStart');
+    expect(trackingEvents[1].eventName).to.be('error');
+    expect(trackingEvents[0].url).to.be('trackingurl3');
+    expect(trackingEvents[1].url).to.be('errorurl3');
 
     vastAd = amc.timeline[2];
-    expect(vastAd.ad).to.be.an("object");
-    expect(vastAd.ad.data.error).to.eql(["errorurl3"]);
-    expect(vastAd.ad.data.impression).to.eql(["impressionurl3"]);
+    expect(vastAd.ad).to.be.an('object');
+    expect(vastAd.ad.data.error).to.eql(['errorurl3']);
+    expect(vastAd.ad.data.impression).to.eql(['impressionurl3']);
     expect(vastAd.ad.data.linear).not.to.be(null);
-    expect(vastAd.ad.data.linear.duration).to.eql("00:00:52");
-    expect(vastAd.ad.data.linear.skipOffset).to.be("00:00:05");
-    expect(vastAd.ad.data.linear.tracking.start).to.eql(["starturl3"]);
-    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(["firstquartileurl3"]);
-    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(["midpointurl3"]);
-    expect(vastAd.ad.data.linear.clickThrough).to.eql("clickthroughurl3");
+    expect(vastAd.ad.data.linear.duration).to.eql('00:00:52');
+    expect(vastAd.ad.data.linear.skipOffset).to.be('00:00:05');
+    expect(vastAd.ad.data.linear.tracking.start).to.eql(['starturl3']);
+    expect(vastAd.ad.data.linear.tracking.firstQuartile).to.eql(['firstquartileurl3']);
+    expect(vastAd.ad.data.linear.tracking.midpoint).to.eql(['midpointurl3']);
+    expect(vastAd.ad.data.linear.clickThrough).to.eql('clickthroughurl3');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
     expect(vastAd.ad.data.linear.mediaFiles[0].id).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].delivery).to.be(undefined);
-    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be("330");
-    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be("640");
-    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be("360");
-    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("video/mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].bitrate).to.be('330');
+    expect(vastAd.ad.data.linear.mediaFiles[0].width).to.be('640');
+    expect(vastAd.ad.data.linear.mediaFiles[0].height).to.be('360');
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('video/mp4');
     expect(vastAd.ad.data.linear.mediaFiles[0].scalable).to.be(undefined);
     expect(vastAd.ad.data.linear.mediaFiles[0].maintainAspectRatio).to.be(undefined);
-    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be("1.mp4");
+    expect(vastAd.ad.data.linear.mediaFiles[0].url).to.be('1.mp4');
     expect(vastAd.ad.repeatAfter).to.be(null);
   });
 
-  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 1', function() {
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 1', () => {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput1);
-    var adBreaks = vastAdManager.adBreaks;
+    const { adBreaks } = vastAdManager;
 
-    var firstRepeatAdBreak = adBreaks[0];
-    expect(firstRepeatAdBreak.repeatAfter).to.be("00:00:");
+    const firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be('00:00:');
 
-    var vastAd = amc.timeline[0];
+    let vastAd = amc.timeline[0];
     expect(vastAd.ad.repeatAfter).to.be(null);
 
-    var secondRepeatAdBreak = adBreaks[1];
-    expect(secondRepeatAdBreak.repeatAfter).to.be("1337");
+    const secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be('1337');
 
     vastAd = amc.timeline[1];
     expect(vastAd.ad.repeatAfter).to.be(null);
   });
 
-  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 2', function() {
+  it('Vast 3.0, VMAP: Should parse AdBreak with bad repeat inputs - 2', () => {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlineRepeatAdBadInput2);
-    var adBreaks = vastAdManager.adBreaks;
+    const { adBreaks } = vastAdManager;
 
-    var firstRepeatAdBreak = adBreaks[0];
-    expect(firstRepeatAdBreak.repeatAfter).to.be("apple");
+    const firstRepeatAdBreak = adBreaks[0];
+    expect(firstRepeatAdBreak.repeatAfter).to.be('apple');
 
-    var vastAd = amc.timeline[0];
+    let vastAd = amc.timeline[0];
     expect(vastAd.ad.repeatAfter).to.be(null);
 
-    var secondRepeatAdBreak = adBreaks[1];
-    expect(secondRepeatAdBreak.repeatAfter).to.be("");
+    const secondRepeatAdBreak = adBreaks[1];
+    expect(secondRepeatAdBreak.repeatAfter).to.be('');
 
     vastAd = amc.timeline[1];
     expect(vastAd.ad.repeatAfter).to.be(null);
   });
 
-  it('Vast 3.0, VMAP: Should not play podded ad if allowMultipleAds is set to false', function() {
+  it('Vast 3.0, VMAP: Should not play podded ad if allowMultipleAds is set to false', () => {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlinePodded);
     expect(amc.timeline.length).to.be(0);
   });
 
-  it('Vast Ad Manager: Should notify non-linear ad end when stream ends with active overlay', function() {
-    var nonLinearStartNotified = 0;
-    var nonLinearEndNotified = 0;
-    var embed_code = "embed_code";
-    var vast_ad_mid = {
-      type: "vast",
+  it('Vast Ad Manager: Should notify non-linear ad end when stream ends with active overlay', () => {
+    let nonLinearStartNotified = 0;
+    let nonLinearEndNotified = 0;
+    const embed_code = 'embed_code';
+    const vast_ad_mid = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
+      ad_set_code: 'ad_set_code',
       time: 10,
-      position_type: "t",
-      url: "1.svg"
+      position_type: 't',
+      url: '1.svg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad_mid]
+    const content = {
+      embed_code,
+      ads: [vast_ad_mid],
     };
 
-    amc.sendURLToLoadAndPlayNonLinearAd = function() {
+    amc.sendURLToLoadAndPlayNonLinearAd = function () {
       nonLinearStartNotified++;
     };
-    amc.notifyNonlinearAdEnded = function() {
+    amc.notifyNonlinearAdEnded = function () {
       nonLinearEndNotified++;
     };
 
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "html5_ssl_ad_server": "https://blah.com",
-      "html5_ad_server": "http://blah.com"
+      html5_ssl_ad_server: 'https://blah.com',
+      html5_ad_server: 'http://blah.com',
     }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXML);
     expect(errorType.length).to.be(0);
 
-    var vastAd = amc.timeline[1];
+    const vastAd = amc.timeline[1];
     vastAdManager.playAd(vastAd);
     expect(nonLinearStartNotified).to.be(1);
     expect(nonLinearEndNotified).to.be(0);
 
     vastAdManager.cancelAd(vastAd, {
-      code : amc.AD_CANCEL_CODE.STREAM_ENDED
+      code: amc.AD_CANCEL_CODE.STREAM_ENDED,
     });
     expect(nonLinearStartNotified).to.be(1);
     expect(nonLinearEndNotified).to.be(1);
   });
 
-  it('Vast Ad Manager: Should use page level settings with position_type t', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should use page level settings with position_type t', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": 10000
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: 10000,
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline[0].ad.position).to.be(10);
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+    expect(vastAdManager.vastUrl).to.be('http://blahblah');
   });
 
-  it('Vast Ad Manager: Should use page level settings with position_type t with string position', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should use page level settings with position_type t with string position', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": "10000"
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: '10000',
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline[0].ad.position).to.be(10);
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+    expect(vastAdManager.vastUrl).to.be('http://blahblah');
   });
 
-  it('Vast Ad Manager: Should use page level settings with position_type p', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should use page level settings with position_type p', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": 50
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: 50,
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
-    expect(amc.timeline[0].ad.position).to.be(50); //this should be the percentage. The plugin no longer takes care of the calculation
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(50); // this should be the percentage. The plugin no longer takes care of the calculation
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+    expect(vastAdManager.vastUrl).to.be('http://blahblah');
   });
 
-  it('Vast Ad Manager: Should use page level settings with position_type p with string position', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should use page level settings with position_type p with string position', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": "70"
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: '70',
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
-    expect(amc.timeline[0].ad.position).to.be(70); //this should be the percentage. The plugin no longer takes care of the calculation
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
+    expect(amc.timeline[0].ad.position).to.be(70); // this should be the percentage. The plugin no longer takes care of the calculation
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+    expect(vastAdManager.vastUrl).to.be('http://blahblah');
   });
 
-  it('Vast Ad Manager: Can add multiple position type \'t\' ads with page level settings', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Can add multiple position type \'t\' ads with page level settings', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": 10000
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: 10000,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": 20000
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: 20000,
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
     expect(amc.timeline[0].ad.position).to.be(10);
     expect(amc.timeline[1].ad.position).to.be(20);
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+    expect(vastAdManager.vastUrl).to.be('http://blahblah');
   });
 
-  it('Vast Ad Manager: Can add multiple position type \'p\' ads with page level settings', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Can add multiple position type \'p\' ads with page level settings', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": 25
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: 25,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": 50
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: 50,
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.position).to.be(25);//this should be the percentage. The plugin no longer takes care of the calculation
-    expect(amc.timeline[1].ad.position).to.be(50);//this should be the percentage. The plugin no longer takes care of the calculation
+    expect(amc.timeline[0].ad.position).to.be(25);// this should be the percentage. The plugin no longer takes care of the calculation
+    expect(amc.timeline[1].ad.position).to.be(50);// this should be the percentage. The plugin no longer takes care of the calculation
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+    expect(vastAdManager.vastUrl).to.be('http://blahblah');
   });
 
-  it('Vast Ad Manager: Can add multiple mixed position type ads with page level settings', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Can add multiple mixed position type ads with page level settings', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": 25
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: 25,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": 50000
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: 50000,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": 0
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: 0,
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(3);
-    expect(amc.timeline[0].ad.position).to.be(25);//this should be the percentage. The plugin no longer takes care of the calculation
+    expect(amc.timeline[0].ad.position).to.be(25);// this should be the percentage. The plugin no longer takes care of the calculation
     expect(amc.timeline[1].ad.position).to.be(50);
-    //Timeline is not sorted at this point
+    // Timeline is not sorted at this point
     expect(amc.timeline[2].ad.position).to.be(0);
     vastAdManager.playAd(amc.timeline[2]);
-    expect(vastAdManager.vastUrl).to.be("http://blahblah");
+    expect(vastAdManager.vastUrl).to.be('http://blahblah');
   });
 
-  it('Vast Ad Manager: Should ignore page level settings with non-string tag_urls', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should ignore page level settings with non-string tag_urls', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": null,
-          "position_type": "t",
-          "position": 0
+          tag_url: null,
+          position_type: 't',
+          position: 0,
         },
         {
-          "position_type": "p",
-          "position": 0
+          position_type: 'p',
+          position: 0,
         },
         {
-          "tag_url": {},
-          "position_type": "t",
-          "position": 0
+          tag_url: {},
+          position_type: 't',
+          position: 0,
         },
         {
-          "tag_url": function(){},
-          "position_type": "t",
-          "position": 0
+          tag_url() {},
+          position_type: 't',
+          position: 0,
         },
         {
-          "tag_url": true,
-          "position_type": "t",
-          "position": 0
+          tag_url: true,
+          position_type: 't',
+          position: 0,
         },
         {
-          "tag_url": false,
-          "position_type": "t",
-          "position": 0
+          tag_url: false,
+          position_type: 't',
+          position: 0,
         },
         {
-          "tag_url": 12345,
-          "position_type": "t",
-          "position": 0
-        }
-      ]
+          tag_url: 12345,
+          position_type: 't',
+          position: 0,
+        },
+      ],
     }, {}, content);
     expect(amc.timeline.length).to.be(0);
   });
 
-  it('Vast Ad Manager: Should ignore page level settings with null positions', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should ignore page level settings with null positions', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": null
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: null,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": null
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: null,
+        },
+      ],
     }, {}, content);
     expect(amc.timeline.length).to.be(0);
   });
 
-  it('Vast Ad Manager: Should ignore page level settings with undefined positions', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should ignore page level settings with undefined positions', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t"
+          tag_url: 'http://blahblah',
+          position_type: 't',
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p"
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+        },
+      ],
     }, {}, content);
     expect(amc.timeline.length).to.be(0);
   });
 
-  it('Vast Ad Manager: Should ignore page level settings with non-string/non-number positions', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should ignore page level settings with non-string/non-number positions', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "all_ads": [
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": {}
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: {},
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": function(){}
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position() {},
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": true
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: true,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": false
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: false,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "t",
-          "position": NaN
+          tag_url: 'http://blahblah',
+          position_type: 't',
+          position: NaN,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": "NaN"
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: 'NaN',
+        },
+      ],
     }, {}, content);
     expect(amc.timeline.length).to.be(0);
   });
 
-  it('Vast Ad Manager: Should use tag url override if provided in page level settings for content tree ads', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should use tag url override if provided in page level settings for content tree ads', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t",
-      url: "http://vastad1"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
+      url: 'http://vastad1',
     };
-    var vast_ad2 = {
-      type: "vast",
+    const vast_ad2 = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code2",
-      time:0,
-      position_type:"t",
-      url: "http://vastad2"
+      ad_set_code: 'ad_set_code2',
+      time: 0,
+      position_type: 't',
+      url: 'http://vastad2',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad, vast_ad2],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "tagUrl":"http://override"
+      tagUrl: 'http://override',
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://override");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://override");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://override');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://override');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://override");
+    expect(vastAdManager.vastUrl).to.be('http://override');
   });
 
-  it('Vast Ad Manager: Should use tag url override if provided in page level settings for page level ads', function() {
-    var embed_code = "embed_code";
-    var content = {
-      embed_code: embed_code,
-      duration: 120000
+  it('Vast Ad Manager: Should use tag url override if provided in page level settings for page level ads', () => {
+    const embed_code = 'embed_code';
+    const content = {
+      embed_code,
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
     vastAdManager.loadMetadata({
-      "tagUrl":"http://override",
-      "all_ads":[
+      tagUrl: 'http://override',
+      all_ads: [
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": 25
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: 25,
         },
         {
-          "tag_url": "http://blahblah",
-          "position_type": "p",
-          "position": 50
-        }
-      ]
+          tag_url: 'http://blahblah',
+          position_type: 'p',
+          position: 50,
+        },
+      ],
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://override");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://override");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://override');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://override');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://override");
+    expect(vastAdManager.vastUrl).to.be('http://override');
   });
 
-  it('Vast Ad Manager: Should ignore tag url override if is not a string', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast Ad Manager: Should ignore tag url override if is not a string', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t",
-      url: "http://vastad1"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
+      url: 'http://vastad1',
     };
-    var vast_ad2 = {
-      type: "vast",
+    const vast_ad2 = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code2",
-      time:0,
-      position_type:"t",
-      url: "http://vastad2"
+      ad_set_code: 'ad_set_code2',
+      time: 0,
+      position_type: 't',
+      url: 'http://vastad2',
     };
-    var content = {
-      embed_code: embed_code,
+    const content = {
+      embed_code,
       ads: [vast_ad, vast_ad2],
-      duration: 120000
+      duration: 120000,
     };
     vastAdManager.initialize(amc);
 
     vastAdManager.loadMetadata({
-      "tagUrl":null
+      tagUrl: null,
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://vastad1');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://vastad2');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+    expect(vastAdManager.vastUrl).to.be('http://vastad1');
 
     amc.timeline = [];
     vastAdManager.loadMetadata({
-      //undefined tag url
+      // undefined tag url
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://vastad1');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://vastad2');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+    expect(vastAdManager.vastUrl).to.be('http://vastad1');
 
     amc.timeline = [];
     vastAdManager.loadMetadata({
-      "tagUrl":{}
+      tagUrl: {},
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://vastad1');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://vastad2');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+    expect(vastAdManager.vastUrl).to.be('http://vastad1');
 
     amc.timeline = [];
     vastAdManager.loadMetadata({
-      "tagUrl":function(){}
+      tagUrl() {},
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://vastad1');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://vastad2');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+    expect(vastAdManager.vastUrl).to.be('http://vastad1');
 
     amc.timeline = [];
     vastAdManager.loadMetadata({
-      "tagUrl":12345
+      tagUrl: 12345,
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://vastad1');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://vastad2');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+    expect(vastAdManager.vastUrl).to.be('http://vastad1');
 
     amc.timeline = [];
     vastAdManager.loadMetadata({
-      "tagUrl":true
+      tagUrl: true,
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://vastad1');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://vastad2');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+    expect(vastAdManager.vastUrl).to.be('http://vastad1');
 
     amc.timeline = [];
     vastAdManager.loadMetadata({
-      "tagUrl":false
+      tagUrl: false,
     }, {}, content);
-    amc.timeline[0].id = "asdf";//work around because we are using mockAMC and normally it assigns id's
+    amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);
-    expect(amc.timeline[0].ad.tag_url).to.be("http://vastad1");
-    expect(amc.timeline[1].ad.tag_url).to.be("http://vastad2");
+    expect(amc.timeline[0].ad.tag_url).to.be('http://vastad1');
+    expect(amc.timeline[1].ad.tag_url).to.be('http://vastad2');
     vastAdManager.playAd(amc.timeline[0]);
-    expect(vastAdManager.vastUrl).to.be("http://vastad1");
+    expect(vastAdManager.vastUrl).to.be('http://vastad1');
   });
 
-  it('VPAID 2.0: Should use VPAID recovery timeout overrides', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('VPAID 2.0: Should use VPAID recovery timeout overrides', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:0,
-      position_type:"t"
+      ad_set_code: 'ad_set_code',
+      time: 0,
+      position_type: 't',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"vpaidTimeout":{
-      "iframe":9,
-      "loaded":10,
-      "started":11,
-      "stopped":12
-    }}, {}, content);
+    vastAdManager.loadMetadata({
+      vpaidTimeout: {
+        iframe: 9,
+        loaded: 10,
+        started: 11,
+        stopped: 12,
+      },
+    }, {}, content);
     expect(vastAdManager.VPAID_AD_IFRAME_TIMEOUT).to.be(9000);
     expect(vastAdManager.VPAID_AD_LOADED_TIMEOUT).to.be(10000);
     expect(vastAdManager.VPAID_AD_STARTED_TIMEOUT).to.be(11000);
     expect(vastAdManager.VPAID_AD_STOPPED_TIMEOUT).to.be(12000);
   });
 
-  it('VPAID 2.0: Should parse VPAID linear creative', function() {
+  it('VPAID 2.0: Should parse VPAID linear creative', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     expect(ad).to.be.an('object');
     expect(ad.duration).to.eql(16);
     expect(ad.position).to.eql(0);
-    var parsedAd = global.vpaidAd.ad.data;
+    const parsedAd = global.vpaidAd.ad.data;
     expect(ad.ad).to.be.an('object');
-    expect(ad.videoRestrictions).to.eql({ technology: OO.VIDEO.TECHNOLOGY.HTML5,
-      features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE] });
+    expect(ad.videoRestrictions).to.eql({
+      technology: OO.VIDEO.TECHNOLOGY.HTML5,
+      features: [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_GIVE],
+    });
     expect(ad.ad.adPodIndex).to.eql(1);
     expect(ad.ad.adPodLength).to.eql(1);
     expect(ad.ad.sequence).to.be(null);
@@ -2488,54 +2530,55 @@ describe('ad_manager_vast', function() {
     expect(ad.ad.data.adParams).to.eql(parsedAd.adParams);
   });
 
-  it('VPAID 2.0: Should create slot and video slot', function() {
+  it('VPAID 2.0: Should create slot and video slot', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(_.isElement(vastAdManager._slot)).to.be(true);
     expect(_.isElement(vastAdManager._videoSlot)).to.be(true);
   });
 
-  it('VPAID 2.0: initAd should be called after validations', function() {
+  it('VPAID 2.0: initAd should be called after validations', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
-    expect(global.vpaid.adInit).to.be(true)
+    expect(global.vpaid.adInit).to.be(true);
   });
 
-  it('VPAID 2.0: initAd should not be called when any required ad unit function is missing', function() {
+  it('VPAID 2.0: initAd should not be called when any required ad unit function is missing', () => {
     vpaidInitialize();
-    global.vpaid.getVPAIDAd = function() { return new global.vpaid.missingFnVPAIDAd(); };
-    var ad = amc.timeline[1];
+    global.vpaid.getVPAIDAd = function () { return new global.vpaid.missingFnVPAIDAd(); };
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
-    expect(global.vpaid.adInit).to.be(false)
+    expect(global.vpaid.adInit).to.be(false);
   });
 
-  it('VPAID 2.0: initAd should not be called when using incorrect version <2.0', function() {
+  it('VPAID 2.0: initAd should not be called when using incorrect version <2.0', () => {
     vpaidInitialize();
-    global.vpaid.getVPAIDAd = function() { return new global.vpaid.incorrectVersionVPAIDAd(); };
-    var ad = amc.timeline[1];
+    global.vpaid.getVPAIDAd = function () { return new global.vpaid.incorrectVersionVPAIDAd(); };
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
-    expect(global.vpaid.adInit).to.be(false)
+    expect(global.vpaid.adInit).to.be(false);
   });
 
-  it('VPAID 2.0: Ad should be started', function() {
-    var podStartedNotified = 0, linearStartedNotified = 0;
+  it('VPAID 2.0: Ad should be started', () => {
+    let podStartedNotified = 0; let
+      linearStartedNotified = 0;
     vpaidInitialize();
 
-    amc.notifyPodStarted = function() {
+    amc.notifyPodStarted = function () {
       podStartedNotified++;
     };
 
-    amc.notifyLinearAdStarted = function() {
+    amc.notifyLinearAdStarted = function () {
       linearStartedNotified++;
     };
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(global.vpaid.adStarted).to.be(true);
@@ -2543,19 +2586,20 @@ describe('ad_manager_vast', function() {
     expect(linearStartedNotified).to.eql(1);
   });
 
-  it('VPAID 2.0: Ad should be stopped when ad video is completed', function() {
-    var podEndNotified = 0, linearEndNotified = 0;
+  it('VPAID 2.0: Ad should be stopped when ad video is completed', () => {
+    let podEndNotified = 0; let
+      linearEndNotified = 0;
     vpaidInitialize();
 
-    amc.notifyPodEnded = function() {
+    amc.notifyPodEnded = function () {
       podEndNotified++;
     };
 
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function () {
       linearEndNotified++;
     };
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     ad.vpaidAd.adVideoCompleted();
@@ -2564,38 +2608,39 @@ describe('ad_manager_vast', function() {
     expect(linearEndNotified).to.eql(1);
   });
 
-  it('VPAID 2.0: Ad should be skipped when calling skipAd', function() {
-    var podEndNotified = 0, linearEndNotified = 0;
+  it('VPAID 2.0: Ad should be skipped when calling skipAd', () => {
+    let podEndNotified = 0; let
+      linearEndNotified = 0;
     vpaidInitialize();
 
-    amc.notifyPodEnded = function() {
+    amc.notifyPodEnded = function () {
       podEndNotified++;
     };
 
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function () {
       linearEndNotified++;
     };
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     vastAdManager.cancelAd(ad, {
-      code : amc.AD_CANCEL_CODE.SKIPPED
+      code: amc.AD_CANCEL_CODE.SKIPPED,
     });
     expect(global.vpaid.adSkipped).to.be(true);
     expect(podEndNotified).to.eql(1);
     expect(linearEndNotified).to.eql(1);
-
   });
 
-  it('VPAID 2.0: Ad skip button should display when skippableState changes to true, or hide when false', function() {
-    var allowSkipButton = false, skipOffset = 0;
-    amc.showSkipVideoAdButton = function(allowButton, offset) {
+  it('VPAID 2.0: Ad skip button should display when skippableState changes to true, or hide when false', () => {
+    let allowSkipButton = false; let
+      skipOffset = 0;
+    amc.showSkipVideoAdButton = function (allowButton, offset) {
       allowSkipButton = allowButton;
       skipOffset = offset;
     };
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
 
@@ -2606,32 +2651,33 @@ describe('ad_manager_vast', function() {
     expect(skipOffset).to.be('0');
   });
 
-  it('VPAID 2.0: Should check and send companion ads', function() {
-    var companion;
-    var parsedAd = global.vpaidAd.ad.data;
-    amc.showCompanion = function(companionAds) {
+  it('VPAID 2.0: Should check and send companion ads', () => {
+    let companion;
+    const parsedAd = global.vpaidAd.ad.data;
+    amc.showCompanion = function (companionAds) {
       companion = companionAds;
     };
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(companion).to.eql(parsedAd.companion);
   });
 
-  it('VPAID 2.0: Ad should not end on adVideoEnded', function() {
-    var podEndNotified = 0, linearEndNotified = 0;
+  it('VPAID 2.0: Ad should not end on adVideoEnded', () => {
+    let podEndNotified = 0; let
+      linearEndNotified = 0;
     vpaidInitialize();
 
-    amc.notifyPodEnded = function() {
+    amc.notifyPodEnded = function () {
       podEndNotified++;
     };
 
-    amc.notifyLinearAdEnded = function() {
+    amc.notifyLinearAdEnded = function () {
       linearEndNotified++;
     };
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     vastAdManager.adVideoEnded();
@@ -2639,15 +2685,15 @@ describe('ad_manager_vast', function() {
     expect(linearEndNotified).to.eql(0);
   });
 
-  it('VPAID 2.0: Ad Unit should handle clickthru if playerHandles is false, otherwise players handle the click', function() {
-    var adUnitHandling = true;
+  it('VPAID 2.0: Ad Unit should handle clickthru if playerHandles is false, otherwise players handle the click', () => {
+    let adUnitHandling = true;
     vpaidInitialize();
 
-    vastAdManager.openUrl = function(url) {
+    vastAdManager.openUrl = function (url) {
       adUnitHandling = false;
     };
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     ad.vpaidAd.sendClick(false);
@@ -2657,94 +2703,94 @@ describe('ad_manager_vast', function() {
     expect(adUnitHandling).to.be(false);
   });
 
-  it('VPAID 2.0: Should notify linear ad started when adLinearChange is sent', function() {
-    var linearStartedNotified = 0;
+  it('VPAID 2.0: Should notify linear ad started when adLinearChange is sent', () => {
+    let linearStartedNotified = 0;
     vpaidInitialize(vpaidNonLinearXML);
 
-    amc.notifyLinearAdStarted = function() {
+    amc.notifyLinearAdStarted = function () {
       linearStartedNotified++;
     };
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
-    amc.adManagerSettings['linearAdSkipButtonStartTime'] = 5;
+    amc.adManagerSettings.linearAdSkipButtonStartTime = 5;
     ad.vpaidAd.sendAdLinearChange(false);
     expect(linearStartedNotified).to.eql(0);
     ad.vpaidAd.sendAdLinearChange(true);
     expect(linearStartedNotified).to.eql(1);
   });
 
-  it('VPAID 2.0: Should parse and send ad parameters', function() {
+  it('VPAID 2.0: Should parse and send ad parameters', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(JSON.parse(ad.ad.adParams)).to.eql(ad.vpaidAd.properties.adParameters);
   });
 
-  it('VPAID 2.0: Should hide player ui', function() {
-    var hidePlayerUi = false;
-    amc.hidePlayerUi = function() {
+  it('VPAID 2.0: Should hide player ui', () => {
+    let hidePlayerUi = false;
+    amc.hidePlayerUi = function () {
       hidePlayerUi = true;
     };
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(hidePlayerUi).to.be(true);
   });
 
-  it('VPAID 2.0: Should resize ad unit on size changed', function() {
+  it('VPAID 2.0: Should resize ad unit on size changed', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(ad.vpaidAd.properties.width).to.be(100);
     expect(ad.vpaidAd.properties.height).to.be(100);
-    vastAdManager._slot.getBoundingClientRect = function() {
+    vastAdManager._slot.getBoundingClientRect = function () {
       return {
         width: 200,
-        height: 300
-      }
+        height: 300,
+      };
     };
     amc.publishPlayerEvent(amc.EVENTS.SIZE_CHANGED);
     expect(ad.vpaidAd.properties.width).to.be(200);
     expect(ad.vpaidAd.properties.height).to.be(300);
   });
 
-  it('VPAID 2.0: Should resize ad unit on fullscreen change', function() {
+  it('VPAID 2.0: Should resize ad unit on fullscreen change', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     expect(ad.vpaidAd.properties.width).to.be(100);
     expect(ad.vpaidAd.properties.height).to.be(100);
-    vastAdManager._slot.getBoundingClientRect = function() {
+    vastAdManager._slot.getBoundingClientRect = function () {
       return {
         width: 200,
-        height: 300
-      }
+        height: 300,
+      };
     };
     amc.publishPlayerEvent(amc.EVENTS.FULLSCREEN_CHANGED);
     expect(ad.vpaidAd.properties.width).to.be(200);
     expect(ad.vpaidAd.properties.height).to.be(300);
   });
 
-  it('VPAID 2.0: Should check/show ad unit companions when no XML companions available', function() {
-    var companion;
-    amc.showCompanion = function(companionAds) {
+  it('VPAID 2.0: Should check/show ad unit companions when no XML companions available', () => {
+    let companion;
+    amc.showCompanion = function (companionAds) {
       companion = companionAds;
     };
     vpaidInitialize(vpaidNoCompanionXML);
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
-    expect(companion).to.eql({companion:{}});
+    expect(companion).to.eql({ companion: {} });
   });
 
-  it('VPAID 2.0: should fail if media file value is empty', function() {
+  it('VPAID 2.0: should fail if media file value is empty', () => {
     vpaidInitialize(vpaidLinearNoValuesXML);
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     expect(vastAdManager.initializeAd()).to.be(null);
     expect(ad.duration).to.eql(16);
@@ -2752,32 +2798,32 @@ describe('ad_manager_vast', function() {
     expect(global.vpaid.adStarted).to.be(false);
   });
 
-  //TODO: Add unit tests for other tracking events
-  it('VPAID 2.0: Impression tracking URLs should be pinged', function() {
+  // TODO: Add unit tests for other tracking events
+  it('VPAID 2.0: Impression tracking URLs should be pinged', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     ad.vpaidAd.callEvent('AdImpression');
 
     sinon.assert.calledOnce(OO.pixelPing);
-    expect(OO.pixelPing.getCall(0).args).to.eql([`impressionUrl`]);
+    expect(OO.pixelPing.getCall(0).args).to.eql(['impressionUrl']);
   });
 
-  it('Vast Content Type Filtering: Parser should catch content types for HLS', function() {
+  it('Vast Content Type Filtering: Parser should catch content types for HLS', () => {
     vastAdManager.initialize(amc);
-    var vast_ad = {
-      type: "vast",
+    const vast_ad = {
+      type: 'vast',
     };
 
     // catch content-type: application/x-mpegurl
     vastAdManager.onVastResponse(vast_ad, contentTypeHLS1);
-    var vastAd = amc.timeline[0];
-    expect(vastAd.ad).to.be.an("object");
+    let vastAd = amc.timeline[0];
+    expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
-    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("application/x-mpegurl");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('application/x-mpegurl');
     expect(vastAd.ad.streams).to.not.be(null);
-    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
+    expect(vastAd.ad.streams.hls).to.be('1.m3u8');
 
     amc = new fake_amc();
     vastAdManager.destroy();
@@ -2786,11 +2832,11 @@ describe('ad_manager_vast', function() {
     // catch content-type: application/mpegurl
     vastAdManager.onVastResponse(vast_ad, contentTypeHLS2);
     vastAd = amc.timeline[0];
-    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
-    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("application/mpegurl");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('application/mpegurl');
     expect(vastAd.ad.streams).to.not.be(null);
-    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
+    expect(vastAd.ad.streams.hls).to.be('1.m3u8');
 
     amc = new fake_amc();
     vastAdManager.destroy();
@@ -2799,11 +2845,11 @@ describe('ad_manager_vast', function() {
     // catch content-type: audio/x-mpegurl
     vastAdManager.onVastResponse(vast_ad, contentTypeHLS3);
     vastAd = amc.timeline[0];
-    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
-    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("audio/x-mpegurl");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('audio/x-mpegurl');
     expect(vastAd.ad.streams).to.not.be(null);
-    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
+    expect(vastAd.ad.streams.hls).to.be('1.m3u8');
 
     amc = new fake_amc();
     vastAdManager.destroy();
@@ -2812,46 +2858,48 @@ describe('ad_manager_vast', function() {
     // catch content-type: audio/mpegurl
     vastAdManager.onVastResponse(vast_ad, contentTypeHLS4);
     vastAd = amc.timeline[0];
-    expect(vastAd.ad).to.be.an("object");
+    expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
-    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be("audio/mpegurl");
+    expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('audio/mpegurl');
     expect(vastAd.ad.streams).to.not.be(null);
-    expect(vastAd.ad.streams.hls).to.be("1.m3u8");
+    expect(vastAd.ad.streams.hls).to.be('1.m3u8');
   });
 
   // Tracking Event Tests
 
-  it('Vast: Linear Creative Tracking Events URLs should be pinged', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast: Linear Creative Tracking Events URLs should be pinged', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.mp4"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.mp4',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad, linearXML);
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
 
     // creativeView, impression, and start tracking events
     vastAdManager.playAd(ad);
 
-    var duration = 52;
-    var firstQuartileTime = duration / 4;
-    var midpointTime = duration / 2;
-    var thirdQuartileTime = (3 * duration) / 4;
+    const duration = 52;
+    const firstQuartileTime = duration / 4;
+    const midpointTime = duration / 2;
+    const thirdQuartileTime = (3 * duration) / 4;
 
     // "firstQuartile", "midpoint" and "thirdQuartile" tracking events
     amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, firstQuartileTime, duration);
@@ -2889,51 +2937,51 @@ describe('ad_manager_vast', function() {
 
     // "skip" tracking event
     vastAdManager.cancelAd(ad, {
-      code : amc.AD_CANCEL_CODE.SKIPPED
+      code: amc.AD_CANCEL_CODE.SKIPPED,
     });
 
     sinon.mock(window).expects('open').once();
     // e.once();
     sinon.assert.callCount(OO.pixelPing, 25);
-    expect(OO.pixelPing.getCall(0).args).to.eql([`creativeViewUrl`]);
-    expect(OO.pixelPing.getCall(1).args).to.eql([`startUrl`]);
-    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionUrl`]);
-    expect(OO.pixelPing.getCall(3).args).to.eql([`firstQuartileUrl`]);
-    expect(OO.pixelPing.getCall(4).args).to.eql([`midpointUrl`]);
-    expect(OO.pixelPing.getCall(5).args).to.eql([`thirdQuartileUrl`]);
-    expect(OO.pixelPing.getCall(6).args).to.eql([`clickTrackingUrl`]);
-    expect(OO.pixelPing.getCall(7).args).to.eql([`customClickUrl`]);
-    expect(OO.pixelPing.getCall(8).args).to.eql([`pauseUrl`]);
-    expect(OO.pixelPing.getCall(9).args).to.eql([`resumeUrl`]);
-    expect(OO.pixelPing.getCall(10).args).to.eql([`pauseUrl`]);
-    expect(OO.pixelPing.getCall(11).args).to.eql([`resumeUrl`]);
-    expect(OO.pixelPing.getCall(12).args).to.eql([`muteUrl`]);
-    expect(OO.pixelPing.getCall(13).args).to.eql([`unmuteUrl`]);
-    expect(OO.pixelPing.getCall(14).args).to.eql([`muteUrl`]);
-    expect(OO.pixelPing.getCall(15).args).to.eql([`unmuteUrl`]);
-    expect(OO.pixelPing.getCall(16).args).to.eql([`fullscreenUrl`]);
-    expect(OO.pixelPing.getCall(17).args).to.eql([`exitFullscreenUrl`]);
-    expect(OO.pixelPing.getCall(18).args).to.eql([`fullscreenUrl`]);
-    expect(OO.pixelPing.getCall(19).args).to.eql([`exitFullscreenUrl`]);
-    expect(OO.pixelPing.getCall(20).args).to.eql([`completeUrl`]);
-    expect(OO.pixelPing.getCall(21).args).to.eql([`creativeViewUrl`]);
-    expect(OO.pixelPing.getCall(22).args).to.eql([`startUrl`]);
-    expect(OO.pixelPing.getCall(23).args).to.eql([`impressionUrl`]);
-    expect(OO.pixelPing.getCall(24).args).to.eql([`skipUrl`]);
+    expect(OO.pixelPing.getCall(0).args).to.eql(['creativeViewUrl']);
+    expect(OO.pixelPing.getCall(1).args).to.eql(['startUrl']);
+    expect(OO.pixelPing.getCall(2).args).to.eql(['impressionUrl']);
+    expect(OO.pixelPing.getCall(3).args).to.eql(['firstQuartileUrl']);
+    expect(OO.pixelPing.getCall(4).args).to.eql(['midpointUrl']);
+    expect(OO.pixelPing.getCall(5).args).to.eql(['thirdQuartileUrl']);
+    expect(OO.pixelPing.getCall(6).args).to.eql(['clickTrackingUrl']);
+    expect(OO.pixelPing.getCall(7).args).to.eql(['customClickUrl']);
+    expect(OO.pixelPing.getCall(8).args).to.eql(['pauseUrl']);
+    expect(OO.pixelPing.getCall(9).args).to.eql(['resumeUrl']);
+    expect(OO.pixelPing.getCall(10).args).to.eql(['pauseUrl']);
+    expect(OO.pixelPing.getCall(11).args).to.eql(['resumeUrl']);
+    expect(OO.pixelPing.getCall(12).args).to.eql(['muteUrl']);
+    expect(OO.pixelPing.getCall(13).args).to.eql(['unmuteUrl']);
+    expect(OO.pixelPing.getCall(14).args).to.eql(['muteUrl']);
+    expect(OO.pixelPing.getCall(15).args).to.eql(['unmuteUrl']);
+    expect(OO.pixelPing.getCall(16).args).to.eql(['fullscreenUrl']);
+    expect(OO.pixelPing.getCall(17).args).to.eql(['exitFullscreenUrl']);
+    expect(OO.pixelPing.getCall(18).args).to.eql(['fullscreenUrl']);
+    expect(OO.pixelPing.getCall(19).args).to.eql(['exitFullscreenUrl']);
+    expect(OO.pixelPing.getCall(20).args).to.eql(['completeUrl']);
+    expect(OO.pixelPing.getCall(21).args).to.eql(['creativeViewUrl']);
+    expect(OO.pixelPing.getCall(22).args).to.eql(['startUrl']);
+    expect(OO.pixelPing.getCall(23).args).to.eql(['impressionUrl']);
+    expect(OO.pixelPing.getCall(24).args).to.eql(['skipUrl']);
   });
 
-  it('Vast: Normal VAST Tracking Events should not be pinged if ad is VPAID', function() {
+  it('Vast: Normal VAST Tracking Events should not be pinged if ad is VPAID', () => {
     vpaidInitialize();
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
 
     // creativeView, impression, and start tracking events
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
 
-    var duration = 52;
-    var firstQuartileTime = duration / 4;
-    var midpointTime = duration / 2;
-    var thirdQuartileTime = (3 * duration) / 4;
+    const duration = 52;
+    const firstQuartileTime = duration / 4;
+    const midpointTime = duration / 2;
+    const thirdQuartileTime = (3 * duration) / 4;
 
     // "firstQuartile", "midpoint" and "thirdQuartile" tracking events
     amc.publishPlayerEvent(amc.EVENTS.AD_PLAYHEAD_TIME_CHANGED, firstQuartileTime, duration);
@@ -2971,35 +3019,37 @@ describe('ad_manager_vast', function() {
 
     // "skip" tracking event
     vastAdManager.cancelAd(ad, {
-      code : amc.AD_CANCEL_CODE.SKIPPED
+      code: amc.AD_CANCEL_CODE.SKIPPED,
     });
 
     sinon.assert.notCalled(OO.pixelPing);
   });
 
-  it('Vast: NonLinear Creative Tracking Events URLs should be pinged', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('Vast: NonLinear Creative Tracking Events URLs should be pinged', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
     vastAdManager.onVastResponse(vast_ad, nonLinearXML);
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
 
     // play video once with no player click
     vastAdManager.playAd(ad);
@@ -3016,136 +3066,138 @@ describe('ad_manager_vast', function() {
     vastAdManager.adVideoEnded();
 
     sinon.assert.callCount(OO.pixelPing, 20);
-    expect(OO.pixelPing.getCall(0).args).to.eql([`impressionOverlayUrl`]);
-    expect(OO.pixelPing.getCall(1).args).to.eql([`impressionOverlay2Url`]);
-    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionOverlay3Url`]);
-    expect(OO.pixelPing.getCall(3).args).to.eql([`impressionOverlay4Url`]);
-    expect(OO.pixelPing.getCall(4).args).to.eql([`impressionOverlay5Url`]);
-    expect(OO.pixelPing.getCall(5).args).to.eql([`impressionOverlay6Url`]);
-    expect(OO.pixelPing.getCall(6).args).to.eql([`impressionOverlayUrl`]);
-    expect(OO.pixelPing.getCall(7).args).to.eql([`impressionOverlay2Url`]);
-    expect(OO.pixelPing.getCall(8).args).to.eql([`impressionOverlay3Url`]);
-    expect(OO.pixelPing.getCall(9).args).to.eql([`impressionOverlay4Url`]);
-    expect(OO.pixelPing.getCall(10).args).to.eql([`impressionOverlay5Url`]);
-    expect(OO.pixelPing.getCall(11).args).to.eql([`impressionOverlay6Url`]);
-    expect(OO.pixelPing.getCall(12).args).to.eql([`nonLinearClickTrackingUrl`]);
-    expect(OO.pixelPing.getCall(13).args).to.eql([`impressionOverlayUrl`]);
-    expect(OO.pixelPing.getCall(14).args).to.eql([`impressionOverlay2Url`]);
-    expect(OO.pixelPing.getCall(15).args).to.eql([`impressionOverlay3Url`]);
-    expect(OO.pixelPing.getCall(16).args).to.eql([`impressionOverlay4Url`]);
-    expect(OO.pixelPing.getCall(17).args).to.eql([`impressionOverlay5Url`]);
-    expect(OO.pixelPing.getCall(18).args).to.eql([`impressionOverlay6Url`]);
-    expect(OO.pixelPing.getCall(19).args).to.eql([`closeUrl`]);
+    expect(OO.pixelPing.getCall(0).args).to.eql(['impressionOverlayUrl']);
+    expect(OO.pixelPing.getCall(1).args).to.eql(['impressionOverlay2Url']);
+    expect(OO.pixelPing.getCall(2).args).to.eql(['impressionOverlay3Url']);
+    expect(OO.pixelPing.getCall(3).args).to.eql(['impressionOverlay4Url']);
+    expect(OO.pixelPing.getCall(4).args).to.eql(['impressionOverlay5Url']);
+    expect(OO.pixelPing.getCall(5).args).to.eql(['impressionOverlay6Url']);
+    expect(OO.pixelPing.getCall(6).args).to.eql(['impressionOverlayUrl']);
+    expect(OO.pixelPing.getCall(7).args).to.eql(['impressionOverlay2Url']);
+    expect(OO.pixelPing.getCall(8).args).to.eql(['impressionOverlay3Url']);
+    expect(OO.pixelPing.getCall(9).args).to.eql(['impressionOverlay4Url']);
+    expect(OO.pixelPing.getCall(10).args).to.eql(['impressionOverlay5Url']);
+    expect(OO.pixelPing.getCall(11).args).to.eql(['impressionOverlay6Url']);
+    expect(OO.pixelPing.getCall(12).args).to.eql(['nonLinearClickTrackingUrl']);
+    expect(OO.pixelPing.getCall(13).args).to.eql(['impressionOverlayUrl']);
+    expect(OO.pixelPing.getCall(14).args).to.eql(['impressionOverlay2Url']);
+    expect(OO.pixelPing.getCall(15).args).to.eql(['impressionOverlay3Url']);
+    expect(OO.pixelPing.getCall(16).args).to.eql(['impressionOverlay4Url']);
+    expect(OO.pixelPing.getCall(17).args).to.eql(['impressionOverlay5Url']);
+    expect(OO.pixelPing.getCall(18).args).to.eql(['impressionOverlay6Url']);
+    expect(OO.pixelPing.getCall(19).args).to.eql(['closeUrl']);
   });
 
-  it('VAST: Wrapper ads should be properly parsed into the adTrackingInfo object', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('VAST: Wrapper ads should be properly parsed into the adTrackingInfo object', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     const expected = {
-      "6654644": {
-        "vastAdObject": null,
-        "errorURLs": ["errorurl"],
-        "wrapperParentId": "wrapper-parent-2"
+      6654644: {
+        vastAdObject: null,
+        errorURLs: ['errorurl'],
+        wrapperParentId: 'wrapper-parent-2',
       },
-      "wrapper-parent-1": {
-        "vastAdObject": {
-          "error": ["errorWrapper1Url"],
-          "impression": ["impressionWrapper1Url"],
-          "linear": {
-            "tracking": {
-              "creativeView": [],
-              "start": ["startWrapper1Url"],
-              "midpoint": ["midpointWrapper1Url"],
-              "firstQuartile": ["firstQuartileWrapper1Url"],
-              "thirdQuartile": ["thirdQuartileWrapper1Url"],
-              "complete": ["completeWrapper1Url"],
-              "mute": [],
-              "unmute": [],
-              "pause": [],
-              "rewind": [],
-              "resume": [],
-              "fullscreen": [],
-              "exitFullscreen": [],
-              "expand": [],
-              "collapse": [],
-              "acceptInvitation": [],
-              "close": [],
-              "skip": []
+      'wrapper-parent-1': {
+        vastAdObject: {
+          error: ['errorWrapper1Url'],
+          impression: ['impressionWrapper1Url'],
+          linear: {
+            tracking: {
+              creativeView: [],
+              start: ['startWrapper1Url'],
+              midpoint: ['midpointWrapper1Url'],
+              firstQuartile: ['firstQuartileWrapper1Url'],
+              thirdQuartile: ['thirdQuartileWrapper1Url'],
+              complete: ['completeWrapper1Url'],
+              mute: [],
+              unmute: [],
+              pause: [],
+              rewind: [],
+              resume: [],
+              fullscreen: [],
+              exitFullscreen: [],
+              expand: [],
+              collapse: [],
+              acceptInvitation: [],
+              close: [],
+              skip: [],
             },
-            "clickTracking": ["clickTrackingWrapper1Url"],
-            "clickThrough": "clickThroughWrapper1Url",
-            "customClick": ["customClickWrapper1Url"]
+            clickTracking: ['clickTrackingWrapper1Url'],
+            clickThrough: 'clickThroughWrapper1Url',
+            customClick: ['customClickWrapper1Url'],
           },
-          "nonLinear": {},
-          "companion": [],
-          "type": "Wrapper",
-          "version": "2.0",
-          "vastAdTagUri": "vastad.xml",
-          "title": "wrapperParentAd1",
-          "id": "wrapper-parent-1"
+          nonLinear: {},
+          companion: [],
+          type: 'Wrapper',
+          version: '2.0',
+          vastAdTagUri: 'vastad.xml',
+          title: 'wrapperParentAd1',
+          id: 'wrapper-parent-1',
         },
-        "errorURLs": ["errorWrapper1Url"],
-        "wrapperParentId": null
+        errorURLs: ['errorWrapper1Url'],
+        wrapperParentId: null,
       },
-      "wrapper-parent-2": {
-        "vastAdObject": {
-          "error": ["errorWrapper2Url"],
-          "impression": ["impressionWrapper2Url"],
-          "linear": {
-            "tracking": {
-              "creativeView": [],
-              "start": ["startWrapper2Url"],
-              "midpoint": ["midpointWrapper2Url"],
-              "firstQuartile": ["firstQuartileWrapper2Url"],
-              "thirdQuartile": ["thirdQuartileWrapper2Url"],
-              "complete": ["completeWrapper2Url"],
-              "mute": [],
-              "unmute": [],
-              "pause": [],
-              "rewind": [],
-              "resume": [],
-              "fullscreen": [],
-              "exitFullscreen": [],
-              "expand": [],
-              "collapse": [],
-              "acceptInvitation": [],
-              "close": [],
-              "skip": []
+      'wrapper-parent-2': {
+        vastAdObject: {
+          error: ['errorWrapper2Url'],
+          impression: ['impressionWrapper2Url'],
+          linear: {
+            tracking: {
+              creativeView: [],
+              start: ['startWrapper2Url'],
+              midpoint: ['midpointWrapper2Url'],
+              firstQuartile: ['firstQuartileWrapper2Url'],
+              thirdQuartile: ['thirdQuartileWrapper2Url'],
+              complete: ['completeWrapper2Url'],
+              mute: [],
+              unmute: [],
+              pause: [],
+              rewind: [],
+              resume: [],
+              fullscreen: [],
+              exitFullscreen: [],
+              expand: [],
+              collapse: [],
+              acceptInvitation: [],
+              close: [],
+              skip: [],
             },
-            "clickTracking": ["clickTrackingWrapper2Url"],
-            "clickThrough": "clickThroughWrapper2Url",
-            "customClick": ["customClickWrapper2Url"]
+            clickTracking: ['clickTrackingWrapper2Url'],
+            clickThrough: 'clickThroughWrapper2Url',
+            customClick: ['customClickWrapper2Url'],
           },
-          "nonLinear": {},
-          "companion": [],
-          "type": "Wrapper",
-          "version": "2.0",
-          "vastAdTagUri": "vastad.xml",
-          "title": "wrapperParentAd2",
-          "id": "wrapper-parent-2"
+          nonLinear: {},
+          companion: [],
+          type: 'Wrapper',
+          version: '2.0',
+          vastAdTagUri: 'vastad.xml',
+          title: 'wrapperParentAd2',
+          id: 'wrapper-parent-2',
         },
-        "errorURLs": ["errorWrapper2Url"],
-        "wrapperParentId": "wrapper-parent-1"
-      }
-    }
+        errorURLs: ['errorWrapper2Url'],
+        wrapperParentId: 'wrapper-parent-1',
+      },
+    };
 
 
     // need to fake wrapper ajax calls
@@ -3156,87 +3208,91 @@ describe('ad_manager_vast', function() {
     expect(JSON.stringify(vastAdManager.adTrackingInfo)).to.eql(JSON.stringify(expected));
   });
 
-  it('VAST: Wrapper ads\' tracking events should be pinged if child\'s events are pinged', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('VAST: Wrapper ads\' tracking events should be pinged if child\'s events are pinged', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     // Wrapper ads could be visualized as a tree with parents and children,
     // but in this case, it looks more like a linked list:
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
-    var parentDepthOneId = "wrapper-parent-1";
-    var parentDepthTwoId = "wrapper-parent-2";
+    const parentDepthOneId = 'wrapper-parent-1';
+    const parentDepthTwoId = 'wrapper-parent-2';
 
     // need to fake wrapper ajax calls
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
     vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
     vastAdManager.onVastResponse(vast_ad, linearXML, parentDepthTwoId);
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
 
     // creativeView, impression, and start tracking events
     vastAdManager.playAd(ad);
 
 
     sinon.assert.callCount(OO.pixelPing, 7);
-    expect(OO.pixelPing.getCall(0).args).to.eql([`creativeViewUrl`]);
-    expect(OO.pixelPing.getCall(1).args).to.eql([`startUrl`]);
-    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionUrl`]);
-    expect(OO.pixelPing.getCall(3).args).to.eql([`startWrapper2Url`]);
-    expect(OO.pixelPing.getCall(4).args).to.eql([`impressionWrapper2Url`]);
-    expect(OO.pixelPing.getCall(5).args).to.eql([`startWrapper1Url`]);
-    expect(OO.pixelPing.getCall(6).args).to.eql([`impressionWrapper1Url`]);
+    expect(OO.pixelPing.getCall(0).args).to.eql(['creativeViewUrl']);
+    expect(OO.pixelPing.getCall(1).args).to.eql(['startUrl']);
+    expect(OO.pixelPing.getCall(2).args).to.eql(['impressionUrl']);
+    expect(OO.pixelPing.getCall(3).args).to.eql(['startWrapper2Url']);
+    expect(OO.pixelPing.getCall(4).args).to.eql(['impressionWrapper2Url']);
+    expect(OO.pixelPing.getCall(5).args).to.eql(['startWrapper1Url']);
+    expect(OO.pixelPing.getCall(6).args).to.eql(['impressionWrapper1Url']);
   });
 
-  it('VAST: Wrapper ads\' tracking events should be pinged if VPAID child\'s events are pinged', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vpaid",
+  it('VAST: Wrapper ads\' tracking events should be pinged if VPAID child\'s events are pinged', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vpaid',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     // Wrapper ads could be visualized as a tree with parents and children,
     // but in this case, it looks more like a linked list:
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
-    var parentDepthOneId = "wrapper-parent-1";
-    var parentDepthTwoId = "wrapper-parent-2";
+    const parentDepthOneId = 'wrapper-parent-1';
+    const parentDepthTwoId = 'wrapper-parent-2';
 
     // need to fake wrapper ajax calls
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
     vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
     vastAdManager.onVastResponse(vast_ad, vpaidLinearXML, parentDepthTwoId);
 
-    var ad = amc.timeline[1];
+    const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
 
     vastAdManager.initializeAd();
@@ -3245,66 +3301,68 @@ describe('ad_manager_vast', function() {
 
     // leaf and parent level ad events should be pinged
     sinon.assert.callCount(OO.pixelPing, 6);
-    expect(OO.pixelPing.getCall(0).args).to.eql([`impressionUrl`]);
-    expect(OO.pixelPing.getCall(1).args).to.eql([`impressionWrapper2Url`]);
-    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionWrapper1Url`]);
-    expect(OO.pixelPing.getCall(3).args).to.eql([`startUrl`]);
-    expect(OO.pixelPing.getCall(4).args).to.eql([`startWrapper2Url`]);
-    expect(OO.pixelPing.getCall(5).args).to.eql([`startWrapper1Url`]);
+    expect(OO.pixelPing.getCall(0).args).to.eql(['impressionUrl']);
+    expect(OO.pixelPing.getCall(1).args).to.eql(['impressionWrapper2Url']);
+    expect(OO.pixelPing.getCall(2).args).to.eql(['impressionWrapper1Url']);
+    expect(OO.pixelPing.getCall(3).args).to.eql(['startUrl']);
+    expect(OO.pixelPing.getCall(4).args).to.eql(['startWrapper2Url']);
+    expect(OO.pixelPing.getCall(5).args).to.eql(['startWrapper1Url']);
 
 
     ad.vpaidAd.callEvent('AdClickThru');
 
     sinon.assert.callCount(OO.pixelPing, 12);
-    expect(OO.pixelPing.getCall(6).args).to.eql([`clickTracking`]);
-    expect(OO.pixelPing.getCall(7).args).to.eql([`customClick`]);
-    expect(OO.pixelPing.getCall(8).args).to.eql([`clickTrackingWrapper2Url`]);
-    expect(OO.pixelPing.getCall(9).args).to.eql([`customClickWrapper2Url`]);
-    expect(OO.pixelPing.getCall(10).args).to.eql([`clickTrackingWrapper1Url`]);
-    expect(OO.pixelPing.getCall(11).args).to.eql([`customClickWrapper1Url`]);
+    expect(OO.pixelPing.getCall(6).args).to.eql(['clickTracking']);
+    expect(OO.pixelPing.getCall(7).args).to.eql(['customClick']);
+    expect(OO.pixelPing.getCall(8).args).to.eql(['clickTrackingWrapper2Url']);
+    expect(OO.pixelPing.getCall(9).args).to.eql(['customClickWrapper2Url']);
+    expect(OO.pixelPing.getCall(10).args).to.eql(['clickTrackingWrapper1Url']);
+    expect(OO.pixelPing.getCall(11).args).to.eql(['customClickWrapper1Url']);
 
     ad.vpaidAd.callEvent('AdError');
 
     sinon.assert.callCount(OO.pixelPing, 15);
 
-    expect(OO.pixelPing.getCall(12).args).to.eql([`errorUrl`]);
-    expect(OO.pixelPing.getCall(13).args).to.eql([`errorWrapper2Url`]);
-    expect(OO.pixelPing.getCall(14).args).to.eql([`errorWrapper1Url`]);
+    expect(OO.pixelPing.getCall(12).args).to.eql(['errorUrl']);
+    expect(OO.pixelPing.getCall(13).args).to.eql(['errorWrapper2Url']);
+    expect(OO.pixelPing.getCall(14).args).to.eql(['errorWrapper1Url']);
   });
 
-  it('VAST: Wrapper ad requests should not end ad pod until non-wrapper ad is found', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('VAST: Wrapper ad requests should not end ad pod until non-wrapper ad is found', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
-    var podEnded = false;
-    amc.notifyPodEnded = function(id) {
+    let podEnded = false;
+    amc.notifyPodEnded = function (id) {
       podEnded = true;
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     // Wrapper ads could be visualized as a tree with parents and children,
     // but in this case, it looks more like a linked list:
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
-    var parentDepthOneId = "wrapper-parent-1";
-    var parentDepthTwoId = "wrapper-parent-2";
-    var leafId = "6654644"; // Ad ID from linearXML file
+    const parentDepthOneId = 'wrapper-parent-1';
+    const parentDepthTwoId = 'wrapper-parent-2';
+    const leafId = '6654644'; // Ad ID from linearXML file
 
-    var adRequestAd = amc.timeline[0];
+    const adRequestAd = amc.timeline[0];
     expect(adRequestAd.adType).to.be(amc.ADTYPE.AD_REQUEST);
     vastAdManager.playAd(adRequestAd);
 
@@ -3318,39 +3376,41 @@ describe('ad_manager_vast', function() {
     expect(podEnded).to.be(true);
   });
 
-  it('VAST: Wrapper ad requests should end ad pod on vast error', function() {
-    var embed_code = "embed_code";
-    var vast_ad = {
-      type: "vast",
+  it('VAST: Wrapper ad requests should end ad pod on vast error', () => {
+    const embed_code = 'embed_code';
+    const vast_ad = {
+      type: 'vast',
       first_shown: 0,
       frequency: 2,
-      ad_set_code: "ad_set_code",
-      time:10,
-      position_type:"t",
-      url:"1.jpg"
+      ad_set_code: 'ad_set_code',
+      time: 10,
+      position_type: 't',
+      url: '1.jpg',
     };
-    var content = {
-      embed_code: embed_code,
-      ads: [vast_ad]
+    const content = {
+      embed_code,
+      ads: [vast_ad],
     };
-    var podEnded = false;
-    amc.notifyPodEnded = function(id) {
+    let podEnded = false;
+    amc.notifyPodEnded = function (id) {
       podEnded = true;
     };
     vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
+    vastAdManager.loadMetadata({
+      html5_ssl_ad_server: 'https://blah',
+      html5_ad_server: 'http://blah',
+    }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
 
     // Wrapper ads could be visualized as a tree with parents and children,
     // but in this case, it looks more like a linked list:
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
-    var parentDepthOneId = "wrapper-parent-1";
-    var parentDepthTwoId = "wrapper-parent-2";
-    var leafId = "6654644"; // Ad ID from linearXML file
+    const parentDepthOneId = 'wrapper-parent-1';
+    const parentDepthTwoId = 'wrapper-parent-2';
+    const leafId = '6654644'; // Ad ID from linearXML file
 
-    var adRequestAd = amc.timeline[0];
+    const adRequestAd = amc.timeline[0];
     expect(adRequestAd.adType).to.be(amc.ADTYPE.AD_REQUEST);
     vastAdManager.playAd(adRequestAd);
 
@@ -3358,7 +3418,7 @@ describe('ad_manager_vast', function() {
     expect(podEnded).to.be(false);
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
     expect(podEnded).to.be(false);
-    vastAdManager.onVastResponse(vast_ad,'asdf');
+    vastAdManager.onVastResponse(vast_ad, 'asdf');
     expect(errorType.length > 0).to.be(true);
     expect(podEnded).to.be(true);
   });
