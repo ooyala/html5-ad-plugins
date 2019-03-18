@@ -35,6 +35,35 @@ AdInstance = function (params) {
     };
   };
 };
+
+const AdManager = function () {
+  this.setNetwork = function () {};
+  this.setServer = function () {};
+  this.newContext = function () {
+    fwContext = new function () {
+      this.callbacks = {};
+      this.setProfile = function () {};
+      this.setVideoAsset = setVideoAsset;
+      this.setSiteSection = function () {};
+      this.addKeyValue = function () {};
+      this.addEventListener = function (event, callback) {
+        this.callbacks[event] = callback;
+      };
+      this.setParameter = function (constName, value, overrideLevel) {
+        fwParams[constName] = { value, overrideLevel };
+      };
+      this.submitRequest = function () {};
+      this.getTemporalSlots = getTemporalSlots;
+      this.registerVideoDisplayBase = function () {};
+      this.setContentVideoElement = function () {};
+      this.setVideoState = function () {};
+      this.setAdVolume = function () {};
+      this.dispose = function () {};
+    }();
+    return fwContext;
+  };
+};
+
 tv = {
   freewheel: {
     SDK: {
@@ -56,33 +85,7 @@ tv = {
       PARAMETER_LEVEL_OVERRIDE: 'override',
       PARAMETER_LEVEL_GLOBAL: 'global',
 
-      AdManager : function(){ // eslint-disable-line
-        this.setNetwork = function () {};
-        this.setServer = function () {};
-        this.newContext = function () {
-          fwContext = new function () {
-            this.callbacks = {};
-            this.setProfile = function () {};
-            this.setVideoAsset = setVideoAsset;
-            this.setSiteSection = function () {};
-            this.addKeyValue = function () {};
-            this.addEventListener = function (event, callback) {
-              this.callbacks[event] = callback;
-            };
-            this.setParameter = function (constName, value, overrideLevel) {
-              fwParams[constName] = { value, overrideLevel };
-            };
-            this.submitRequest = function () {};
-            this.getTemporalSlots = getTemporalSlots;
-            this.registerVideoDisplayBase = function () {};
-            this.setContentVideoElement = function () {};
-            this.setVideoState = function () {};
-            this.setAdVolume = function () {};
-            this.dispose = function () {};
-          }();
-          return fwContext;
-        };
-      },
+      AdManager,
     },
   },
 };
