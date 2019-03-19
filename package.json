@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "mocha test/unit-tests --require test/test_lib.js --exit",
-    "lint": "node node_modules/eslint/bin/eslint.js ./**/*.js",
+    "lint": "eslint ./**/*.js",
     "build": "echo",
     "build-prod": "echo",
     "start": "echo",

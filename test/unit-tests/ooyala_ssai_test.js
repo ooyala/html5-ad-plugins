@@ -12,8 +12,7 @@ require(`${COMMON_SRC_ROOT}classes/emitter.js`);
 const fs = require('fs');
 
 describe('ad_manager_ooyala_ssai', function () {
-  let amc; let
-    OoyalaSsai;
+  let amc; let OoyalaSsai;
   const name = 'ooyala-ssai-ads-manager';
   const originalOoAds = _.clone(OO.Ads);
   require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
