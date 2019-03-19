@@ -15,19 +15,16 @@ const {
   pairs,
 } = require('underscore');
 
-//TODO make amc ignore ad request timeout.
-require("../html5-common/js/utils/InitModules/InitOOUnderscore.js");
-require("../html5-common/js/utils/constants.js");
-require("../html5-common/js/utils/utils.js");
+// TODO make amc ignore ad request timeout.
+require('../html5-common/js/utils/InitModules/InitOOUnderscore.js');
+require('../html5-common/js/utils/constants.js');
+require('../html5-common/js/utils/utils.js');
 
 
+(function () {
+  const registeredGoogleIMAManagers = {};
 
-(function()
-{
-  var registeredGoogleIMAManagers = {};
-
-  OO.Ads.manager(function()
-  {
+  OO.Ads.manager(() => {
     /**
      * @class GoogleIMA
      * @classDesc The GoogleIMA Ads Manager class is registered as an ads manager with the Ad Manager Controller.
@@ -39,51 +36,50 @@ require("../html5-common/js/utils/utils.js");
      *             Google for tracking
      * @property {object} sharedVideoElement The video element to use on iOS where only one video element is allowed
      */
-    var GoogleIMA = function()
-    {
-      this.name = "google-ima-ads-manager";
+    const GoogleIMA = function () {
+      this.name = 'google-ima-ads-manager';
       this.ready = false;
       this.runningUnitTests = false;
       this.sharedVideoElement = null;
       this.initTime = Date.now();
       this.enableIosSkippableAds = false;
 
-      //private member variables of this GoogleIMA object
-      var _amc = null;
-      var _adModuleJsReady = false;
-      var _playheadTracker;
-      var _usingAdRules;
-      var _IMAAdsLoader;
-      var _IMAAdsManager;
-      var _imaAdPlayed;
-      var _IMAAdDisplayContainer;
-      var _linearAdIsPlaying;
-      var _timeUpdater = null;
-      var _uiContainer = null;
-      var _uiContainerPrevStyle = null;
-      var browserCanAutoplayUnmuted = false;
+      // private member variables of this GoogleIMA object
+      let _amc = null;
+      let _adModuleJsReady = false;
+      let _playheadTracker;
+      let _usingAdRules;
+      let _IMAAdsLoader;
+      let _IMAAdsManager;
+      let _imaAdPlayed;
+      let _IMAAdDisplayContainer;
+      let _linearAdIsPlaying;
+      let _timeUpdater = null;
+      let _uiContainer = null;
+      let _uiContainerPrevStyle = null;
+      let browserCanAutoplayUnmuted = false;
 
-      var _adToPlayOnRequestSuccess = null;
-      var _requestedAd = null;
+      let _adToPlayOnRequestSuccess = null;
+      let _requestedAd = null;
 
-      //Constants
-      var DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
-      var DEFAULT_ADS_REQUEST_TIME_OUT = 15000;
-      var DEFAULT_LOAD_VIDEO_TIME_OUT = 15000;
-      var AD_RULES_POSITION_TYPE = 'r';
-      var NON_AD_RULES_POSITION_TYPE = 't';
-      var NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
-      var PLAYER_TYPE = "Ooyala";
-      var PLUGIN_VERSION = "1.0";
+      // Constants
+      const DEFAULT_IMA_IFRAME_Z_INDEX = 10004;
+      const DEFAULT_ADS_REQUEST_TIME_OUT = 15000;
+      const DEFAULT_LOAD_VIDEO_TIME_OUT = 15000;
+      const AD_RULES_POSITION_TYPE = 'r';
+      const NON_AD_RULES_POSITION_TYPE = 't';
+      const NON_AD_RULES_PERCENT_POSITION_TYPE = 'p';
+      const PLAYER_TYPE = 'Ooyala';
+      const PLUGIN_VERSION = '1.0';
 
-      var VISIBLE_CSS = {left: OO.CSS.VISIBLE_POSITION, visibility: "visible"};
-      var INVISIBLE_CSS = {left: OO.CSS.INVISIBLE_POSITION, visibility: "hidden"};
+      const VISIBLE_CSS = { left: OO.CSS.VISIBLE_POSITION, visibility: 'visible' };
+      const INVISIBLE_CSS = { left: OO.CSS.INVISIBLE_POSITION, visibility: 'hidden' };
 
-      var OVERLAY_WIDTH_PADDING = 50;
-      var OVERLAY_HEIGHT_PADDING = 50;
+      const OVERLAY_WIDTH_PADDING = 50;
+      const OVERLAY_HEIGHT_PADDING = 50;
 
-      var TIME_UPDATER_INTERVAL = 500;
-      var OOYALA_IMA_PLUGIN_TIMEOUT = "ooyalaImaPluginTimeout";
+      const TIME_UPDATER_INTERVAL = 500;
+      const OOYALA_IMA_PLUGIN_TIMEOUT = 'ooyalaImaPluginTimeout';
 
       /**
        * Initializes the class by registering the ad manager controller.
@@ -98,16 +94,13 @@ require("../html5-common/js/utils/utils.js");
 
         _amc = amcIn;
 
-        var ext = OO.DEBUG ? '_debug.js' : '.js';
-        var remoteModuleJs = "//imasdk.googleapis.com/js/sdkloader/ima3" + ext;
+        const ext = OO.DEBUG ? '_debug.js' : '.js';
+        const remoteModuleJs = `//imasdk.googleapis.com/js/sdkloader/ima3${ext}`;
         _resetVars();
         _createAMCListeners();
-        if (!this.runningUnitTests)
-        {
+        if (!this.runningUnitTests) {
           _amc.loadAdModule(this.name, remoteModuleJs, _onSdkLoaded);
-        }
-        else
-        {
+        } else {
           _onSdkLoaded(true);
         }
       };
@@ -164,14 +157,14 @@ require("../html5-common/js/utils/utils.js");
         this.useInsecureVpaidMode = false;
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
 
-        //flag to track whether ad rules failed to load
+        // flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
 
-        //ad request vars
+        // ad request vars
         _adToPlayOnRequestSuccess = null;
         _requestedAd = null;
 
-        //google sdk variables
+        // google sdk variables
         _IMAAdsLoader = null;
         _IMAAdsManager = null;
         _imaAdPlayed = false;
@@ -198,9 +191,8 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA@_removeAMCListeners
        */
-      var _removeAMCListeners = () => {
-        if (_amc)
-        {
+      const _removeAMCListeners = () => {
+        if (_amc) {
           _amc.removePlayerListener(_amc.EVENTS.INITIAL_PLAY_REQUESTED, _onInitialPlayRequested);
           _amc.removePlayerListener(_amc.EVENTS.CONTENT_COMPLETED, _onContentCompleted);
           _amc.removePlayerListener(_amc.EVENTS.PLAYHEAD_TIME_CHANGED, _onPlayheadTimeChanged);
@@ -222,135 +214,112 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} movieMetadata Metadata pertaining specifically to the movie being played
        */
       this.loadMetadata = (metadata, baseMetadata, movieMetadata) => {
-        this.mainContentDuration = movieMetadata.duration/1000;
+        this.mainContentDuration = movieMetadata.duration / 1000;
         this.allAdInfo = metadata.all_ads;
 
-        //Check if any ad is ad rules type.  if one is then we change to only using ad rules.
-        var usesAdRulesCheck = (ad) =>{
-          return ad.position_type == AD_RULES_POSITION_TYPE;
-        };
-        var adRulesAd = find(metadata.all_ads, usesAdRulesCheck);
+        // Check if any ad is ad rules type.  if one is then we change to only using ad rules.
+        const usesAdRulesCheck = ad => ad.position_type == AD_RULES_POSITION_TYPE;
+        const adRulesAd = find(metadata.all_ads, usesAdRulesCheck);
         _usingAdRules = !!adRulesAd;
         this.adRulesLoadError = false;
 
-        //only fill in the adTagUrl if it's ad rules. Otherwise wait till AMC gives the correct one.
+        // only fill in the adTagUrl if it's ad rules. Otherwise wait till AMC gives the correct one.
         this.adTagUrl = null;
-        if (_usingAdRules)
-        {
+        if (_usingAdRules) {
           this.adTagUrl = adRulesAd.tag_url;
           this.adPosition = 0;
         }
 
-        //check if ads should play on replays
+        // check if ads should play on replays
         this.requestAdsOnReplay = true;
-        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.REPLAY_ADS))
-        {
+        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.REPLAY_ADS)) {
           this.requestAdsOnReplay = _amc.adManagerSettings[_amc.AD_SETTINGS.REPLAY_ADS];
         }
 
         this.preloadAds = false;
-        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.PRELOAD_ADS))
-        {
+        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.PRELOAD_ADS)) {
           this.preloadAds = _amc.adManagerSettings[_amc.AD_SETTINGS.PRELOAD_ADS];
         }
 
-        //check for override on ad timeout
+        // check for override on ad timeout
         this.maxAdsRequestTimeout = DEFAULT_ADS_REQUEST_TIME_OUT;
-        //IMA does not like timeouts of 0, it still attempts to play the ad even though
-        //we have timed out
-        //This may be a fault of the plugin or SDK. More investigation is required
+        // IMA does not like timeouts of 0, it still attempts to play the ad even though
+        // we have timed out
+        // This may be a fault of the plugin or SDK. More investigation is required
         if (isFinite(_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT])
-            && (_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0 || this.runningUnitTests))
-        {
+            && (_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0 || this.runningUnitTests)) {
           this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
         }
 
         this.additionalAdTagParameters = null;
-        if (metadata.hasOwnProperty("additionalAdTagParameters"))
-        {
+        if (metadata.hasOwnProperty('additionalAdTagParameters')) {
           this.additionalAdTagParameters = metadata.additionalAdTagParameters;
         }
 
-        //if playerControlsOverAds is true we can assume the player controls
-        //should be shown. Otherwise use whatever is passed in for showAdControls
+        // if playerControlsOverAds is true we can assume the player controls
+        // should be shown. Otherwise use whatever is passed in for showAdControls
         this.showAdControls = false;
         this.playerControlsOverAds = _amc.pageSettings && _amc.pageSettings.playerControlsOverAds === true;
-        if (this.playerControlsOverAds)
-        {
+        if (this.playerControlsOverAds) {
           this.showAdControls = true;
-        }
-        else if (metadata.hasOwnProperty("showAdControls"))
-        {
+        } else if (metadata.hasOwnProperty('showAdControls')) {
           this.showAdControls = metadata.showAdControls;
         }
 
-        //if we are showing the ad controls but the control bar isn't
-        //supposed to go over the video, then the video will resize
-        //and we have to disable autohiding the bar.
+        // if we are showing the ad controls but the control bar isn't
+        // supposed to go over the video, then the video will resize
+        // and we have to disable autohiding the bar.
         this.autoHideAdControls = true;
         if (this.showAdControls && !this.playerControlsOverAds) {
           this.autoHideAdControls = false;
         }
 
         this.useGoogleAdUI = false;
-        if (metadata.hasOwnProperty("useGoogleAdUI"))
-        {
+        if (metadata.hasOwnProperty('useGoogleAdUI')) {
           this.useGoogleAdUI = metadata.useGoogleAdUI;
         }
 
         this.useGoogleCountdown = false;
-        if (metadata.hasOwnProperty("useGoogleCountdown"))
-        {
+        if (metadata.hasOwnProperty('useGoogleCountdown')) {
           this.useGoogleCountdown = metadata.useGoogleCountdown;
         }
 
         this.useInsecureVpaidMode = false;
-        if (metadata.hasOwnProperty("vpaidMode"))
-        {
-          this.useInsecureVpaidMode = metadata.vpaidMode === "insecure";
+        if (metadata.hasOwnProperty('vpaidMode')) {
+          this.useInsecureVpaidMode = metadata.vpaidMode === 'insecure';
         }
 
         this.disableFlashAds = false;
-        if (metadata.hasOwnProperty("disableFlashAds"))
-        {
+        if (metadata.hasOwnProperty('disableFlashAds')) {
           this.disableFlashAds = metadata.disableFlashAds;
         }
 
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
-        if (metadata.hasOwnProperty("iframeZIndex"))
-        {
+        if (metadata.hasOwnProperty('iframeZIndex')) {
           this.imaIframeZIndex = metadata.iframeZIndex;
         }
 
         this.enableIosSkippableAds = false;
-        if (metadata.hasOwnProperty("enableIosSkippableAds"))
-        {
+        if (metadata.hasOwnProperty('enableIosSkippableAds')) {
           this.enableIosSkippableAds = metadata.enableIosSkippableAds;
         }
 
-        //we don't set a default because we want Google's default if it isn't specified.
-        if(metadata.hasOwnProperty("setMaxRedirects"))
-        {
-          if (typeof metadata.setMaxRedirects === "number")
-          {
+        // we don't set a default because we want Google's default if it isn't specified.
+        if (metadata.hasOwnProperty('setMaxRedirects')) {
+          if (typeof metadata.setMaxRedirects === 'number') {
             this.maxRedirects = metadata.setMaxRedirects;
-          }
-          else if (typeof metadata.setMaxRedirects === "string")
-          {
-            //convert to number
+          } else if (typeof metadata.setMaxRedirects === 'string') {
+            // convert to number
             this.maxRedirects = +metadata.setMaxRedirects;
           }
         }
 
-        //On second video playthroughs, we will not be initializing the ad manager again.
-        //Attempt to create the ad display container here instead of after the sdk has loaded
-        if (!_IMAAdDisplayContainer)
-        {
+        // On second video playthroughs, we will not be initializing the ad manager again.
+        // Attempt to create the ad display container here instead of after the sdk has loaded
+        if (!_IMAAdDisplayContainer) {
           _IMA_SDK_tryInitAdContainer();
-        }
-        else if (!_IMAAdsLoader)
-        {
-          //The Ads Loader might have been destroyed if we had timed out.
+        } else if (!_IMAAdsLoader) {
+          // The Ads Loader might have been destroyed if we had timed out.
           IMA_SDK_tryCreateAdsLoader();
         }
 
@@ -358,13 +327,11 @@ require("../html5-common/js/utils/utils.js");
 
         _trySetAdManagerToReady();
 
-        //double check that we have ads to play, and that after building the timeline there are ads (it filters out
-        //ill formed ads).
-        var validAdTags = _getValidAdTagUrls();
-        if (validAdTags && validAdTags.length > 0)
-        {
-          if (_usingAdRules)
-          {
+        // double check that we have ads to play, and that after building the timeline there are ads (it filters out
+        // ill formed ads).
+        const validAdTags = _getValidAdTagUrls();
+        if (validAdTags && validAdTags.length > 0) {
+          if (_usingAdRules) {
             this.canSetupAdsRequest = false;
           }
         }
@@ -378,8 +345,8 @@ require("../html5-common/js/utils/utils.js");
        */
       this.registerUi = () => {
         this.uiRegistered = true;
-        if (_amc.ui.useSingleVideoElement && !this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0] &&
-            (_amc.ui.ooyalaVideoElement[0].className === "video")) {
+        if (_amc.ui.useSingleVideoElement && !this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0]
+            && (_amc.ui.ooyalaVideoElement[0].className === 'video')) {
           this.setupSharedVideoElement(_amc.ui.ooyalaVideoElement[0]);
         }
 
@@ -394,16 +361,15 @@ require("../html5-common/js/utils/utils.js");
        * @param element Element to be setup as the shared video element
        */
       this.setupSharedVideoElement = (element) => {
-        //Remove any listeners we added on the previous shared video element
-        if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.removeEventListener === "function")
-        {
+        // Remove any listeners we added on the previous shared video element
+        if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.removeEventListener === 'function') {
           this.sharedVideoElement.removeEventListener('webkitendfullscreen', _raisePauseEvent);
         }
         this.sharedVideoElement = element;
-        //On iPhone, there is a limitation in the IMA SDK where we do not receive a pause event when
-        //we leave the native player
-        //This is a workaround to listen for the webkitendfullscreen event ourselves
-        if(this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.addEventListener === "function"){
+        // On iPhone, there is a limitation in the IMA SDK where we do not receive a pause event when
+        // we leave the native player
+        // This is a workaround to listen for the webkitendfullscreen event ourselves
+        if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.addEventListener === 'function') {
           this.sharedVideoElement.addEventListener('webkitendfullscreen', _raisePauseEvent);
         }
       };
@@ -417,55 +383,48 @@ require("../html5-common/js/utils/utils.js");
        * @returns {OO.AdManagerController#Ad[]} timeline A list of the ads to play for the current video
        */
       this.buildTimeline = () => {
-        var adsTimeline = [];
-        //for the moment we don't support mixing adrules and non-adrules.
-        if (!_usingAdRules)
-        {
-          var validAdTags = _getValidAdTagUrls();
-          if(validAdTags)
-          {
-            for (var i = 0; i < validAdTags.length; i++)
-            {
-              var ad = validAdTags[i];
-              //double check it's not an ad rules ad before trying to add it to the timeline
-              if (ad.position_type != AD_RULES_POSITION_TYPE)
-              {
+        const adsTimeline = [];
+        // for the moment we don't support mixing adrules and non-adrules.
+        if (!_usingAdRules) {
+          const validAdTags = _getValidAdTagUrls();
+          if (validAdTags) {
+            for (let i = 0; i < validAdTags.length; i++) {
+              const ad = validAdTags[i];
+              // double check it's not an ad rules ad before trying to add it to the timeline
+              if (ad.position_type != AD_RULES_POSITION_TYPE) {
                 var streams = {};
-                streams[OO.VIDEO.ENCODING.IMA] = "";
-                var adData = {
-                  "position": ad.position / 1000,
-                  "adManager": this.name,
-                  "ad": ad,
-                  "streams": streams,
-                  "adType": _amc.ADTYPE.UNKNOWN_AD_REQUEST,
-                  "mainContentDuration": this.mainContentDuration
+                streams[OO.VIDEO.ENCODING.IMA] = '';
+                const adData = {
+                  position: ad.position / 1000,
+                  adManager: this.name,
+                  ad,
+                  streams,
+                  adType: _amc.ADTYPE.UNKNOWN_AD_REQUEST,
+                  mainContentDuration: this.mainContentDuration,
                 };
 
-                if (ad.position_type === NON_AD_RULES_PERCENT_POSITION_TYPE)
-                {
+                if (ad.position_type === NON_AD_RULES_PERCENT_POSITION_TYPE) {
                   adData.positionType = NON_AD_RULES_PERCENT_POSITION_TYPE;
                   adData.position = ad.position;
                 }
 
-                var adToInsert = new _amc.Ad(adData);
+                const adToInsert = new _amc.Ad(adData);
                 adsTimeline.push(adToInsert);
               }
             }
           }
-        }
-        else
-        {
-          //return a placeholder preroll while we wait for IMA
+        } else {
+          // return a placeholder preroll while we wait for IMA
           var streams = {};
-          streams[OO.VIDEO.ENCODING.IMA] = "";
-          var placeholder = [ new _amc.Ad({
+          streams[OO.VIDEO.ENCODING.IMA] = '';
+          const placeholder = [new _amc.Ad({
             position: 0,
             duration: 0,
             adManager: this.name,
             ad: {},
-            streams: streams,
-            //use linear video so VTC can prepare the video element (does not disturb overlays)
-            adType: _amc.ADTYPE.UNKNOWN_AD_REQUEST
+            streams,
+            // use linear video so VTC can prepare the video element (does not disturb overlays)
+            adType: _amc.ADTYPE.UNKNOWN_AD_REQUEST,
           })];
 
           return placeholder;
@@ -483,8 +442,7 @@ require("../html5-common/js/utils/utils.js");
        * @returns {array} Ads with valid ad tags. Null if this.allAdInfo doesn't exist.
        */
       var _getValidAdTagUrls = () => {
-        if (!this.allAdInfo)
-        {
+        if (!this.allAdInfo) {
           return null;
         }
 
@@ -498,14 +456,13 @@ require("../html5-common/js/utils/utils.js");
        * @returns {array} Ads with valid ad tags.
        */
       var _isValidAdTag = (ad) => {
-        if(!ad)
-        {
+        if (!ad) {
           return false;
         }
 
-        var url = ad.tag_url;
-        var isAdRulesAd = (ad.position_type == AD_RULES_POSITION_TYPE);
-        var isSameAdType = (_usingAdRules == isAdRulesAd);
+        const url = ad.tag_url;
+        const isAdRulesAd = (ad.position_type == AD_RULES_POSITION_TYPE);
+        const isSameAdType = (_usingAdRules == isAdRulesAd);
 
         return isSameAdType && url && typeof url === 'string';
       };
@@ -518,28 +475,21 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} adRequestOnly True to request the ad without starting playback, false to request and playback the ad
        */
       this.playAd = (amcAdPod, adRequestOnly) => {
-        if (amcAdPod === null || typeof amcAdPod === 'undefined')
-        {
+        if (amcAdPod === null || typeof amcAdPod === 'undefined') {
           return;
         }
 
-        if (!adRequestOnly)
-        {
+        if (!adRequestOnly) {
           _adToPlayOnRequestSuccess = amcAdPod;
-        }
-        else
-        {
+        } else {
           _requestedAd = amcAdPod;
         }
 
-        if (_requestedAd === amcAdPod && this.currentAMCAdPod === amcAdPod)
-        {
-          if (!adRequestOnly)
-          {
+        if (_requestedAd === amcAdPod && this.currentAMCAdPod === amcAdPod) {
+          if (!adRequestOnly) {
             _adToPlayOnRequestSuccess = this.currentAMCAdPod;
 
-            if (this.adsReady)
-            {
+            if (this.adsReady) {
               _tryPlayImaAd();
             }
           }
@@ -547,19 +497,15 @@ require("../html5-common/js/utils/utils.js");
           return;
         }
 
-        if(this.currentAMCAdPod)
-        {
+        if (this.currentAMCAdPod) {
           _endCurrentAd(true);
         }
 
         this.currentAMCAdPod = amcAdPod;
-        if(!this.currentAMCAdPod)
-        {
-          _throwError("playAd() called but amcAdPod is null.");
-        }
-        else if (!this.currentAMCAdPod.ad)
-        {
-          _throwError("playAd() called but amcAdPod.ad is null.");
+        if (!this.currentAMCAdPod) {
+          _throwError('playAd() called but amcAdPod is null.');
+        } else if (!this.currentAMCAdPod.ad) {
+          _throwError('playAd() called but amcAdPod.ad is null.');
         }
 
         /*
@@ -568,16 +514,13 @@ require("../html5-common/js/utils/utils.js");
         This fixes issues where overlays appear behind the video and for iOS it fixes
         video ads not showing.
         */
-        var IMAiframe = _getImaIframe();
-        if (IMAiframe && IMAiframe.style)
-        {
+        const IMAiframe = _getImaIframe();
+        if (IMAiframe && IMAiframe.style) {
           IMAiframe.style.zIndex = this.imaIframeZIndex;
         }
 
-        if(_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST)
-        {
-          if (adRequestOnly)
-          {
+        if (_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST) {
+          if (adRequestOnly) {
             this.canSetupAdsRequest = true;
             _trySetupAdsRequest();
           }
@@ -585,37 +528,30 @@ require("../html5-common/js/utils/utils.js");
           return;
         }
 
-        //IMA doesn't use the adVideoElement layer so make sure to hide it.
-        if (!_amc.ui.useSingleVideoElement && _amc.ui.adVideoElement)
-        {
+        // IMA doesn't use the adVideoElement layer so make sure to hide it.
+        if (!_amc.ui.useSingleVideoElement && _amc.ui.adVideoElement) {
           _amc.ui.adVideoElement.css(INVISIBLE_CSS);
         }
 
-        if(_usingAdRules && this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY)
-        {
+        if (_usingAdRules && this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY) {
           _tryStartAd();
-        }
-        else
-        {
-          //if we are trying to play an linear ad then we need to request the ad now.
-          if (this.currentAMCAdPod.ad.forced_ad_type != _amc.ADTYPE.NONLINEAR_OVERLAY)
-          {
-            //reset adRequested and adTagUrl so we can request another ad
+        } else {
+          // if we are trying to play an linear ad then we need to request the ad now.
+          if (this.currentAMCAdPod.ad.forced_ad_type != _amc.ADTYPE.NONLINEAR_OVERLAY) {
+            // reset adRequested and adTagUrl so we can request another ad
             _resetAdsState();
             this.adTagUrl = this.currentAMCAdPod.ad.tag_url;
             this.adPosition = this.currentAMCAdPod.ad.position / 1000;
             _trySetupAdsRequest();
           }
-          //Otherwise we are trying to play an overlay, at this point IMA is already
-          //displaying it, so just notify AMC that we are showing an overlay.
-          else
-          {
-            //provide width and height values if available. Alice will use these to resize
-            //the skin plugins div when a non linear overlay is on screen
-            if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
-            {
-              //IMA requires some padding in order to have the overlay render or else
-              //IMA thinks the available real estate is too small.
+          // Otherwise we are trying to play an overlay, at this point IMA is already
+          // displaying it, so just notify AMC that we are showing an overlay.
+          else {
+            // provide width and height values if available. Alice will use these to resize
+            // the skin plugins div when a non linear overlay is on screen
+            if (this.currentAMCAdPod && this.currentNonLinearIMAAd) {
+              // IMA requires some padding in order to have the overlay render or else
+              // IMA thinks the available real estate is too small.
               this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
               this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
               this.currentAMCAdPod.paddingWidth = OVERLAY_WIDTH_PADDING;
@@ -637,8 +573,8 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} ad The ad to hide
        */
       this.cancelOverlay = (ad) => {
-        //currently IMA doesn't have overlay durations so it will always be canceled.
-        //They will never receive a completed message.
+        // currently IMA doesn't have overlay durations so it will always be canceled.
+        // They will never receive a completed message.
         this.cancelAd(ad);
       };
 
@@ -649,14 +585,12 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} ad The ad to cancel
        */
       this.cancelAd = (ad) => {
-        if(ad && this.currentAMCAdPod && ad.id != this.currentAMCAdPod.id)
-        {
-          _throwError("AMC canceling ad that is not the current one playing.");
+        if (ad && this.currentAMCAdPod && ad.id != this.currentAMCAdPod.id) {
+          _throwError('AMC canceling ad that is not the current one playing.');
         }
-        OO.log("GOOGLE IMA: ad got canceled by AMC");
+        OO.log('GOOGLE IMA: ad got canceled by AMC');
 
-        if (!_usingAdRules)
-        {
+        if (!_usingAdRules) {
           _IMA_SDK_destroyAdsManager();
         }
         _endCurrentAd(true);
@@ -669,8 +603,7 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} ad The ad to pause
        */
       this.pauseAd = (ad) => {
-        if (_IMAAdsManager && this.adPlaybackStarted)
-        {
+        if (_IMAAdsManager && this.adPlaybackStarted) {
           _IMAAdsManager.pause();
         }
       };
@@ -682,24 +615,18 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} ad The ad to resume
        */
       this.resumeAd = (ad) => {
-        if (this.startImaOnVtcPlay)
-        {
+        if (this.startImaOnVtcPlay) {
           this.startImaOnVtcPlay = false;
-          if (_IMAAdsManager)
-          {
+          if (_IMAAdsManager) {
             _IMAAdsManager.start();
           }
-        }
-        else if (_IMAAdsManager && this.adPlaybackStarted)
-        {
-          //On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
-          //We want to force the video to reenter fullscreen and play
-          if (OO.isIphone && this.sharedVideoElement)
-          {
-            //resumeAd will only be called if we have exited fullscreen
-            //so this is safe to call
-            if (!_inlinePlaybackSupported())
-            {
+        } else if (_IMAAdsManager && this.adPlaybackStarted) {
+          // On iPhone, just calling _IMAAdsManager.resume doesn't resume the video
+          // We want to force the video to reenter fullscreen and play
+          if (OO.isIphone && this.sharedVideoElement) {
+            // resumeAd will only be called if we have exited fullscreen
+            // so this is safe to call
+            if (!_inlinePlaybackSupported()) {
               this.sharedVideoElement.webkitEnterFullscreen();
             }
             this.sharedVideoElement.play();
@@ -709,38 +636,33 @@ require("../html5-common/js/utils/utils.js");
       };
 
       this.getVolume = () => {
-        var volume = 1;
-        if (_IMAAdsManager)
-        {
+        let volume = 1;
+        if (_IMAAdsManager) {
           volume = _IMAAdsManager.getVolume();
         }
         return volume;
       };
 
       this.setVolume = (volume) => {
-        if (_IMAAdsManager)
-        {
-          //do not set non-zero volumes if we have not captured the user click
-          //since that will cause IMA to error out on platforms where
-          //muted autoplay is not supported
+        if (_IMAAdsManager) {
+          // do not set non-zero volumes if we have not captured the user click
+          // since that will cause IMA to error out on platforms where
+          // muted autoplay is not supported
           const isVolumeDifferent = _IMAAdsManager.getVolume() !== volume;
-          if (isVolumeDifferent &&
-            (this.capturedUserClick || volume === 0 || !this.requiresMutedAutoplay())
+          if (isVolumeDifferent
+            && (this.capturedUserClick || volume === 0 || !this.requiresMutedAutoplay())
           ) {
             this.savedVolume = -1;
             _IMAAdsManager.setVolume(volume);
-            //workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
-            //on when sharing video element or if playback has not started,
-            //so we'll notify of current volume and mute state now
-            if (this.videoControllerWrapper && (!this.adPlaybackStarted || this.sharedVideoElement))
-            {
+            // workaround of an IMA issue where we don't receive a VOLUME_CHANGED ad event
+            // on when sharing video element or if playback has not started,
+            // so we'll notify of current volume and mute state now
+            if (this.videoControllerWrapper && (!this.adPlaybackStarted || this.sharedVideoElement)) {
               this.videoControllerWrapper.raiseVolumeEvent();
             }
           }
-        }
-        else
-        {
-          //if ad is not playing, store the volume to set later when we start the video
+        } else {
+          // if ad is not playing, store the volume to set later when we start the video
           this.savedVolume = volume;
         }
       };
@@ -753,46 +675,42 @@ require("../html5-common/js/utils/utils.js");
        */
       this.setupUnmutedPlayback = () => {
         this.capturedUserClick = true;
-        //We need to pass the user click to the IMA AdDisplayContainer's
-        //initialize method so that IMA can start ads unmuted.
-        //Do not do this if curently playing an ad or else the ad will restart.
-        //We call IMA's setVolume method to pass the click instead if ad is
-        //currently playing
-        if (!this.currentIMAAd)
-        {
-          if (_IMAAdDisplayContainer)
-          {
+        // We need to pass the user click to the IMA AdDisplayContainer's
+        // initialize method so that IMA can start ads unmuted.
+        // Do not do this if curently playing an ad or else the ad will restart.
+        // We call IMA's setVolume method to pass the click instead if ad is
+        // currently playing
+        if (!this.currentIMAAd) {
+          if (_IMAAdDisplayContainer) {
             _IMAAdDisplayContainer.initialize();
           }
         }
       };
 
       this.getCurrentTime = () => {
-        var currentTime = 0;
-        //IMA provides values for getRemainingTime which can result in negative current times
-        //or current times which are greater than duration.
-        //We will check these boundaries so we will not report these unexpected current times
-        if (_IMAAdsManager &&
-          this.currentIMAAd &&
-          _IMAAdsManager.getRemainingTime() >= 0 &&
-          _IMAAdsManager.getRemainingTime() <= this.currentIMAAd.getDuration())
-        {
+        let currentTime = 0;
+        // IMA provides values for getRemainingTime which can result in negative current times
+        // or current times which are greater than duration.
+        // We will check these boundaries so we will not report these unexpected current times
+        if (_IMAAdsManager
+          && this.currentIMAAd
+          && _IMAAdsManager.getRemainingTime() >= 0
+          && _IMAAdsManager.getRemainingTime() <= this.currentIMAAd.getDuration()) {
           currentTime = this.currentIMAAd.getDuration() - _IMAAdsManager.getRemainingTime();
         }
         return currentTime;
       };
 
       this.getDuration = () => {
-        var duration = 0;
-        if (this.currentIMAAd)
-        {
+        let duration = 0;
+        if (this.currentIMAAd) {
           duration = this.currentIMAAd.getDuration();
         }
         return duration;
       };
 
       this.adVideoFocused = () => {
-        //Required for plugin
+        // Required for plugin
       };
 
       /**
@@ -802,9 +720,8 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_onReplayRequested.
        */
       var _onReplayRequested = () => {
-        if (!_IMAAdsLoader)
-        {
-          //The Ads Loader might have been destroyed if we had timed out.
+        if (!_IMAAdsLoader) {
+          // The Ads Loader might have been destroyed if we had timed out.
           IMA_SDK_tryCreateAdsLoader();
         }
         this.isReplay = true;
@@ -812,11 +729,10 @@ require("../html5-common/js/utils/utils.js");
         _resetPlayheadTracker();
         this.contentEnded = false;
         this.adRulesLoadError = false;
-        //In the case of ad rules, non of the ads are in the timeline
-        //and we won't call initialPlayRequested again. So we manually call
-        //to load the ads again. We don't care about preloading at this point.
-        if (_usingAdRules)
-        {
+        // In the case of ad rules, non of the ads are in the timeline
+        // and we won't call initialPlayRequested again. So we manually call
+        // to load the ads again. We don't care about preloading at this point.
+        if (_usingAdRules) {
           _trySetupAdsRequest();
         }
       };
@@ -829,14 +745,13 @@ require("../html5-common/js/utils/utils.js");
       var _resetAdsState = () => {
         _tryUndoSetupForAdRules();
 
-        //If you want to use the same ad tag twice you have to destroy the admanager and call
-        //adsLoader.contentComplete. (This also helps with non-adrules ads)  This resets the
-        //internal state in the IMA SDK. You call contentComplete after destroying the adManager
-        //so you don't accidently play postrolls.
-        //Link to documentation: https://developers.google.com/interactive-media-ads/docs/sdks/android/faq
+        // If you want to use the same ad tag twice you have to destroy the admanager and call
+        // adsLoader.contentComplete. (This also helps with non-adrules ads)  This resets the
+        // internal state in the IMA SDK. You call contentComplete after destroying the adManager
+        // so you don't accidently play postrolls.
+        // Link to documentation: https://developers.google.com/interactive-media-ads/docs/sdks/android/faq
         _IMA_SDK_destroyAdsManager();
-        if (_IMAAdsLoader)
-        {
+        if (_IMAAdsLoader) {
           _IMAAdsLoader.contentComplete();
         }
         this.currentIMAAd = null;
@@ -855,13 +770,12 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onInitialPlayRequested = (event, wasAutoplayed) => {
         this.initialPlayRequestTime = new Date().valueOf();
-        OO.log("_onInitialPlayRequested");
-        //double check that IMA SDK loaded.
-        if(!_IMAAdDisplayContainer)
-        {
+        OO.log('_onInitialPlayRequested');
+        // double check that IMA SDK loaded.
+        if (!_IMAAdDisplayContainer) {
           _onImaAdError();
           _amc.unregisterAdManager(this.name);
-          _throwError("onInitialPlayRequested called but _IMAAdDisplayContainer not created yet.");
+          _throwError('onInitialPlayRequested called but _IMAAdDisplayContainer not created yet.');
         }
 
         this.initialPlayRequested = true;
@@ -869,9 +783,9 @@ require("../html5-common/js/utils/utils.js");
         _IMAAdDisplayContainer.initialize();
         this.capturedUserClick = this.capturedUserClick || !wasAutoplayed;
 
-        //if the IMA ads manager object exists, this means that the ad was preloaded
-        //Call the init function here when using ad rules so that IMA can take over ad control.
-        //If we call it earlier, the ad will start playback automatically even if we're not autoplaying
+        // if the IMA ads manager object exists, this means that the ad was preloaded
+        // Call the init function here when using ad rules so that IMA can take over ad control.
+        // If we call it earlier, the ad will start playback automatically even if we're not autoplaying
         if (_usingAdRules && _IMAAdsManager) {
           _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
         }
@@ -887,14 +801,13 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA#_tryNotifyUnmutedPlaybackFailed
        */
-      var _tryNotifyUnmutedPlaybackFailed = () => {
-        var notified = false;
-        //PLAYER-2426: We do not want to mute if we are using ad rules, are handling the initial ad request
-        //for ad rules, and found no prerolls.
-        var noPrerollAdRulesAdRequest = _usingAdRules && !this.hasPreroll && this.currentAMCAdPod &&
-            this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST;
-        if (this.willPlayAdMuted() && this.videoControllerWrapper && !noPrerollAdRulesAdRequest)
-        {
+      const _tryNotifyUnmutedPlaybackFailed = () => {
+        let notified = false;
+        // PLAYER-2426: We do not want to mute if we are using ad rules, are handling the initial ad request
+        // for ad rules, and found no prerolls.
+        const noPrerollAdRulesAdRequest = _usingAdRules && !this.hasPreroll && this.currentAMCAdPod
+            && this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST;
+        if (this.willPlayAdMuted() && this.videoControllerWrapper && !noPrerollAdRulesAdRequest) {
           this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
           notified = true;
@@ -908,11 +821,10 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA#_tryStartAdsManager
        */
-      var _tryStartAdsManager = () => {
-        var notified = _tryNotifyUnmutedPlaybackFailed();
-        if (!notified && _IMAAdsManager)
-        {
-          OO.log("Starting IMA Ads Manager");
+      const _tryStartAdsManager = () => {
+        const notified = _tryNotifyUnmutedPlaybackFailed();
+        if (!notified && _IMAAdsManager) {
+          OO.log('Starting IMA Ads Manager');
           _IMAAdsManager.start();
         }
       };
@@ -923,15 +835,13 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_tryPlayImaAd
        */
       var _tryPlayImaAd = () => {
-        //block this code from running till we want to play the video
-        //if you run it before then ima will take over and immediately try to play
-        //ads (if there is a preroll)
-        var validAdRequestSuccess = this.currentAMCAdPod && _adToPlayOnRequestSuccess === this.currentAMCAdPod;
-        var readyToPlay = validAdRequestSuccess || _usingAdRules;
-        if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer && readyToPlay)
-        {
-          try
-          {
+        // block this code from running till we want to play the video
+        // if you run it before then ima will take over and immediately try to play
+        // ads (if there is a preroll)
+        const validAdRequestSuccess = this.currentAMCAdPod && _adToPlayOnRequestSuccess === this.currentAMCAdPod;
+        const readyToPlay = validAdRequestSuccess || _usingAdRules;
+        if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer && readyToPlay) {
+          try {
             // PBW-6610
             // Traditionally we have relied on the LOADED ad event before calling adsManager.start.
             // This may have worked accidentally.
@@ -942,21 +852,18 @@ require("../html5-common/js/utils/utils.js");
             _adToPlayOnRequestSuccess = null;
             _imaAdPlayed = true;
 
-            //notify placeholder end if we do not have a preroll to start main content
+            // notify placeholder end if we do not have a preroll to start main content
 
-            //handling this after starting the ads manager since we need these states for determining
-            //if we require muted autoplay.
-            if(_usingAdRules &&
-              !this.hasPreroll &&
-              this.currentAMCAdPod &&
-              this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST)
-            {
+            // handling this after starting the ads manager since we need these states for determining
+            // if we require muted autoplay.
+            if (_usingAdRules
+              && !this.hasPreroll
+              && this.currentAMCAdPod
+              && this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST) {
               _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
               _endCurrentAd(true);
             }
-          }
-          catch (adError)
-          {
+          } catch (adError) {
             _onImaAdError(adError);
           }
         }
@@ -969,11 +876,9 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_onContentCompleted
        */
       var _onContentCompleted = () => {
-        if (this.contentEnded == false)
-        {
+        if (this.contentEnded == false) {
           this.contentEnded = true;
-          if (_IMAAdsLoader)
-          {
+          if (_IMAAdsLoader) {
             _IMAAdsLoader.contentComplete();
           }
         }
@@ -987,16 +892,14 @@ require("../html5-common/js/utils/utils.js");
        * @param duration - duration of the movie.
        */
       var _onPlayheadTimeChanged = (event, playheadTime, duration) => {
-        if (!_playheadTracker)
-        {
+        if (!_playheadTracker) {
           _resetPlayheadTracker();
         }
 
-        //in case the amc gives us playhead updates while IMA is playing an ad (AdRules case)
-        //then we don't want to update the playhead that IMA reads from to avoid triggering
-        //more ads while playing the current one.
-        if(!_linearAdIsPlaying)
-        {
+        // in case the amc gives us playhead updates while IMA is playing an ad (AdRules case)
+        // then we don't want to update the playhead that IMA reads from to avoid triggering
+        // more ads while playing the current one.
+        if (!_linearAdIsPlaying) {
           _playheadTracker.currentTime = playheadTime;
           _playheadTracker.duration = duration;
         }
@@ -1028,29 +931,23 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_updateIMASize
        */
       var _updateIMASize = () => {
-        if (_IMAAdsManager && _uiContainer)
-        {
-          var viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
-          var width = _uiContainer.clientWidth;
-          var height = _uiContainer.clientHeight;
-          //For nonlinear overlays, we want to provide the size that we sent to the AMC in playAd.
-          //We do this because the player skin plugins div (_uiContainer) may not have been redrawn yet
-          if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
-          {
-            if (this.currentAMCAdPod.width)
-            {
+        if (_IMAAdsManager && _uiContainer) {
+          const viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
+          let width = _uiContainer.clientWidth;
+          let height = _uiContainer.clientHeight;
+          // For nonlinear overlays, we want to provide the size that we sent to the AMC in playAd.
+          // We do this because the player skin plugins div (_uiContainer) may not have been redrawn yet
+          if (this.currentAMCAdPod && this.currentNonLinearIMAAd) {
+            if (this.currentAMCAdPod.width) {
               width = this.currentAMCAdPod.width;
-              if (this.currentAMCAdPod.paddingWidth)
-              {
+              if (this.currentAMCAdPod.paddingWidth) {
                 width += this.currentAMCAdPod.paddingWidth;
               }
             }
 
-            if (this.currentAMCAdPod.height)
-            {
+            if (this.currentAMCAdPod.height) {
               height = this.currentAMCAdPod.height;
-              if (this.currentAMCAdPod.paddingHeight)
-              {
+              if (this.currentAMCAdPod.paddingHeight) {
                 height += this.currentAMCAdPod.paddingHeight;
               }
             }
@@ -1066,12 +963,9 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_resetPlayheadTracker
        */
       var _resetPlayheadTracker = () => {
-        if (!_playheadTracker)
-        {
-          _playheadTracker = {duration: 0, currentTime: 0};
-        }
-        else
-        {
+        if (!_playheadTracker) {
+          _playheadTracker = { duration: 0, currentTime: 0 };
+        } else {
           _playheadTracker.currentTime = 0;
         }
       };
@@ -1083,69 +977,62 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_trySetupAdsRequest
        */
       var _trySetupAdsRequest = () => {
-        //need metadata, ima sdk, and ui to be registered before we can request an ad
-        if ( this.adsRequested         ||
-            !this.canSetupAdsRequest   ||
-            !this.adTagUrl             ||
-            !this.uiRegistered         ||
-            !_amc.currentEmbedCode     ||
-            !_IMAAdsLoader             ||
-            !_checkRequestAdsOnReplay())
-        {
+        // need metadata, ima sdk, and ui to be registered before we can request an ad
+        if (this.adsRequested
+            || !this.canSetupAdsRequest
+            || !this.adTagUrl
+            || !this.uiRegistered
+            || !_amc.currentEmbedCode
+            || !_IMAAdsLoader
+            || !_checkRequestAdsOnReplay()) {
           return;
         }
 
-        //at this point we are guaranteed that metadata has been received and the sdk is loaded.
-        //so now we can set whether to disable flash ads or not.
-        if (google && google.ima && google.ima.settings)
-        {
+        // at this point we are guaranteed that metadata has been received and the sdk is loaded.
+        // so now we can set whether to disable flash ads or not.
+        if (google && google.ima && google.ima.settings) {
           google.ima.settings.setDisableFlashAds(this.disableFlashAds);
         }
 
-        var adsRequest = new google.ima.AdsRequest();
-        if (this.additionalAdTagParameters)
-        {
-          var connector = this.adTagUrl.indexOf("?") > 0 ? "&" : "?";
+        const adsRequest = new google.ima.AdsRequest();
+        if (this.additionalAdTagParameters) {
+          const connector = this.adTagUrl.indexOf('?') > 0 ? '&' : '?';
 
           // Generate an array of key/value pairings, for faster string concat
-          var paramArray = [];
-          var param = null;
-          for (param in this.additionalAdTagParameters)
-          {
-            paramArray.push(param + "=" + this.additionalAdTagParameters[param]);
+          const paramArray = [];
+          let param = null;
+          for (param in this.additionalAdTagParameters) {
+            paramArray.push(`${param}=${this.additionalAdTagParameters[param]}`);
           }
-          this.adTagUrl += connector + paramArray.join("&");
+          this.adTagUrl += connector + paramArray.join('&');
         }
         adsRequest.adTagUrl = OO.getNormalizedTagUrl(this.adTagUrl, _amc.currentEmbedCode);
         this.adFinalTagUrl = adsRequest.adTagUrl;
         // Specify the linear and nonlinear slot sizes. This helps the SDK to
         // select the correct creative if multiple are returned.
-        var w = _amc.ui.width;
-        var h = _amc.ui.height;
+        const w = _amc.ui.width;
+        const h = _amc.ui.height;
         adsRequest.linearAdSlotWidth = w;
         adsRequest.linearAdSlotHeight = h;
 
         adsRequest.nonLinearAdSlotWidth = w;
         adsRequest.nonLinearAdSlotHeight = h;
 
-        //Google makes use of certain parameters to determine inventory for ad playback
-        var adWillPlayMuted = this.willPlayAdMuted();
-        OO.log("IMA: setAdWillPlayMuted = " + adWillPlayMuted);
+        // Google makes use of certain parameters to determine inventory for ad playback
+        const adWillPlayMuted = this.willPlayAdMuted();
+        OO.log(`IMA: setAdWillPlayMuted = ${adWillPlayMuted}`);
         adsRequest.setAdWillPlayMuted(adWillPlayMuted);
 
         _resetAdsState();
         _trySetupForAdRules();
         _IMAAdsLoader.requestAds(adsRequest);
 
-        //Used to determine time until response is received
+        // Used to determine time until response is received
         this.adRequestTime = new Date().valueOf();
         _amc.onAdRequest(this.name, this.adPosition);
-        if (this.runningUnitTests && this.maxAdsRequestTimeout === 0)
-        {
+        if (this.runningUnitTests && this.maxAdsRequestTimeout === 0) {
           _adsRequestTimeout();
-        }
-        else
-        {
+        } else {
           this.adsRequestTimeoutRef = delay(_adsRequestTimeout, this.maxAdsRequestTimeout);
         }
         this.adsRequested = true;
@@ -1160,8 +1047,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_checkRequestAdsOnReplay
        */
       var _checkRequestAdsOnReplay = () => {
-        if (!this.isReplay)
-        {
+        if (!this.isReplay) {
           return true;
         }
 
@@ -1176,16 +1062,14 @@ require("../html5-common/js/utils/utils.js");
        */
       var _onSdkLoaded = (success) => {
         _adModuleJsReady = success;
-        OO.log("onSdkLoaded!");
+        OO.log('onSdkLoaded!');
         // [PBK-639] Corner case where Google's SDK 200s but isn't properly
         // loaded. Better safe than sorry..
-        if (!success || !_isGoogleSDKValid())
-        {
+        if (!success || !_isGoogleSDKValid()) {
           _onImaAdError();
-          errorString = "ERROR Google SDK failed to load";
-          if (success && !_isGoogleSDKValid())
-          {
-            errorString = "ERROR Google SDK loaded but could not be validated"
+          errorString = 'ERROR Google SDK failed to load';
+          if (success && !_isGoogleSDKValid()) {
+            errorString = 'ERROR Google SDK loaded but could not be validated';
           }
           _amc.onAdSdkLoadFailure(this.name, errorString);
           _amc.unregisterAdManager(this.name);
@@ -1202,36 +1086,27 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_IMA_SDK_tryInitAdContainer
        */
       var _IMA_SDK_tryInitAdContainer = () => {
-        if (_adModuleJsReady && this.uiRegistered)
-        {
-          if (!_isGoogleSDKValid())
-          {
-             _throwError("IMA SDK loaded but does not contain valid data");
+        if (_adModuleJsReady && this.uiRegistered) {
+          if (!_isGoogleSDKValid()) {
+            _throwError('IMA SDK loaded but does not contain valid data');
           }
 
-          if (!_IMAAdDisplayContainer)
-          {
-            //**It's now safe to set SDK settings, we have all the page level overrides and
-            //the SDK is guaranteed to be loaded.
+          if (!_IMAAdDisplayContainer) {
+            //* *It's now safe to set SDK settings, we have all the page level overrides and
+            // the SDK is guaranteed to be loaded.
 
-            //These are required by Google for tracking purposes.
+            // These are required by Google for tracking purposes.
             google.ima.settings.setPlayerVersion(PLUGIN_VERSION);
             google.ima.settings.setPlayerType(PLAYER_TYPE);
-            if (_amc.uiLanguage)
-            {
+            if (_amc.uiLanguage) {
               google.ima.settings.setLocale(_amc.uiLanguage);
-            }
-            else
-            {
+            } else {
               google.ima.settings.setLocale(OO.getLocale());
             }
 
-            if (this.useInsecureVpaidMode)
-            {
+            if (this.useInsecureVpaidMode) {
               google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.INSECURE);
-            }
-            else
-            {
+            } else {
               google.ima.settings.setVpaidMode(google.ima.ImaSdkSettings.VpaidMode.ENABLED);
             }
 
@@ -1241,17 +1116,17 @@ require("../html5-common/js/utils/utils.js");
               google.ima.settings.setNumRedirects(this.maxRedirects);
             }
 
-            //Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
+            // Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
             _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
-            //iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
-            //also doesn't not seem to work nicely with podded ads if you don't use it.
+            // iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
+            // also doesn't not seem to work nicely with podded ads if you don't use it.
 
-            var vid = this.sharedVideoElement;
+            const vid = this.sharedVideoElement;
 
-            //for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
-            //properly with the Alice skin.
+            // for IMA, we always want to use the plugins element to house the IMA UI. This allows it to behave
+            // properly with the Alice skin.
             _IMAAdDisplayContainer = new google.ima.AdDisplayContainer(_uiContainer,
-                                                                       vid);
+              vid);
           }
 
           IMA_SDK_tryCreateAdsLoader();
@@ -1266,10 +1141,9 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#IMA_SDK_tryCreateAdsLoader
        */
       var IMA_SDK_tryCreateAdsLoader = () => {
-        if (_IMAAdDisplayContainer)
-        {
-          var adsManagerEvents = google.ima.AdsManagerLoadedEvent.Type;
-          var adErrorEvent = google.ima.AdErrorEvent.Type;
+        if (_IMAAdDisplayContainer) {
+          const adsManagerEvents = google.ima.AdsManagerLoadedEvent.Type;
+          const adErrorEvent = google.ima.AdErrorEvent.Type;
           _IMA_SDK_destroyAdsLoader();
           _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
           _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
@@ -1282,9 +1156,8 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA#_IMA_SDK_destroyAdDisplayContainer
        */
-      var _IMA_SDK_destroyAdDisplayContainer = () => {
-        if (_IMAAdDisplayContainer)
-        {
+      const _IMA_SDK_destroyAdDisplayContainer = () => {
+        if (_IMAAdDisplayContainer) {
           _IMAAdDisplayContainer.destroy();
           _IMAAdDisplayContainer = null;
           this.capturedUserClick = false;
@@ -1297,8 +1170,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_IMA_SDK_destroyAdsLoader
        */
       var _IMA_SDK_destroyAdsLoader = () => {
-        if (_IMAAdsLoader)
-        {
+        if (_IMAAdsLoader) {
           _IMAAdsLoader.destroy();
           _IMAAdsLoader = null;
         }
@@ -1310,8 +1182,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_IMA_SDK_destroyAdsManager
        */
       var _IMA_SDK_destroyAdsManager = () => {
-        if (_IMAAdsManager)
-        {
+        if (_IMAAdsManager) {
           _IMAAdsManager.stop();
           _IMAAdsManager.destroy();
           _IMAAdsManager = null;
@@ -1345,9 +1216,7 @@ require("../html5-common/js/utils/utils.js");
        * @returns {string[]} An array of encoding types corresponding to the video elements that the Video Controller
        *                     should create. Return an empty array, null, or undefined if this is not required.
        */
-      this.createAdVideoElementOnPlayerInit = () => {
-        return [OO.VIDEO.ENCODING.IMA];
-      };
+      this.createAdVideoElementOnPlayerInit = () => [OO.VIDEO.ENCODING.IMA];
 
       /**
        * Sets this ad manager to ready and notifies the Ad Manager Controller that it's ready if
@@ -1356,8 +1225,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_trySetAdManagerToReady
        */
       var _trySetAdManagerToReady = () => {
-        if (_IMAAdDisplayContainer && this.metadataReady && !this.ready)
-        {
+        if (_IMAAdDisplayContainer && this.metadataReady && !this.ready) {
           this.ready = true;
           _amc.onAdManagerReady();
           _amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
@@ -1370,9 +1238,8 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_adsRequestTimeout
        */
       var _adsRequestTimeout = () => {
-        OO.log("IMA Ad request timed out");
-        if (!this.adsReady)
-        {
+        OO.log('IMA Ad request timed out');
+        if (!this.adsReady) {
           _onImaAdError(OOYALA_IMA_PLUGIN_TIMEOUT);
         }
       };
@@ -1385,16 +1252,14 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} adErrorEvent - IMA SDK error data
        */
       var _onImaAdError = (adError) => {
-        //all IMA errors are fatal so it's safe to clear out this timeout.
+        // all IMA errors are fatal so it's safe to clear out this timeout.
         clearTimeout(this.adsRequestTimeoutRef);
-        if(_usingAdRules)
-        {
-          //if ads are not ready yet, ima failed to load
-          if(!this.adsReady)
-          {
+        if (_usingAdRules) {
+          // if ads are not ready yet, ima failed to load
+          if (!this.adsReady) {
             this.adRulesLoadError = true;
           }
-          //give control back to AMC
+          // give control back to AMC
           _tryUndoSetupForAdRules();
         }
 
@@ -1404,28 +1269,25 @@ require("../html5-common/js/utils/utils.js");
           _IMA_SDK_destroyAdsLoader();
         }
 
-        //make sure we are showing the video in case it was hidden for whatever reason.
-        if (adError)
-        {
-          var errorString = "ERROR Google IMA";
+        // make sure we are showing the video in case it was hidden for whatever reason.
+        if (adError) {
+          let errorString = 'ERROR Google IMA';
 
-          //if this error came from the SDK
-          if (adError.getError)
-          {
-            var errorData = adError.getError();
-            var isTimeout = false;
-            var isEmpty = false;
-            var isPlaybackError = false;
-            var errorCodes = {
-                               vastErrorCode : errorData.getVastErrorCode(),
-                               innerErrorCode : errorData.getInnerError(),
-                               errorCode : errorData.getErrorCode()
-                             };
-            OO.log("GOOGLE_IMA:: SDK Error received: Error Code List", JSON.stringify(errorCodes));
-            var imaErrorCodes = google.ima.AdError.ErrorCode;
+          // if this error came from the SDK
+          if (adError.getError) {
+            const errorData = adError.getError();
+            let isTimeout = false;
+            let isEmpty = false;
+            let isPlaybackError = false;
+            const errorCodes = {
+              vastErrorCode: errorData.getVastErrorCode(),
+              innerErrorCode: errorData.getInnerError(),
+              errorCode: errorData.getErrorCode(),
+            };
+            OO.log('GOOGLE_IMA:: SDK Error received: Error Code List', JSON.stringify(errorCodes));
+            const imaErrorCodes = google.ima.AdError.ErrorCode;
 
-            switch (errorCodes.vastErrorCode)
-            {
+            switch (errorCodes.vastErrorCode) {
               case imaErrorCodes.VAST_MEDIA_LOAD_TIMEOUT:
               case imaErrorCodes.VAST_LOAD_TIMEOUT:
                 isTimeout = true;
@@ -1441,38 +1303,27 @@ require("../html5-common/js/utils/utils.js");
               default:
                 break;
             }
-            if (errorCodes.errorCode == imaErrorCodes.VIDEO_PLAY_ERROR)
-            {
+            if (errorCodes.errorCode == imaErrorCodes.VIDEO_PLAY_ERROR) {
               isPlaybackError = true;
             }
 
-            _amc.onSdkAdEvent(this.name, adError.type, {errorData: errorData});
-            if (isEmpty)
-            {
+            _amc.onSdkAdEvent(this.name, adError.type, { errorData });
+            if (isEmpty) {
               _amc.onAdRequestEmpty(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage());
-            }
-            else if (isPlaybackError)
-            {
+            } else if (isPlaybackError) {
               _amc.onAdPlaybackError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), this.currentMedia);
-            }
-            else
-            {
+            } else {
               _amc.onAdRequestError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), isTimeout);
             }
-            errorString = "ERROR Google SDK: " + adError.getError();
-          }
-          else
-          {
-            //else the error came from the plugin
-            errorString = "ERROR Google IMA plugin: " + adError;
+            errorString = `ERROR Google SDK: ${adError.getError()}`;
+          } else {
+            // else the error came from the plugin
+            errorString = `ERROR Google IMA plugin: ${adError}`;
           }
 
-          if (_amc)
-          {
+          if (_amc) {
             _amc.raiseAdError(errorString);
-          }
-          else
-          {
+          } else {
             OO.log(errorString);
           }
         }
@@ -1489,55 +1340,51 @@ require("../html5-common/js/utils/utils.js");
       var _onAdRequestSuccess = (adsManagerLoadedEvent) => {
         clearTimeout(this.adsRequestTimeoutRef);
         this.adResponseTime = new Date().valueOf();
-        var responseTime = this.adResponseTime - this.adRequestTime;
-        var timeSinceInitialPlay =  this.adResponseTime - this.initialPlayRequestTime;
+        const responseTime = this.adResponseTime - this.adRequestTime;
+        const timeSinceInitialPlay = this.adResponseTime - this.initialPlayRequestTime;
         _amc.onAdRequestSuccess(this.name, this.adPosition, responseTime, timeSinceInitialPlay);
-        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, {eventData : {}});
+        _amc.onSdkAdEvent(this.name, adsManagerLoadedEvent.type, { eventData: {} });
 
-        if (!_usingAdRules && _IMAAdsManager)
-        {
-          //destroy the current ad manager is there is one
+        if (!_usingAdRules && _IMAAdsManager) {
+          // destroy the current ad manager is there is one
           _IMA_SDK_destroyAdsManager();
           this.currentIMAAd = null;
           this.currentNonLinearIMAAd = null;
         }
         // https://developers.google.com/interactive-media-ads/docs/sdks/googlehtml5_apis_v3#ima.AdsRenderingSettings
-        var adsSettings = new google.ima.AdsRenderingSettings();
+        const adsSettings = new google.ima.AdsRenderingSettings();
         adsSettings.loadVideoTimeout = DEFAULT_LOAD_VIDEO_TIME_OUT;
         adsSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
         adsSettings.useStyledNonLinearAds = true;
         adsSettings.enablePreloading = this.preloadAds;
-        if (this.useGoogleCountdown)
-        {
-          //both COUNTDOWN and AD_ATTRIBUTION are required as per
-          //https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.UiElements
+        if (this.useGoogleCountdown) {
+          // both COUNTDOWN and AD_ATTRIBUTION are required as per
+          // https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.UiElements
           adsSettings.uiElements = [google.ima.UiElements.COUNTDOWN, google.ima.UiElements.AD_ATTRIBUTION];
         }
         adsSettings.useStyledLinearAds = this.useGoogleAdUI;
         _IMAAdsManager = adsManagerLoadedEvent.getAdsManager(_playheadTracker, adsSettings);
 
         // When the ads manager is ready, we are ready to apply css changes to the video element
-        if (this.videoControllerWrapper)
-        {
+        if (this.videoControllerWrapper) {
           this.videoControllerWrapper.readyForCss = true;
         }
 
-        if (this.videoControllerWrapper)
-        {
+        if (this.videoControllerWrapper) {
           this.videoControllerWrapper.applyStoredCss();
         }
 
-        //a cue point index of 0 references a preroll, so we know we have a preroll if we find it in cuePoints
-        var cuePoints = _IMAAdsManager.getCuePoints();
+        // a cue point index of 0 references a preroll, so we know we have a preroll if we find it in cuePoints
+        const cuePoints = _IMAAdsManager.getCuePoints();
         this.hasPreroll = cuePoints.indexOf(0) >= 0;
 
-        var eventType = google.ima.AdEvent.Type;
+        const eventType = google.ima.AdEvent.Type;
         // Add listeners to the required events.
         _IMAAdsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, _onImaAdError, false, this);
 
-        //Following is gathered from:
-        //https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdEvent.Type
-        var imaAdEvents = [
+        // Following is gathered from:
+        // https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdEvent.Type
+        const imaAdEvents = [
           eventType.AD_BREAK_READY,
           eventType.AD_METADATA,
           eventType.ALL_ADS_COMPLETED,
@@ -1561,23 +1408,23 @@ require("../html5-common/js/utils/utils.js");
           eventType.THIRD_QUARTILE,
           eventType.USER_CLOSE,
           eventType.VOLUME_CHANGED,
-          eventType.VOLUME_MUTED
+          eventType.VOLUME_MUTED,
         ];
 
-        var addIMAEventListener = (e) => {
+        const addIMAEventListener = (e) => {
           _IMAAdsManager.addEventListener(e, _IMA_SDK_onAdEvent, false, this);
         };
 
         each(imaAdEvents, addIMAEventListener, this);
 
-        //Workaround of an issue on iOS where the IMA iframe is capturing clicks.
+        // Workaround of an issue on iOS where the IMA iframe is capturing clicks.
         if (OO.isIos) {
           _hideImaIframe();
         }
 
-        //We can safely call init here if we're not using ad rules
-        //If we are using ad rules, we need to wait until we get the initialPlayRequested event so that we
-        //are ready for ad playback.
+        // We can safely call init here if we're not using ad rules
+        // If we are using ad rules, we need to wait until we get the initialPlayRequested event so that we
+        // are ready for ad playback.
         if (!_usingAdRules || this.initialPlayRequested) {
           _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
         }
@@ -1594,19 +1441,17 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_startPlaylistAd
        * @param adEvent - Event data from IMA SDK.
        */
-      var _startPlaylistAd = (adEvent) => {
-        OO.log("GOOGLE_IMA:: starting playlist ad");
+      const _startPlaylistAd = (adEvent) => {
+        OO.log('GOOGLE_IMA:: starting playlist ad');
         // Proceed as usual if we're not using ad rules
-        if (!_usingAdRules)
-        {
+        if (!_usingAdRules) {
           return;
         }
         // Mimic AMC behavior and cancel any existing non-linear ads before playing the next ad.
         // Note that there is a known issue in the IMA SDK that prevents the COMPLETE
         // event from being fired when a non-linear ad is removed. This is also a workaround
         // for that issue.
-        if (this.currentAMCAdPod && this.currentNonLinearIMAAd)
-        {
+        if (this.currentAMCAdPod && this.currentNonLinearIMAAd) {
           this.cancelAd(this.currentAMCAdPod);
         }
         // [PLAYER-319]
@@ -1614,8 +1459,8 @@ require("../html5-common/js/utils/utils.js");
         // has enough room for the overlay by the time the ad is ready to play. As a workaround, we expand
         // the ad container and make sure it's rendered, while at the same time hiding it visually.
         // We store the element's current style in order to restore it afterwards.
-        _uiContainerPrevStyle = _uiContainer.getAttribute("style") || "";
-        _uiContainer.setAttribute("style", "display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;");
+        _uiContainerPrevStyle = _uiContainer.getAttribute('style') || '';
+        _uiContainer.setAttribute('style', 'display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;');
         _onSizeChanged();
         _tryNotifyUnmutedPlaybackFailed();
       };
@@ -1626,7 +1471,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_IMA_SDK_onAdClicked
        * @param adEvent - Event data from IMA SDK.
        */
-      var _IMA_SDK_onAdClicked = (adEvent) => {
+      const _IMA_SDK_onAdClicked = (adEvent) => {
         _amc.adsClicked();
         _amc.adsClickthroughOpened();
       };
@@ -1637,29 +1482,27 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA#_IMA_SDK_pauseMainContent
        */
-      var _IMA_SDK_pauseMainContent = () => {
-        OO.log("GOOGLE_IMA:: Content Pause Requested by Google IMA!");
+      const _IMA_SDK_pauseMainContent = () => {
+        OO.log('GOOGLE_IMA:: Content Pause Requested by Google IMA!');
         _linearAdIsPlaying = true;
-        if (_usingAdRules)
-        {
-          var adData =
-          {
+        if (_usingAdRules) {
+          const adData = {
             position_type: AD_RULES_POSITION_TYPE,
-            forced_ad_type: _amc.ADTYPE.LINEAR_VIDEO
+            forced_ad_type: _amc.ADTYPE.LINEAR_VIDEO,
           };
-          var streams = {};
-          streams[OO.VIDEO.ENCODING.IMA] = "";
+          const streams = {};
+          streams[OO.VIDEO.ENCODING.IMA] = '';
           if (_playheadTracker.currentTime <= 0) {
-            var ad = {
-              "position": _amc.FORCED_AD_POSITION,
-              "adManager": this.name,
-              "ad": adData,
-              "streams": streams,
-              "adType": _amc.ADTYPE.LINEAR_VIDEO,
-              "mainContentDuration": this.mainContentDuration
+            const ad = {
+              position: _amc.FORCED_AD_POSITION,
+              adManager: this.name,
+              ad: adData,
+              streams,
+              adType: _amc.ADTYPE.LINEAR_VIDEO,
+              mainContentDuration: this.mainContentDuration,
             };
             _amc.appendToTimeline([
-              new _amc.Ad(ad)
+              new _amc.Ad(ad),
             ]);
             _endCurrentAd(true);
           } else {
@@ -1673,11 +1516,11 @@ require("../html5-common/js/utils/utils.js");
        * @private
        * @method GoogleIMA#_IMA_SDK_resumeMainContent
        */
-      var _IMA_SDK_resumeMainContent = () => {
-        OO.log("GOOGLE_IMA:: Content Resume Requested by Google IMA!");
+      const _IMA_SDK_resumeMainContent = () => {
+        OO.log('GOOGLE_IMA:: Content Resume Requested by Google IMA!');
 
-        //make sure when we resume, that we have ended the ad pod and told
-        //the AMC that we have done so.
+        // make sure when we resume, that we have ended the ad pod and told
+        // the AMC that we have done so.
         _endCurrentAd(true);
       };
 
@@ -1687,8 +1530,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_raisePauseEvent
        */
       var _raisePauseEvent = () => {
-        if (this.videoControllerWrapper)
-        {
+        if (this.videoControllerWrapper) {
           this.videoControllerWrapper.raisePauseEvent();
         }
       };
@@ -1700,7 +1542,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#checkCompanionAds
        * @param {object} ad The Ad metadata
        */
-      var _checkCompanionAds = (ad) => {
+      const _checkCompanionAds = (ad) => {
         // companionAd slots are required
         if (!ad || !_amc.pageSettings.companionAd || !_amc.pageSettings.companionAd.slots) {
           return;
@@ -1709,16 +1551,16 @@ require("../html5-common/js/utils/utils.js");
         // companionAd: {
         //  slots: [{width: 300, height: 250}, ..]
         // }
-        var slots = _amc.pageSettings.companionAd.slots;
-        var companionAds = [],
-            companionAd = null;
+        const { slots } = _amc.pageSettings.companionAd;
+        const companionAds = [];
+        let companionAd = null;
 
         each(slots, (slot) => {
           if (slot.width && slot.height) {
             companionAd = ad.getCompanionAds(slot.width, slot.height);
             if (companionAd.length) {
               each(companionAd, (ad) => {
-                companionAds.push({slotSize: slot.width + "x" + slot.height, ad: ad.getContent()});
+                companionAds.push({ slotSize: `${slot.width}x${slot.height}`, ad: ad.getContent() });
               });
             }
           }
@@ -1727,7 +1569,7 @@ require("../html5-common/js/utils/utils.js");
         if (!companionAds.length) {
           return;
         }
-        //companionAds = [{slotSize: "300x250", ad: <Companion Ad as HTML>}, ..]
+        // companionAds = [{slotSize: "300x250", ad: <Companion Ad as HTML>}, ..]
         _amc.showCompanion(companionAds);
       };
 
@@ -1738,28 +1580,26 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} adEvent The IMA ad event
        */
       var _IMA_SDK_onAdEvent = (adEvent) => {
-        if (_ignoreWhenAdNotPlaying(adEvent))
-        {
-          OO.log("Ignoring IMA EVENT: ", adEvent.type, adEvent);
+        if (_ignoreWhenAdNotPlaying(adEvent)) {
+          OO.log('Ignoring IMA EVENT: ', adEvent.type, adEvent);
           return;
         }
-        _amc.onSdkAdEvent(this.name, adEvent.type, {adData : adEvent.getAdData()});
+        _amc.onSdkAdEvent(this.name, adEvent.type, { adData: adEvent.getAdData() });
         // Retrieve the ad from the event. Some events (e.g. ALL_ADS_COMPLETED)
         // don't have ad object associated.
-        var eventType = google.ima.AdEvent.Type;
-        var ad = adEvent.getAd();
+        const eventType = google.ima.AdEvent.Type;
+        const ad = adEvent.getAd();
         // Retrieve the ad data as well.
         // Some events will not have ad data associated.
-        var adData = adEvent.getAdData();
+        const adData = adEvent.getAdData();
 
-        switch (adEvent.type)
-        {
+        switch (adEvent.type) {
           case eventType.LOADED:
             _startPlaylistAd(adEvent);
-            //We normally focus the video element when receiving the ad STARTED notification from IMA.
-            //However, for environments where only a single video element is supported, we will focus the video
-            //element right before starting the ad. This allows the video element listeners to get unregistered
-            //and prevent shared video element interference.
+            // We normally focus the video element when receiving the ad STARTED notification from IMA.
+            // However, for environments where only a single video element is supported, we will focus the video
+            // element right before starting the ad. This allows the video element listeners to get unregistered
+            // and prevent shared video element interference.
             if (_amc.ui.useSingleVideoElement) {
               _amc.focusAdVideo();
             }
@@ -1767,60 +1607,51 @@ require("../html5-common/js/utils/utils.js");
             _resetUIContainerStyle();
             break;
           case eventType.STARTED:
-            //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
-            //We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
+            // Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
+            // We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
             if (OO.isIos) {
-              var IMAiframe = _getImaIframe();
-              if (IMAiframe && IMAiframe.style)
-              {
+              const IMAiframe = _getImaIframe();
+              if (IMAiframe && IMAiframe.style) {
                 IMAiframe.style.display = 'block';
               }
             }
 
             if (this.videoControllerWrapper && this.requiresMutedAutoplay()) {
-              //workaround of an IMA issue where we don't receive a MUTED ad event
-              //on Safari mobile, so we'll notify of current volume and mute state now
+              // workaround of an IMA issue where we don't receive a MUTED ad event
+              // on Safari mobile, so we'll notify of current volume and mute state now
               this.videoControllerWrapper.raiseVolumeEvent();
             }
 
             this.adPlaybackStarted = true;
-            if(ad.isLinear())
-            {
+            if (ad.isLinear()) {
               _linearAdIsPlaying = true;
 
               if (!_amc.ui.useSingleVideoElement) {
                 _amc.focusAdVideo();
               }
 
-              if (this.savedVolume >= 0)
-              {
+              if (this.savedVolume >= 0) {
                 this.setVolume(this.savedVolume);
                 this.savedVolume = -1;
               }
-              //Since IMA handles its own UI, we want the video player to hide its UI elements
+              // Since IMA handles its own UI, we want the video player to hide its UI elements
               _amc.hidePlayerUi(this.showAdControls, false, this.autoHideAdControls);
 
-              //in the case where skippable ads are enabled we want to exit fullscreen
-              //because custom playback is disabled and ads can't be rendered in fullscreen.
-              if (_inlinePlaybackSupported() && OO.isIphone && this.enableIosSkippableAds === true)
-              {
-                if (this.sharedVideoElement)
-                {
+              // in the case where skippable ads are enabled we want to exit fullscreen
+              // because custom playback is disabled and ads can't be rendered in fullscreen.
+              if (_inlinePlaybackSupported() && OO.isIphone && this.enableIosSkippableAds === true) {
+                if (this.sharedVideoElement) {
                   this.sharedVideoElement.webkitExitFullscreen();
                 }
               }
-            }
-            else
-            {
+            } else {
               this.currentNonLinearIMAAd = ad;
             }
             this.currentIMAAd = ad;
             _onSizeChanged();
             _tryStartAd();
-            if (this.videoControllerWrapper)
-            {
-              if (ad.isLinear())
-              {
+            if (this.videoControllerWrapper) {
+              if (ad.isLinear()) {
                 this.videoControllerWrapper.raisePlayEvent();
               }
               this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
@@ -1829,16 +1660,13 @@ require("../html5-common/js/utils/utils.js");
             // Non-linear ad rules or VMAP ads will not be started by _tryStartAd()
             // because there'll be no AMC ad pod. We start them here after the time update event
             // in order to prevent the progress bar from flashing
-            if (_usingAdRules && !ad.isLinear())
-            {
+            if (_usingAdRules && !ad.isLinear()) {
               _startNonLinearAdRulesOverlay();
             }
             break;
           case eventType.RESUMED:
-            if (this.videoControllerWrapper)
-            {
-              if (ad.isLinear())
-              {
+            if (this.videoControllerWrapper) {
+              if (ad.isLinear()) {
                 this.videoControllerWrapper.raisePlayEvent();
               }
             }
@@ -1846,38 +1674,34 @@ require("../html5-common/js/utils/utils.js");
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
           case eventType.COMPLETE:
-            //Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
-            //We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
+            // Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
+            // We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
             if (OO.isIos) {
               _hideImaIframe();
             }
 
-            if(_usingAdRules)
-            {
+            if (_usingAdRules) {
               this.adResponseTime = new Date().valueOf();
             }
             var adSkipped = false;
-            if (adEvent.type === eventType.SKIPPED)
-            {
+            if (adEvent.type === eventType.SKIPPED) {
               adSkipped = true;
             }
             var completionTime = new Date().valueOf() - this.currentImpressionTime;
             _amc.onAdCompleted(this.name, completionTime, adSkipped, this.adFinalTagUrl);
             this.adPlaybackStarted = false;
-            if (this.videoControllerWrapper && (ad && ad.isLinear()))
-            {
+            if (this.videoControllerWrapper && (ad && ad.isLinear())) {
               _stopTimeUpdater();
-              //IMA provides values which can result in negative current times or current times which are greater than duration.
-              //For good user experience, we will provide the duration as the current time here if the event type is COMPLETE
-              var currentTime = adEvent.type === eventType.COMPLETE ? this.getDuration() : this.getCurrentTime();
+              // IMA provides values which can result in negative current times or current times which are greater than duration.
+              // For good user experience, we will provide the duration as the current time here if the event type is COMPLETE
+              const currentTime = adEvent.type === eventType.COMPLETE ? this.getDuration() : this.getCurrentTime();
               this.videoControllerWrapper.raiseTimeUpdate(currentTime, this.getDuration());
               this.videoControllerWrapper.raiseEndedEvent();
             }
-            //Save the volume so the volume can persist on future ad playbacks if we don't receive another volume update from VTC
+            // Save the volume so the volume can persist on future ad playbacks if we don't receive another volume update from VTC
             this.savedVolume = this.getVolume();
 
-            if (!ad || !ad.isLinear())
-            {
+            if (!ad || !ad.isLinear()) {
               this.currentNonLinearIMAAd = null;
             }
 
@@ -1890,7 +1714,7 @@ require("../html5-common/js/utils/utils.js");
             break;
           case eventType.ALL_ADS_COMPLETED:
             _linearAdIsPlaying = false;
-            OO.log("all google ima ads completed!");
+            OO.log('all google ima ads completed!');
             _tryUndoSetupForAdRules();
 
             /*
@@ -1898,8 +1722,7 @@ require("../html5-common/js/utils/utils.js");
             both adrules and non-adrules. For non-adrules, this event is triggered after every ad,
             so we must check that it is the last postroll before calling _IMA_SDK_resumeMainContent().
             */
-            if (OO.isIos && this.contentEnded && _amc.isLastAdPlayed())
-            {
+            if (OO.isIos && this.contentEnded && _amc.isLastAdPlayed()) {
               _IMA_SDK_resumeMainContent();
             }
             break;
@@ -1907,33 +1730,22 @@ require("../html5-common/js/utils/utils.js");
 
             this.currentImpressionTime = new Date().valueOf();
             var loadTime = this.currentImpressionTime - this.adResponseTime;
-            var protocol = "VAST";
-            if (ad && ad.g && ad.g.vpaid === true)
-            {
-              protocol = "VPAID";
+            var protocol = 'VAST';
+            if (ad && ad.g && ad.g.vpaid === true) {
+              protocol = 'VPAID';
             }
-            var type = "unknown";
-            if (ad && ad.isLinear())
-            {
-              if (ad.getContentType().lastIndexOf("video", 0 ) === 0 )
-              {
+            var type = 'unknown';
+            if (ad && ad.isLinear()) {
+              if (ad.getContentType().lastIndexOf('video', 0) === 0) {
                 type = _amc.ADTYPE.LINEAR_VIDEO;
-              }
-              else
-              {
+              } else {
                 type = _amc.ADTYPE.LINEAR_OVERLAY;
               }
-            }
-            else
-            {
-              if (ad && ad.getContentType().lastIndexOf("video", 0 ) === 0 )
-              {
-                type = _amc.ADTYPE.NONLINEAR_VIDEO;
-              }
-              else
-              {
-                type = _amc.ADTYPE.NONLINEAR_OVERLAY;
-              }
+            } else
+            if (ad && ad.getContentType().lastIndexOf('video', 0) === 0) {
+              type = _amc.ADTYPE.NONLINEAR_VIDEO;
+            } else {
+              type = _amc.ADTYPE.NONLINEAR_OVERLAY;
             }
             _amc.onAdSdkImpression(this.name, this.adPosition, loadTime, protocol, type);
             break;
@@ -1944,22 +1756,20 @@ require("../html5-common/js/utils/utils.js");
             break;
           case eventType.VOLUME_CHANGED:
           case eventType.VOLUME_MUTED:
-            //Workaround of an issue where if IMA takes too long to mute the video
-            //for autoplay. If we receive the muted event and ad playback has not started,
-            //call resume() to force IMA to try playing the ad again. Note that
-            //calling start() again does not seem to work.
-            //Observed on Android Nexus 6P, version 7.1.1
+            // Workaround of an issue where if IMA takes too long to mute the video
+            // for autoplay. If we receive the muted event and ad playback has not started,
+            // call resume() to force IMA to try playing the ad again. Note that
+            // calling start() again does not seem to work.
+            // Observed on Android Nexus 6P, version 7.1.1
             if (adEvent.type === eventType.VOLUME_MUTED && !this.adPlaybackStarted) {
               _IMAAdsManager.resume();
             }
-            if (this.videoControllerWrapper)
-            {
+            if (this.videoControllerWrapper) {
               this.videoControllerWrapper.raiseVolumeEvent();
             }
             break;
           case eventType.DURATION_CHANGE:
-            if (this.videoControllerWrapper)
-            {
+            if (this.videoControllerWrapper) {
               this.videoControllerWrapper.raiseDurationChange(this.getCurrentTime(), this.getDuration());
             }
             break;
@@ -1969,10 +1779,9 @@ require("../html5-common/js/utils/utils.js");
             _IMA_SDK_onAdClicked(adEvent);
             break;
           case eventType.CONTENT_PAUSE_REQUESTED:
-            if (_usingAdRules && ad)
-            {
-              var adPodInfo = ad.getAdPodInfo();
-              var adPodIndex = adPodInfo.getPodIndex();
+            if (_usingAdRules && ad) {
+              const adPodInfo = ad.getAdPodInfo();
+              const adPodIndex = adPodInfo.getPodIndex();
               if (adPodIndex != 0) // if ad is not part of preroll
               {
                 this.adResponseTime = new Date().valueOf();
@@ -1996,8 +1805,8 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} adEvent The IMA ad event
        */
       var _ignoreWhenAdNotPlaying = (adEvent) => {
-        var eventType = google.ima.AdEvent.Type;
-        var ignoredEvents = [
+        const eventType = google.ima.AdEvent.Type;
+        const ignoredEvents = [
           // eventType.ALL_ADS_COMPLETED,
           eventType.COMPLETE,
           eventType.SKIPPED,
@@ -2010,7 +1819,7 @@ require("../html5-common/js/utils/utils.js");
           eventType.THIRD_QUARTILE,
           // eventType.VOLUME_CHANGED,
           // eventType.VOLUME_MUTED,
-          eventType.USER_CLOSE
+          eventType.USER_CLOSE,
           // eventType.DURATION_CHANGE
         ];
 
@@ -2024,9 +1833,8 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_resetUIContainerStyle
        */
       var _resetUIContainerStyle = () => {
-        if (_uiContainer && typeof _uiContainerPrevStyle !== 'undefined' && _uiContainerPrevStyle !== null)
-        {
-          _uiContainer.setAttribute("style", _uiContainerPrevStyle);
+        if (_uiContainer && typeof _uiContainerPrevStyle !== 'undefined' && _uiContainerPrevStyle !== null) {
+          _uiContainer.setAttribute('style', _uiContainerPrevStyle);
         }
         _uiContainerPrevStyle = null;
       };
@@ -2039,17 +1847,12 @@ require("../html5-common/js/utils/utils.js");
        */
       var _startTimeUpdater = () => {
         _stopTimeUpdater();
-        //starting an interval causes unit tests to throw a max call stack exceeded error
-        if (!this.runningUnitTests)
-        {
-          _timeUpdater = setInterval(() =>
-          {
-            if(_linearAdIsPlaying)
-            {
+        // starting an interval causes unit tests to throw a max call stack exceeded error
+        if (!this.runningUnitTests) {
+          _timeUpdater = setInterval(() => {
+            if (_linearAdIsPlaying) {
               this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
-            }
-            else
-            {
+            } else {
               _stopTimeUpdater();
             }
           }, TIME_UPDATER_INTERVAL);
@@ -2072,8 +1875,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_trySetupForAdRules
        */
       var _trySetupForAdRules = () => {
-        if (_usingAdRules)
-        {
+        if (_usingAdRules) {
           _amc.adManagerWillControlAds(this.name);
         }
       };
@@ -2084,8 +1886,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_tryUndoSetupForAdRules
        */
       var _tryUndoSetupForAdRules = () => {
-        if (_usingAdRules && _amc)
-        {
+        if (_usingAdRules && _amc) {
           _amc.adManagerDoneControllingAds(this.name);
         }
       };
@@ -2097,9 +1898,9 @@ require("../html5-common/js/utils/utils.js");
        * @returns {object} The IMA iframe
        */
       var _getImaIframe = () => {
-        var imaIframe = null;
+        let imaIframe = null;
         if (_uiContainer) {
-          var iframes = _uiContainer.querySelector('iframe');
+          const iframes = _uiContainer.querySelector('iframe');
           imaIframe = iframes;
         }
         return imaIframe;
@@ -2111,9 +1912,8 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_hideImaIframe
        */
       var _hideImaIframe = () => {
-        var IMAiframe = _getImaIframe();
-        if (IMAiframe && IMAiframe.style)
-        {
+        const IMAiframe = _getImaIframe();
+        if (IMAiframe && IMAiframe.style) {
           IMAiframe.style.display = 'none';
         }
       };
@@ -2125,7 +1925,7 @@ require("../html5-common/js/utils/utils.js");
        * @param {object} adEvent
        */
       var _onAdMetrics = (adEvent) => {
-        OO.log("Google IMA Ad playthrough", adEvent.type);
+        OO.log('Google IMA Ad playthrough', adEvent.type);
       };
 
       /**
@@ -2147,16 +1947,12 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_tryStartAd
        */
       var _tryStartAd = () => {
-        var adTypeStarted = null;
-        if (this.currentIMAAd && this.currentAMCAdPod)
-        {
-          if (this.currentIMAAd.isLinear())
-          {
+        let adTypeStarted = null;
+        if (this.currentIMAAd && this.currentAMCAdPod) {
+          if (this.currentIMAAd.isLinear()) {
             adTypeStarted = _amc.ADTYPE.LINEAR_VIDEO;
             _startLinearAd();
-          }
-          else
-          {
+          } else {
             adTypeStarted = _amc.ADTYPE.NONLINEAR_OVERLAY;
             _startNonLinearOverlay();
           }
@@ -2170,58 +1966,49 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_startLinearAd
        */
       var _startLinearAd = () => {
-        if (!this.currentIMAAd)
-        {
-          _throwError("Trying to start linear ad and this.currentIMAAd is falsy");
+        if (!this.currentIMAAd) {
+          _throwError('Trying to start linear ad and this.currentIMAAd is falsy');
         }
 
-        if (!this.currentAMCAdPod)
-        {
-          _throwError("Trying to start linear ad and this.currentAMCAdPod is falsy");
+        if (!this.currentAMCAdPod) {
+          _throwError('Trying to start linear ad and this.currentAMCAdPod is falsy');
         }
 
-        var adId = this.currentAMCAdPod.id;
+        const adId = this.currentAMCAdPod.id;
 
-        var adProperties = {};
+        const adProperties = {};
 
-        //ad properties - actual values to be provided by IMA APIs, default values are set here
-        var totalAdsInPod = 1;
+        // ad properties - actual values to be provided by IMA APIs, default values are set here
+        let totalAdsInPod = 1;
         adProperties.indexInPod = 1;
         adProperties.name = null;
         adProperties.duration = 0;
-        adProperties.hasClickUrl = false; //default to false because IMA does not provide any clickthrough APIs to us
+        adProperties.hasClickUrl = false; // default to false because IMA does not provide any clickthrough APIs to us
         adProperties.skippable = false;
 
-        try
-        {
-          var adPodInfo = this.currentIMAAd.getAdPodInfo();
+        try {
+          const adPodInfo = this.currentIMAAd.getAdPodInfo();
           totalAdsInPod = adPodInfo.getTotalAds();
           adProperties.indexInPod = adPodInfo.getAdPosition();
-        }
-        catch(e)
-        {
-          _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
+        } catch (e) {
+          _throwError('IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().');
         }
 
-        //Google may remove any of these APIs at a future point.
-        //Note: getClickThroughUrl has been removed by Google
-        if (typeof this.currentIMAAd.getTitle == "function")
-        {
+        // Google may remove any of these APIs at a future point.
+        // Note: getClickThroughUrl has been removed by Google
+        if (typeof this.currentIMAAd.getTitle === 'function') {
           adProperties.name = this.currentIMAAd.getTitle();
         }
 
-        if (typeof this.currentIMAAd.getDuration == "function")
-        {
+        if (typeof this.currentIMAAd.getDuration === 'function') {
           adProperties.duration = this.currentIMAAd.getDuration();
         }
 
-        if (typeof this.currentIMAAd.isSkippable == "function")
-        {
+        if (typeof this.currentIMAAd.isSkippable === 'function') {
           adProperties.skippable = this.currentIMAAd.isSkippable();
         }
 
-        if (adProperties.indexInPod == 1)
-        {
+        if (adProperties.indexInPod == 1) {
           _amc.notifyPodStarted(adId, totalAdsInPod);
         }
 
@@ -2236,21 +2023,20 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_startNonLinearOverlay
        */
       var _startNonLinearOverlay = () => {
-        if (!this.currentAMCAdPod)
-        {
-          _throwError("Trying to start non linear overlay and this.currentAMCAdPod is falsy");
+        if (!this.currentAMCAdPod) {
+          _throwError('Trying to start non linear overlay and this.currentAMCAdPod is falsy');
         }
 
-        //notify that the fake ad has started
+        // notify that the fake ad has started
         _amc.notifyPodStarted(this.currentAMCAdPod.id);
-        //we don't know the type of ad until it starts playing, we assume it's linear
-        //but if it isn't then we need to tell the ad manager otherwise and resume playing
-        var adData = {
+        // we don't know the type of ad until it starts playing, we assume it's linear
+        // but if it isn't then we need to tell the ad manager otherwise and resume playing
+        const adData = {
           position_type: NON_AD_RULES_POSITION_TYPE,
-          forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY
+          forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY,
         };
         _checkCompanionAds(this.currentIMAAd);
-        //end the request ad
+        // end the request ad
         _endCurrentAd(true);
         _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
       };
@@ -2264,9 +2050,9 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_startNonLinearAdRulesOverlay
        */
       var _startNonLinearAdRulesOverlay = () => {
-        var adData = {
+        const adData = {
           position_type: AD_RULES_POSITION_TYPE,
-          forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY
+          forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY,
         };
         _checkCompanionAds(this.currentIMAAd);
         _amc.forceAdToPlay(this.name, adData, _amc.ADTYPE.NONLINEAR_OVERLAY);
@@ -2278,11 +2064,10 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_stopNonLinearOverlay
        * @param adId the id of the overlay we are stopping
        */
-      var _stopNonLinearOverlay = (adId) => {
+      const _stopNonLinearOverlay = (adId) => {
         _amc.notifyNonlinearAdEnded(adId);
 
-        if (!_usingAdRules)
-        {
+        if (!_usingAdRules) {
           _resetAdsState();
         }
       };
@@ -2294,21 +2079,17 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_endCurrentAdPod
        * @param linear whether or not the ad pod was linear or overlay
        */
-      var _endCurrentAdPod = (linear) => {
-        if (this.currentAMCAdPod)
-        {
-          var currentAMCAdPod = this.currentAMCAdPod;
-          var adId = currentAMCAdPod.id;
+      const _endCurrentAdPod = (linear) => {
+        if (this.currentAMCAdPod) {
+          const { currentAMCAdPod } = this;
+          const adId = currentAMCAdPod.id;
 
           this.currentAMCAdPod = null;
           _linearAdIsPlaying = false;
 
-          if (linear)
-          {
+          if (linear) {
             _amc.notifyPodEnded(adId);
-          }
-          else
-          {
+          } else {
             _stopNonLinearOverlay(adId);
           }
         }
@@ -2323,45 +2104,35 @@ require("../html5-common/js/utils/utils.js");
        * @param forceEndAdPod forces the ad pod to end
        */
       var _endCurrentAd = (forceEndAdPod) => {
-        if (this.currentAMCAdPod)
-        {
-          if (this.currentIMAAd)
-          {
-            var currentIMAAd = this.currentIMAAd;
+        if (this.currentAMCAdPod) {
+          if (this.currentIMAAd) {
+            const { currentIMAAd } = this;
             this.currentIMAAd = null;
-            if (currentIMAAd.isLinear())
-            {
-              var adPodInfo = currentIMAAd.getAdPodInfo();
-              if(!adPodInfo)
-              {
-                if (forceEndAdPod)
-                {
+            if (currentIMAAd.isLinear()) {
+              const adPodInfo = currentIMAAd.getAdPodInfo();
+              if (!adPodInfo) {
+                if (forceEndAdPod) {
                   _endCurrentAdPod(true);
                 }
-                _throwError("IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().");
+                _throwError('IMA ad returning bad value for this.currentIMAAd.getAdPodInfo().');
               }
 
               _amc.notifyLinearAdEnded(this.currentAMCAdPod.id);
 
-              var adPos = adPodInfo.getAdPosition();
-              var totalAds = adPodInfo.getTotalAds();
-              //IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
+              const adPos = adPodInfo.getAdPosition();
+              const totalAds = adPodInfo.getTotalAds();
+              // IMA's ad position is 1 based not 0 based.  So last ad in a 3 ad pod will be position 3.
 
-              //Wait until we receive content resume event from IMA before we end ad pod for
-              //single video element mode. This is to workaround an issue where the video controller
-              //and IMA are out of sync if we end ad pod too early for single video element mode
-              if ((!_amc.ui.useSingleVideoElement && adPos == totalAds) || forceEndAdPod)
-              {
+              // Wait until we receive content resume event from IMA before we end ad pod for
+              // single video element mode. This is to workaround an issue where the video controller
+              // and IMA are out of sync if we end ad pod too early for single video element mode
+              if ((!_amc.ui.useSingleVideoElement && adPos == totalAds) || forceEndAdPod) {
                 _endCurrentAdPod(true);
               }
-            }
-            else
-            {
+            } else {
               _endCurrentAdPod(this.currentAMCAdPod.isRequest);
             }
-          }
-          else
-          {
+          } else {
             _endCurrentAdPod(true);
           }
         }
@@ -2378,9 +2149,7 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#_isGoogleSDKValid
        * @returns {boolean} True if AdDisplayContainer is defined.
        */
-      var _isGoogleSDKValid = () => {
-        return (google && google.ima && google.ima.AdDisplayContainer);
-      };
+      var _isGoogleSDKValid = () => (google && google.ima && google.ima.AdDisplayContainer);
 
       this.registerVideoControllerWrapper = (videoWrapper) => {
         this.videoControllerWrapper = videoWrapper;
@@ -2403,10 +2172,8 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#requiresMutedAutoplay
        * @returns {boolean} true if video must be muted to autoplay, false otherwise
        */
-      this.requiresMutedAutoplay = () => {
-        return !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid ||
-          (OO.isChrome && OO.chromeMajorVersion >= 66));
-      };
+      this.requiresMutedAutoplay = () => !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid
+          || (OO.isChrome && OO.chromeMajorVersion >= 66));
 
       /**
        * Checks to see if we intend for the ad to playback muted.
@@ -2414,18 +2181,14 @@ require("../html5-common/js/utils/utils.js");
        * @method GoogleIMA#willPlayAdMuted
        * @returns {boolean} true if we intend for the ad to playback muted, false otherwise
        */
-      this.willPlayAdMuted = () => {
-        return this.requiresMutedAutoplay() && !this.capturedUserClick;
-      };
+      this.willPlayAdMuted = () => this.requiresMutedAutoplay() && !this.capturedUserClick;
     };
 
-    var _inlinePlaybackSupported = () => {
-      return !(OO.iosMajorVersion < 10 && OO.isIphone);
-    };
+    var _inlinePlaybackSupported = () => !(OO.iosMajorVersion < 10 && OO.isIphone);
 
     var _throwError = (outputStr) => {
-      //TODO consolidate code to exit gracefully if we have an error.
-      throw new Error("GOOGLE IMA: " + outputStr);
+      // TODO consolidate code to exit gracefully if we have an error.
+      throw new Error(`GOOGLE IMA: ${outputStr}`);
     };
 
     return new GoogleIMA();
@@ -2438,8 +2201,8 @@ require("../html5-common/js/utils/utils.js");
    * @property {boolean} ready The readiness of the plugin for use (true if elements can be created)
    * @property {object} streams An array of supported encoding types (ex. m3u8, mp4)
    */
-  var GoogleIMAVideoFactory = function() {
-    this.name = "GoogleIMAVideoTech";
+  const GoogleIMAVideoFactory = function () {
+    this.name = 'GoogleIMAVideoTech';
     this.encodings = [OO.VIDEO.ENCODING.IMA];
     this.features = [OO.VIDEO.FEATURE.VIDEO_OBJECT_SHARING_TAKE];
     this.technology = OO.VIDEO.TECHNOLOGY.HTML5;
@@ -2456,8 +2219,8 @@ require("../html5-common/js/utils/utils.js");
      * @returns {object} A reference to the wrapper for the newly created element
      */
     this.create = (parentContainer, id, ooyalaVideoController, css, playerId) => {
-      var googleIMA = registeredGoogleIMAManagers[playerId];
-      var wrapper = new GoogleIMAVideoWrapper(googleIMA);
+      const googleIMA = registeredGoogleIMAManagers[playerId];
+      const wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
       return wrapper;
@@ -2473,9 +2236,9 @@ require("../html5-common/js/utils/utils.js");
      * @returns {object} A reference to the wrapper for the video element
      */
     this.createFromExisting = (domId, ooyalaVideoController, playerId) => {
-      var googleIMA = registeredGoogleIMAManagers[playerId];
+      const googleIMA = registeredGoogleIMAManagers[playerId];
       googleIMA.setupSharedVideoElement(document.getElementById(domId));
-      var wrapper = new GoogleIMAVideoWrapper(googleIMA);
+      const wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
       return wrapper;
@@ -2511,19 +2274,19 @@ require("../html5-common/js/utils/utils.js");
    * @property {boolean} readyForCss When true, css may be applied on the video element.  When false, css
    *                                 should be stored for use later when this value is true.
    */
-  var GoogleIMAVideoWrapper = function(ima) {
-    var _ima = ima;
+  var GoogleIMAVideoWrapper = function (ima) {
+    const _ima = ima;
 
     this.controller = {};
     this.disableNativeSeek = true;
     this.isControllingVideo = true;
     this.readyForCss = false;
-    var storedCss = null;
-    var previousVolume = 1;
+    let storedCss = null;
+    let previousVolume = 1;
 
-    /************************************************************************************/
+    /** ********************************************************************************* */
     // Required. Methods that Video Controller, Destroy, or Factory call
-    /************************************************************************************/
+    /** ********************************************************************************* */
 
     /**
      * Takes control of the video element from another plugin.
@@ -2562,9 +2325,7 @@ require("../html5-common/js/utils/utils.js");
      * @param {boolean} live True if it is a live asset, false otherwise (unused here)
      * @returns {boolean} True or false indicating success
      */
-    this.setVideoUrl = (url) => {
-      return true;
-    };
+    this.setVideoUrl = url => true;
 
     /**
      * Loads the current stream url in the video element; the element should be left paused.
@@ -2617,9 +2378,9 @@ require("../html5-common/js/utils/utils.js");
      * @method TemplateVideoWrapper#mute
      */
     this.mute = () => {
-      //Note there is no "mute" API. IMA seems to handle the muted
-      //attribute themselves when volume is set to 0
-      var currentVolume = _ima.getVolume();
+      // Note there is no "mute" API. IMA seems to handle the muted
+      // attribute themselves when volume is set to 0
+      const currentVolume = _ima.getVolume();
       if (currentVolume) {
         previousVolume = currentVolume;
       }
@@ -2636,7 +2397,7 @@ require("../html5-common/js/utils/utils.js");
       if (fromUser) {
         _ima.setupUnmutedPlayback();
       }
-      _ima.setVolume(previousVolume ? previousVolume : 1);
+      _ima.setVolume(previousVolume || 1);
     };
 
     /**
@@ -2647,12 +2408,9 @@ require("../html5-common/js/utils/utils.js");
      */
     this.setVolume = (volume, muteState) => {
       previousVolume = volume;
-      if (muteState)
-      {
+      if (muteState) {
         this.mute();
-      }
-      else
-      {
+      } else {
         _ima.setVolume(volume);
       }
     };
@@ -2664,7 +2422,7 @@ require("../html5-common/js/utils/utils.js");
      * @returns {number} The current time position of the video (seconds)
      */
     this.getCurrentTime = () => {
-      var time = _ima.getCurrentTime();
+      const time = _ima.getCurrentTime();
       return time;
     };
 
@@ -2675,12 +2433,9 @@ require("../html5-common/js/utils/utils.js");
      * @param {object} css The css to apply in key value pairs
      */
     this.applyCss = (css) => {
-      if (!this.readyForCss)
-      {
+      if (!this.readyForCss) {
         storedCss = css;
-      }
-      else
-      {
+      } else {
         applyCssToElement(css);
       }
     };
@@ -2709,7 +2464,7 @@ require("../html5-common/js/utils/utils.js");
      */
     var applyCssToElement = (css) => {
       if (css && this.isControllingVideo && _ima.sharedVideoElement) {
-        var node = document.querySelector(_ima.sharedVideoElement);
+        const node = document.querySelector(_ima.sharedVideoElement);
         pairs(css).forEach(([key, value]) => {
           node.style[key] = value;
         });
@@ -2732,13 +2487,13 @@ require("../html5-common/js/utils/utils.js");
      * @param {string} event The event to raise to the video controller
      * @param {object} params [optional] Event parameters
      */
-    var notifyIfInControl = (event, params) => {
+    const notifyIfInControl = (event, params) => {
       if (this.isControllingVideo) {
         this.controller.notify(event, params);
       }
     };
 
-    //Events
+    // Events
     this.raisePlayEvent = () => {
       notifyIfInControl(this.controller.EVENTS.PLAY, {});
       notifyIfInControl(this.controller.EVENTS.PLAYING);
@@ -2753,16 +2508,16 @@ require("../html5-common/js/utils/utils.js");
     };
 
     this.raiseVolumeEvent = () => {
-      //IMA is considered muted when volume is set to 0. There are no getters
-      //for the muted state
-      var volume = _ima.getVolume();
+      // IMA is considered muted when volume is set to 0. There are no getters
+      // for the muted state
+      const volume = _ima.getVolume();
       if (volume === 0) {
         notifyIfInControl(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
       } else {
         notifyIfInControl(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: false });
-        //PLAYER-2810: Publishing a volume of 0 overwrites the users unmuted volume. We'll
-        //only publish volume if we're not muted so that this does not happen
-        notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { "volume" : volume });
+        // PLAYER-2810: Publishing a volume of 0 overwrites the users unmuted volume. We'll
+        // only publish volume if we're not muted so that this does not happen
+        notifyIfInControl(this.controller.EVENTS.VOLUME_CHANGE, { volume });
       }
     };
 
@@ -2806,9 +2561,11 @@ require("../html5-common/js/utils/utils.js");
      * @param {Number} buffer - value of buffer
      * @link https://groups.google.com/forum/#!topic/ima-sdk/zRNKpKNSukM
      */
-    const raisePlayhead = (eventname, currentTime, duration, buffer=1) => {
+    const raisePlayhead = (eventname, currentTime, duration, buffer = 1) => {
       const seekRange = { begin: 0, end: 0 };
-      notifyIfInControl(eventname, { currentTime, duration, buffer, seekRange });
+      notifyIfInControl(eventname, {
+        currentTime, duration, buffer, seekRange,
+      });
     };
   };
 

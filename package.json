@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "mocha test/unit-tests --require test/test_lib.js --exit",
-    "lint": "echo",
+    "lint": "eslint ./**/*.js",
     "build": "echo",
     "build-prod": "echo",
     "start": "echo",
@@ -33,6 +33,9 @@
     "babel-core": "^7.0.0-bridge.0",
     "babelify": "^9.0.0",
     "browserify": "16.2.2",
+    "eslint": "^5.15.2",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.16.0",
     "expect.js": "0.3.1",
     "file-lister": "^1.1.0",
     "gulp": "3.9.1",

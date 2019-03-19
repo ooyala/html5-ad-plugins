@@ -2,10 +2,10 @@ global.vpaid = {
   adInit: false,
   adStarted: false,
   adStopped: false,
-  adSkipped: false
-}
+  adSkipped: false,
+};
 
-global.vpaid.VpaidAd = function() {
+global.vpaid.VpaidAd = function () {
   this.slot_ = null;
   this.eventsCallbacks = {};
   this.videoSlot_ = null;
@@ -15,65 +15,65 @@ global.vpaid.VpaidAd = function() {
     adParameters: '{}',
     width: 100,
     height: 100,
-    adCompanions: {companion: {}}
+    adCompanions: { companion: {} },
   };
-  this.initAd = function(width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
+  this.initAd = function (width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
     global.vpaid.adInit = true;
     this.properties.adParameters = JSON.parse(creativeData.AdParameters);
     this.callEvent('AdLoaded');
   };
-  this.handshakeVersion = function(version) { return ('2.0'); };
-  this.startAd = function() {
+  this.handshakeVersion = function (version) { return ('2.0'); };
+  this.startAd = function () {
     global.vpaid.adStarted = true;
   };
-  this.stopAd = function() {
+  this.stopAd = function () {
     this.callEvent('AdStopped');
     global.vpaid.adStopped = true;
-   };
-  this.resizeAd = function(width, height, viewMode) {
+  };
+  this.resizeAd = function (width, height, viewMode) {
     this.properties.width = width;
     this.properties.height = height;
   };
-  this.adVideoCompleted = function() {
+  this.adVideoCompleted = function () {
     this.callEvent('AdVideoComplete');
   };
-  this.pauseAd = function() {};
-  this.resumeAd = function() {};
-  this.expandAd = function() {};
-  this.collapseAd = function() {};
-  this.sendClick = function(playerHandles) {
-    this.eventsCallbacks['AdClickThru'].apply(this, ['url', 1, playerHandles]);
-  }
-  this.sendAdLinearChange = function(isLinear) {
-    this.properties['adLinear'] = isLinear;
+  this.pauseAd = function () {};
+  this.resumeAd = function () {};
+  this.expandAd = function () {};
+  this.collapseAd = function () {};
+  this.sendClick = function (playerHandles) {
+    this.eventsCallbacks.AdClickThru.apply(this, ['url', 1, playerHandles]);
+  };
+  this.sendAdLinearChange = function (isLinear) {
+    this.properties.adLinear = isLinear;
     this.callEvent('AdLinearChange');
-  }
-  this.skipAd = function() {
+  };
+  this.skipAd = function () {
     global.vpaid.adSkipped = true;
     this.callEvent('AdSkipped');
   };
-  this.subscribe = function(aCallback, eventName, aContext) {
-    var cb = aCallback.bind(aContext);
+  this.subscribe = function (aCallback, eventName, aContext) {
+    const cb = aCallback.bind(aContext);
     this.eventsCallbacks[eventName] = cb;
   };
-  this.unsubscribe = function(eventName) {};
-  this.setSkippableState = function(state) {
+  this.unsubscribe = function (eventName) {};
+  this.setSkippableState = function (state) {
     this.properties.skippableState = state;
     this.callEvent('AdSkippableStateChange');
   };
-  this.getAdSkippableState = function() {
+  this.getAdSkippableState = function () {
     return this.properties.skippableState;
   };
-  this.getAdCompanions = function() {
+  this.getAdCompanions = function () {
     return this.properties.adCompanions;
-  }
-  this.getAdLinear = function() {
-    return this.properties['adLinear'];
   };
-  this.setAdLinear = function(adLinear) {
-    this.properties['adLinear'] = adLinear;
+  this.getAdLinear = function () {
+    return this.properties.adLinear;
   };
-  this.callEvent = function(eventType) {
+  this.setAdLinear = function (adLinear) {
+    this.properties.adLinear = adLinear;
+  };
+  this.callEvent = function (eventType) {
     if (eventType in this.eventsCallbacks) {
       this.eventsCallbacks[eventType]();
     }
@@ -81,36 +81,36 @@ global.vpaid.VpaidAd = function() {
 };
 
 // Has all required functions but handshakeVersion returns <2.0
-global.vpaid.incorrectVersionVPAIDAd = function() {
+global.vpaid.incorrectVersionVPAIDAd = function () {
   this.slot_ = null;
   this.videoSlot_ = null;
   this.properties = {
-    adLinear: true
+    adLinear: true,
   };
-  this.initAd = function(width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
+  this.initAd = function (width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
     global.vpaid.adInit = true;
   };
-  this.handshakeVersion = function(version) { return ('1.0'); };
-  this.startAd = function() {};
-  this.stopAd = function() {};
-  this.resizeAd = function(width, height, viewMode) {};
-  this.pauseAd = function() {};
-  this.resumeAd = function() {};
-  this.expandAd = function() {};
-  this.collapseAd = function() {};
-  this.skipAd = function() {};
-  this.subscribe = function(aCallback, eventName, aContext) {};
-  this.unsubscribe = function(eventName) {};
+  this.handshakeVersion = function (version) { return ('1.0'); };
+  this.startAd = function () {};
+  this.stopAd = function () {};
+  this.resizeAd = function (width, height, viewMode) {};
+  this.pauseAd = function () {};
+  this.resumeAd = function () {};
+  this.expandAd = function () {};
+  this.collapseAd = function () {};
+  this.skipAd = function () {};
+  this.subscribe = function (aCallback, eventName, aContext) {};
+  this.unsubscribe = function (eventName) {};
 };
 
-//required functions missing
-global.vpaid.missingFnVPAIDAd = function() {
-  this.initAd = function(width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
+// required functions missing
+global.vpaid.missingFnVPAIDAd = function () {
+  this.initAd = function (width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
     global.vpaid.adInit = true;
   };
-  this.handshakeVersion = function(version) { return ('2.0'); };
-  this.startAd = function() {};
-  this.stopAd = function() {};
+  this.handshakeVersion = function (version) { return ('2.0'); };
+  this.startAd = function () {};
+  this.stopAd = function () {};
 };
 
 global.vpaidAd = {
@@ -129,22 +129,22 @@ global.vpaidAd = {
         url: 'image1.jpg',
         expandedWidth: undefined,
         expandedHeight: undefined,
-        tracking: { creativeView: [] }
+        tracking: { creativeView: [] },
       }],
       error: '',
-      impression: [ { url: 'impressionUrl' } ],
+      impression: [{ url: 'impressionUrl' }],
       linear: {
         mediaFiles: {
           url: 'http://file.js',
           type: 'application/javascript',
           width: 16,
           height: 9,
-          tracking: []
+          tracking: [],
         },
         skipOffset: null,
         clickTracking: 'clickTracking',
         clickThrough: 'clickThrough',
-        customClick: 'customClick'
+        customClick: 'customClick',
       },
       nonLinear: {
         mediaFiles: {
@@ -152,23 +152,23 @@ global.vpaidAd = {
           type: 'application/javascript',
           width: 16,
           height: 9,
-          tracking: []
+          tracking: [],
         },
         skipOffset: null,
         clickTracking: '',
         clickThrough: '',
-        customClick: ''
+        customClick: '',
       },
       title: 'title',
       tracking: [
         { event: 'start', url: 'startUrl' },
         { event: 'firstQuartile', url: 'firstQuartileUrl' },
         { event: 'complete', url: 'completeUrl' },
-        { event: 'mute', url: 'muteUrl' }
+        { event: 'mute', url: 'muteUrl' },
       ],
       type: 'linearVideo',
       version: '2.0',
-      videoClickTracking: { clickTracking: 'clickTracking', clickThrough: 'clickThrough', customClick: 'customClick' }
+      videoClickTracking: { clickTracking: 'clickTracking', clickThrough: 'clickThrough', customClick: 'customClick' },
     },
     fallbackAd: null,
     positionSeconds: 0,
@@ -177,5 +177,5 @@ global.vpaidAd = {
     type: 'InLine',
     durationInMilliseconds: 16000,
   },
-  isLinear: true
+  isLinear: true,
 };

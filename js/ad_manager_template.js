@@ -5,7 +5,7 @@
  * version 0.1
  */
 
-OO.Ads.manager(function() {
+OO.Ads.manager(() => {
   /**
    * @class AdManager
    * @classDesc The main Ad Manager class.
@@ -18,14 +18,14 @@ OO.Ads.manager(function() {
    * @property {object} videoRestrictions Optional property that represents restrictions on the video plugin
    *   used.  ex. {"technology":OO.VIDEO.TECHNOLOGY.HTML5, "features":[OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE]}
    */
-  var AdManager = function() {
-    this.name = "my-ads-manager";
+  const AdManager = function () {
+    this.name = 'my-ads-manager';
     this.ready = false;
     this.videoRestrictions = {};
 
-    var amc  = null;
-    var remoteModuleJs = "http://my.company/myAdModule.js";
-    var adModuleJsReady = false;
+    let amc = null;
+    const remoteModuleJs = 'http://my.company/myAdModule.js';
+    let adModuleJsReady = false;
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -41,7 +41,7 @@ OO.Ads.manager(function() {
       // Add any player event listeners now
       amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
 
-      //ID3 Tag example
+      // ID3 Tag example
       amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
 
       // Loads a remote file.  Use this function to load the client SDK for your ad module.
@@ -74,8 +74,8 @@ OO.Ads.manager(function() {
      */
     this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
       this.ready = true;
-      //Call the onAdManagerReady API after setting this.ready to true
-      //to notify the Ad Manager Controller that this ad plugin is ready
+      // Call the onAdManagerReady API after setting this.ready to true
+      // to notify the Ad Manager Controller that this ad plugin is ready
       amc.onAdManagerReady();
     };
 
@@ -90,26 +90,29 @@ OO.Ads.manager(function() {
      * @returns {OO.AdManagerController#Ad[]} timeline A list of the ads to play for the current video
      */
     this.buildTimeline = () => {
-      var ad1 = {}, ad2 = {};
-      //Video restrictions can be provided at the ad level. If provided, the player will
-      //attempt to create a video element that supports the given video restrictions.
-      //If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
-      //If the element is not created due to lack of support from the available video plugins,
-      //the ad will be skipped
-      return [ new amc.Ad({ position: 0,
-                            duration: 10,
-                            adManager: this.name,
-                            ad: ad1,
-                            adType: amc.ADTYPE.LINEAR_VIDEO,
-                            videoRestrictions: { technology: OO.VIDEO.TECHNOLOGY.HTML5 }
-                          }),
-               new amc.Ad({ position: 30,
-                            duration: 10,
-                            adManager: this.name,
-                            ad: ad2,
-                            adType: amc.ADTYPE.NONLINEAR_OVERLAY
-                          })
-             ];
+      const ad1 = {}; const
+        ad2 = {};
+      // Video restrictions can be provided at the ad level. If provided, the player will
+      // attempt to create a video element that supports the given video restrictions.
+      // If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
+      // If the element is not created due to lack of support from the available video plugins,
+      // the ad will be skipped
+      return [new amc.Ad({
+        position: 0,
+        duration: 10,
+        adManager: this.name,
+        ad: ad1,
+        adType: amc.ADTYPE.LINEAR_VIDEO,
+        videoRestrictions: { technology: OO.VIDEO.TECHNOLOGY.HTML5 },
+      }),
+      new amc.Ad({
+        position: 30,
+        duration: 10,
+        adManager: this.name,
+        ad: ad2,
+        adType: amc.ADTYPE.NONLINEAR_OVERLAY,
+      }),
+      ];
     };
 
     /**
@@ -177,8 +180,8 @@ OO.Ads.manager(function() {
      * @public
      * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
      */
-    //this.hideOverlay = (currentAd) => {
-    //};
+    // this.hideOverlay = (currentAd) => {
+    // };
 
     /**
      * <i>Optional.</i><br/>
@@ -189,8 +192,8 @@ OO.Ads.manager(function() {
      * @public
      * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
      */
-    //this.cancelOverlay = (currentAd) => {
-    //};
+    // this.cancelOverlay = (currentAd) => {
+    // };
 
     /**
      * This function gets called by the ad Manager Controller when an ad has completed playing. If the main video is
@@ -244,7 +247,7 @@ OO.Ads.manager(function() {
      * @param {object} metadata Any metadata attached to the found tag.
      */
     this.onVideoTagFound = (event, videoId, tagType, metadata) => {
-      OO.log("TAG FOUND w/ args: ", arguments);
+      OO.log('TAG FOUND w/ args: ', arguments);
     };
 
     /**
@@ -280,13 +283,11 @@ OO.Ads.manager(function() {
      * @returns {string[]} An array of encoding types corresponding to the video elements that the Video Controller
      *                     should create. Return an empty array, null, or undefined if this is not required.
      */
-    this.createAdVideoElementOnPlayerInit = () => {
-      return [];
-    };
+    this.createAdVideoElementOnPlayerInit = () => [];
 
     var _onContentChanged = () => {
       // Callback for example listener registered in this.initialize
-    }
+    };
   };
 
   return new AdManager();
