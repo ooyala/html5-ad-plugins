@@ -1,18 +1,18 @@
-OO.plugin('heartbeat', function(OO) {
-  var log = function(...args) {
+OO.plugin('heartbeat', (OO) => {
+  const log = function (...args) {
     OO.log.apply(this, ['heartbeat:', ...args]);
   };
 
-  var heartbeat = function(mb) {
-    var _this = this;
-    var config = {};
+  const heartbeat = function (mb) {
+    const _this = this;
+    let config = {};
 
-    var DEFAULT_CONFIG = Object.freeze({
+    const DEFAULT_CONFIG = Object.freeze({
       Interval: 10 * 1000,
-      ReportingPathPattern: '<hostname>/v1/vod_playback_pos/<embed_code>?ssai_guid=<ssai_guid>'
+      ReportingPathPattern: '<hostname>/v1/vod_playback_pos/<embed_code>?ssai_guid=<ssai_guid>',
     });
 
-    //constants
+    // constants
     _this.CONSTANTS = Object.freeze({
       HA_ASSET_FLAG: 'ha_enabled',
       HA_IGNORE_MAX_FLAG: 'ha_ignore_max_timeout',
@@ -20,23 +20,23 @@ OO.plugin('heartbeat', function(OO) {
       PROXY_REFRESH_TIME: 6,
     });
 
-    var streamUrl = '';
-    var ssaiGuid = '';
-    var embedCode = '';
+    let streamUrl = '';
+    let ssaiGuid = '';
+    let embedCode = '';
 
-    var movieDuration = 0;
-    var playheadPosition = 0;
-    var hostname = '//ssai.ooyala.com';
-    var reportingPaused = false;
+    let movieDuration = 0;
+    let playheadPosition = 0;
+    const hostname = '//ssai.ooyala.com';
+    let reportingPaused = false;
 
-    var heartbeatTimer = 0;
+    let heartbeatTimer = 0;
 
     initialize();
 
     function initialize() {
       config = buildConfig(config);
 
-      //events subscribe
+      // events subscribe
       mb.subscribe(OO.EVENTS.VC_WILL_PLAY, 'heartbeat', _onVcWillPlay);
       mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'heartbeat', _onEmbedCodeChanged);
       mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'heartbeat', _onPlayheadTimeChange);
@@ -57,15 +57,15 @@ OO.plugin('heartbeat', function(OO) {
     }
 
     function reportHeartBeat() {
-      if(reportingPaused){
+      if (reportingPaused) {
         return;
       }
 
-      var reportUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
+      const reportUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
 
-      var data = {
+      const data = {
         playheadpos: parseInt(playheadPosition),
-        pingfrequency: parseInt(config.Interval / 1000)
+        pingfrequency: parseInt(config.Interval / 1000),
       };
 
       fetch(reportUrl, {
@@ -73,12 +73,12 @@ OO.plugin('heartbeat', function(OO) {
         body: JSON.stringify(data),
       }).then(() => {
         log('Heartbeat was sent successfully');
-      })
+      });
     }
 
     function parseGuid(url) {
-      var reg = new RegExp(/ssai_guid=([^&?]*)/g);
-      var result = reg.exec(url);
+      const reg = new RegExp(/ssai_guid=([^&?]*)/g);
+      const result = reg.exec(url);
 
       if (result.length && result[1]) {
         return result[1];
@@ -100,26 +100,26 @@ OO.plugin('heartbeat', function(OO) {
       playheadPosition = currentTime || 0;
     }
 
-    function _onEmbedCodeChanged(event, theEmbedCode){
+    function _onEmbedCodeChanged(event, theEmbedCode) {
       embedCode = theEmbedCode || '';
     }
 
-    function _onPause(){
+    function _onPause() {
       reportingPaused = true;
     }
 
-    function _onPlay(){
+    function _onPlay() {
       reportingPaused = false;
     }
 
-    function _onPlayed(){
+    function _onPlayed() {
       reportingPaused = false;
       reportHeartBeat();
       stopHeartBeat();
     }
 
     function buildConfig(configuration) {
-      var _config = Object.assign({}, DEFAULT_CONFIG, configuration);
+      const _config = Object.assign({}, DEFAULT_CONFIG, configuration);
 
       if (!_config.segmentLength) {
         _config.maxSegmentsToCheck = _config.maxSegmentsToCheck || DEFAULT_CONFIG.maxSegmentsToCheck;

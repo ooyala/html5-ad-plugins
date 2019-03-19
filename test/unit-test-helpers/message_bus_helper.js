@@ -5,16 +5,13 @@ const {
   last,
 } = require('underscore');
 
-(function(OO) {
-
-  extend(OO.MessageBus.prototype,  {
-    published: function(event) {
-      var matches = filter(this._messageHistory, function(msg) { return msg[0] === 'publish' && msg[1] === event; });
+(function (OO) {
+  extend(OO.MessageBus.prototype, {
+    published(event) {
+      const matches = filter(this._messageHistory, msg => msg[0] === 'publish' && msg[1] === event);
       return rest(last(matches) || []);
     },
 
-    __end_marker: true
+    __end_marker: true,
   });
-
 }(OO));
-
