@@ -368,19 +368,20 @@ OO.Ads.manager(function()
     this.resumeAd = (ad) => {
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ["resume"]);
-        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && _.isFinite(ad.duration)) {
+        if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && isFinite(ad.duration)) {
           var duration = ad.duration;
+	  const { startTime, pauseTime } = this.adIdDictionary[ad.ad.data.id];	
           //Deducting the already played duration of ad  from the actual ad duration for making timer accurate
-          if(_.isFinite(this.adIdDictionary[ad.ad.data.id].startTime) && _.isFinite(this.adIdDictionary[ad.ad.data.id].pauseTime) )
+          if( startTime && isFinite(startTime) && pauseTime && isFinite(pauseTime) )
           {
-            duration = (ad.duration * 1000) - (this.adIdDictionary[ad.ad.data.id].pauseTime - this.adIdDictionary[ad.ad.data.id].startTime);
+            duration = (ad.duration * 1000) - (pauseTime - startTime);
           }
 
           if(duration < 0)
             duration = ad.duration * 1000;
 
           //Setting the ad callback again since ad was resumed
-          this.adIdDictionary[ad.ad.data.id].adTimer = _.delay(
+          this.adIdDictionary[ad.ad.data.id].adTimer = delay(
             _adEndedCallback(null, ad.ad.data.id),
             duration
           );
@@ -500,7 +501,7 @@ OO.Ads.manager(function()
         {
           this.adIdDictionary[currentId3Object.adId] = {
             state: STATE.WAITING,
-            adTimer: _.delay(_adEndedCallback(null, currentId3Object.adId), _getAdDuration(currentId3Object)),
+            adTimer: delay(_adEndedCallback(null, currentId3Object.adId), _getAdDuration(currentId3Object)),
             startTime: (new Date()).getTime()
 
           };
@@ -512,7 +513,7 @@ OO.Ads.manager(function()
           clearTimeout(this.adIdDictionary[currentId3Object.adId].adTimer);
           this.adIdDictionary[currentId3Object.adId].state = STATE.WAITING;
           this.adIdDictionary[currentId3Object.adId].startTime = (new Date()).getTime();
-          this.adIdDictionary[currentId3Object.adId].adTimer = _.delay(
+          this.adIdDictionary[currentId3Object.adId].adTimer = delay(
             _adEndedCallback(null, currentId3Object.adId),
             _getAdDuration(currentId3Object)
           );
@@ -537,8 +538,8 @@ OO.Ads.manager(function()
     *
     *
     */
-    var _getAdDuration = _.bind(function(id3Object)
-    {
+    var _getAdDuration = (id3Object) =>{
+	    
       var duration = 0;
       //If not start id3 tag from ad, we recalculate ad duration.
         if (id3Object.time != 0){
@@ -548,7 +549,7 @@ OO.Ads.manager(function()
         else
           duration = id3Object.duration;
         return duration * 1000;
-    },this);
+    };
 
 
     /**
