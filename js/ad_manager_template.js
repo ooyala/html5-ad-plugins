@@ -19,6 +19,10 @@ OO.Ads.manager(() => {
    *   used.  ex. {"technology":OO.VIDEO.TECHNOLOGY.HTML5, "features":[OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE]}
    */
   const AdManager = function () {
+    const _onContentChanged = () => {
+      // Callback for example listener registered in this.initialize
+    };
+
     this.name = 'my-ads-manager';
     this.ready = false;
     this.videoRestrictions = {};
@@ -284,10 +288,6 @@ OO.Ads.manager(() => {
      *                     should create. Return an empty array, null, or undefined if this is not required.
      */
     this.createAdVideoElementOnPlayerInit = () => [];
-
-    var _onContentChanged = () => {
-      // Callback for example listener registered in this.initialize
-    };
   };
 
   return new AdManager();

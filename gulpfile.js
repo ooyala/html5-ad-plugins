@@ -20,6 +20,19 @@ const path = {
   originalJs: ['./js/'],
 };
 
+const checkFileExtension = function (extension, fileName) {
+  if (!fileName || fileName.length < extension.length) {
+    return false;
+  }
+
+  return (fileName.lastIndexOf(extension) == fileName.length - extension.length);
+};
+
+const getFileNameFromPath = function (path) {
+  const start = path.lastIndexOf('/') + 1;
+  return path.substring(start);
+};
+
 const browserify_fn = function () {
   const bundleThis = function (srcArray) {
     _.each(srcArray, (sourceFile) => {
@@ -63,19 +76,6 @@ gulp.task('init_module', (callback) => {
 gulp.task('build', ['init_module'], () => {
   browserify_fn();
 });
-
-var checkFileExtension = function (extension, fileName) {
-  if (!fileName || fileName.length < extension.length) {
-    return false;
-  }
-
-  return (fileName.lastIndexOf(extension) == fileName.length - extension.length);
-};
-
-var getFileNameFromPath = function (path) {
-  const start = path.lastIndexOf('/') + 1;
-  return path.substring(start);
-};
 
 // Run tests
 gulp.task('test', shell.task(['make test']));

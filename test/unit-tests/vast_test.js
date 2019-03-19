@@ -13,6 +13,10 @@ const sinon = require('sinon');
 const fs = require('fs');
 
 describe('ad_manager_vast', function () {
+  const initialPlay = function () {
+    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
+  };
+
   let amc; let
     vastAdManager;
   const name = 'vast';
@@ -124,10 +128,6 @@ describe('ad_manager_vast', function () {
     vastAdManager.initialPlay();
     xml = xml || vpaidLinearXML;
     vastAdManager.onVastResponse(preroll, xml);
-  };
-
-  var initialPlay = function () {
-    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
 
   before(_.bind(() => {

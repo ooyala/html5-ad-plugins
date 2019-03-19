@@ -30,6 +30,76 @@ OO.Ads.manager(() => {
   };
 
   const Liverail = function () {
+    const _onIframeLoaded = () => {
+      log('iframe loaded');
+      iframeLoaded = true;
+      _tryLoadSdk();
+    };
+
+    const _resetAdState = () => {
+      startAfterLoad = false;
+      adLoaded = false;
+      adPlaying = false;
+      slotStartedCallback = null;
+      slotEndedCallback = null;
+      adStartedCallback = null;
+      adEndedCallback = null;
+    };
+
+    // /// Playback /////
+    const _playbackBeginning = () => {
+      const creativeData = {};
+      const environmentVariables = extend({
+        slot: amc.ui.videoWrapper[0],
+        // slot: amc.ui.adWrapper[0],
+        videoSlot: amc.ui.adVideoElement[0],
+        videoSlotCanAutoPlay: true, // based on LR engineer's comment, need to set it to true
+      }, this.environmentVariables);
+
+      // TODO: This actually shouldn't be done now in case the window is small for the ad lifetime.
+      //       This should be done within seconds before ad playback.
+      // initAd is defined in the VPAID spec:
+      // http://www.iab.net/media/file/VPAIDFINAL51109.pdf
+      liverailVPAIDManager.initAd(amc.ui.adVideoElement[0].offsetWidth, amc.ui.adVideoElement[0].offsetHeight,
+        'normal', 600, creativeData, environmentVariables);
+    };
+
+    const _tryInit = () => {
+      if (!adModuleJsReady || !metadataFetched) return;
+      this.ready = true;
+      amc.onAdManagerReady(this.name);
+      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
+    };
+
+    const _onSdkLoaded = () => {
+      log('SDK loaded');
+      adModuleJsReady = true;
+
+      liverailVPAIDManager = liverailFrame.contentWindow.getVPAIDAd();
+      liverailVPAIDManager.handshakeVersion('2.0');
+
+      let eventName;
+      for (eventName in VPAID_EVENTS) {
+        // liverailVPAIDManager.subscribe(() => {this._onAdEvent(VPAID_EVENTS[eventName])}),
+        liverailVPAIDManager.subscribe(() => {
+          this._onAdEvent(VPAID_EVENTS[eventName]);
+        },
+        VPAID_EVENTS[eventName]);
+      }
+
+      _tryInit();
+    };
+
+    const _tryLoadSdk = () => {
+      if ((remoteModuleJs == null) || !iframeLoaded) return;
+      const loader = liverailFrame.contentWindow.document.createElement('script');
+      loader.src = remoteModuleJs;
+      loader.onload = _onSdkLoaded;
+      loader.onerror = this.destroy;
+      liverailFrame.contentWindow.document.body.appendChild(loader);
+      _tryInit();
+    };
+
     // core
     this.name = 'liverail-ads-manager';
     let amc = null;
@@ -76,45 +146,10 @@ OO.Ads.manager(() => {
       document.body.appendChild(liverailFrame);
     };
 
-    var _onIframeLoaded = () => {
-      log('iframe loaded');
-      iframeLoaded = true;
-      _tryLoadSdk();
-    };
-
     this.registerUi = () => {
       remoteModuleJs = (amc.ui.isSSL ? 'https://cdn-static-secure.liverail.com/js/LiveRail.AdManager-1.0.js'
         : 'http://cdn-static.liverail.com/js/LiveRail.AdManager-1.0.js');
       _tryLoadSdk();
-    };
-
-    var _tryLoadSdk = () => {
-      if ((remoteModuleJs == null) || !iframeLoaded) return;
-      const loader = liverailFrame.contentWindow.document.createElement('script');
-      loader.src = remoteModuleJs;
-      loader.onload = _onSdkLoaded;
-      loader.onerror = this.destroy;
-      liverailFrame.contentWindow.document.body.appendChild(loader);
-      _tryInit();
-    };
-
-    var _onSdkLoaded = () => {
-      log('SDK loaded');
-      adModuleJsReady = true;
-
-      liverailVPAIDManager = liverailFrame.contentWindow.getVPAIDAd();
-      liverailVPAIDManager.handshakeVersion('2.0');
-
-      let eventName;
-      for (eventName in VPAID_EVENTS) {
-        // liverailVPAIDManager.subscribe(() => {this._onAdEvent(VPAID_EVENTS[eventName])}),
-        liverailVPAIDManager.subscribe(() => {
-          this._onAdEvent(VPAID_EVENTS[eventName]);
-        },
-        VPAID_EVENTS[eventName]);
-      }
-
-      _tryInit();
     };
 
     this.loadMetadata = (pageAndBacklotMetadata, baseMetadata) => {
@@ -186,32 +221,6 @@ OO.Ads.manager(() => {
             : amc.ADTYPE.NONLINEAR_OVERLAY),
         }),
       ];
-    };
-
-    var _tryInit = () => {
-      if (!adModuleJsReady || !metadataFetched) return;
-      this.ready = true;
-      amc.onAdManagerReady(this.name);
-      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
-    };
-
-    // /// Playback /////
-
-    var _playbackBeginning = () => {
-      const creativeData = {};
-      const environmentVariables = extend({
-        slot: amc.ui.videoWrapper[0],
-        // slot: amc.ui.adWrapper[0],
-        videoSlot: amc.ui.adVideoElement[0],
-        videoSlotCanAutoPlay: true, // based on LR engineer's comment, need to set it to true
-      }, this.environmentVariables);
-
-      // TODO: This actually shouldn't be done now in case the window is small for the ad lifetime.
-      //       This should be done within seconds before ad playback.
-      // initAd is defined in the VPAID spec:
-      // http://www.iab.net/media/file/VPAIDFINAL51109.pdf
-      liverailVPAIDManager.initAd(amc.ui.adVideoElement[0].offsetWidth, amc.ui.adVideoElement[0].offsetHeight,
-        'normal', 600, creativeData, environmentVariables);
     };
 
     this.playAd = (ad) => {
@@ -310,16 +319,6 @@ OO.Ads.manager(() => {
           log('LIVERAIL AD LOG -', logData);
           break;
       }
-    };
-
-    var _resetAdState = () => {
-      startAfterLoad = false;
-      adLoaded = false;
-      adPlaying = false;
-      slotStartedCallback = null;
-      slotEndedCallback = null;
-      adStartedCallback = null;
-      adEndedCallback = null;
     };
 
     const _updateCountdown = () => {

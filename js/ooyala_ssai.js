@@ -44,6 +44,561 @@ OO.Ads.manager(() => {
    *   used.  ex. {"technology":OO.VIDEO.TECHNOLOGY.HTML5, "features":[OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE]}
    */
   const OoyalaSsai = function () {
+    /**
+     * Remove listeners from the Ad Manager Controller about playback.
+     * @private
+     * @method OoyalaSsai#_removeAMCListeners
+     */
+    const _removeAMCListeners = () => {
+      if (!amc) {
+        return;
+      }
+
+      amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+      amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, this.onContentUrlChanged);
+      amc.removePlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED, this.onPlayheadTimeChanged);
+      amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
+      amc.removePlayerListener(amc.EVENTS.REPLAY_REQUESTED, this.onReplay);
+      amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, this.onFullscreenChanged);
+      amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, this.onAdVolumeChanged);
+      amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, this.onMuteStateChanged);
+      amc.removePlayerListener(amc.EVENTS.PLAY_STARTED, this.onPlayStarted);
+      amc.removePlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, this.onContentTreeFetched);
+    };
+
+    /**
+     * Callback used when the duration of an ad has passed.
+     * @private
+     * @method OoyalaSsai#_adEndedCallback
+     */
+    const _adEndedCallback = (clearTimeoutId, objectId) => () => {
+      if (clearTimeoutId) {
+        clearTimeout(clearTimeoutId);
+      }
+
+      if (!isUndefined(this.adIdDictionary[objectId])) {
+        amc.notifyLinearAdEnded(this.adIdDictionary[objectId].curAdId);
+        amc.notifyPodEnded(this.adIdDictionary[objectId].curAdId);
+
+        adMode = false;
+        this.currentAd = null;
+        // We delete vast info for this ad, since was completed.
+        delete this.adIdDictionary[objectId];
+      }
+    };
+
+    /**
+     * Helper function to call impressions.
+     * @private
+     * @method OoyalaSsai#_handleImpressionCalls
+     * @param {object} curId3Object An object with the impressions data
+     */
+    const _handleImpressionCalls = (curId3Object) => {
+      if (!isId3ContainsStartedTime(curId3Object.time)) {
+        const dataToExecutingImpressions = {
+          ad: {
+            data: this.adIdDictionary[curId3Object.adId].vastData,
+          },
+        };
+
+        _handleTrackingUrls(dataToExecutingImpressions, TRACKING_CALL_NAMES[curId3Object.time]);
+      }
+    };
+
+    /**
+     * Replaces the %5BCACHEBUSTING%5D / [CACHEBUSTING] string in each URL in the array with a
+     * random generated string. The purpose of a cachebuster is to keep the URLs unique to prevent
+     * cached responses.
+     * @private
+     * @method OoyalaSsai#_cacheBuster
+     * @param {string[]} urls The array of URLs
+     * @returns {string[]} The new array of URLs.
+     */
+    const _cacheBuster = (urls) => {
+      for (let i = 0; i < urls.length; i++) {
+        const searchString = '[CACHEBUSTING]';
+        const encodedSearchString = encodeURIComponent(searchString);
+        const regex = new RegExp(encodedSearchString, 'i');
+        const randString = OO.getRandomString();
+        urls[i] = urls[i].replace(regex, randString);
+      }
+      return urls;
+    };
+
+    /**
+     * Helper function to ping URLs in each set of tracking event arrays.
+     * @private
+     * @method OoyalaSsai#_pingTrackingUrls
+     * @param {object} urlObject An object with the tracking event names and their
+     * associated URL array.
+     */
+    const _pingTrackingUrls = (urlObject) => {
+      for (const trackingName in urlObject) {
+        if (!urlObject.hasOwnProperty(trackingName)) {
+          return;
+        }
+        try {
+          let urls = urlObject[trackingName];
+          if (!urls) {
+            OO.log(`Ooyala SSAI: No "${trackingName}" tracking URLs provided to ping`);
+            return;
+          }
+          if (bustTheCache) {
+            urls = _cacheBuster(urls);
+          }
+          OO.pixelPings(urls);
+          OO.log(`Ooyala SSAI: "${trackingName}" tracking URLs pinged`);
+        } catch (e) {
+          OO.log(`Ooyala SSAI: Failed to ping "${trackingName}" tracking URLs`);
+          if (amc) {
+            amc.raiseAdError(e);
+          }
+        }
+      }
+    };
+
+    /**
+     * Helper function to convert the ad object returned by the Vast#parser function into
+     * a key-value pair object where the key is the ad id and the value is the ad object.
+     * @private
+     * @method OoyalaSsai#_parseVastAdsObject
+     * @param {object} vastAds The object containing the parsed ad data
+     * @returns {object} The key-value pair object.
+     */
+    const _parseVastAdsObject = (vastAds) => {
+      let vastAd;
+      const _adIdVastData = {};
+      if (vastAds) {
+        if (vastAds.podded && vastAds.podded.length > 0) {
+          for (let i = 0; i < vastAds.podded.length; i++) {
+            vastAd = vastAds.podded[i];
+            if (vastAd && vastAd.id) {
+              _adIdVastData[vastAd.id] = vastAd;
+            }
+          }
+        }
+        if (vastAds.standalone && vastAds.standalone.length > 0) {
+          for (let i = 0; i < vastAds.standalone.length; i++) {
+            vastAd = vastAds.standalone[i];
+            if (vastAd && vastAd.id) {
+              _adIdVastData[vastAd.id] = vastAd;
+            }
+          }
+        }
+      }
+      return _adIdVastData;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click through url.
+     * @private
+     * @method OoyalaSsai#_getLinearClickThroughUrl
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The linear click through url. Returns null if no
+     * URL exists.
+     */
+    const _getLinearClickThroughUrl = (adObject) => {
+      let linearClickThroughUrl = null;
+      if (adObject
+        && adObject.linear
+        && adObject.linear.clickThrough) {
+        linearClickThroughUrl = adObject.linear.clickThrough;
+      }
+      return linearClickThroughUrl;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's title.
+     * @private
+     * @method OoyalaSsai#_getTitle
+     * @param {object} adObject The ad metadata
+     * @return {string|null} The title of the ad. Returns null if no title exists.
+     */
+    const _getTitle = (adObject) => {
+      let title = null;
+      if (adObject && adObject.title) {
+        title = adObject.title;
+      }
+      return title;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's tracking urls under a specific event name.
+     * @private
+     * @method OoyalaSsai#_getLinearTrackingEventUrls
+     * @param {object} adObject The ad metadata
+     * @param {string} trackingEventName The name of the tracking event
+     * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
+     */
+    const _getLinearTrackingEventUrls = (adObject, trackingEventName) => {
+      let trackingUrls = null;
+      if (adObject
+        && adObject.ad
+        && adObject.ad.data
+        && adObject.ad.data.linear
+        && adObject.ad.data.linear.tracking
+        && adObject.ad.data.linear.tracking[trackingEventName]
+        && adObject.ad.data.linear.tracking[trackingEventName].length > 0) {
+        trackingUrls = adObject.ad.data.linear.tracking[trackingEventName];
+      }
+      return trackingUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's linear click tracking urls.
+     * @private
+     * @method OoyalaSsai#_getLinearClickTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of linear click tracking urls. Returns null if no
+     * URLs exist.
+     */
+    const _getLinearClickTrackingUrls = (adObject) => {
+      let linearClickTrackingUrls = null;
+      if (adObject
+        && adObject.ad
+        && adObject.ad.data
+        && adObject.ad.data.linear
+        && adObject.ad.data.linear.clickTracking
+        && adObject.ad.data.linear.clickTracking.length > 0) {
+        linearClickTrackingUrls = adObject.ad.data.linear.clickTracking;
+      }
+      return linearClickTrackingUrls;
+    };
+
+    /**
+     * Helper function to retrieve the ad object's impression urls.
+     * @private
+     * @method OoyalaSsai#_getImpressionUrls
+     * @param {object} adObject The ad metadata
+     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
+     */
+    const _getImpressionUrls = (adObject) => {
+      let impressionUrls = null;
+      if (adObject
+        && adObject.ad
+        && adObject.ad.data
+        && adObject.ad.data.impression
+        && adObject.ad.data.impression.length > 0) {
+        impressionUrls = adObject.ad.data.impression;
+      }
+      return impressionUrls;
+    };
+
+    /**
+     * Ping a list of tracking event names' URLs.
+     * @private
+     * @method OoyalaSsai#_handleTrackingUrls
+     * @param {object} adObject The ad metadata
+     * @param {string[]} trackingEventNames The array of tracking event names
+     */
+    const _handleTrackingUrls = (adObject, trackingEventNames) => {
+      if (adObject) {
+        each(trackingEventNames, (trackingEventName) => {
+          let urls;
+          switch (trackingEventName) {
+            case 'impression':
+              urls = _getImpressionUrls(adObject);
+              break;
+            case 'linearClickTracking':
+              urls = _getLinearClickTrackingUrls(adObject);
+              break;
+            default:
+              /*
+               * Note: Had to change _getTrackingEventUrls to a less generic, _getLinearTrackingEventUrls.
+               * Slight discrepancy between Ooyala SSAI and vast ad manager here. For vast, the
+               * "tracking" object exists in the ad.data object, but not in Ooyala SSAI.
+               */
+              urls = _getLinearTrackingEventUrls(adObject, trackingEventName);
+          }
+          const urlObject = {};
+          urlObject[trackingEventName] = urls;
+          _pingTrackingUrls(urlObject);
+        });
+      } else {
+        console.log(
+          `Ooyala SSAI: Tried to ping URLs: [${trackingEventNames
+          }] but ad object passed in was: ${adObject}`,
+        );
+      }
+    };
+
+    /**
+     * Helper function to pretty print the ID3_QUERY_PARAMETERS object.
+     * @private
+     * @method OoyalaSsai#_id3QueryParametersToString
+     * @returns {string} The string: "adid, t, d".
+     */
+    const _id3QueryParametersToString = () => {
+      let result = '';
+      each(values(ID3_QUERY_PARAMETERS), (value) => {
+        result = `${result + value}, `;
+      });
+      result = result.slice(0, -2);
+      return result;
+    };
+
+    /**
+     * TODO: Improve return statement jsdoc
+     * Parses the string contained in the ID3 metadata.
+     * @private
+     * @method OoyalaSsai#_parseId3String
+     * @param {string} id3String The string contained under the "TXXX" property to parse
+     * @returns {object} An object with "adId", "time", and "duration" as properties.
+     */
+    const _parseId3String = (id3String) => {
+      let parsedId3Object = null;
+      if (id3String) {
+        parsedId3Object = {};
+        const queryParameterStrings = id3String.split('&');
+        if (queryParameterStrings.length === 3) {
+          for (let i = 0; i < queryParameterStrings.length; i++) {
+            const queryParameterString = queryParameterStrings[i];
+            const queryParameterSplit = queryParameterString.split('=');
+            const queryParameterKey = queryParameterSplit[0];
+            const queryParameterValue = queryParameterSplit[1];
+            if (queryParameterKey === ID3_QUERY_PARAMETERS.AD_ID) {
+              parsedId3Object.adId = queryParameterValue;
+            } else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME) {
+              parsedId3Object.time = parseFloat(queryParameterValue);
+            } else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION) {
+              parsedId3Object.duration = parseFloat(queryParameterValue);
+            } else {
+              OO.log(`Ooyala SSAI: ${queryParameterKey} is an unrecognized query parameter.\n`
+                + `Recognized query parameters: ${_id3QueryParametersToString()}`);
+              parsedId3Object = null;
+              break;
+            }
+          }
+        } else {
+          OO.log(`Ooyala SSAI: ID3 Metadata String contains${queryParameterStrings.length
+          }query parameters, but was expected to contain 3 query parameters: ${
+            _id3QueryParametersToString()}`);
+          parsedId3Object = null;
+        }
+      }
+      return parsedId3Object;
+    };
+
+    /**
+     * TODO: Improve return statement jsdoc
+     * Parses the ID3 metadata that is received.
+     * @private
+     * @method OoyalaSsai#_parseId3Object
+     * @param {object} id3Object The ID3 metadata passed in
+     * @returns {object} An object with "adId", "time", and "duration" as properties.
+     */
+    const _parseId3Object = (id3Object) => {
+      let parsedId3Object = null;
+      if (id3Object) {
+        if (has(id3Object, 'TXXX')) {
+          const id3String = id3Object.TXXX;
+          parsedId3Object = _parseId3String(id3String);
+        } else {
+          OO.log('Ooyala SSAI: Expected ID3 Metadata Object to have a \'TXXX\' property');
+        }
+      }
+      return parsedId3Object;
+    };
+
+    /**
+     * Attempts to load obtain ad timeline and metadata for the asset from SSAI api.
+     * @private
+     * @method OoyalaSsai#_sendMetadataRequest
+     */
+    const _sendMetadataRequest = () => {
+      const url = `${window.location.protocol}//${this.domainName}/v1/metadata/${this.currentEmbed}?ssai_guid=${this.ssaiGuid}`;
+      fetch(url, {
+        method: 'get',
+        credentials: 'omit',
+        headers: {
+          'Content-Type': 'application/json',
+          pragma: 'no-cache',
+          'cache-control': 'no-cache',
+        },
+      })
+        .then(res => res.json())
+        .then(res => this.onMetadataResponse(res))
+        .catch(err => this.onMetadataError(url, err));
+    };
+
+    /**
+     * Attempts to load the Ad after normalizing the url.
+     * @private
+     * @method OoyalaSsai#_sendRequest
+     * @param {string} url The url that contains the Ad creative
+     */
+    const _sendRequest = (url, currentId3Object) => {
+      fetch(url, {
+        method: 'get',
+        credentials: 'omit',
+        headers: {
+          pragma: 'no-cache',
+          'cache-control': 'no-cache',
+        },
+      })
+        .then(res => res.text())
+        .then(str => (new window.DOMParser()).parseFromString(str, 'text/xml'))
+        .then(res => this.onResponse(currentId3Object, res))
+        .catch((error) => {
+          console.error(error);
+          this.onRequestError(currentId3Object);
+        });
+    };
+
+    /**
+     * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
+     * the Vast Ad Response from the ads proxy.
+     * @private
+     * @method OoyalaSsai#_preformatUrl
+     * @param {string} url The request URL
+     * @returns {string} The request URL with the formatted request URL.
+     */
+    const _preformatUrl = url => url.replace(/vhls|hls/gi, matched => ENDPOINTS_MAP_OBJECT[matched]);
+
+    /**
+     * Checks if current ID3 tag is the last one for an ad, value is
+     * represented in percentage, being 100 the completed time.
+     * @private
+     * @method OoyalaSsai#isId3ContainsCompletedTime
+     * @param  {float} id3ObjectTime  Time value from currentId3Object
+     * @returns {boolean}  True if ID3 tag time is 100
+     */
+    const isId3ContainsCompletedTime = id3ObjectTime => id3ObjectTime === 100;
+
+    /**
+     * Appends a parameter to a url.
+     * @private
+     * @param  {string} url   Url to append the param to
+     * @param  {string} param The parameter to be appended
+     * @returns {string}       The resulting url after appending the param
+     */
+    const _appendParamToUrl = (url, param) => {
+      if (isString(url) && isString(param)) {
+        if (url.indexOf('?') > -1) {
+          return `${url}&${param}`;
+        }
+
+        return `${url}?${param}`;
+      }
+      return url;
+    };
+
+    /**
+     * Helper function to append "offset" and "aid" query parameters to the request URL.
+     * @private
+     * @method OoyalaSsai#_appendAdsProxyQueryParameters
+     * @param {string} url The request URL
+     * @param {string} adId The ID of the ad
+     * @returns {string} The request URL with the appended query parameters.
+     */
+    const _appendAdsProxyQueryParameters = (url, adId) => {
+      const offset = OFFSET_PARAM + currentOffset;
+      let newUrl = _appendParamToUrl(url, offset);
+
+      const adIdParam = AD_ID_PARAM + adId;
+      newUrl = _appendParamToUrl(newUrl, adIdParam);
+      return newUrl;
+    };
+
+    /**
+     * Parses the ad url to obtain the ssai guid, embed code and ssai api domain name
+     * @private
+     * @method OoyalaSsai#_parseUrl
+     * @param {string} url The stream url
+     */
+    const _parseUrl = (url) => {
+      if (typeof url !== 'string') {
+        return;
+      }
+      const urlParts = url.split('?');
+      if (urlParts === null) {
+        return;
+      }
+      const queryParamString = urlParts[1];
+      const mainUrl = urlParts[0];
+      const mainUrlParts = mainUrl.split('/');
+      if (mainUrlParts !== null) {
+        this.domainName = mainUrlParts[2];
+        this.currentEmbed = mainUrlParts[4];
+      }
+      const queryParams = queryParamString.split('&');
+      if (queryParams === null) {
+        return;
+      }
+      for (let index = 0; index < queryParams.length; index++) {
+        const paramParts = queryParams[index].split('=');
+        if (paramParts === null) {
+          continue;
+        }
+        if (paramParts[0] === 'ssai_guid') {
+          this.ssaiGuid = paramParts[1];
+          return;
+        }
+      }
+    };
+
+    /**
+     * Appends the smart player identifier to the request URL.
+     * @private
+     * @method OoyalaSsai#_makeSmartUrl
+     * @param {string} url The stream url
+     * @returns {string} The modified stream url with the appended unique identifier.
+     */
+    const _makeSmartUrl = url => _appendParamToUrl(url, SMART_PLAYER);
+
+    /**
+     * Force an ad to play with configured ssai ad data
+     * @private
+     * @method OoyalaSsai#_notifyAmcToPlayAd
+     */
+    const _notifyAmcToPlayAd = (id3Object, adObject) => {
+      let ssaiAd;
+      if (adObject && id3Object) {
+        ssaiAd = _configureSsaiObject(adObject);
+        _setVastDataToDictionary(id3Object, adObject);
+        // If not start id3 tag from ad, we recalculate ad duration.
+        if (id3Object.time != 0) {
+          const adOffset = id3Object.time * id3Object.duration / 100;
+          id3Object.duration -= adOffset;
+        }
+      }
+
+      amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
+    };
+
+    /**
+     * Returns the ssai data from the vast object in case if the vast
+     * object contains data for the current id3 object.
+     * @private
+     * @param id3Object
+     * @param adIdVastData
+     * @returns {*}
+     */
+    const _getAdObjectFromVast = (id3Object, adIdVastData) => {
+      if (has(adIdVastData, id3Object.adId)) {
+        return adIdVastData[id3Object.adId];
+      }
+    };
+
+    /**
+     * Helper function to handle the ID3 Ad timeout and request.
+     * @private
+     * @method OoyalaSsai#_handleId3Ad
+     * @param {object} id3Object The ID3 object
+     */
+    const _handleId3Ad = (id3Object) => {
+      // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
+      if (!this.testMode) {
+        _sendRequest(requestUrl, id3Object);
+      } else {
+        this.onResponse(id3Object, null);
+      }
+    };
+
+    const _onContentChanged = () => {
+      currentOffset = 0;
+    };
+
     this.name = 'ooyala-ssai-ads-manager';
     this.ready = false;
     this.initTime = Date.now();
@@ -220,7 +775,7 @@ OO.Ads.manager(() => {
         // log message if parameter does not conform to any of the above values
         else {
           OO.log(`${'Ooyala Pulse: page level parameter: "cacheBuster" expected value: "true"'
-                 + ' or "false", but value received was: '}${adManagerMetadata.cacheBuster}`);
+          + ' or "false", but value received was: '}${adManagerMetadata.cacheBuster}`);
         }
       }
     };
@@ -236,11 +791,11 @@ OO.Ads.manager(() => {
      * @returns {OO.OoyalaSsaiController#Ad[]} timeline A list of the ads to play for the current video
      */
     this.buildTimeline = // Video restrictions can be provided at the ad level. If provided, the player will
-// attempt to create a video element that supports the given video restrictions.
-// If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
-// If the element is not created due to lack of support from the available video plugins,
-// the ad will be skipped
-() => null
+      // attempt to create a video element that supports the given video restrictions.
+      // If created, it will exist in amc.ui.adVideoElemen t by the time playAd is called.
+      // If the element is not created due to lack of support from the available video plugins,
+      // the ad will be skipped
+      () => null
     ;
 
     /**
@@ -503,21 +1058,6 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Helper function to handle the ID3 Ad timeout and request.
-     * @private
-     * @method OoyalaSsai#_handleId3Ad
-     * @param {object} id3Object The ID3 object
-     */
-    var _handleId3Ad = (id3Object) => {
-      // Will call _sendRequest() once live team fixes ads proxy issue. Will directly call onResponse() for now.
-      if (!this.testMode) {
-        _sendRequest(requestUrl, id3Object);
-      } else {
-        this.onResponse(id3Object, null);
-      }
-    };
-
-    /**
      * Called if the ajax call succeeds
      * @public
      * @method OoyalaSsai#onResponse
@@ -545,20 +1085,6 @@ OO.Ads.manager(() => {
     this.onMetadataResponse = (metadata) => {
       this.timeline = metadata;
       amc.notifySSAIAdTimelineReceived(this.timeline);
-    };
-
-    /**
-     * Returns the ssai data from the vast object in case if the vast
-     * object contains data for the current id3 object.
-     * @private
-     * @param id3Object
-     * @param adIdVastData
-     * @returns {*}
-     */
-    var _getAdObjectFromVast = (id3Object, adIdVastData) => {
-      if (has(adIdVastData, id3Object.adId)) {
-        return adIdVastData[id3Object.adId];
-      }
     };
 
     /**
@@ -596,25 +1122,6 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Force an ad to play with configured ssai ad data
-     * @private
-     * @method OoyalaSsai#_notifyAmcToPlayAd
-     */
-    var _notifyAmcToPlayAd = (id3Object, adObject) => {
-      if (adObject && id3Object) {
-        var ssaiAd = _configureSsaiObject(adObject);
-        _setVastDataToDictionary(id3Object, adObject);
-        // If not start id3 tag from ad, we recalculate ad duration.
-        if (id3Object.time != 0) {
-          const adOffset = id3Object.time * id3Object.duration / 100;
-          id3Object.duration -= adOffset;
-        }
-      }
-
-      amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
-    };
-
-    /**
      * Called if the ajax call fails
      * @public
      * @method OoyalaSsai#onRequestError
@@ -635,9 +1142,9 @@ OO.Ads.manager(() => {
     this.onMetadataError = (url, error) => {
       OO.log(`SSAI Metadata Request: Error${JSON.stringify(error)}`);
       if (error !== null) {
-      	const code = error.status;
-      	const message = error.responseText;
-      	amc.raiseApiError(code, message, url);
+        const code = error.status;
+        const message = error.responseText;
+        amc.raiseApiError(code, message, url);
       }
     };
 
@@ -734,10 +1241,6 @@ OO.Ads.manager(() => {
       _removeAMCListeners();
     };
 
-    var _onContentChanged = () => {
-      currentOffset = 0;
-    };
-
     // Helper Functions
 
     /**
@@ -749,238 +1252,14 @@ OO.Ads.manager(() => {
     this.getBustTheCache = () => bustTheCache;
 
     /**
-     * Appends the smart player identifier to the request URL.
+     * Checks if current ID3 tag is the first one for an ad, value is
+     * represented in percentage, being 0 the start time.
      * @private
-     * @method OoyalaSsai#_makeSmartUrl
-     * @param {string} url The stream url
-     * @returns {string} The modified stream url with the appended unique identifier.
+     * @method OoyalaSsai#isId3ContainsStartedTime
+     * @param  {float} id3ObjectTime  Time value from currentId3Object
+     * @returns {boolean}  True if ID3 tag time is 0
      */
-    var _makeSmartUrl = url => _appendParamToUrl(url, SMART_PLAYER);
-
-    /**
-     * Parses the ad url to obtain the ssai guid, embed code and ssai api domain name
-     * @private
-     * @method OoyalaSsai#_parseUrl
-     * @param {string} url The stream url
-     */
-    var _parseUrl = (url) => {
-      if (typeof url !== 'string') {
-      	return;
-      }
-      const urlParts = url.split('?');
-      if (urlParts === null) {
-      	return;
-      }
-      const queryParamString = urlParts[1];
-      const mainUrl = urlParts[0];
-      const mainUrlParts = mainUrl.split('/');
-      if (mainUrlParts !== null) {
-      	this.domainName = mainUrlParts[2];
-      	this.currentEmbed = mainUrlParts[4];
-      }
-      const queryParams = queryParamString.split('&');
-      if (queryParams === null) {
-      	return;
-      }
-      for (let index = 0; index < queryParams.length; index++) {
-        const paramParts = queryParams[index].split('=');
-        if (paramParts === null) {
-	      continue;
-	    }
-        if (paramParts[0] === 'ssai_guid') {
-          this.ssaiGuid = paramParts[1];
-          return;
-        }
-      }
-    };
-
-    /**
-     * Helper function to append "offset" and "aid" query parameters to the request URL.
-     * @private
-     * @method OoyalaSsai#_appendAdsProxyQueryParameters
-     * @param {string} url The request URL
-     * @param {string} adId The ID of the ad
-     * @returns {string} The request URL with the appended query parameters.
-     */
-    var _appendAdsProxyQueryParameters = (url, adId) => {
-      const offset = OFFSET_PARAM + currentOffset;
-      let newUrl = _appendParamToUrl(url, offset);
-
-      const adIdParam = AD_ID_PARAM + adId;
-      newUrl = _appendParamToUrl(newUrl, adIdParam);
-      return newUrl;
-    };
-
-    /**
-     * Appends a parameter to a url.
-     * @private
-     * @param  {string} url   Url to append the param to
-     * @param  {string} param The parameter to be appended
-     * @returns {string}       The resulting url after appending the param
-     */
-    var _appendParamToUrl = (url, param) => {
-      if (isString(url) && isString(param)) {
-        if (url.indexOf('?') > -1) {
-          return `${url}&${param}`;
-        }
-
-        return `${url}?${param}`;
-      }
-      return url;
-    };
-
-    /**
-    * Checks if current ID3 tag is the last one for an ad, value is
-    * represented in percentage, being 100 the completed time.
-    * @private
-    * @method OoyalaSsai#isId3ContainsCompletedTime
-    * @param  {float} id3ObjectTime  Time value from currentId3Object
-    * @returns {boolean}  True if ID3 tag time is 100
-    */
-    var isId3ContainsCompletedTime = id3ObjectTime => id3ObjectTime === 100;
-
-    /**
-    * Checks if current ID3 tag is the first one for an ad, value is
-    * represented in percentage, being 0 the start time.
-    * @private
-    * @method OoyalaSsai#isId3ContainsStartedTime
-    * @param  {float} id3ObjectTime  Time value from currentId3Object
-    * @returns {boolean}  True if ID3 tag time is 0
-    */
     const isId3ContainsStartedTime = id3ObjectTime => id3ObjectTime === 0;
-
-    /**
-     * Helper function to replace change the HLS manifest URL to the endpoint used to retrieve
-     * the Vast Ad Response from the ads proxy.
-     * @private
-     * @method OoyalaSsai#_preformatUrl
-     * @param {string} url The request URL
-     * @returns {string} The request URL with the formatted request URL.
-     */
-    var _preformatUrl = url => url.replace(/vhls|hls/gi, matched => ENDPOINTS_MAP_OBJECT[matched]);
-
-    /**
-     * Attempts to load the Ad after normalizing the url.
-     * @private
-     * @method OoyalaSsai#_sendRequest
-     * @param {string} url The url that contains the Ad creative
-     */
-    var _sendRequest = (url, currentId3Object) => {
-      fetch(url, {
-        method: 'get',
-        credentials: 'omit',
-        headers: {
-          pragma: 'no-cache',
-          'cache-control': 'no-cache',
-        },
-      })
-        .then(res => res.text())
-        .then(str => (new window.DOMParser()).parseFromString(str, 'text/xml'))
-        .then(res => this.onResponse(currentId3Object, res))
-        .catch((error) => {
-          console.error(error);
-          this.onRequestError(currentId3Object);
-        });
-    };
-
-    /**
-     * Attempts to load obtain ad timeline and metadata for the asset from SSAI api.
-     * @private
-     * @method OoyalaSsai#_sendMetadataRequest
-     */
-    var _sendMetadataRequest = () => {
-      const url = `${window.location.protocol}//${this.domainName}/v1/metadata/${this.currentEmbed}?ssai_guid=${this.ssaiGuid}`;
-      fetch(url, {
-        method: 'get',
-        credentials: 'omit',
-        headers: {
-          'Content-Type': 'application/json',
-          pragma: 'no-cache',
-          'cache-control': 'no-cache',
-        },
-      })
-        .then(res => res.json())
-        .then(res => this.onMetadataResponse(res))
-        .catch(err => this.onMetadataError(url, err));
-    };
-
-    /**
-     * TODO: Improve return statement jsdoc
-     * Parses the ID3 metadata that is received.
-     * @private
-     * @method OoyalaSsai#_parseId3Object
-     * @param {object} id3Object The ID3 metadata passed in
-     * @returns {object} An object with "adId", "time", and "duration" as properties.
-     */
-    var _parseId3Object = (id3Object) => {
-      let parsedId3Object = null;
-      if (id3Object) {
-        if (has(id3Object, 'TXXX')) {
-          const id3String = id3Object.TXXX;
-          parsedId3Object = _parseId3String(id3String);
-        } else {
-          OO.log("Ooyala SSAI: Expected ID3 Metadata Object to have a 'TXXX' property");
-        }
-      }
-      return parsedId3Object;
-    };
-
-    /**
-     * TODO: Improve return statement jsdoc
-     * Parses the string contained in the ID3 metadata.
-     * @private
-     * @method OoyalaSsai#_parseId3String
-     * @param {string} id3String The string contained under the "TXXX" property to parse
-     * @returns {object} An object with "adId", "time", and "duration" as properties.
-     */
-    var _parseId3String = (id3String) => {
-      let parsedId3Object = null;
-      if (id3String) {
-        parsedId3Object = {};
-        const queryParameterStrings = id3String.split('&');
-        if (queryParameterStrings.length === 3) {
-          for (let i = 0; i < queryParameterStrings.length; i++) {
-            const queryParameterString = queryParameterStrings[i];
-            const queryParameterSplit = queryParameterString.split('=');
-            const queryParameterKey = queryParameterSplit[0];
-            const queryParameterValue = queryParameterSplit[1];
-            if (queryParameterKey === ID3_QUERY_PARAMETERS.AD_ID) {
-              parsedId3Object.adId = queryParameterValue;
-            } else if (queryParameterKey === ID3_QUERY_PARAMETERS.TIME) {
-              parsedId3Object.time = parseFloat(queryParameterValue);
-            } else if (queryParameterKey === ID3_QUERY_PARAMETERS.DURATION) {
-              parsedId3Object.duration = parseFloat(queryParameterValue);
-            } else {
-              OO.log(`Ooyala SSAI: ${queryParameterKey} is an unrecognized query parameter.\n`
-                     + `Recognized query parameters: ${_id3QueryParametersToString()}`);
-              parsedId3Object = null;
-              break;
-            }
-          }
-        } else {
-          OO.log(`Ooyala SSAI: ID3 Metadata String contains${queryParameterStrings.length
-          }query parameters, but was expected to contain 3 query parameters: ${
-            _id3QueryParametersToString()}`);
-          parsedId3Object = null;
-        }
-      }
-      return parsedId3Object;
-    };
-
-    /**
-     * Helper function to pretty print the ID3_QUERY_PARAMETERS object.
-     * @private
-     * @method OoyalaSsai#_id3QueryParametersToString
-     * @returns {string} The string: "adid, t, d".
-     */
-    var _id3QueryParametersToString = () => {
-      let result = '';
-      each(values(ID3_QUERY_PARAMETERS), (value) => {
-        result = `${result + value}, `;
-      });
-      result = result.slice(0, -2);
-      return result;
-    };
 
     /**
      * Temporary mock function to force an ad to play until live team fixes ad proxy.
@@ -999,170 +1278,6 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Ping a list of tracking event names' URLs.
-     * @private
-     * @method OoyalaSsai#_handleTrackingUrls
-     * @param {object} adObject The ad metadata
-     * @param {string[]} trackingEventNames The array of tracking event names
-     */
-    var _handleTrackingUrls = (adObject, trackingEventNames) => {
-      if (adObject) {
-        each(trackingEventNames, (trackingEventName) => {
-          let urls;
-          switch (trackingEventName) {
-            case 'impression':
-              urls = _getImpressionUrls(adObject);
-              break;
-            case 'linearClickTracking':
-              urls = _getLinearClickTrackingUrls(adObject);
-              break;
-            default:
-              /*
-               * Note: Had to change _getTrackingEventUrls to a less generic, _getLinearTrackingEventUrls.
-               * Slight discrepancy between Ooyala SSAI and vast ad manager here. For vast, the
-               * "tracking" object exists in the ad.data object, but not in Ooyala SSAI.
-               */
-              urls = _getLinearTrackingEventUrls(adObject, trackingEventName);
-          }
-          const urlObject = {};
-          urlObject[trackingEventName] = urls;
-          _pingTrackingUrls(urlObject);
-        });
-      } else {
-        console.log(
-          `Ooyala SSAI: Tried to ping URLs: [${trackingEventNames
-          }] but ad object passed in was: ${adObject}`,
-        );
-      }
-    };
-
-    /**
-     * Helper function to retrieve the ad object's impression urls.
-     * @private
-     * @method OoyalaSsai#_getImpressionUrls
-     * @param {object} adObject The ad metadata
-     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
-     */
-    var _getImpressionUrls = (adObject) => {
-      let impressionUrls = null;
-      if (adObject
-          && adObject.ad
-          && adObject.ad.data
-          && adObject.ad.data.impression
-          && adObject.ad.data.impression.length > 0) {
-        impressionUrls = adObject.ad.data.impression;
-      }
-      return impressionUrls;
-    };
-
-    /**
-     * Helper function to retrieve the ad object's linear click tracking urls.
-     * @private
-     * @method OoyalaSsai#_getLinearClickTrackingUrls
-     * @param {object} adObject The ad metadata
-     * @return {string[]|null} The array of linear click tracking urls. Returns null if no
-     * URLs exist.
-     */
-    var _getLinearClickTrackingUrls = (adObject) => {
-      let linearClickTrackingUrls = null;
-      if (adObject
-          && adObject.ad
-          && adObject.ad.data
-          && adObject.ad.data.linear
-          && adObject.ad.data.linear.clickTracking
-          && adObject.ad.data.linear.clickTracking.length > 0) {
-        linearClickTrackingUrls = adObject.ad.data.linear.clickTracking;
-      }
-      return linearClickTrackingUrls;
-    };
-
-    /**
-     * Helper function to retrieve the ad object's tracking urls under a specific event name.
-     * @private
-     * @method OoyalaSsai#_getLinearTrackingEventUrls
-     * @param {object} adObject The ad metadata
-     * @param {string} trackingEventName The name of the tracking event
-     * @returns {string[]|null} The array of tracking urls associated with the event name. Returns null if no URLs exist.
-     */
-    var _getLinearTrackingEventUrls = (adObject, trackingEventName) => {
-      let trackingUrls = null;
-      if (adObject
-          && adObject.ad
-          && adObject.ad.data
-          && adObject.ad.data.linear
-          && adObject.ad.data.linear.tracking
-          && adObject.ad.data.linear.tracking[trackingEventName]
-          && adObject.ad.data.linear.tracking[trackingEventName].length > 0) {
-        trackingUrls = adObject.ad.data.linear.tracking[trackingEventName];
-      }
-      return trackingUrls;
-    };
-
-    /**
-     * Helper function to retrieve the ad object's title.
-     * @private
-     * @method OoyalaSsai#_getTitle
-     * @param {object} adObject The ad metadata
-     * @return {string|null} The title of the ad. Returns null if no title exists.
-     */
-    var _getTitle = (adObject) => {
-      let title = null;
-      if (adObject && adObject.title) {
-        title = adObject.title;
-      }
-      return title;
-    };
-
-    /**
-     * Helper function to retrieve the ad object's linear click through url.
-     * @private
-     * @method OoyalaSsai#_getLinearClickThroughUrl
-     * @param {object} adObject The ad metadata
-     * @return {string|null} The linear click through url. Returns null if no
-     * URL exists.
-     */
-    var _getLinearClickThroughUrl = (adObject) => {
-      let linearClickThroughUrl = null;
-      if (adObject
-          && adObject.linear
-          && adObject.linear.clickThrough) {
-        linearClickThroughUrl = adObject.linear.clickThrough;
-      }
-      return linearClickThroughUrl;
-    };
-
-    /**
-     * Helper function to convert the ad object returned by the Vast#parser function into
-     * a key-value pair object where the key is the ad id and the value is the ad object.
-     * @private
-     * @method OoyalaSsai#_parseVastAdsObject
-     * @param {object} vastAds The object containing the parsed ad data
-     * @returns {object} The key-value pair object.
-     */
-    var _parseVastAdsObject = (vastAds) => {
-      const _adIdVastData = {};
-      if (vastAds) {
-        if (vastAds.podded && vastAds.podded.length > 0) {
-          for (var i = 0; i < vastAds.podded.length; i++) {
-            var vastAd = vastAds.podded[i];
-            if (vastAd && vastAd.id) {
-              _adIdVastData[vastAd.id] = vastAd;
-            }
-          }
-        }
-        if (vastAds.standalone && vastAds.standalone.length > 0) {
-          for (var i = 0; i < vastAds.standalone.length; i++) {
-            var vastAd = vastAds.standalone[i];
-            if (vastAd && vastAd.id) {
-              _adIdVastData[vastAd.id] = vastAd;
-            }
-          }
-        }
-      }
-      return _adIdVastData;
-    };
-
-    /**
      * Helper function to get the duration property within the Vast ad object.
      * @private
      * @method OoyalaSsai#_getDuration
@@ -1172,8 +1287,8 @@ OO.Ads.manager(() => {
     const _getDuration = (vastAdData) => {
       let duration = null;
       if (vastAdData
-          && vastAdData.linear
-          && vastAdData.linear.duration) {
+        && vastAdData.linear
+        && vastAdData.linear.duration) {
         duration = vastAdData.linear.duration;
       }
       return duration;
@@ -1224,121 +1339,6 @@ OO.Ads.manager(() => {
         duration = vastDuration;
       }
       return duration;
-    };
-
-    /**
-     * Helper function to ping URLs in each set of tracking event arrays.
-     * @private
-     * @method OoyalaSsai#_pingTrackingUrls
-     * @param {object} urlObject An object with the tracking event names and their
-     * associated URL array.
-     */
-    var _pingTrackingUrls = (urlObject) => {
-      for (const trackingName in urlObject) {
-        if (!urlObject.hasOwnProperty(trackingName)) {
-          return;
-        }
-        try {
-          let urls = urlObject[trackingName];
-          if (!urls) {
-            OO.log(`Ooyala SSAI: No "${trackingName}" tracking URLs provided to ping`);
-            return;
-          }
-          if (bustTheCache) {
-            urls = _cacheBuster(urls);
-          }
-          OO.pixelPings(urls);
-          OO.log(`Ooyala SSAI: "${trackingName}" tracking URLs pinged`);
-        } catch (e) {
-          OO.log(`Ooyala SSAI: Failed to ping "${trackingName}" tracking URLs`);
-          if (amc) {
-            amc.raiseAdError(e);
-          }
-        }
-      }
-    };
-
-    /**
-     * Replaces the %5BCACHEBUSTING%5D / [CACHEBUSTING] string in each URL in the array with a
-     * random generated string. The purpose of a cachebuster is to keep the URLs unique to prevent
-     * cached responses.
-     * @private
-     * @method OoyalaSsai#_cacheBuster
-     * @param {string[]} urls The array of URLs
-     * @returns {string[]} The new array of URLs.
-     */
-    var _cacheBuster = (urls) => {
-      for (let i = 0; i < urls.length; i++) {
-        const searchString = '[CACHEBUSTING]';
-        const encodedSearchString = encodeURIComponent(searchString);
-        const regex = new RegExp(encodedSearchString, 'i');
-        const randString = OO.getRandomString();
-        urls[i] = urls[i].replace(regex, randString);
-      }
-      return urls;
-    };
-
-    /**
-     * Helper function to call impressions.
-     * @private
-     * @method OoyalaSsai#_handleImpressionCalls
-     * @param {object} curId3Object An object with the impressions data
-     */
-    var _handleImpressionCalls = (curId3Object) => {
-      if (!isId3ContainsStartedTime(curId3Object.time)) {
-        const dataToExecutingImpressions = {
-          ad: {
-            data: this.adIdDictionary[curId3Object.adId].vastData,
-          },
-        };
-
-        _handleTrackingUrls(dataToExecutingImpressions, TRACKING_CALL_NAMES[curId3Object.time]);
-      }
-    };
-
-    /**
-     * Callback used when the duration of an ad has passed.
-     * @private
-     * @method OoyalaSsai#_adEndedCallback
-     */
-    // var self = this;
-    var _adEndedCallback = (clearTimeoutId, objectId) => () => {
-      if (clearTimeoutId) {
-        clearTimeout(clearTimeoutId);
-      }
-
-      if (!isUndefined(this.adIdDictionary[objectId])) {
-        amc.notifyLinearAdEnded(this.adIdDictionary[objectId].curAdId);
-        amc.notifyPodEnded(this.adIdDictionary[objectId].curAdId);
-
-        adMode = false;
-        this.currentAd = null;
-        // We delete vast info for this ad, since was completed.
-        delete this.adIdDictionary[objectId];
-      }
-    }
-    ;
-
-    /**
-     * Remove listeners from the Ad Manager Controller about playback.
-     * @private
-     * @method OoyalaSsai#_removeAMCListeners
-     */
-    var _removeAMCListeners = () => {
-      if (!amc) {
-        return;
-      }
-
-      amc.removePlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
-      amc.removePlayerListener(amc.EVENTS.CONTENT_URL_CHANGED, this.onContentUrlChanged);
-      amc.removePlayerListener(amc.EVENTS.PLAYHEAD_TIME_CHANGED, this.onPlayheadTimeChanged);
-      amc.removePlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
-      amc.removePlayerListener(amc.EVENTS.REPLAY_REQUESTED, this.onReplay);
-      amc.removePlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, this.onFullscreenChanged);
-      amc.removePlayerListener(amc.EVENTS.AD_VOLUME_CHANGED, this.onAdVolumeChanged);
-      amc.removePlayerListener(amc.EVENTS.MUTE_STATE_CHANGED, this.onMuteStateChanged);
-      amc.removePlayerListener(amc.EVENTS.PLAY_STARTED, this.onPlayStarted);
-      amc.removePlayerListener(amc.EVENTS.CONTENT_TREE_FETCHED, this.onContentTreeFetched);
     };
   };
   return new OoyalaSsai();

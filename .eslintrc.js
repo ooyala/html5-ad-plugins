@@ -14,7 +14,6 @@ module.exports = {
   rules: {
     "no-underscore-dangle": "warn",
     "vars-on-top": "warn",
-    "no-var": "warn",
     "max-len": "warn",
     "no-use-before-define": "warn",
     "consistent-return": "warn",
@@ -55,5 +54,6 @@ module.exports = {
     "no-fallthrough": "warn",
     "no-mixed-operators": "warn",
     "no-loop-func": "warn",
+    "no-case-declarations": "warn",
   },
 };
