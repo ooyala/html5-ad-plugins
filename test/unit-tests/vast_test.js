@@ -9,6 +9,7 @@ require(COMMON_SRC_ROOT + "utils/utils.js");
 require(COMMON_SRC_ROOT + "utils/environment.js");
 require(COMMON_SRC_ROOT + "classes/emitter.js");
 
+var sinon = require('sinon');
 var fs = require("fs");
 
 describe('ad_manager_vast', function() {
@@ -43,46 +44,34 @@ describe('ad_manager_vast', function() {
   var contentTypeHLS3XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_3.xml"), "utf8");
   var contentTypeHLS4XMLString = fs.readFileSync(require.resolve("../unit-test-helpers/mock_responses/vast_content_type_HLS_4.xml"), "utf8");
 
-  var linearXML = OO.$.parseXML(linearXMLString);
-  var linearNoClickthroughXML = OO.$.parseXML(linearXMLNoClickthroughString);
-  var linearXML2Ads = OO.$.parseXML(linearXML2AdsString);
-  var linear3_0XML = OO.$.parseXML(linear3_0XMLString);
-  var linear3_0XMLPodded = OO.$.parseXML(linear3_0PoddedXMLString);
-  var linear3_0MissingMediaFiles = OO.$.parseXML(linear3_0MissingMediaFilesString);
-  var nonLinearXML = OO.$.parseXML(nonLinearXMLString);
-  var nonLinearXMLMissingURL = OO.$.parseXML(nonLinearXMLMissingURLString);
-  var vmapAdTagPre = OO.$.parseXML(vmapAdTagPreXMLString);
-  var vmapInlinePreAdTagPost = OO.$.parseXML(vmapInlinePreAdTagPostXMLString);
-  var vmapInlinePodded = OO.$.parseXML(vmapInlinePoddedXMLString);
-  var vmapInlineRepeatAd = OO.$.parseXML(vmapInlineRepeatAdXMLString);
-  var vmapInlineRepeatAdBadInput1 = OO.$.parseXML(vmapInlineRepeatAdBadInput1XMLString);
-  var vmapInlineRepeatAdBadInput2 = OO.$.parseXML(vmapInlineRepeatAdBadInput2XMLString);
-  var vpaidLinearXML = OO.$.parseXML(vpaidLinearXMLString);
-  var vpaidLinearNoValuesXML = OO.$.parseXML(vpaidLinearNoValuesXMLString);
-  var vpaidNonLinearXML = OO.$.parseXML(vpaidNonLinearXMLString);
-  var vpaidNoCompanionXML = OO.$.parseXML(vpaidNoCompanionXMLString);
-  var contentTypeHLS1 = OO.$.parseXML(contentTypeHLS1XMLString);
-  var contentTypeHLS2 = OO.$.parseXML(contentTypeHLS2XMLString);
-  var contentTypeHLS3 = OO.$.parseXML(contentTypeHLS3XMLString);
-  var contentTypeHLS4 = OO.$.parseXML(contentTypeHLS4XMLString);
+  var linearXML = $.parseXML(linearXMLString);
+  var linearNoClickthroughXML = $.parseXML(linearXMLNoClickthroughString);
+  var linearXML2Ads = $.parseXML(linearXML2AdsString);
+  var linear3_0XML = $.parseXML(linear3_0XMLString);
+  var linear3_0XMLPodded = $.parseXML(linear3_0PoddedXMLString);
+  var linear3_0MissingMediaFiles = $.parseXML(linear3_0MissingMediaFilesString);
+  var nonLinearXML = $.parseXML(nonLinearXMLString);
+  var nonLinearXMLMissingURL = $.parseXML(nonLinearXMLMissingURLString);
+  var vmapAdTagPre = $.parseXML(vmapAdTagPreXMLString);
+  var vmapInlinePreAdTagPost = $.parseXML(vmapInlinePreAdTagPostXMLString);
+  var vmapInlinePodded = $.parseXML(vmapInlinePoddedXMLString);
+  var vmapInlineRepeatAd = $.parseXML(vmapInlineRepeatAdXMLString);
+  var vmapInlineRepeatAdBadInput1 = $.parseXML(vmapInlineRepeatAdBadInput1XMLString);
+  var vmapInlineRepeatAdBadInput2 = $.parseXML(vmapInlineRepeatAdBadInput2XMLString);
+  var vpaidLinearXML = $.parseXML(vpaidLinearXMLString);
+  var vpaidLinearNoValuesXML = $.parseXML(vpaidLinearNoValuesXMLString);
+  var vpaidNonLinearXML = $.parseXML(vpaidNonLinearXMLString);
+  var vpaidNoCompanionXML = $.parseXML(vpaidNoCompanionXMLString);
+  var contentTypeHLS1 = $.parseXML(contentTypeHLS1XMLString);
+  var contentTypeHLS2 = $.parseXML(contentTypeHLS2XMLString);
+  var contentTypeHLS3 = $.parseXML(contentTypeHLS3XMLString);
+  var contentTypeHLS4 = $.parseXML(contentTypeHLS4XMLString);
 
-  var wrapper1XML = OO.$.parseXML(wrapper1XMLString);
-  var wrapper2XML = OO.$.parseXML(wrapper2XMLString);
+  var wrapper1XML = $.parseXML(wrapper1XMLString);
+  var wrapper2XML = $.parseXML(wrapper2XMLString);
   var playerParamWrapperDepth = OO.playerParams.maxVastWrapperDepth;
   var errorType = [];
-  var pixelPingCalled = false;
-  var trackingUrlsPinged = {};
   var adsClickthroughOpenedCalled = 0;
-
-  // Helper functions
-  var fakeAd = function(timePositionClass, position, duration) {
-    var timePositionClass = timePositionClass;
-    var position = position;
-    var duration = duration;
-    this.getTimePositionClass = function(){ return timePositionClass; };
-    this.getTimePosition = function() { return position; };
-    this.getTotalDuration = function() { return duration; };
-  };
 
   var initialize = function() {
     var embed_code = "embed_code";
@@ -148,19 +137,6 @@ describe('ad_manager_vast', function() {
     delete require.cache[require.resolve(SRC_ROOT + "ad_manager_vast.js")];
     require(SRC_ROOT + "ad_manager_vast.js");
 
-    // mock pixelPing to test error tracking
-    OO.pixelPing = function(url) {
-      pixelPingCalled = true;
-      if (url) {
-        if (trackingUrlsPinged.hasOwnProperty(url)) {
-          trackingUrlsPinged[url] += 1;
-        }
-        else {
-          trackingUrlsPinged[url] = 1;
-        }
-      }
-    };
-
     var originalTrackError = _.bind(vastAdManager.trackError, vastAdManager);
 
     // mock trackError function to test error tracking
@@ -184,11 +160,11 @@ describe('ad_manager_vast', function() {
     amc.adManagerList.push(vastAdManager);
     OO.playerParams.maxVastWrapperDepth = 2;
     errorType = [];
-    pixelPingCalled= false;
-    trackingUrlsPinged = {};
     vastAdManager.adTrackingInfo = {};
     vastAdManager.adBreaks = [];
     adsClickthroughOpenedCalled = 0;
+
+    OO.pixelPing = sinon.spy();
 
     //VPAID specifics
     global.vpaid.adInit = false;
@@ -196,6 +172,8 @@ describe('ad_manager_vast', function() {
     global.vpaid.adStopped = false;
     global.vpaid.adSkipped = false;
     global.vpaid.getVPAIDAd = function() { return new global.vpaid.VpaidAd(); };
+
+    window.open = () => ({});
   });
 
   afterEach(_.bind(function() {
@@ -222,15 +200,11 @@ describe('ad_manager_vast', function() {
     expect(function() { vastAdManager.initialize(amc); }).to.not.throwException();
   });
 
-  it('Init: ad manager handles the loadMetadata function and asks to create an mp4 element', function(){
-    var oldAmcReady = _.bind(amc.onAdManagerReady, amc);
-    var createMp4Element = false;
-    amc.onAdManagerReady = function(makeMp4) {
-      createMp4Element = makeMp4;
-      if (typeof oldAmcReady === "function") {
-        oldAmcReady();
-      }
-    };
+  it('Init: ad manager notifies amc after loading metadata', function() {
+
+    amc.onAdManagerReady = sinon.spy();
+    amc.reportPluginLoaded = sinon.spy();
+
     var embed_code = "embed_code";
     var vast_ad = {
       type: "vast",
@@ -240,25 +214,28 @@ describe('ad_manager_vast', function() {
       time:0,
       position_type:"t"
     };
-    var content = {
+
+    var movieMetadata = {
       embed_code: embed_code,
       ads: [vast_ad]
     };
-    vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, content);
-    expect(createMp4Element).to.be(true);
-  });
+    var pbMetadata = {
+      "html5_ssl_ad_server": "https://blah",
+      "html5_ad_server": "http://blah"
+    };
 
-  it('Init: ad manager notifies controller that it is loaded', function(){
-    var pluginLoaded = false;
-    amc.reportPluginLoaded = function(date, name){
-      pluginLoaded = true;
-    }
     vastAdManager.initialize(amc);
-    expect(function() { vastAdManager.loadMetadata({"html5_ssl_ad_server":"https://blah",
-      "html5_ad_server": "http://blah"}, {}, {});}).to.not.throwException();
-    expect(pluginLoaded).to.be(true);
+    vastAdManager.loadMetadata(pbMetadata, null, movieMetadata);
+    expect(vastAdManager.ready).to.be(true);
+
+    sinon.assert.calledOnce(amc.onAdManagerReady);
+    sinon.assert.calledWith(amc.onAdManagerReady, true);
+
+    // TODO: mock Date to always return the same value
+    sinon.assert.calledOnce(amc.reportPluginLoaded);
+    const reportPluginLoadedCalls = amc.reportPluginLoaded.getCall(0)
+    expect(reportPluginLoadedCalls.args[0]).to.be.a('number');
+    expect(reportPluginLoadedCalls.args[1]).to.eql('vast');
   });
 
   it('Init: ad manager is ready', function(){
@@ -746,17 +723,6 @@ describe('ad_manager_vast', function() {
   it('Vast 2.0: should open clickthrough url if player is clicked', function(){
     //Vast Ad Manager regularly calls window.open here.
     //Will instead track what we are trying to open
-    var openedUrls = [];
-    vastAdManager.openUrl = function(url) {
-      if (url) {
-        openedUrls.push(url);
-        return true;
-      }
-      return false;
-    };
-    amc.adsClickthroughOpened = function() {
-      adsClickthroughOpenedCalled += 1;
-    };
     var embed_code = "embed_code";
     var vast_ad_mid = {
       type: "vast",
@@ -782,8 +748,8 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(vastAd);
     vastAdManager.playerClicked(vastAd, true);
     //1 clickthrough url is defined in vast_linear.xml
-    expect(openedUrls.length).to.be(1);
-    expect(adsClickthroughOpenedCalled).to.be(1);
+    sinon.mock(window).expects('open').once();
+    sinon.assert.calledOnce(amc.adsClickthroughOpened);
   });
 
   it('Vast 2.0: should not open a clickthrough url if one is not defined', function(){
@@ -1510,9 +1476,8 @@ describe('ad_manager_vast', function() {
     };
 
     vastAdManager.onVastResponse(vast_ad_mid, linear3_0MissingMediaFiles);
-    expect(_.contains(errorType, vastAdManager.ERROR_CODES.GENERAL_LINEAR_ADS)).to.be(true);
-    expect(pixelPingCalled).to.be(true);
-    expect(trackingUrlsPinged.errorurl).to.be(1);
+    sinon.assert.calledOnce(OO.pixelPing);
+    sinon.assert.calledWith(OO.pixelPing, `errorurl`);
   });
 
   it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', function(){
@@ -1539,9 +1504,8 @@ describe('ad_manager_vast', function() {
     };
 
     vastAdManager.onVastResponse(vast_ad_mid, nonLinearXMLMissingURL);
-    expect(_.contains(errorType, vastAdManager.ERROR_CODES.GENERAL_NONLINEAR_ADS)).to.be(true);
-    expect(pixelPingCalled).to.be(true);
-    expect(trackingUrlsPinged.errorurl).to.be(1);
+    sinon.assert.calledOnce(OO.pixelPing);
+    sinon.assert.calledWith(OO.pixelPing, `errorurl`);
   });
 
   it('Vast 3.0, VMAP: Should call onVMAPResponse if there is a VMAP XML response', function() {
@@ -2795,7 +2759,9 @@ describe('ad_manager_vast', function() {
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
     ad.vpaidAd.callEvent('AdImpression');
-    expect(trackingUrlsPinged.impressionUrl).to.be(1);
+
+    sinon.assert.calledOnce(OO.pixelPing);
+    expect(OO.pixelPing.getCall(0).args).to.eql([`impressionUrl`]);
   });
 
   it('Vast Content Type Filtering: Parser should catch content types for HLS', function() {
@@ -2926,23 +2892,34 @@ describe('ad_manager_vast', function() {
       code : amc.AD_CANCEL_CODE.SKIPPED
     });
 
-    expect(trackingUrlsPinged.startUrl).to.be           (2);
-    expect(trackingUrlsPinged.creativeViewUrl).to.be    (2);
-    expect(trackingUrlsPinged.impressionUrl).to.be      (2);
-    expect(trackingUrlsPinged.firstQuartileUrl).to.be   (1);
-    expect(trackingUrlsPinged.midpointUrl).to.be        (1);
-    expect(trackingUrlsPinged.thirdQuartileUrl).to.be   (1);
-    expect(trackingUrlsPinged.clickTrackingUrl).to.be   (1);
-    expect(trackingUrlsPinged.clickThroughUrl).to.be    (undefined); //clickthrough url should not be pinged. It's only to be opened in a new tab/window
-    expect(trackingUrlsPinged.customClickUrl).to.be     (1);
-    expect(trackingUrlsPinged.pauseUrl).to.be           (2);
-    expect(trackingUrlsPinged.resumeUrl).to.be          (2);
-    expect(trackingUrlsPinged.muteUrl).to.be            (2);
-    expect(trackingUrlsPinged.unmuteUrl).to.be          (2);
-    expect(trackingUrlsPinged.fullscreenUrl).to.be      (2);
-    expect(trackingUrlsPinged.exitFullscreenUrl).to.be  (2);
-    expect(trackingUrlsPinged.completeUrl).to.be        (1);
-    expect(trackingUrlsPinged.skipUrl).to.be            (1);
+    sinon.mock(window).expects('open').once();
+    // e.once();
+    sinon.assert.callCount(OO.pixelPing, 25);
+    expect(OO.pixelPing.getCall(0).args).to.eql([`creativeViewUrl`]);
+    expect(OO.pixelPing.getCall(1).args).to.eql([`startUrl`]);
+    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionUrl`]);
+    expect(OO.pixelPing.getCall(3).args).to.eql([`firstQuartileUrl`]);
+    expect(OO.pixelPing.getCall(4).args).to.eql([`midpointUrl`]);
+    expect(OO.pixelPing.getCall(5).args).to.eql([`thirdQuartileUrl`]);
+    expect(OO.pixelPing.getCall(6).args).to.eql([`clickTrackingUrl`]);
+    expect(OO.pixelPing.getCall(7).args).to.eql([`customClickUrl`]);
+    expect(OO.pixelPing.getCall(8).args).to.eql([`pauseUrl`]);
+    expect(OO.pixelPing.getCall(9).args).to.eql([`resumeUrl`]);
+    expect(OO.pixelPing.getCall(10).args).to.eql([`pauseUrl`]);
+    expect(OO.pixelPing.getCall(11).args).to.eql([`resumeUrl`]);
+    expect(OO.pixelPing.getCall(12).args).to.eql([`muteUrl`]);
+    expect(OO.pixelPing.getCall(13).args).to.eql([`unmuteUrl`]);
+    expect(OO.pixelPing.getCall(14).args).to.eql([`muteUrl`]);
+    expect(OO.pixelPing.getCall(15).args).to.eql([`unmuteUrl`]);
+    expect(OO.pixelPing.getCall(16).args).to.eql([`fullscreenUrl`]);
+    expect(OO.pixelPing.getCall(17).args).to.eql([`exitFullscreenUrl`]);
+    expect(OO.pixelPing.getCall(18).args).to.eql([`fullscreenUrl`]);
+    expect(OO.pixelPing.getCall(19).args).to.eql([`exitFullscreenUrl`]);
+    expect(OO.pixelPing.getCall(20).args).to.eql([`completeUrl`]);
+    expect(OO.pixelPing.getCall(21).args).to.eql([`creativeViewUrl`]);
+    expect(OO.pixelPing.getCall(22).args).to.eql([`startUrl`]);
+    expect(OO.pixelPing.getCall(23).args).to.eql([`impressionUrl`]);
+    expect(OO.pixelPing.getCall(24).args).to.eql([`skipUrl`]);
   });
 
   it('Vast: Normal VAST Tracking Events should not be pinged if ad is VPAID', function() {
@@ -2997,7 +2974,7 @@ describe('ad_manager_vast', function() {
       code : amc.AD_CANCEL_CODE.SKIPPED
     });
 
-    expect(trackingUrlsPinged).to.eql({});
+    sinon.assert.notCalled(OO.pixelPing);
   });
 
   it('Vast: NonLinear Creative Tracking Events URLs should be pinged', function() {
@@ -3038,14 +3015,27 @@ describe('ad_manager_vast', function() {
     vastAdManager.cancelOverlay();
     vastAdManager.adVideoEnded();
 
-    expect(trackingUrlsPinged.impressionOverlayUrl).to.be       (3);
-    expect(trackingUrlsPinged.impressionOverlay2Url).to.be      (3);
-    expect(trackingUrlsPinged.impressionOverlay3Url).to.be      (3);
-    expect(trackingUrlsPinged.impressionOverlay4Url).to.be      (3);
-    expect(trackingUrlsPinged.impressionOverlay5Url).to.be      (3);
-    expect(trackingUrlsPinged.impressionOverlay6Url).to.be      (3);
-    expect(trackingUrlsPinged.nonLinearClickTrackingUrl).to.be  (1);
-    expect(trackingUrlsPinged.closeUrl).to.be                   (1);
+    sinon.assert.callCount(OO.pixelPing, 20);
+    expect(OO.pixelPing.getCall(0).args).to.eql([`impressionOverlayUrl`]);
+    expect(OO.pixelPing.getCall(1).args).to.eql([`impressionOverlay2Url`]);
+    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionOverlay3Url`]);
+    expect(OO.pixelPing.getCall(3).args).to.eql([`impressionOverlay4Url`]);
+    expect(OO.pixelPing.getCall(4).args).to.eql([`impressionOverlay5Url`]);
+    expect(OO.pixelPing.getCall(5).args).to.eql([`impressionOverlay6Url`]);
+    expect(OO.pixelPing.getCall(6).args).to.eql([`impressionOverlayUrl`]);
+    expect(OO.pixelPing.getCall(7).args).to.eql([`impressionOverlay2Url`]);
+    expect(OO.pixelPing.getCall(8).args).to.eql([`impressionOverlay3Url`]);
+    expect(OO.pixelPing.getCall(9).args).to.eql([`impressionOverlay4Url`]);
+    expect(OO.pixelPing.getCall(10).args).to.eql([`impressionOverlay5Url`]);
+    expect(OO.pixelPing.getCall(11).args).to.eql([`impressionOverlay6Url`]);
+    expect(OO.pixelPing.getCall(12).args).to.eql([`nonLinearClickTrackingUrl`]);
+    expect(OO.pixelPing.getCall(13).args).to.eql([`impressionOverlayUrl`]);
+    expect(OO.pixelPing.getCall(14).args).to.eql([`impressionOverlay2Url`]);
+    expect(OO.pixelPing.getCall(15).args).to.eql([`impressionOverlay3Url`]);
+    expect(OO.pixelPing.getCall(16).args).to.eql([`impressionOverlay4Url`]);
+    expect(OO.pixelPing.getCall(17).args).to.eql([`impressionOverlay5Url`]);
+    expect(OO.pixelPing.getCall(18).args).to.eql([`impressionOverlay6Url`]);
+    expect(OO.pixelPing.getCall(19).args).to.eql([`closeUrl`]);
   });
 
   it('VAST: Wrapper ads should be properly parsed into the adTrackingInfo object', function() {
@@ -3069,38 +3059,101 @@ describe('ad_manager_vast', function() {
     initialPlay();
     vastAdManager.initialPlay();
 
-    // Wrapper ads could be visualized as a tree with parents and children,
-    // but in this case, it looks more like a linked list:
-    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
-    var parentDepthOneId = "wrapper-parent-1";
-    var parentDepthTwoId = "wrapper-parent-2";
-    var leafId = "6654644"; // Ad ID from linearXML file
+    const expected = {
+      "6654644": {
+        "vastAdObject": null,
+        "errorURLs": ["errorurl"],
+        "wrapperParentId": "wrapper-parent-2"
+      },
+      "wrapper-parent-1": {
+        "vastAdObject": {
+          "error": ["errorWrapper1Url"],
+          "impression": ["impressionWrapper1Url"],
+          "linear": {
+            "tracking": {
+              "creativeView": [],
+              "start": ["startWrapper1Url"],
+              "midpoint": ["midpointWrapper1Url"],
+              "firstQuartile": ["firstQuartileWrapper1Url"],
+              "thirdQuartile": ["thirdQuartileWrapper1Url"],
+              "complete": ["completeWrapper1Url"],
+              "mute": [],
+              "unmute": [],
+              "pause": [],
+              "rewind": [],
+              "resume": [],
+              "fullscreen": [],
+              "exitFullscreen": [],
+              "expand": [],
+              "collapse": [],
+              "acceptInvitation": [],
+              "close": [],
+              "skip": []
+            },
+            "clickTracking": ["clickTrackingWrapper1Url"],
+            "clickThrough": "clickThroughWrapper1Url",
+            "customClick": ["customClickWrapper1Url"]
+          },
+          "nonLinear": {},
+          "companion": [],
+          "type": "Wrapper",
+          "version": "2.0",
+          "vastAdTagUri": "vastad.xml",
+          "title": "wrapperParentAd1",
+          "id": "wrapper-parent-1"
+        },
+        "errorURLs": ["errorWrapper1Url"],
+        "wrapperParentId": null
+      },
+      "wrapper-parent-2": {
+        "vastAdObject": {
+          "error": ["errorWrapper2Url"],
+          "impression": ["impressionWrapper2Url"],
+          "linear": {
+            "tracking": {
+              "creativeView": [],
+              "start": ["startWrapper2Url"],
+              "midpoint": ["midpointWrapper2Url"],
+              "firstQuartile": ["firstQuartileWrapper2Url"],
+              "thirdQuartile": ["thirdQuartileWrapper2Url"],
+              "complete": ["completeWrapper2Url"],
+              "mute": [],
+              "unmute": [],
+              "pause": [],
+              "rewind": [],
+              "resume": [],
+              "fullscreen": [],
+              "exitFullscreen": [],
+              "expand": [],
+              "collapse": [],
+              "acceptInvitation": [],
+              "close": [],
+              "skip": []
+            },
+            "clickTracking": ["clickTrackingWrapper2Url"],
+            "clickThrough": "clickThroughWrapper2Url",
+            "customClick": ["customClickWrapper2Url"]
+          },
+          "nonLinear": {},
+          "companion": [],
+          "type": "Wrapper",
+          "version": "2.0",
+          "vastAdTagUri": "vastad.xml",
+          "title": "wrapperParentAd2",
+          "id": "wrapper-parent-2"
+        },
+        "errorURLs": ["errorWrapper2Url"],
+        "wrapperParentId": "wrapper-parent-1"
+      }
+    }
+
 
     // need to fake wrapper ajax calls
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
-    vastAdManager.onVastResponse(vast_ad, wrapper2XML, parentDepthOneId);
-    vastAdManager.onVastResponse(vast_ad, linearXML, parentDepthTwoId);
+    vastAdManager.onVastResponse(vast_ad, wrapper2XML, 'wrapper-parent-1');
+    vastAdManager.onVastResponse(vast_ad, linearXML, 'wrapper-parent-2');
 
-    var adTrackingInfo = vastAdManager.adTrackingInfo;
-
-    // adTrackingInfo should have the three ads parsed
-    expect(_.keys(adTrackingInfo).length).to.be(3);
-    expect(_.has(adTrackingInfo, parentDepthOneId)).to.be(true);
-    expect(_.has(adTrackingInfo, parentDepthTwoId)).to.be(true);
-    expect(_.has(adTrackingInfo, leafId)).to.be(true);
-
-    var parentDepthOneObject = adTrackingInfo[parentDepthOneId];
-    var parentDepthTwoObject = adTrackingInfo[parentDepthTwoId];
-    var leafObject = adTrackingInfo[leafId];
-
-    // Ad Tracking Objects should have correct wrapper parent IDs
-    expect(parentDepthOneObject.wrapperParentId).to.be(null);
-    expect(parentDepthTwoObject.wrapperParentId).to.be(parentDepthOneId);
-    expect(leafObject.wrapperParentId).to.be(parentDepthTwoId);
-
-    expect(parentDepthOneObject.vastAdObject).to.not.be(null);
-    expect(parentDepthTwoObject.vastAdObject).to.not.be(null);
-    expect(leafObject.vastAdObject).to.be(null);
+    expect(JSON.stringify(vastAdManager.adTrackingInfo)).to.eql(JSON.stringify(expected));
   });
 
   it('VAST: Wrapper ads\' tracking events should be pinged if child\'s events are pinged', function() {
@@ -3129,7 +3182,6 @@ describe('ad_manager_vast', function() {
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
     var parentDepthOneId = "wrapper-parent-1";
     var parentDepthTwoId = "wrapper-parent-2";
-    var leafId = "6654644"; // Ad ID from linearXML file
 
     // need to fake wrapper ajax calls
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
@@ -3141,16 +3193,15 @@ describe('ad_manager_vast', function() {
     // creativeView, impression, and start tracking events
     vastAdManager.playAd(ad);
 
-    // leaf and parent level ad events should be pinged
-    expect(trackingUrlsPinged.impressionUrl).to.be(1);
-    expect(trackingUrlsPinged.startUrl).to.be(1);
-    expect(trackingUrlsPinged.creativeViewUrl).to.be(1);
 
-    expect(trackingUrlsPinged.impressionWrapper2Url).to.be(1);
-    expect(trackingUrlsPinged.startWrapper2Url).to.be(1);
-
-    expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
-    expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
+    sinon.assert.callCount(OO.pixelPing, 7);
+    expect(OO.pixelPing.getCall(0).args).to.eql([`creativeViewUrl`]);
+    expect(OO.pixelPing.getCall(1).args).to.eql([`startUrl`]);
+    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionUrl`]);
+    expect(OO.pixelPing.getCall(3).args).to.eql([`startWrapper2Url`]);
+    expect(OO.pixelPing.getCall(4).args).to.eql([`impressionWrapper2Url`]);
+    expect(OO.pixelPing.getCall(5).args).to.eql([`startWrapper1Url`]);
+    expect(OO.pixelPing.getCall(6).args).to.eql([`impressionWrapper1Url`]);
   });
 
   it('VAST: Wrapper ads\' tracking events should be pinged if VPAID child\'s events are pinged', function() {
@@ -3179,7 +3230,6 @@ describe('ad_manager_vast', function() {
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
     var parentDepthOneId = "wrapper-parent-1";
     var parentDepthTwoId = "wrapper-parent-2";
-    var leafId = "6654644"; // Ad ID from linearXML file
 
     // need to fake wrapper ajax calls
     vastAdManager.onVastResponse(vast_ad, wrapper1XML);
@@ -3194,34 +3244,32 @@ describe('ad_manager_vast', function() {
     ad.vpaidAd.callEvent('AdVideoStart');
 
     // leaf and parent level ad events should be pinged
-    expect(trackingUrlsPinged.impressionUrl).to.be(1);
-    expect(trackingUrlsPinged.startUrl).to.be(1);
+    sinon.assert.callCount(OO.pixelPing, 6);
+    expect(OO.pixelPing.getCall(0).args).to.eql([`impressionUrl`]);
+    expect(OO.pixelPing.getCall(1).args).to.eql([`impressionWrapper2Url`]);
+    expect(OO.pixelPing.getCall(2).args).to.eql([`impressionWrapper1Url`]);
+    expect(OO.pixelPing.getCall(3).args).to.eql([`startUrl`]);
+    expect(OO.pixelPing.getCall(4).args).to.eql([`startWrapper2Url`]);
+    expect(OO.pixelPing.getCall(5).args).to.eql([`startWrapper1Url`]);
 
-    expect(trackingUrlsPinged.impressionWrapper2Url).to.be(1);
-    expect(trackingUrlsPinged.startWrapper2Url).to.be(1);
-
-    expect(trackingUrlsPinged.impressionWrapper1Url).to.be(1);
-    expect(trackingUrlsPinged.startWrapper1Url).to.be(1);
 
     ad.vpaidAd.callEvent('AdClickThru');
-    expect(trackingUrlsPinged.clickTracking).to.be(1);
-    expect(trackingUrlsPinged.clickThrough).to.be(undefined); //clickthrough shouldn't be sent out.
-    expect(trackingUrlsPinged.customClick).to.be(1);
 
-    expect(trackingUrlsPinged.clickTrackingWrapper1Url).to.be(1);
-    expect(trackingUrlsPinged.clickThroughWrapper1Url).to.be(undefined); //clickthroughurl shouldn't be sent out.
-    expect(trackingUrlsPinged.customClickWrapper1Url).to.be(1);
-
-    expect(trackingUrlsPinged.clickTrackingWrapper2Url).to.be(1);
-    expect(trackingUrlsPinged.clickThroughWrapper2Url).to.be(undefined);
-    expect(trackingUrlsPinged.customClickWrapper2Url).to.be(1);
+    sinon.assert.callCount(OO.pixelPing, 12);
+    expect(OO.pixelPing.getCall(6).args).to.eql([`clickTracking`]);
+    expect(OO.pixelPing.getCall(7).args).to.eql([`customClick`]);
+    expect(OO.pixelPing.getCall(8).args).to.eql([`clickTrackingWrapper2Url`]);
+    expect(OO.pixelPing.getCall(9).args).to.eql([`customClickWrapper2Url`]);
+    expect(OO.pixelPing.getCall(10).args).to.eql([`clickTrackingWrapper1Url`]);
+    expect(OO.pixelPing.getCall(11).args).to.eql([`customClickWrapper1Url`]);
 
     ad.vpaidAd.callEvent('AdError');
-    expect(trackingUrlsPinged.errorUrl).to.be(1);
 
-    expect(trackingUrlsPinged.errorWrapper1Url).to.be(1);
+    sinon.assert.callCount(OO.pixelPing, 15);
 
-    expect(trackingUrlsPinged.errorWrapper2Url).to.be(1);
+    expect(OO.pixelPing.getCall(12).args).to.eql([`errorUrl`]);
+    expect(OO.pixelPing.getCall(13).args).to.eql([`errorWrapper2Url`]);
+    expect(OO.pixelPing.getCall(14).args).to.eql([`errorWrapper1Url`]);
   });
 
   it('VAST: Wrapper ad requests should not end ad pod until non-wrapper ad is found', function() {

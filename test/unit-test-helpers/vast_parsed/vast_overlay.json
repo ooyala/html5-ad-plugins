@@ -1,0 +1,64 @@
+{
+  "podded": [],
+  "standalone": [{
+    "error": [],
+    "impression": ["impressionOverlayUrl",
+      "impressionOverlay2Url",
+      "impressionOverlay3Url",
+      "impressionOverlay4Url",
+      "impressionOverlay5Url",
+      "impressionOverlay6Url"],
+    "linear": {},
+    "nonLinear": {
+      "tracking": {
+        "creativeView": [],
+        "start": [],
+        "midpoint": [],
+        "firstQuartile": [],
+        "thirdQuartile": [],
+        "complete": [],
+        "mute": [],
+        "unmute": [],
+        "pause": [],
+        "rewind": [],
+        "resume": [],
+        "fullscreen": [],
+        "exitFullscreen": [],
+        "expand": [],
+        "collapse": ["collapseUrl"],
+        "acceptInvitation": ["acceptInvitationUrl"],
+        "close": ["closeUrl"],
+        "skip": []
+      },
+      "width": "300",
+      "height": "60",
+      "nonLinearClickThrough": "nonLinearClickThroughUrl",
+      "nonLinearClickTracking": ["nonLinearClickTrackingUrl"],
+      "type": "static",
+      "data": "1.jpg",
+      "url": "1.jpg"
+    },
+    "companion": [{
+      "tracking": { "creativeView": ["companionCreativeViewUrl"] },
+      "width": "300",
+      "height": "60",
+      "companionClickThrough": "companionClickThroughUrl",
+      "type": "static",
+      "data": "companion.jpg",
+      "url": "companion.jpg"
+    },
+    {
+      "tracking": { "creativeView": ["companion2CreativeViewUrl"] },
+      "width": "300",
+      "height": "250",
+      "companionClickThrough": "companion2ClickThroughUrl",
+      "type": "static",
+      "data": "companion2.jpg",
+      "url": "companion2.jpg"
+    }],
+    "type": "InLine",
+    "version": "2.0",
+    "title": "TV Overlay PNG",
+    "id": "2281331"
+  }]
+}

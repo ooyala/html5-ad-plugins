@@ -1,0 +1,111 @@
+{
+  "podded": [],
+  "standalone": [{
+    "error": ["errorurl"],
+    "impression": ["impressionUrl"],
+    "linear": {
+      "tracking": {
+        "creativeView": ["creativeViewUrl"],
+        "start": ["startUrl"],
+        "midpoint": ["midpointUrl"],
+        "firstQuartile": ["firstQuartileUrl"],
+        "thirdQuartile": ["thirdQuartileUrl"],
+        "complete": ["completeUrl"],
+        "mute": ["muteUrl"],
+        "unmute": ["unmuteUrl"],
+        "pause": ["pauseUrl"],
+        "rewind": ["rewindUrl"],
+        "resume": ["resumeUrl"],
+        "fullscreen": ["fullscreenUrl"],
+        "exitFullscreen": ["exitFullscreenUrl"],
+        "expand": [],
+        "collapse": [],
+        "acceptInvitation": [],
+        "close": [],
+        "skip": ["skipUrl"]
+      },
+      "clickTracking": ["clickTrackingUrl"],
+      "clickThrough": "clickThroughUrl",
+      "customClick": ["customClickUrl"],
+      "mediaFiles": [{
+        "type": "video/x-flv",
+        "url": "1.flv",
+        "bitrate": "338",
+        "width": "426",
+        "height": "240"
+      },
+      {
+        "type": "video/mp4",
+        "url": "1.mp4",
+        "bitrate": "330",
+        "width": "640",
+        "height": "360"
+      },
+      {
+        "type": "video/3gpp",
+        "url": "1.3gp",
+        "bitrate": "84",
+        "width": "176",
+        "height": "144"
+      },
+      {
+        "type": "video/3gpp",
+        "url": "2.3gp",
+        "bitrate": "235",
+        "width": "320",
+        "height": "240"
+      },
+      {
+        "type": "video/x-flv",
+        "url": "2.flv",
+        "bitrate": "385",
+        "width": "640",
+        "height": "360"
+      },
+      {
+        "type": "video/webm",
+        "url": "1.webm",
+        "bitrate": "385",
+        "width": "640",
+        "height": "360"
+      },
+      {
+        "type": "video/webm",
+        "url": "2.webm",
+        "bitrate": "538",
+        "width": "854",
+        "height": "480"
+      },
+      {
+        "type": "video/x-flv",
+        "url": "3.flv",
+        "bitrate": "424",
+        "width": "854",
+        "height": "480"
+      }],
+      "duration": "00:00:52"
+    },
+    "nonLinear": {},
+    "companion": [{
+      "tracking": { "creativeView": ["companionCreativeViewUrl"] },
+      "width": "728",
+      "height": "90",
+      "companionClickThrough": "companionClickThrough",
+      "type": "static",
+      "data": "1.jpg",
+      "url": "1.jpg"
+    },
+    {
+      "tracking": { "creativeView": ["companion2CreativeViewUrl"] },
+      "width": "300",
+      "height": "250",
+      "companionClickThrough": "companion2ClickThrough",
+      "type": "static",
+      "data": "2.jpg", "url": "2.jpg"
+    }],
+    "type": "InLine",
+    "version": "2.0",
+    "title": "video",
+    "id": "6654644"
+  }]
+}
