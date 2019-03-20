@@ -289,6 +289,7 @@ OO.Ads.manager(() => {
         adMode = true;
         this.currentAd = ad;
         if (ad.ad && ad.ad.data && ad.ad.data.id) {
+          
           this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
           _handleTrackingUrls(this.currentAd, ['impression', 'start']);
           if (ad.duration && !isNumber(ad.duration)) {
@@ -333,6 +334,7 @@ OO.Ads.manager(() => {
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ['pause']);
         if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id]) {
+          this.adIdDictionary[ad.ad.data.id].pauseTime = (new Date()).getTime();
           clearTimeout(this.adIdDictionary[ad.ad.data.id].adTimer);
         }
       }
@@ -349,10 +351,23 @@ OO.Ads.manager(() => {
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ['resume']);
         if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && isFinite(ad.duration)) {
-          // Setting the ad callback again since ad was resumed
+
+          var duration = ad.duration;
+	        const { startTime, pauseTime } = this.adIdDictionary[ad.ad.data.id];	
+          //Deducting the already played duration of ad  from the actual ad duration for making timer accurate
+          if( startTime && isFinite(startTime) && pauseTime && isFinite(pauseTime) )
+          {
+            duration = (ad.duration * 1000) - (pauseTime - startTime);
+          }
+
+          if(duration < 0)
+            duration = ad.duration * 1000;
+
+          //Setting the ad callback again since ad was resumed
           this.adIdDictionary[ad.ad.data.id].adTimer = delay(
             _adEndedCallback(null, ad.ad.data.id),
-            ad.duration * 1000,
+            duration
+
           );
         }
       }
@@ -465,16 +480,19 @@ OO.Ads.manager(() => {
         if (!has(this.adIdDictionary, currentId3Object.adId)) {
           this.adIdDictionary[currentId3Object.adId] = {
             state: STATE.WAITING,
-            adTimer: delay(_adEndedCallback(null, currentId3Object.adId), currentId3Object.duration * 1000),
+            adTimer: delay(_adEndedCallback(null, currentId3Object.adId), _getAdDuration(currentId3Object)),
+            startTime: (new Date()).getTime()
           };
           _handleId3Ad(currentId3Object);
         } else if (has(this.adIdDictionary, currentId3Object.adId)
           && !this.adIdDictionary[currentId3Object.adId].state) {
           clearTimeout(this.adIdDictionary[currentId3Object.adId].adTimer);
           this.adIdDictionary[currentId3Object.adId].state = STATE.WAITING;
+          this.adIdDictionary[currentId3Object.adId].startTime = (new Date()).getTime();
           this.adIdDictionary[currentId3Object.adId].adTimer = delay(
             _adEndedCallback(null, currentId3Object.adId),
-            currentId3Object.duration * 1000,
+            _getAdDuration(currentId3Object)
+
           );
           _notifyAmcToPlayAd(currentId3Object, this.adIdDictionary[currentId3Object.adId].vastData);
         }
@@ -492,15 +510,22 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
-     * clicked. Here it will try to load the rest of the vast ads at this point if there any.
-     * @public
-     * @method OoyalaSsai#onReplay
-     */
-    this.onReplay = () => {
-      currentOffset = 0;
-      this.currentAd = null;
+    *
+    *
+    */
+    var _getAdDuration = (id3Object) =>{
+	    
+      var duration = 0;
+      //If not start id3 tag from ad, we recalculate ad duration.
+        if (id3Object.time != 0){
+          var adOffset = id3Object.time * id3Object.duration / 100;
+          duration = id3Object.duration - adOffset;
+        }
+        else
+          duration = id3Object.duration;
+        return duration * 1000;
     };
+
 
     /**
      * Helper function to handle the ID3 Ad timeout and request.
@@ -518,6 +543,20 @@ OO.Ads.manager(() => {
     };
 
     /**
+     * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the replay button is
+     * clicked. Here it will try to load the rest of the vast ads at this point if there any.
+     * @public
+     * @method OoyalaSsai#onReplay
+     */
+    this.onReplay = function()
+    {
+      currentOffset = 0;
+      this.currentAd = null;
+    };
+
+    
+
+    /**
      * Called if the ajax call succeeds
      * @public
      * @method OoyalaSsai#onResponse
@@ -527,8 +566,8 @@ OO.Ads.manager(() => {
     this.onResponse = (id3Object, xml) => {
       OO.log('Ooyala SSAI: Response');
       // Call VastParser code
-      const vastAds = this.vastParser.parser(xml);
-      const adIdVastData = _parseVastAdsObject(vastAds);
+      var vastAds = this.vastParser.parser(xml);
+      var adIdVastData = _parseVastAdsObject(vastAds);
 
       const adObject = _getAdObjectFromVast(id3Object, adIdVastData);
       _notifyAmcToPlayAd(id3Object, adObject);
@@ -888,6 +927,7 @@ OO.Ads.manager(() => {
      * @private
      * @method OoyalaSsai#_sendMetadataRequest
      */
+
     var _sendMetadataRequest = () => {
       const url = `${window.location.protocol}//${this.domainName}/v1/metadata/${this.currentEmbed}?ssai_guid=${this.ssaiGuid}`;
       fetch(url, {
@@ -895,8 +935,8 @@ OO.Ads.manager(() => {
         credentials: 'omit',
         headers: {
           'Content-Type': 'application/json',
-          pragma: 'no-cache',
-          'cache-control': 'no-cache',
+          'pragma': 'no-cache',
+          'cache-control': 'no-cache'
         },
       })
         .then(res => res.json())
