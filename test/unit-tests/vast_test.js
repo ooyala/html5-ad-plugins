@@ -97,6 +97,10 @@ describe('ad_manager_vast', function () {
     }, {}, content);
   };
 
+  const initialPlay = function () {
+    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
+  };
+
   const vpaidInitialize = function (xml) {
     const embed_code = 'embed_code';
     const preroll = {
@@ -124,10 +128,6 @@ describe('ad_manager_vast', function () {
     vastAdManager.initialPlay();
     xml = xml || vpaidLinearXML;
     vastAdManager.onVastResponse(preroll, xml);
-  };
-
-  var initialPlay = function () {
-    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
 
   before(_.bind(() => {

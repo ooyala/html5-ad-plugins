@@ -64,41 +64,14 @@ OO.Ads.manager(() => {
       }
     };
 
-    // /// Setup /////
-    this.initialize = (amcInterface) => {
-      amc = amcInterface;
-      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _playbackBeginning);
-      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _playbackBeginning);
-      log('Initializing SDK');
-      liverailFrame = document.createElement('iframe');
-      liverailFrame.style.display = 'none';
-      liverailFrame.onload = _onIframeLoaded;
-      document.body.appendChild(liverailFrame);
+    const _tryInit = () => {
+      if (!adModuleJsReady || !metadataFetched) return;
+      this.ready = true;
+      amc.onAdManagerReady(this.name);
+      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
     };
 
-    var _onIframeLoaded = () => {
-      log('iframe loaded');
-      iframeLoaded = true;
-      _tryLoadSdk();
-    };
-
-    this.registerUi = () => {
-      remoteModuleJs = (amc.ui.isSSL ? 'https://cdn-static-secure.liverail.com/js/LiveRail.AdManager-1.0.js'
-        : 'http://cdn-static.liverail.com/js/LiveRail.AdManager-1.0.js');
-      _tryLoadSdk();
-    };
-
-    var _tryLoadSdk = () => {
-      if ((remoteModuleJs == null) || !iframeLoaded) return;
-      const loader = liverailFrame.contentWindow.document.createElement('script');
-      loader.src = remoteModuleJs;
-      loader.onload = _onSdkLoaded;
-      loader.onerror = this.destroy;
-      liverailFrame.contentWindow.document.body.appendChild(loader);
-      _tryInit();
-    };
-
-    var _onSdkLoaded = () => {
+    const _onSdkLoaded = () => {
       log('SDK loaded');
       adModuleJsReady = true;
 
@@ -115,6 +88,28 @@ OO.Ads.manager(() => {
       }
 
       _tryInit();
+    };
+
+    const _tryLoadSdk = () => {
+      if ((remoteModuleJs == null) || !iframeLoaded) return;
+      const loader = liverailFrame.contentWindow.document.createElement('script');
+      loader.src = remoteModuleJs;
+      loader.onload = _onSdkLoaded;
+      loader.onerror = this.destroy;
+      liverailFrame.contentWindow.document.body.appendChild(loader);
+      _tryInit();
+    };
+
+    const _onIframeLoaded = () => {
+      log('iframe loaded');
+      iframeLoaded = true;
+      _tryLoadSdk();
+    };
+
+    this.registerUi = () => {
+      remoteModuleJs = (amc.ui.isSSL ? 'https://cdn-static-secure.liverail.com/js/LiveRail.AdManager-1.0.js'
+        : 'http://cdn-static.liverail.com/js/LiveRail.AdManager-1.0.js');
+      _tryLoadSdk();
     };
 
     this.loadMetadata = (pageAndBacklotMetadata, baseMetadata) => {
@@ -188,16 +183,9 @@ OO.Ads.manager(() => {
       ];
     };
 
-    var _tryInit = () => {
-      if (!adModuleJsReady || !metadataFetched) return;
-      this.ready = true;
-      amc.onAdManagerReady(this.name);
-      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
-    };
-
     // /// Playback /////
 
-    var _playbackBeginning = () => {
+    const _playbackBeginning = () => {
       const creativeData = {};
       const environmentVariables = extend({
         slot: amc.ui.videoWrapper[0],
@@ -242,6 +230,16 @@ OO.Ads.manager(() => {
       } else {
         startAfterLoad = true;
       }
+    };
+
+    const _resetAdState = () => {
+      startAfterLoad = false;
+      adLoaded = false;
+      adPlaying = false;
+      slotStartedCallback = null;
+      slotEndedCallback = null;
+      adStartedCallback = null;
+      adEndedCallback = null;
     };
 
     this.cancelAd = () => {
@@ -310,16 +308,18 @@ OO.Ads.manager(() => {
           log('LIVERAIL AD LOG -', logData);
           break;
       }
-    };
 
-    var _resetAdState = () => {
-      startAfterLoad = false;
-      adLoaded = false;
-      adPlaying = false;
-      slotStartedCallback = null;
-      slotEndedCallback = null;
-      adStartedCallback = null;
-      adEndedCallback = null;
+      // /// Setup /////
+      this.initialize = (amcInterface) => {
+        amc = amcInterface;
+        amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _playbackBeginning);
+        amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _playbackBeginning);
+        log('Initializing SDK');
+        liverailFrame = document.createElement('iframe');
+        liverailFrame.style.display = 'none';
+        liverailFrame.onload = _onIframeLoaded;
+        document.body.appendChild(liverailFrame);
+      };
     };
 
     const _updateCountdown = () => {

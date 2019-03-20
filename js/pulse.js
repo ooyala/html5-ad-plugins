@@ -71,30 +71,6 @@
       let previewAdId;
       let noPulseConfiguration = false;
 
-      /**
-             * Ad manager init
-             *
-             * Register the event listeners for everything the ad player will need
-             * @param adManagerController
-             * @param playerId
-             */
-      this.initialize = (adManagerController, playerId) => {
-        amc = adManagerController; // the AMC is how the code interacts with the player
-        pulseAdManagers[playerId] = this;
-
-        // Add any player event listeners now
-        amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
-        amc.addPlayerListener(amc.EVENTS.PAUSED, _onContentPause);
-        amc.addPlayerListener(amc.EVENTS.RESUME, _onContentResume);
-        amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _onInitialPlay);
-        amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _onPlayStarted);
-        amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _onContentFinished);
-        amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
-        amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _onFullscreenChanged);
-        amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _onReplay);
-        amc.addPlayerListener(amc.EVENTS.DEVICE_ID_SET, _onDeviceIdSet);
-      };
-
       this.getAdPlayer = () => adPlayer;
 
       /**
@@ -122,7 +98,6 @@
         }
       };
 
-
       const mergeCommaSeparatedListsBase = (a, b) => {
         if (a) {
           if (b) {
@@ -143,7 +118,7 @@
         return retArray;
       };
 
-      var mergeCommaSeparatedStrings = () => {
+      const mergeCommaSeparatedStrings = () => {
         // Remove the undefined element first
         const params = removeUndefinedElements(arguments);
         const argsLentgh = params.length;
@@ -282,7 +257,7 @@
         }
       };
 
-      var updateAdScreenPointerEventsEnabled = () => {
+      const updateAdScreenPointerEventsEnabled = () => {
         const adScreens = document.getElementsByClassName('oo-ad-screen');
         const skinClickLayers = document.getElementsByClassName('oo-player-skin-plugins-click-layer');
 
@@ -304,11 +279,11 @@
             this.adScreenIntervalId = undefined;
           }
 
-          for (var i = 0; i < adScreens.length; ++i) {
+          for (let i = 0; i < adScreens.length; ++i) {
             adScreens[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
           }
 
-          for (var i = 0; i < skinClickLayers.length; ++i) {
+          for (let i = 0; i < skinClickLayers.length; ++i) {
             skinClickLayers[i].style['pointer-events'] = this.adScreenPointerEventsEnabled ? 'auto' : 'none';
           }
         }
@@ -324,21 +299,462 @@
         updateAdScreenPointerEventsEnabled();
       };
 
+      const makePlaceholderAd = (type, position) => {
+        const streams = {};
+        streams[OO.VIDEO.ENCODING.PULSE] = '';
+        return new amc.Ad({
+          position,
+          duration: 42,
+          adManager: this.name,
+          ad: { type, placeholder: true },
+          streams,
+          adType: amc.ADTYPE.UNKNOWN_AD_REQUEST,
+        });
+      };
+
+
+      // When the overlay shoule be removed
+      const onOverlayFinished = () => {
+        clearTimeout(overlayTimer);
+        amc.notifyNonlinearAdEnded(currentOverlayAd.id);
+        currentOverlayAd = null;
+      };
+
+      //
+      const startOverlayCountdown = () => {
+        lastOverlayAdStart = Date.now();
+        overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
+      };
+
+      // Called when the overlay is displayed
+      const onOverlayShown = () => {
+        if (currentOverlayAd) {
+          overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
+          adPlayer.overlayAdShown(currentOverlayAd.ad);
+          startOverlayCountdown();
+        }
+      };
+
+      // Save the current display time of the overlay so it can be resumed later
+      const overlayPause = () => {
+        if (currentOverlayAd) {
+          overlayTimeLeftMillis -= (Date.now() - lastOverlayAdStart);
+          clearTimeout(overlayTimer);
+        }
+      };
 
       /**
-             * Called by Ad Manager Controller.  When this function is called, all movie and server metadata are
-             * ready to be parsed.
-             * This metadata may contain the adTagUrl and other ad manager and movie specific configuration.
-             * @method AdManager#loadMetadata
-             * @public
-             * @param {object} adManagerMetadata Ad manager-specific metadata
-             * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
-             * @param {object} movieMetadata Metadata for the main video
+             * When an ad is canceled
+             * @param ad v4ad
+             * @param params error code
              */
+      this.cancelAd = (ad, params) => {
+        // Only skip can happen
+        if (params.code === 'skipped') {
+          adPlayer.skipButtonClicked();
+        } else if (session) {
+          session.stopAdBreak();
+        }
+      };
+
+      this.cancelOverlay = (v4ad) => {
+        adPlayer.overlayAdClosed(v4ad.ad);
+        clearTimeout(overlayTimer);
+        currentOverlayAd = null;
+      };
+
+      /**
+             * Pause the ad player
+             * @param ad v4 ad
+             */
+      this.pauseAd = (ad) => {
+        if (adPlayer) {
+          adPlayer.pause();
+        }
+      };
+
+      /**
+             * Resume the v4ad
+             * @param ad
+             */
+      this.resumeAd = (ad) => {
+        if (adPlayer) {
+          adPlayer.play();
+        }
+      };
+
+      /**
+             * <i>Optional.</i><br/>
+             * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
+             * called
+             * @method AdManager#playerClicked
+             * @public
+             */
+      this.playerClicked = (amcAd, showPage) => {
+        if (this._currentAd) {
+          const clickThroughURL = this._currentAd.getClickthroughURL();
+          if (clickThroughURL) {
+            this.openClickThrough(clickThroughURL);
+          }
+        } else if (this._currentOverlayAd) {
+          adPlayer.overlayAdClicked(this._currentOverlayAd);
+        } else if (this._currentPauseAd) {
+          // TODO
+        }
+      };
+
+      /**
+             * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
+             * the Ad Manager Controller.
+             * @method AdManager#destroy
+             * @public
+             */
+      this.destroy = () => {
+        // Stop any running ads
+        if (adPlayer) {
+          adPlayer.destroy();
+        }
+      };
+
+      this.registerVideoControllerWrapper = (videoPlugin) => {
+        this.videoControllerWrapper = videoPlugin;
+      };
+
+      const _onContentChanged = () => {
+        // Not needed rn
+      };
+
+      const _onContentPause = () => {
+        contentPaused = true;
+        if (adPlayer) {
+          adPlayer.contentPaused();
+        }
+      };
+
+
+      const _onContentResume = () => {
+        contentPaused = false;
+
+        if (currentPauseAd) {
+          amc.notifyNonlinearAdEnded(currentPauseAd.id);
+          currentPauseAd = null;
+        }
+        if (adPlayer) {
+          adPlayer.contentStarted();
+        }
+      };
+
+
+      this.notifyAdPodStarted = (id, adCount) => {
+        if (!podStarted) {
+          podStarted = id;
+        }
+        amc.notifyPodStarted(podStarted, adCount);
+      };
+
+      this.notifyAdPodEnded = () => {
+        const podEndedId = podStarted;
+        podStarted = null;
+        amc.notifyPodEnded(podEndedId);
+      };
+
+      /**
+             * Called by the Pulse SDK when an overlay should shown
+             * @param pulseOverlayAd
+             */
+      this.showOverlayAd = (pulseOverlayAd) => {
+        if (currentOverlayAd) {
+          onOverlayFinished();
+        }
+
+        this._currentOverlayAd = pulseOverlayAd;
+
+        amc.forceAdToPlay(this.name,
+          pulseOverlayAd,
+          amc.ADTYPE.NONLINEAR_OVERLAY,
+          [pulseOverlayAd.getResourceURL()]);
+      };
+
+      /**
+             * Called by the Pulse SDK to show a pause ad.
+             * @param pulsePauseAd
+             */
+      this.showPauseAd = (pulsePauseAd) => {
+        /* not implemented */
+      };
+
+      // This method is called by the V4 AMF
+      this.showOverlay = () => {
+        if (currentOverlayAd) {
+          startOverlayCountdown();
+        }
+      };
+
+      this.hideOverlay = (ad) => {
+        overlayTimeLeftMillis -= (Date.now() - lastOverlayAdStart);
+      };
+
+      this.illegalOperationOccurred = (msg) => {
+
+      };
+
+      this.sessionEnded = () => {
+        amc.adManagerDoneControllingAds();
+      };
+
+      this.openClickThrough = (url) => {
+        window.open(url);
+        if (adPlayer) {
+          adPlayer.adClickThroughOpened();
+        }
+      };
+
+      /**
+             * Checks to see if the ad player is muted.
+             * @protected
+             * @method Pulse#muted
+             * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
+             */
+      this.muted = () => {
+        let muted = true;
+        if (adPlayer) {
+          muted = adPlayer._muted;
+        }
+        return muted;
+      };
+
+      const playPlaceholder = () => {
+        const streams = {};
+        streams[OO.VIDEO.ENCODING.PULSE] = '';
+        amc.forceAdToPlay(
+          this.name,
+          { placeholder: true },
+          amc.ADTYPE.LINEAR_VIDEO,
+          streams,
+        );
+      };
+
+      const _onMainVideoTimeUpdate = (event, playheadTime, duration) => {
+        if (adPlayer) { adPlayer.contentPositionChanged(playheadTime); }
+      };
+
+      const _onPlayStarted = () => {
+        if (adPlayer) {
+          adPlayer.contentStarted();
+        }
+      };
+
+      const _onContentFinished = () => {
+        this._contentFinished = true;
+        if (adPlayer) {
+          adPlayer.contentFinished();
+        }
+      };
+
+      const _onDeviceIdSet = (event, deviceId) => {
+        if (!this._persistentId) {
+          this._persistentId = deviceId;
+        }
+      };
+
+      const _onSizeChanged = (event, width, height) => {
+        if (adPlayer) {
+          adPlayer.resize(-1,
+            -1, isFullscreen);
+          setTimeout(() => {
+            adPlayer.resize(-1, -1, isFullscreen);
+          }, 500);
+        }
+      };
+
+      const _onFullscreenChanged = (event, shouldEnterFullscreen) => {
+        isFullscreen = shouldEnterFullscreen;
+        _onSizeChanged();
+      };
+
+      const _onInitialPlay = () => {
+        if (!this.ready || noPulseConfiguration) {
+          // Do not wait for prerolls, do not control ads
+          return;
+        }
+
+        isWaitingForPrerolls = true;
+        amc.adManagerWillControlAds();
+        if (adModuleState === AD_MODULE_STATE.READY) {
+          if (!adPlayer) {
+            this.tryInitAdPlayer();
+          }
+
+          session = OO.Pulse.createSession(this._contentMetadata, this._requestSettings);
+
+          // We start the Pulse session
+          if (adPlayer) {
+            adPlayer.startSession(session, this);
+          }
+        }
+      };
+
+      const _onReplay = () => {
+        this._contentFinished = false;
+        _onInitialPlay.call(this);
+      };
+
+      const _onAdFinished = () => {
+        amc.notifyLinearAdEnded(1);
+        enableAdScreenPointerEvents();
+        this._currentAd = null;
+      };
+
+      const _onAdError = () => {
+        enableAdScreenPointerEvents();
+      };
+
+      const _onAdSkipped = () => {
+        amc.notifyLinearAdEnded(1);
+        enableAdScreenPointerEvents();
+        this._currentAd = null;
+      };
+
+      const _onAdBreakFinished = () => {
+        this._currentAdBreak = null;
+        this.notifyAdPodEnded();
+      };
+
+      const _onAdBreakStarted = (event, eventData) => {
+        adPlayer.resize(-1,
+          -1, isFullscreen);
+        this._currentAdBreak = eventData.adBreak;
+        this.notifyAdPodStarted(this._adBreakId, this._currentAdBreak.getPlayableAdsTotal());
+      };
+
+      const _onAdClicked = (event, eventData) => {
+        this.videoControllerWrapper.togglePlayPause();
+      };
+      const _onAdPaused = (event, metadata) => {
+        this.videoControllerWrapper.raisePauseEvent();
+      };
+
+      const _onAdPlaying = (event, metadata) => {
+        this.videoControllerWrapper.raisePlayingEvent();
+      };
+
+      /**
+             * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
+             * the video controller wrapper to notify the player of the volume change event.
+             * @private
+             * @method Pulse#_onAdVolumeChanged
+             * @param {String} event The event name
+             * @param {Object} metadata The metadata associated with the event
+             */
+      const _onAdVolumeChanged = (event, metadata) => {
+        this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
+      };
+
+      /**
+             * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
+             * the video controller wrapper to notify the player of the playback failure.
+             * @private
+             * @method Pulse#_onAdPlayPromiseRejected
+             * @param {String} event The event name
+             * @param {Object} metadata The metadata associated with the event
+             */
+      const _onAdPlayPromiseRejected = (event, metadata) => {
+        if (this.muted()) {
+          this.videoControllerWrapper.raiseMutedPlaybackFailed();
+        } else {
+          this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
+        }
+      };
+
+      const _onSessionStarted = (event, metadata) => {
+        if (pluginCallbacks && pluginCallbacks.onSessionCreated) {
+          pluginCallbacks.onSessionCreated(session);
+        }
+      };
+
+      const _onAdTimeUpdate = (event, eventData) => {
+        const duration = eventData.duration ? eventData.duration : this.currentAd.getCoreAd().creatives[0].duration;
+        this.videoControllerWrapper.raiseTimeUpdate(eventData.position, duration);
+      };
+
+      const _onAdStarted = (event, eventData) => {
+        this._currentAd = eventData.ad;
+
+        // If we're playing a VPAID, don't let the player eat the pointer events
+        const selectedMediaFile = this._currentAd.getMediaFiles()[0];
+        if (selectedMediaFile.apiFramework && selectedMediaFile.apiFramework === 'VPAID') {
+          log('Playing VPAID ad; disabling pointer events on player');
+          disableAdScreenPointerEvents();
+        }
+
+        const clickThroughURL = this._currentAd.getClickthroughURL();
+        const skipOffset = this._currentAd.getSkipOffset();
+        let name = null;
+
+        if (this._showAdTitle) {
+          name = this._currentAd.getCoreAd().title;
+        }
+
+        amc.focusAdVideo();
+
+        amc.notifyLinearAdStarted(1, {
+          duration: this._currentAd.getCoreAd().creatives[0].duration,
+          name,
+          indexInPod: eventData.adPosition,
+          skippable: this._currentAd.isSkippable(),
+          hasClickUrl: !!clickThroughURL,
+        });
+
+        if (this._currentAd.isSkippable()) {
+          amc.showSkipVideoAdButton(true, skipOffset.toString());
+        } else {
+          amc.showSkipVideoAdButton(false);
+        }
+        adPlayer.resize(-1,
+          -1, isFullscreen);
+      };
+
+      const _onOverlayShown = (event, metadata) => {
+        /* Impression is tracked by the SDK before this
+                   handler is triggered, so nothing needs to be done here */
+      };
+
+      /**
+       * Ad manager init
+       *
+       * Register the event listeners for everything the ad player will need
+       * @param adManagerController
+       * @param playerId
+       */
+      this.initialize = (adManagerController, playerId) => {
+        amc = adManagerController; // the AMC is how the code interacts with the player
+        pulseAdManagers[playerId] = this;
+
+        // Add any player event listeners now
+        amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+        amc.addPlayerListener(amc.EVENTS.PAUSED, _onContentPause);
+        amc.addPlayerListener(amc.EVENTS.RESUME, _onContentResume);
+        amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _onInitialPlay);
+        amc.addPlayerListener(amc.EVENTS.PLAY_STARTED, _onPlayStarted);
+        amc.addPlayerListener(amc.EVENTS.CONTENT_COMPLETED, _onContentFinished);
+        amc.addPlayerListener(amc.EVENTS.SIZE_CHANGED, _onSizeChanged);
+        amc.addPlayerListener(amc.EVENTS.FULLSCREEN_CHANGED, _onFullscreenChanged);
+        amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _onReplay);
+        amc.addPlayerListener(amc.EVENTS.DEVICE_ID_SET, _onDeviceIdSet);
+      };
+
+      /**
+       * Called by Ad Manager Controller.  When this function is called, all movie and server metadata are
+       * ready to be parsed.
+       * This metadata may contain the adTagUrl and other ad manager and movie specific configuration.
+       * @method AdManager#loadMetadata
+       * @public
+       * @param {object} adManagerMetadata Ad manager-specific metadata
+       * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
+       * @param {object} movieMetadata Metadata for the main video
+       */
       this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
         preferredRenderingMode = adManagerMetadata.pulse_rendering_mode || 'HTML5_FIRST';
-        let protocol; let
-          pulse_account_name;
         this._pulseHost = adManagerMetadata.pulse_host || backlotBaseMetadata.pulse_host || backlotBaseMetadata.vpHost || adManagerMetadata.vpDomain;
 
         if (!this._pulseHost) {
@@ -359,8 +775,8 @@
           this._persistentId = adManagerMetadata.pulse_persistent_id;
         }
         showAdTitle = adManagerMetadata.pulse_show_ad_title || false;
-        protocol = getProtocolFromPulseHost(this._pulseHost);
-        pulse_account_name = getPulseAccount(this._pulseHost);
+        const protocol = getProtocolFromPulseHost(this._pulseHost);
+        const pulse_account_name = getPulseAccount(this._pulseHost);
 
 
         // Load the Pulse SDK if not already included
@@ -484,7 +900,7 @@
         this._requestSettings.vptpTicketData = adManagerMetadata.pulse_vptp_data;
 
         this._requestSettings.maxLinearBreakDuration = parseInt(adManagerMetadata.pulse_max_linear_break_duration
-                    || backlotBaseMetadata.pulse_max_linear_break_duration);
+          || backlotBaseMetadata.pulse_max_linear_break_duration);
 
         if (isNaN(this._requestSettings.maxLinearBreakDuration)) {
           this._requestSettings.maxLinearBreakDuration = null;
@@ -501,8 +917,8 @@
 
         if (adManagerMetadata.all_ads) {
           this._requestSettings.insertionPointFilter = safeSplit(getByPriority(adManagerMetadata.pulse_insertion_point_filter
-                            || backlotBaseMetadata.pulse_insertion_point_filter
-                            || getInsertionPointTypeFromAdPosition(adManagerMetadata.all_ads[0].position)), ',');
+            || backlotBaseMetadata.pulse_insertion_point_filter
+            || getInsertionPointTypeFromAdPosition(adManagerMetadata.all_ads[0].position)), ',');
         } else {
           this._requestSettings.insertionPointFilter = safeSplit(getByPriority(adManagerMetadata.pulse_insertion_point_filter,
             backlotBaseMetadata.pulse_insertion_point_filter), ',');
@@ -541,60 +957,16 @@
       };
 
       /**
-             * Mandatory method. We just return a placeholder ad that will prevent the content from starting. It will allow
-             * the SDK to start the session and return if actual ads are present or not
-             * @returns {array}
-             */
+       * Mandatory method. We just return a placeholder ad that will prevent the content from starting. It will allow
+       * the SDK to start the session and return if actual ads are present or not
+       * @returns {array}
+       */
       this.buildTimeline = () => (noPulseConfiguration ? [] : [makePlaceholderAd.call(this, 'adRequest', 0)]);
 
-      var makePlaceholderAd = (type, position) => {
-        const streams = {};
-        streams[OO.VIDEO.ENCODING.PULSE] = '';
-        return new amc.Ad({
-          position,
-          duration: 42,
-          adManager: this.name,
-          ad: { type, placeholder: true },
-          streams,
-          adType: amc.ADTYPE.UNKNOWN_AD_REQUEST,
-        });
-      };
-
-
-      // When the overlay shoule be removed
-      const onOverlayFinished = () => {
-        clearTimeout(overlayTimer);
-        amc.notifyNonlinearAdEnded(currentOverlayAd.id);
-        currentOverlayAd = null;
-      };
-
-      //
-      const startOverlayCountdown = () => {
-        lastOverlayAdStart = Date.now();
-        overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
-      };
-
-      // Called when the overlay is displayed
-      const onOverlayShown = () => {
-        if (currentOverlayAd) {
-          overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
-          adPlayer.overlayAdShown(currentOverlayAd.ad);
-          startOverlayCountdown();
-        }
-      };
-
-      // Save the current display time of the overlay so it can be resumed later
-      const overlayPause = () => {
-        if (currentOverlayAd) {
-          overlayTimeLeftMillis -= (Date.now() - lastOverlayAdStart);
-          clearTimeout(overlayTimer);
-        }
-      };
-
       /**
-             * Mandatory method. Called by the AMF when an ad play has been requested
-             * @param v4ad
-             */
+       * Mandatory method. Called by the AMF when an ad play has been requested
+       * @param v4ad
+       */
       this.playAd = (v4ad) => {
         if (v4ad === null) {
           return;
@@ -659,121 +1031,6 @@
         }
       };
 
-      /**
-             * When an ad is canceled
-             * @param ad v4ad
-             * @param params error code
-             */
-      this.cancelAd = (ad, params) => {
-        // Only skip can happen
-        if (params.code === 'skipped') {
-          adPlayer.skipButtonClicked();
-        } else if (session) {
-          session.stopAdBreak();
-        }
-      };
-
-      this.cancelOverlay = (v4ad) => {
-        adPlayer.overlayAdClosed(v4ad.ad);
-        clearTimeout(overlayTimer);
-        currentOverlayAd = null;
-      };
-
-      /**
-             * Pause the ad player
-             * @param ad v4 ad
-             */
-      this.pauseAd = (ad) => {
-        if (adPlayer) {
-          adPlayer.pause();
-        }
-      };
-
-      /**
-             * Resume the v4ad
-             * @param ad
-             */
-      this.resumeAd = (ad) => {
-        if (adPlayer) {
-          adPlayer.play();
-        }
-      };
-
-      /**
-             * <i>Optional.</i><br/>
-             * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
-             * called
-             * @method AdManager#playerClicked
-             * @public
-             */
-      this.playerClicked = (amcAd, showPage) => {
-        if (this._currentAd) {
-          const clickThroughURL = this._currentAd.getClickthroughURL();
-          if (clickThroughURL) {
-            this.openClickThrough(clickThroughURL);
-          }
-        } else if (this._currentOverlayAd) {
-          adPlayer.overlayAdClicked(this._currentOverlayAd);
-        } else if (this._currentPauseAd) {
-          // TODO
-        }
-      };
-
-      /**
-             * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
-             * the Ad Manager Controller.
-             * @method AdManager#destroy
-             * @public
-             */
-      this.destroy = () => {
-        // Stop any running ads
-        if (adPlayer) {
-          adPlayer.destroy();
-        }
-      };
-
-      this.registerVideoControllerWrapper = (videoPlugin) => {
-        this.videoControllerWrapper = videoPlugin;
-      };
-
-      var _onContentChanged = () => {
-        // Not needed rn
-      };
-
-      var _onContentPause = () => {
-        contentPaused = true;
-        if (adPlayer) {
-          adPlayer.contentPaused();
-        }
-      };
-
-
-      var _onContentResume = () => {
-        contentPaused = false;
-
-        if (currentPauseAd) {
-          amc.notifyNonlinearAdEnded(currentPauseAd.id);
-          currentPauseAd = null;
-        }
-        if (adPlayer) {
-          adPlayer.contentStarted();
-        }
-      };
-
-
-      this.notifyAdPodStarted = (id, adCount) => {
-        if (!podStarted) {
-          podStarted = id;
-        }
-        amc.notifyPodStarted(podStarted, adCount);
-      };
-
-      this.notifyAdPodEnded = () => {
-        const podEndedId = podStarted;
-        podStarted = null;
-        amc.notifyPodEnded(podEndedId);
-      };
-
       this.startContentPlayback = () => {
         isWaitingForPrerolls = false;
 
@@ -808,125 +1065,6 @@
           return true;
         }
         return false;
-      };
-
-      /**
-             * Called by the Pulse SDK when an overlay should shown
-             * @param pulseOverlayAd
-             */
-      this.showOverlayAd = (pulseOverlayAd) => {
-        if (currentOverlayAd) {
-          onOverlayFinished();
-        }
-
-        this._currentOverlayAd = pulseOverlayAd;
-
-        amc.forceAdToPlay(this.name,
-          pulseOverlayAd,
-          amc.ADTYPE.NONLINEAR_OVERLAY,
-          [pulseOverlayAd.getResourceURL()]);
-      };
-
-      /**
-             * Called by the Pulse SDK to show a pause ad.
-             * @param pulsePauseAd
-             */
-      this.showPauseAd = (pulsePauseAd) => {
-        /* not implemented */
-      };
-
-      // This method is called by the V4 AMF
-      this.showOverlay = () => {
-        if (currentOverlayAd) {
-          startOverlayCountdown();
-        }
-      };
-
-      this.hideOverlay = (ad) => {
-        overlayTimeLeftMillis -= (Date.now() - lastOverlayAdStart);
-      };
-
-      this.illegalOperationOccurred = (msg) => {
-
-      };
-
-      this.sessionEnded = () => {
-        amc.adManagerDoneControllingAds();
-      };
-
-      this.openClickThrough = (url) => {
-        window.open(url);
-        if (adPlayer) {
-          adPlayer.adClickThroughOpened();
-        }
-      };
-
-      /**
-             * Checks to see if the ad player is muted.
-             * @protected
-             * @method Pulse#muted
-             * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
-             */
-      this.muted = () => {
-        let muted = true;
-        if (adPlayer) {
-          muted = adPlayer._muted;
-        }
-        return muted;
-      };
-
-      var playPlaceholder = () => {
-        const streams = {};
-        streams[OO.VIDEO.ENCODING.PULSE] = '';
-        amc.forceAdToPlay(
-          this.name,
-          { placeholder: true },
-          amc.ADTYPE.LINEAR_VIDEO,
-          streams,
-        );
-      };
-
-      var _onMainVideoTimeUpdate = (event, playheadTime, duration) => {
-        if (adPlayer) { adPlayer.contentPositionChanged(playheadTime); }
-      };
-
-      var _onPlayStarted = () => {
-        if (adPlayer) {
-          adPlayer.contentStarted();
-        }
-      };
-
-      var _onContentFinished = () => {
-        this._contentFinished = true;
-        if (adPlayer) {
-          adPlayer.contentFinished();
-        }
-      };
-
-      var _onDeviceIdSet = (event, deviceId) => {
-        if (!this._persistentId) {
-          this._persistentId = deviceId;
-        }
-      };
-
-      var _onFullscreenChanged = (event, shouldEnterFullscreen) => {
-        isFullscreen = shouldEnterFullscreen;
-        _onSizeChanged();
-      };
-
-      var _onReplay = () => {
-        this._contentFinished = false;
-        _onInitialPlay.call(this);
-      };
-
-      var _onSizeChanged = (event, width, height) => {
-        if (adPlayer) {
-          adPlayer.resize(-1,
-            -1, isFullscreen);
-          setTimeout(() => {
-            adPlayer.resize(-1, -1, isFullscreen);
-          }, 500);
-        }
       };
 
       this.tryInitAdPlayer = () => {
@@ -965,152 +1103,376 @@
           }
         }
       };
-
-
-      var _onInitialPlay = () => {
-        if (!this.ready || noPulseConfiguration) {
-          // Do not wait for prerolls, do not control ads
-          return;
-        }
-
-        isWaitingForPrerolls = true;
-        amc.adManagerWillControlAds();
-        if (adModuleState === AD_MODULE_STATE.READY) {
-          if (!adPlayer) {
-            this.tryInitAdPlayer();
-          }
-
-          session = OO.Pulse.createSession(this._contentMetadata, this._requestSettings);
-
-          // We start the Pulse session
-          if (adPlayer) {
-            adPlayer.startSession(session, this);
-          }
-        }
-      };
-
-      var _onAdFinished = () => {
-        amc.notifyLinearAdEnded(1);
-        enableAdScreenPointerEvents();
-        this._currentAd = null;
-      };
-
-      var _onAdError = () => {
-        enableAdScreenPointerEvents();
-      };
-
-      var _onAdSkipped = () => {
-        amc.notifyLinearAdEnded(1);
-        enableAdScreenPointerEvents();
-        this._currentAd = null;
-      };
-
-      var _onAdBreakFinished = () => {
-        this._currentAdBreak = null;
-        this.notifyAdPodEnded();
-      };
-
-      var _onAdBreakStarted = (event, eventData) => {
-        adPlayer.resize(-1,
-          -1, isFullscreen);
-        this._currentAdBreak = eventData.adBreak;
-        this.notifyAdPodStarted(this._adBreakId, this._currentAdBreak.getPlayableAdsTotal());
-      };
-
-      var _onAdClicked = (event, eventData) => {
-        this.videoControllerWrapper.togglePlayPause();
-      };
-      var _onAdPaused = (event, metadata) => {
-        this.videoControllerWrapper.raisePauseEvent();
-      };
-
-      var _onAdPlaying = (event, metadata) => {
-        this.videoControllerWrapper.raisePlayingEvent();
-      };
-
-      /**
-             * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
-             * the video controller wrapper to notify the player of the volume change event.
-             * @private
-             * @method Pulse#_onAdVolumeChanged
-             * @param {String} event The event name
-             * @param {Object} metadata The metadata associated with the event
-             */
-      var _onAdVolumeChanged = (event, metadata) => {
-        this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
-      };
-
-      /**
-             * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
-             * the video controller wrapper to notify the player of the playback failure.
-             * @private
-             * @method Pulse#_onAdPlayPromiseRejected
-             * @param {String} event The event name
-             * @param {Object} metadata The metadata associated with the event
-             */
-      var _onAdPlayPromiseRejected = (event, metadata) => {
-        if (this.muted()) {
-          this.videoControllerWrapper.raiseMutedPlaybackFailed();
-        } else {
-          this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
-        }
-      };
-
-      var _onSessionStarted = (event, metadata) => {
-        if (pluginCallbacks && pluginCallbacks.onSessionCreated) {
-          pluginCallbacks.onSessionCreated(session);
-        }
-      };
-
-      var _onAdTimeUpdate = (event, eventData) => {
-        const duration = eventData.duration ? eventData.duration : this.currentAd.getCoreAd().creatives[0].duration;
-        this.videoControllerWrapper.raiseTimeUpdate(eventData.position, duration);
-      };
-
-      var _onAdStarted = (event, eventData) => {
-        this._currentAd = eventData.ad;
-
-        // If we're playing a VPAID, don't let the player eat the pointer events
-        const selectedMediaFile = this._currentAd.getMediaFiles()[0];
-        if (selectedMediaFile.apiFramework && selectedMediaFile.apiFramework === 'VPAID') {
-          log('Playing VPAID ad; disabling pointer events on player');
-          disableAdScreenPointerEvents();
-        }
-
-        const clickThroughURL = this._currentAd.getClickthroughURL();
-        const skipOffset = this._currentAd.getSkipOffset();
-        let name = null;
-
-        if (this._showAdTitle) {
-          name = this._currentAd.getCoreAd().title;
-        }
-
-        amc.focusAdVideo();
-
-        amc.notifyLinearAdStarted(1, {
-          duration: this._currentAd.getCoreAd().creatives[0].duration,
-          name,
-          indexInPod: eventData.adPosition,
-          skippable: this._currentAd.isSkippable(),
-          hasClickUrl: !!clickThroughURL,
-        });
-
-        if (this._currentAd.isSkippable()) {
-          amc.showSkipVideoAdButton(true, skipOffset.toString());
-        } else {
-          amc.showSkipVideoAdButton(false);
-        }
-        adPlayer.resize(-1,
-          -1, isFullscreen);
-      };
-
-      var _onOverlayShown = (event, metadata) => {
-        /* Impression is tracked by the SDK before this
-                   handler is triggered, so nothing needs to be done here */
-      };
     };
     return new PulseAdManager();
   });
+
+  const PulseVideoWrapper = function (adManager) {
+    const _adManager = adManager;
+
+    this.controller = {};
+    this.isPlaying = false;
+
+    /** ********************************************************************************* */
+    // Required. Methods that Video Controller, Destroy, or Factory call
+    /** ********************************************************************************* */
+
+    /**
+     * Hands control of the video element off to another plugin.
+     * This function is only needed if the feature OO.VIDEO.FEATURE.VIDEO_OBJECT_GIVE or
+     * OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE is supported.
+     * @public
+     * @method PulseVideoWrapper#sharedElementGive
+     */
+    this.sharedElementGive = () => {
+      setTimeout(() => {
+        _adManager.sharedVideoElement.style.display = 'block';
+        _adManager.sharedVideoElement.play();
+      }, 100);
+      _adManager.sharedVideoElement.style.visibility = 'hidden';
+      _adManager._isControllingVideo = false;
+    };
+
+    /**
+     * Takes control of the video element from another plugin.
+     * This function is only needed if the feature OO.VIDEO.FEATURE.VIDEO_OBJECT_GIVE or
+     * OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE is supported.
+     * @public
+     * @method PulseVideoWrapper#sharedElementTake
+     */
+    this.sharedElementTake = () => {
+      _adManager.sharedVideoElement.crossorigin = null;
+      _adManager._isControllingVideo = true;
+      _adManager.sharedVideoElement.style.visibility = 'visible';
+      if (_adManager && _adManager._waitingForContentPause) {
+        _adManager._waitingForContentPause = false;
+      }
+    };
+
+    /**
+     * Subscribes to all events raised by the video element.
+     * This is called by the Factory during creation.
+     * @public
+     * @method PulseVideoWrapper#subscribeAllEvents
+     */
+    this.subscribeAllEvents = () => {
+      _adManager.registerVideoControllerWrapper(this);
+    };
+
+    /**
+     * Unsubscribes all events from the video element.
+     * This function is not required but can be called by the destroy function.
+     * @private
+     * @method PulseVideoWrapper#unsubscribeAllEvents
+     */
+    const unsubscribeAllEvents = () => {};
+
+    /**
+     * Sets the url of the video.
+     * @public
+     * @method PulseVideoWrapper#setVideoUrl
+     * @param {string} url The new url to insert into the video element's src attribute
+     * @param {string} encoding The encoding of video stream, possible values are found in OO.VIDEO.ENCODING (unused here)
+     * @param {boolean} live True if it is a live asset, false otherwise (unused here)
+     * @returns {boolean} True or false indicating success
+     */
+    this.setVideoUrl = url => true;
+
+    /**
+     * Loads the current stream url in the video element; the element should be left paused.  This function
+     * is generally called when preloading a stream before triggering play.  Load may not be called before
+     * play.
+     * @public
+     * @method PulseVideoWrapper#load
+     * @param {boolean} rewind True if the stream should be setup to play as if from the beginning.  When
+     *   true, if initial time has not been set, or if the stream has already been played, set the stream
+     *   position to 0.
+     */
+    this.load = (rewind) => {
+    };
+
+    /**
+     * Sets the initial time of the video playback.  This value should not be used on replay.
+     * @public
+     * @method PulseVideoWrapper#setInitialTime
+     * @param {number} initialTime The initial time of the video (seconds)
+     */
+    this.setInitialTime = (initialTime) => {
+    };
+
+
+    this.togglePlayPause = () => {
+      if (this.isPlaying) { this.pause(); } else { this.play(); }
+    };
+    /**
+     * Triggers playback on the video element.  If the 'load' function was not already called and the stream
+     * is not loaded, trigger a load now.
+     * @public
+     * @method PulseVideoWrapper#play
+     */
+    this.play = () => {
+      if (_adManager) {
+        _adManager.resumeAd();
+        this.isPlaying = true;
+        this.raisePlayingEvent();
+      }
+    };
+
+
+    /**
+     * Triggers a pause on the video element.
+     * @public
+     * @method PulseVideoWrapper#pause
+     */
+    this.pause = () => {
+      if (_adManager) {
+        _adManager.pauseAd();
+        this.isPlaying = false;
+        this.raisePauseEvent();
+      }
+    };
+
+    /**
+     * Triggers a seek on the video element.
+     * @public
+     * @method PulseVideoWrapper#seek
+     * @param {number} time The time to seek the video to (in seconds)
+     */
+    this.seek = (time) => {
+      if (_adManager && _adManager.getAdPlayer()) {
+        _adManager.getAdPlayer().seek(time);
+      }
+    };
+
+    /**
+     * Triggers a volume change on the video element.
+     * @public
+     * @method PulseVideoWrapper#setVolume
+     * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
+     */
+    this.setVolume = (volume) => {
+      // Do not set the volume if the Pulse ad player is muted since that will unmute the ad player
+      if (_adManager && _adManager.getAdPlayer() && !_adManager.muted()) {
+        _adManager.getAdPlayer().setVolume(volume);
+      }
+    };
+
+    /**
+     * Mutes the Pulse ad player.
+     * @public
+     * @method PulseVideoWrapper#mute
+     */
+    this.mute = () => {
+      if (_adManager && _adManager.getAdPlayer()) {
+        _adManager.getAdPlayer().mute();
+      }
+    };
+
+    /**
+     * Unmutes the Pulse ad player.
+     * @public
+     * @method PulseVideoWrapper#unmute
+     */
+    this.unmute = () => {
+      if (_adManager && _adManager.getAdPlayer()) {
+        _adManager.getAdPlayer().unmute();
+      }
+    };
+
+    /**
+     * Gets the current time position of the video.
+     * @public
+     * @method PulseVideoWrapper#getCurrentTime
+     * @returns {number} The current time position of the video (seconds)
+     */
+    this.getCurrentTime = () => {
+    };
+
+    /**
+     * Applies the given css to the video element.
+     * @public
+     * @method PulseVideoWrapper#applyCss
+     * @param {object} css The css to apply in key value pairs
+     */
+    this.applyCss = (css) => {
+      const node = _adManager.sharedVideoElement;
+      if (!node) {
+        return;
+      }
+      Object.keys(css).forEach((prop) => {
+        node.style[prop] = css[prop];
+      });
+    };
+
+    /**
+     * Destroys the individual video element.
+     * @public
+     * @method PulseVideoWrapper#destroy
+     */
+    this.destroy = () => {
+      // Pause the video
+      // Reset the source
+      // Unsubscribe all events
+      unsubscribeAllEvents();
+      // Remove the element
+    };
+
+    /**
+     * Sets the closed captions on the video element.
+     * @public
+     * @method PulseVideoWrapper#setClosedCaptions
+     * @param {string} language The language of the closed captions. Set to null to remove captions.
+     * @param {object} closedCaptions The closedCaptions object
+     * @param {object} params The params to set with closed captions
+     */
+    this.setClosedCaptions = (language, closedCaptions, params) => {
+    };
+
+    /**
+     * Sets the closed captions mode on the video element.
+     * @public
+     * @method PulseVideoWrapper#setClosedCaptionsMode
+     * @param {string} mode The mode to set the text tracks element. One of ("disabled", "hidden", "showing").
+     */
+    this.setClosedCaptionsMode = (mode) => {
+    };
+
+    /**
+     * Sets the crossorigin attribute on the video element.
+     * @public
+     * @method PulseVideoWrapper#setCrossorigin
+     * @param {string} crossorigin The value to set the crossorigin attribute.
+     */
+    this.setCrossorigin = (crossorigin) => {
+    };
+
+    // **********************************************************************************/
+    // Example callback methods
+    // **********************************************************************************/
+
+    this.raisePlayEvent = (event) => {
+      this.controller.notify(this.controller.EVENTS.PLAY, { url: event.target.src });
+    };
+
+    this.raisePlayingEvent = () => {
+      this.controller.notify(this.controller.EVENTS.PLAYING);
+    };
+
+    this.raiseEndedEvent = () => {
+      this.controller.notify(this.controller.EVENTS.ENDED);
+    };
+
+    this.raiseErrorEvent = (event) => {
+      const code = event.target.error ? event.target.error.code : -1;
+      this.controller.notify(this.controller.EVENTS.ERROR, { errorcode: code });
+    };
+
+    this.raiseSeekingEvent = () => {
+      this.controller.notify(this.controller.EVENTS.SEEKING);
+    };
+
+    this.raiseSeekedEvent = () => {
+      this.controller.notify(this.controller.EVENTS.SEEKED);
+    };
+
+    this.raisePauseEvent = () => {
+      this.controller.notify(this.controller.EVENTS.PAUSED);
+    };
+
+    this.raiseRatechangeEvent = () => {
+      this.controller.notify(this.controller.EVENTS.RATE_CHANGE);
+    };
+
+    this.raiseStalledEvent = () => {
+      this.controller.notify(this.controller.EVENTS.STALLED);
+    };
+
+    /**
+     * Notifies the video controller of VOLUME_CHANGE and MUTE_STATE_CHANGE events.
+     * @private
+     * @method PulseVideoWrapper#raiseVolumeEvent
+     * @param {Number} volume The current volume
+     * @param {boolean} muted The current mute state
+     */
+    this.raiseVolumeEvent = (volume, muted) => {
+      if (volume === 0 || muted) {
+        this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
+      } else {
+        this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: false });
+        this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { volume });
+      }
+    };
+
+    /**
+     * Notifies the video controller of the UNMUTED_PLAYBACK_FAILED event.
+     * @private
+     * @method PulseVideoWrapper#raiseUnmutedPlaybackFailed
+     */
+    this.raiseUnmutedPlaybackFailed = () => {
+      this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
+    };
+
+    /**
+     * Notifies the video controller of the MUTED_PLAYBACK_FAILED event.
+     * @private
+     * @method PulseVideoWrapper#raiseMutedPlaybackFailed
+     */
+    this.raiseMutedPlaybackFailed = () => {
+      this.controller.notify(this.controller.EVENTS.MUTED_PLAYBACK_FAILED);
+    };
+
+    this.raiseWaitingEvent = () => {
+      this.controller.notify(this.controller.EVENTS.WAITING);
+    };
+
+    this.raiseTimeUpdate = (position, duration) => {
+      this.controller.notify(this.controller.EVENTS.TIME_UPDATE,
+        {
+          currentTime: position,
+          duration,
+          buffer: duration,
+          seekRange: { begin: 0, end: 10 },
+        });
+    };
+
+    this.raiseDurationChange = (event) => {
+      this.raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, event);
+    };
+
+    this.raisePlayhead = (eventname, event) => {
+      this.controller.notify(eventname,
+        {
+          currentTime: event.target.currentTime,
+          duration: event.target.duration,
+          buffer: 10,
+          seekRange: { begin: 0, end: 10 },
+        });
+    };
+
+    this.raiseProgress = (event) => {
+      this.controller.notify(this.controller.EVENTS.PROGRESS,
+        {
+          currentTime: event.target.currentTime,
+          duration: event.target.duration,
+          buffer: 10,
+          seekRange: { begin: 0, end: 10 },
+        });
+    };
+
+    this.raiseCanPlayThrough = () => {
+      this.controller.notify(this.controller.EVENTS.BUFFERED);
+    };
+
+    this.raiseFullScreenBegin = (event) => {
+      this.controller.notify(this.controller.EVENTS.FULLSCREEN_CHANGED,
+        { _isFullScreen: true, paused: event.target.paused });
+    };
+
+    this.raiseFullScreenEnd = (event) => {
+      this.controller.notify(this.controller.EVENTS.FULLSCREEN_CHANGED,
+        { _isFullScreen: false, paused: event.target.paused });
+    };
+  };
 
   // Pulse Video plugin
   const PulsePlayerFactory = function () {
@@ -1167,374 +1529,6 @@
          * @property TemplateVideoFactory#maxSupportedElements
          */
     this.maxSupportedElements = -1;
-  };
-
-
-  var PulseVideoWrapper = function (adManager) {
-    const _adManager = adManager;
-
-    this.controller = {};
-    this.isPlaying = false;
-
-    /** ********************************************************************************* */
-    // Required. Methods that Video Controller, Destroy, or Factory call
-    /** ********************************************************************************* */
-
-    /**
-         * Hands control of the video element off to another plugin.
-         * This function is only needed if the feature OO.VIDEO.FEATURE.VIDEO_OBJECT_GIVE or
-         * OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE is supported.
-         * @public
-         * @method PulseVideoWrapper#sharedElementGive
-         */
-    this.sharedElementGive = () => {
-      setTimeout(() => {
-        _adManager.sharedVideoElement.style.display = 'block';
-        _adManager.sharedVideoElement.play();
-      }, 100);
-      _adManager.sharedVideoElement.style.visibility = 'hidden';
-      _adManager._isControllingVideo = false;
-    };
-
-    /**
-         * Takes control of the video element from another plugin.
-         * This function is only needed if the feature OO.VIDEO.FEATURE.VIDEO_OBJECT_GIVE or
-         * OO.VIDEO.FEATURE.VIDEO_OBJECT_TAKE is supported.
-         * @public
-         * @method PulseVideoWrapper#sharedElementTake
-         */
-    this.sharedElementTake = () => {
-      _adManager.sharedVideoElement.crossorigin = null;
-      _adManager._isControllingVideo = true;
-      _adManager.sharedVideoElement.style.visibility = 'visible';
-      if (_adManager && _adManager._waitingForContentPause) {
-        _adManager._waitingForContentPause = false;
-      }
-    };
-
-    /**
-         * Subscribes to all events raised by the video element.
-         * This is called by the Factory during creation.
-         * @public
-         * @method PulseVideoWrapper#subscribeAllEvents
-         */
-    this.subscribeAllEvents = () => {
-      _adManager.registerVideoControllerWrapper(this);
-    };
-
-    /**
-         * Unsubscribes all events from the video element.
-         * This function is not required but can be called by the destroy function.
-         * @private
-         * @method PulseVideoWrapper#unsubscribeAllEvents
-         */
-    const unsubscribeAllEvents = () => {};
-
-    /**
-         * Sets the url of the video.
-         * @public
-         * @method PulseVideoWrapper#setVideoUrl
-         * @param {string} url The new url to insert into the video element's src attribute
-         * @param {string} encoding The encoding of video stream, possible values are found in OO.VIDEO.ENCODING (unused here)
-         * @param {boolean} live True if it is a live asset, false otherwise (unused here)
-         * @returns {boolean} True or false indicating success
-         */
-    this.setVideoUrl = url => true;
-
-    /**
-         * Loads the current stream url in the video element; the element should be left paused.  This function
-         * is generally called when preloading a stream before triggering play.  Load may not be called before
-         * play.
-         * @public
-         * @method PulseVideoWrapper#load
-         * @param {boolean} rewind True if the stream should be setup to play as if from the beginning.  When
-         *   true, if initial time has not been set, or if the stream has already been played, set the stream
-         *   position to 0.
-         */
-    this.load = (rewind) => {
-    };
-
-    /**
-         * Sets the initial time of the video playback.  This value should not be used on replay.
-         * @public
-         * @method PulseVideoWrapper#setInitialTime
-         * @param {number} initialTime The initial time of the video (seconds)
-         */
-    this.setInitialTime = (initialTime) => {
-    };
-
-
-    this.togglePlayPause = () => {
-      if (this.isPlaying) { this.pause(); } else { this.play(); }
-    };
-    /**
-         * Triggers playback on the video element.  If the 'load' function was not already called and the stream
-         * is not loaded, trigger a load now.
-         * @public
-         * @method PulseVideoWrapper#play
-         */
-    this.play = () => {
-      if (_adManager) {
-        _adManager.resumeAd();
-        this.isPlaying = true;
-        this.raisePlayingEvent();
-      }
-    };
-
-
-    /**
-         * Triggers a pause on the video element.
-         * @public
-         * @method PulseVideoWrapper#pause
-         */
-    this.pause = () => {
-      if (_adManager) {
-        _adManager.pauseAd();
-        this.isPlaying = false;
-        this.raisePauseEvent();
-      }
-    };
-
-    /**
-         * Triggers a seek on the video element.
-         * @public
-         * @method PulseVideoWrapper#seek
-         * @param {number} time The time to seek the video to (in seconds)
-         */
-    this.seek = (time) => {
-      if (_adManager && _adManager.getAdPlayer()) {
-        _adManager.getAdPlayer().seek(time);
-      }
-    };
-
-    /**
-         * Triggers a volume change on the video element.
-         * @public
-         * @method PulseVideoWrapper#setVolume
-         * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
-         */
-    this.setVolume = (volume) => {
-      // Do not set the volume if the Pulse ad player is muted since that will unmute the ad player
-      if (_adManager && _adManager.getAdPlayer() && !_adManager.muted()) {
-        _adManager.getAdPlayer().setVolume(volume);
-      }
-    };
-
-    /**
-         * Mutes the Pulse ad player.
-         * @public
-         * @method PulseVideoWrapper#mute
-         */
-    this.mute = () => {
-      if (_adManager && _adManager.getAdPlayer()) {
-        _adManager.getAdPlayer().mute();
-      }
-    };
-
-    /**
-         * Unmutes the Pulse ad player.
-         * @public
-         * @method PulseVideoWrapper#unmute
-         */
-    this.unmute = () => {
-      if (_adManager && _adManager.getAdPlayer()) {
-        _adManager.getAdPlayer().unmute();
-      }
-    };
-
-    /**
-         * Gets the current time position of the video.
-         * @public
-         * @method PulseVideoWrapper#getCurrentTime
-         * @returns {number} The current time position of the video (seconds)
-         */
-    this.getCurrentTime = () => {
-    };
-
-    /**
-         * Applies the given css to the video element.
-         * @public
-         * @method PulseVideoWrapper#applyCss
-         * @param {object} css The css to apply in key value pairs
-         */
-    this.applyCss = (css) => {
-      const node = _adManager.sharedVideoElement;
-      if (!node) {
-        return;
-      }
-      Object.keys(css).forEach((prop) => {
-        node.style[prop] = css[prop];
-      });
-    };
-
-    /**
-         * Destroys the individual video element.
-         * @public
-         * @method PulseVideoWrapper#destroy
-         */
-    this.destroy = () => {
-      // Pause the video
-      // Reset the source
-      // Unsubscribe all events
-      unsubscribeAllEvents();
-      // Remove the element
-    };
-
-    /**
-         * Sets the closed captions on the video element.
-         * @public
-         * @method PulseVideoWrapper#setClosedCaptions
-         * @param {string} language The language of the closed captions. Set to null to remove captions.
-         * @param {object} closedCaptions The closedCaptions object
-         * @param {object} params The params to set with closed captions
-         */
-    this.setClosedCaptions = (language, closedCaptions, params) => {
-    };
-
-    /**
-         * Sets the closed captions mode on the video element.
-         * @public
-         * @method PulseVideoWrapper#setClosedCaptionsMode
-         * @param {string} mode The mode to set the text tracks element. One of ("disabled", "hidden", "showing").
-         */
-    this.setClosedCaptionsMode = (mode) => {
-    };
-
-    /**
-         * Sets the crossorigin attribute on the video element.
-         * @public
-         * @method PulseVideoWrapper#setCrossorigin
-         * @param {string} crossorigin The value to set the crossorigin attribute.
-         */
-    this.setCrossorigin = (crossorigin) => {
-    };
-
-    // **********************************************************************************/
-    // Example callback methods
-    // **********************************************************************************/
-
-    this.raisePlayEvent = (event) => {
-      this.controller.notify(this.controller.EVENTS.PLAY, { url: event.target.src });
-    };
-
-    this.raisePlayingEvent = () => {
-      this.controller.notify(this.controller.EVENTS.PLAYING);
-    };
-
-    this.raiseEndedEvent = () => {
-      this.controller.notify(this.controller.EVENTS.ENDED);
-    };
-
-    this.raiseErrorEvent = (event) => {
-      const code = event.target.error ? event.target.error.code : -1;
-      this.controller.notify(this.controller.EVENTS.ERROR, { errorcode: code });
-    };
-
-    this.raiseSeekingEvent = () => {
-      this.controller.notify(this.controller.EVENTS.SEEKING);
-    };
-
-    this.raiseSeekedEvent = () => {
-      this.controller.notify(this.controller.EVENTS.SEEKED);
-    };
-
-    this.raisePauseEvent = () => {
-      this.controller.notify(this.controller.EVENTS.PAUSED);
-    };
-
-    this.raiseRatechangeEvent = () => {
-      this.controller.notify(this.controller.EVENTS.RATE_CHANGE);
-    };
-
-    this.raiseStalledEvent = () => {
-      this.controller.notify(this.controller.EVENTS.STALLED);
-    };
-
-    /**
-         * Notifies the video controller of VOLUME_CHANGE and MUTE_STATE_CHANGE events.
-         * @private
-         * @method PulseVideoWrapper#raiseVolumeEvent
-         * @param {Number} volume The current volume
-         * @param {boolean} muted The current mute state
-         */
-    this.raiseVolumeEvent = (volume, muted) => {
-      if (volume === 0 || muted) {
-        this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: true });
-      } else {
-        this.controller.notify(this.controller.EVENTS.MUTE_STATE_CHANGE, { muted: false });
-        this.controller.notify(this.controller.EVENTS.VOLUME_CHANGE, { volume });
-      }
-    };
-
-    /**
-         * Notifies the video controller of the UNMUTED_PLAYBACK_FAILED event.
-         * @private
-         * @method PulseVideoWrapper#raiseUnmutedPlaybackFailed
-         */
-    this.raiseUnmutedPlaybackFailed = () => {
-      this.controller.notify(this.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
-    };
-
-    /**
-         * Notifies the video controller of the MUTED_PLAYBACK_FAILED event.
-         * @private
-         * @method PulseVideoWrapper#raiseMutedPlaybackFailed
-         */
-    this.raiseMutedPlaybackFailed = () => {
-      this.controller.notify(this.controller.EVENTS.MUTED_PLAYBACK_FAILED);
-    };
-
-    this.raiseWaitingEvent = () => {
-      this.controller.notify(this.controller.EVENTS.WAITING);
-    };
-
-    this.raiseTimeUpdate = (position, duration) => {
-      this.controller.notify(this.controller.EVENTS.TIME_UPDATE,
-        {
-          currentTime: position,
-          duration,
-          buffer: duration,
-          seekRange: { begin: 0, end: 10 },
-        });
-    };
-
-    this.raiseDurationChange = (event) => {
-      this.raisePlayhead(this.controller.EVENTS.DURATION_CHANGE, event);
-    };
-
-    this.raisePlayhead = (eventname, event) => {
-      this.controller.notify(eventname,
-        {
-          currentTime: event.target.currentTime,
-          duration: event.target.duration,
-          buffer: 10,
-          seekRange: { begin: 0, end: 10 },
-        });
-    };
-
-    this.raiseProgress = (event) => {
-      this.controller.notify(this.controller.EVENTS.PROGRESS,
-        {
-          currentTime: event.target.currentTime,
-          duration: event.target.duration,
-          buffer: 10,
-          seekRange: { begin: 0, end: 10 },
-        });
-    };
-
-    this.raiseCanPlayThrough = () => {
-      this.controller.notify(this.controller.EVENTS.BUFFERED);
-    };
-
-    this.raiseFullScreenBegin = (event) => {
-      this.controller.notify(this.controller.EVENTS.FULLSCREEN_CHANGED,
-        { _isFullScreen: true, paused: event.target.paused });
-    };
-
-    this.raiseFullScreenEnd = (event) => {
-      this.controller.notify(this.controller.EVENTS.FULLSCREEN_CHANGED,
-        { _isFullScreen: false, paused: event.target.paused });
-    };
   };
 
   OO.Video.plugin(new PulsePlayerFactory());

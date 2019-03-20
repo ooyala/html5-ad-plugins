@@ -329,7 +329,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#_adRequestTimeout
      */
-    var _adRequestTimeout = () => {
+    const _adRequestTimeout = () => {
       _clearAdRequestTimeout();
       if (!fwContext._adResponse) {
         fwContext.removeEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE);
@@ -349,7 +349,7 @@ OO.Ads.manager(() => {
      * @param callback The function to call when we time out
      * @param duration the time to wait before timing out
      */
-    var _setAdRequestTimeout = (callback, duration) => {
+    const _setAdRequestTimeout = (callback, duration) => {
       if (adRequestTimeout) {
         const error = 'Ad Request Timeout already exists - bad state';
         fw_onError(null, error);
@@ -367,7 +367,7 @@ OO.Ads.manager(() => {
      * @method Freewheel#fw_onAdRequestComplete
      * @param {object} event The requestComplete event indicating success or failure
      */
-    var fw_onAdRequestComplete = (event) => {
+    const fw_onAdRequestComplete = (event) => {
       // clear ad request timeout since fw_onAdRequestComplete was called
       _clearAdRequestTimeout();
       if (event.success) {
@@ -410,7 +410,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#_prepareTimeline
      */
-    var _prepareTimeline = () => {
+    const _prepareTimeline = () => {
       if (!slots) return [];
       if (timeline.length > 0) return;
       for (let i = 0; i < slots.length; i++) {
@@ -463,7 +463,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#_registerDisplayForLinearAd
      */
-    var _registerDisplayForLinearAd = () => {
+    const _registerDisplayForLinearAd = () => {
       fwContext.registerVideoDisplayBase(amc.ui.adWrapper.attr('id'));
     };
 
@@ -472,7 +472,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#_registerDisplayForNonlinearAd
      */
-    var _registerDisplayForNonlinearAd = () => {
+    const _registerDisplayForNonlinearAd = () => {
       if (OO.requiresSingleVideoElement) {
         // on iOS and Android, FW expects the following to be our legit video element when
         // playing back video ads. If we attempt to use the fake video and then switch to
@@ -597,7 +597,7 @@ OO.Ads.manager(() => {
       }
     };
 
-    var _resetAdState = () => {
+    const _resetAdState = () => {
       handlingClick = false;
       currentPlayingSlot = null;
       currentAd = null;
@@ -642,7 +642,7 @@ OO.Ads.manager(() => {
       }
     };
 
-    var _cancelCurrentAd = () => {
+    const _cancelCurrentAd = () => {
       if (currentAd === null) return;
       if ((currentAd.adType === amc.ADTYPE.AD_REQUEST)
           || (typeof (currentPlayingSlot.getCustomId) !== 'function')) {
@@ -677,12 +677,12 @@ OO.Ads.manager(() => {
       _resetAdState();
     };
 
-    var onContentChanged = () => {
+    const onContentChanged = () => {
       // On Content Changed, need to dispose the context
       // if (fwContext && isFunction(fwContext.dispose)) fwContext.dispose();
     };
 
-    var updateOverlayPosition = () => {
+    const updateOverlayPosition = () => {
       // Overlay placement issue - PBI-1227 as of 12/9/2015
       // The main issue with Freewheel is when notifying their SDK of video size changes,
       // Freewheel only attempts to resize ads and not re-position ads.
@@ -696,7 +696,7 @@ OO.Ads.manager(() => {
       }
     };
 
-    var onResize = () => {
+    const onResize = () => {
       updateOverlayPosition();
     };
 
@@ -705,7 +705,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#notifySizeChange
      */
-    var notifySizeChange = () => {
+    const notifySizeChange = () => {
       // Freewheel SDK uses setContentVideoElement and registerVideoDisplayBase for size
       // change notifications for the main content and ad content respectively.
       // _registerDisplayForLinearAd calls registerVideoDisplayBase and
@@ -771,7 +771,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onMainContentInFocus
      */
-    var onMainContentInFocus = () => {
+    const onMainContentInFocus = () => {
       // The Freewheel SDK does not like when the video elements passed in via _registerDisplayForLinearAd
       // and _registerDisplayForNonlinearAd have display set to none. This causes overlays to not
       // be positioned and sized correctly (PBI-1307). When we get notified that the main video content
@@ -793,7 +793,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onPlayRequested
      */
-    var onPlayRequested = () => {
+    const onPlayRequested = () => {
       shouldRequestAds = true;
       setupAdsWrapper();
     };
@@ -805,7 +805,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onReplayRequested
      */
-    var onReplayRequested = () => {
+    const onReplayRequested = () => {
       _resetAdState();
       shouldRequestAds = true;
       setupAdsWrapper();
@@ -816,7 +816,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onPlay
      */
-    var onPlay = () => {
+    const onPlay = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
     };
@@ -826,7 +826,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onPause
      */
-    var onPause = () => {
+    const onPause = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PAUSED);
     };
@@ -836,7 +836,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onResume
      */
-    var onResume = () => {
+    const onResume = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_PLAYING);
     };
@@ -846,7 +846,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onContentCompleted
      */
-    var onContentCompleted = () => {
+    const onContentCompleted = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_STOPPED);
     };
@@ -857,7 +857,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#onAllCompleted
      */
-    var onAllCompleted = () => {
+    const onAllCompleted = () => {
       if (!fwContext || !isFunction(fwContext.setVideoState)) return;
       fwContext.setVideoState(tv.freewheel.SDK.VIDEO_STATE_COMPLETED);
 
@@ -872,7 +872,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#fw_onAdClick
      */
-    var fw_onAdClick = () => {
+    const fw_onAdClick = () => {
       // handlingClick makes sure the click is only triggered once, rather than repeatedly in a loop.
       if (!handlingClick) {
         handlingClick = true;
@@ -896,7 +896,7 @@ OO.Ads.manager(() => {
     * @param {object} event The AD_ERROR event object
     * @param {string} error The error message
     */
-    var fw_onError = (event, error) => {
+    const fw_onError = (event, error) => {
       amc.raiseAdError(`FW: An ad error has occurred. The error string reported was: ${error}`);
     };
 
@@ -907,7 +907,7 @@ OO.Ads.manager(() => {
      * @method Freewheel#fw_onAdImpression
      * @param {object} event The ad impression object indicating which ad started
      */
-    var fw_onAdImpression = (event) => {
+    const fw_onAdImpression = (event) => {
       indexInPod++;
       if (!event || !event.adInstance) {
         return;
@@ -949,7 +949,7 @@ OO.Ads.manager(() => {
      * @method Freewheel#fw_onAdImpressionEnd
      * @param event {object} event The ad impression object indicating which ad ended
      */
-    var fw_onAdImpressionEnd = (event) => {
+    const fw_onAdImpressionEnd = (event) => {
       // FW has an issue where it resets the html5 video element's volume and muted attributes according to
       // FW's internal volume/mute state when moving to the next ad in an ad pod (but not the first ad in an ad pod).
       // This will break playback if muted autoplay is required and FW unmutes the video element. This internal state
@@ -974,7 +974,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#fw_onSlotStarted
      */
-    var fw_onSlotStarted = () => {
+    const fw_onSlotStarted = () => {
       // adVideoElement may be null for overlays
       if (currentPlayingSlot
           && currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY
@@ -996,7 +996,7 @@ OO.Ads.manager(() => {
      * @method Freewheel#fw_onSlotEnded
      * @param {object} event The slotEnded event showing which ad ended
      */
-    var fw_onSlotEnded = (event) => {
+    const fw_onSlotEnded = (event) => {
       // Disable controls on the video element.  Freewheel seems to be turning it on
       // TODO: inspect event for playback success or errors
 
@@ -1025,7 +1025,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Freewheel#_clearAdRequestTimeout
      */
-    var _clearAdRequestTimeout = () => {
+    const _clearAdRequestTimeout = () => {
       if (adRequestTimeout) {
         clearTimeout(adRequestTimeout);
         adRequestTimeout = null;

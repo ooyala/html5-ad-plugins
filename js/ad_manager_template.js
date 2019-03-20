@@ -285,7 +285,7 @@ OO.Ads.manager(() => {
      */
     this.createAdVideoElementOnPlayerInit = () => [];
 
-    var _onContentChanged = () => {
+    const _onContentChanged = () => {
       // Callback for example listener registered in this.initialize
     };
   };

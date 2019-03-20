@@ -14,7 +14,7 @@ module.exports = {
   rules: {
     "no-underscore-dangle": "warn",
     "vars-on-top": "warn",
-    "no-var": "warn",
+    // "no-var": "warn",
     "max-len": "warn",
     "no-use-before-define": "warn",
     "consistent-return": "warn",
@@ -34,7 +34,7 @@ module.exports = {
     "no-prototype-builtins": "warn",
     "no-restricted-globals": "warn",
     "block-scoped-var": "warn",
-    "prefer-const": "warn",
+    // "prefer-const": "warn",
     "guard-for-in": "warn",
     "no-restricted-syntax": "warn",
     "default-case": "warn",
@@ -55,5 +55,6 @@ module.exports = {
     "no-fallthrough": "warn",
     "no-mixed-operators": "warn",
     "no-loop-func": "warn",
+    "no-case-declarations": "warn",
   },
 };

@@ -110,7 +110,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_createAMCListeners
        */
-      var _resetVars = () => {
+      const _resetVars = () => {
         this.ready = false;
         _usingAdRules = true;
 
@@ -176,7 +176,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_createAMCListeners
        */
-      var _createAMCListeners = () => {
+      const _createAMCListeners = () => {
         _amc.addPlayerListener(_amc.EVENTS.INITIAL_PLAY_REQUESTED, _onInitialPlayRequested);
         _amc.addPlayerListener(_amc.EVENTS.CONTENT_COMPLETED, _onContentCompleted);
         _amc.addPlayerListener(_amc.EVENTS.PLAYHEAD_TIME_CHANGED, _onPlayheadTimeChanged);
@@ -383,6 +383,7 @@ require('../html5-common/js/utils/utils.js');
        * @returns {OO.AdManagerController#Ad[]} timeline A list of the ads to play for the current video
        */
       this.buildTimeline = () => {
+        let streams;
         const adsTimeline = [];
         // for the moment we don't support mixing adrules and non-adrules.
         if (!_usingAdRules) {
@@ -392,7 +393,7 @@ require('../html5-common/js/utils/utils.js');
               const ad = validAdTags[i];
               // double check it's not an ad rules ad before trying to add it to the timeline
               if (ad.position_type != AD_RULES_POSITION_TYPE) {
-                var streams = {};
+                streams = {};
                 streams[OO.VIDEO.ENCODING.IMA] = '';
                 const adData = {
                   position: ad.position / 1000,
@@ -415,7 +416,7 @@ require('../html5-common/js/utils/utils.js');
           }
         } else {
           // return a placeholder preroll while we wait for IMA
-          var streams = {};
+          streams = {};
           streams[OO.VIDEO.ENCODING.IMA] = '';
           const placeholder = [new _amc.Ad({
             position: 0,
@@ -441,7 +442,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_getValidAdTagUrls
        * @returns {array} Ads with valid ad tags. Null if this.allAdInfo doesn't exist.
        */
-      var _getValidAdTagUrls = () => {
+      const _getValidAdTagUrls = () => {
         if (!this.allAdInfo) {
           return null;
         }
@@ -455,7 +456,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#isValidAdTag
        * @returns {array} Ads with valid ad tags.
        */
-      var _isValidAdTag = (ad) => {
+      const _isValidAdTag = (ad) => {
         if (!ad) {
           return false;
         }
@@ -719,7 +720,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_onReplayRequested.
        */
-      var _onReplayRequested = () => {
+      const _onReplayRequested = () => {
         if (!_IMAAdsLoader) {
           // The Ads Loader might have been destroyed if we had timed out.
           IMA_SDK_tryCreateAdsLoader();
@@ -742,7 +743,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_resetAdsState
        */
-      var _resetAdsState = () => {
+      const _resetAdsState = () => {
         _tryUndoSetupForAdRules();
 
         // If you want to use the same ad tag twice you have to destroy the admanager and call
@@ -768,7 +769,7 @@ require('../html5-common/js/utils/utils.js');
        * @param {string} event The event name
        * @param {boolean} wasAutoplayed True if the video was autoplayed, false if not
        */
-      var _onInitialPlayRequested = (event, wasAutoplayed) => {
+      const _onInitialPlayRequested = (event, wasAutoplayed) => {
         this.initialPlayRequestTime = new Date().valueOf();
         OO.log('_onInitialPlayRequested');
         // double check that IMA SDK loaded.
@@ -834,7 +835,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_tryPlayImaAd
        */
-      var _tryPlayImaAd = () => {
+      const _tryPlayImaAd = () => {
         // block this code from running till we want to play the video
         // if you run it before then ima will take over and immediately try to play
         // ads (if there is a preroll)
@@ -875,7 +876,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_onContentCompleted
        */
-      var _onContentCompleted = () => {
+      const _onContentCompleted = () => {
         if (this.contentEnded == false) {
           this.contentEnded = true;
           if (_IMAAdsLoader) {
@@ -891,7 +892,7 @@ require('../html5-common/js/utils/utils.js');
        * @param playhead current playhead time
        * @param duration - duration of the movie.
        */
-      var _onPlayheadTimeChanged = (event, playheadTime, duration) => {
+      const _onPlayheadTimeChanged = (event, playheadTime, duration) => {
         if (!_playheadTracker) {
           _resetPlayheadTracker();
         }
@@ -911,7 +912,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#onFullScreenChanged
        * @param {boolean} shouldEnterFullscreen True if going into fullscreen
        */
-      var _onFullscreenChanged = (event, shouldEnterFullscreen) => {
+      const _onFullscreenChanged = (event, shouldEnterFullscreen) => {
         this.isFullscreen = shouldEnterFullscreen;
         _onSizeChanged();
       };
@@ -921,7 +922,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_onSizeChanged
        */
-      var _onSizeChanged = () => {
+      const _onSizeChanged = () => {
         _updateIMASize();
       };
 
@@ -930,7 +931,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_updateIMASize
        */
-      var _updateIMASize = () => {
+      const _updateIMASize = () => {
         if (_IMAAdsManager && _uiContainer) {
           const viewMode = this.isFullscreen ? google.ima.ViewMode.FULLSCREEN : google.ima.ViewMode.NORMAL;
           let width = _uiContainer.clientWidth;
@@ -962,7 +963,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_resetPlayheadTracker
        */
-      var _resetPlayheadTracker = () => {
+      const _resetPlayheadTracker = () => {
         if (!_playheadTracker) {
           _playheadTracker = { duration: 0, currentTime: 0 };
         } else {
@@ -976,7 +977,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_trySetupAdsRequest
        */
-      var _trySetupAdsRequest = () => {
+      const _trySetupAdsRequest = () => {
         // need metadata, ima sdk, and ui to be registered before we can request an ad
         if (this.adsRequested
             || !this.canSetupAdsRequest
@@ -1046,7 +1047,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_checkRequestAdsOnReplay
        */
-      var _checkRequestAdsOnReplay = () => {
+      const _checkRequestAdsOnReplay = () => {
         if (!this.isReplay) {
           return true;
         }
@@ -1060,7 +1061,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_onSdkLoaded
        * @param success - whether SDK loaded successfully.
        */
-      var _onSdkLoaded = (success) => {
+      const _onSdkLoaded = (success) => {
         _adModuleJsReady = success;
         OO.log('onSdkLoaded!');
         // [PBK-639] Corner case where Google's SDK 200s but isn't properly
@@ -1085,7 +1086,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_IMA_SDK_tryInitAdContainer
        */
-      var _IMA_SDK_tryInitAdContainer = () => {
+      const _IMA_SDK_tryInitAdContainer = () => {
         if (_adModuleJsReady && this.uiRegistered) {
           if (!_isGoogleSDKValid()) {
             _throwError('IMA SDK loaded but does not contain valid data');
@@ -1140,7 +1141,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#IMA_SDK_tryCreateAdsLoader
        */
-      var IMA_SDK_tryCreateAdsLoader = () => {
+      const IMA_SDK_tryCreateAdsLoader = () => {
         if (_IMAAdDisplayContainer) {
           const adsManagerEvents = google.ima.AdsManagerLoadedEvent.Type;
           const adErrorEvent = google.ima.AdErrorEvent.Type;
@@ -1169,7 +1170,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_IMA_SDK_destroyAdsLoader
        */
-      var _IMA_SDK_destroyAdsLoader = () => {
+      const _IMA_SDK_destroyAdsLoader = () => {
         if (_IMAAdsLoader) {
           _IMAAdsLoader.destroy();
           _IMAAdsLoader = null;
@@ -1181,7 +1182,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_IMA_SDK_destroyAdsManager
        */
-      var _IMA_SDK_destroyAdsManager = () => {
+      const _IMA_SDK_destroyAdsManager = () => {
         if (_IMAAdsManager) {
           _IMAAdsManager.stop();
           _IMAAdsManager.destroy();
@@ -1224,7 +1225,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_trySetAdManagerToReady
        */
-      var _trySetAdManagerToReady = () => {
+      const _trySetAdManagerToReady = () => {
         if (_IMAAdDisplayContainer && this.metadataReady && !this.ready) {
           this.ready = true;
           _amc.onAdManagerReady();
@@ -1237,7 +1238,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_adsRequestTimeout
        */
-      var _adsRequestTimeout = () => {
+      const _adsRequestTimeout = () => {
         OO.log('IMA Ad request timed out');
         if (!this.adsReady) {
           _onImaAdError(OOYALA_IMA_PLUGIN_TIMEOUT);
@@ -1251,7 +1252,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_onImaAdError
        * @param {object} adErrorEvent - IMA SDK error data
        */
-      var _onImaAdError = (adError) => {
+      const _onImaAdError = (adError) => {
         // all IMA errors are fatal so it's safe to clear out this timeout.
         clearTimeout(this.adsRequestTimeoutRef);
         if (_usingAdRules) {
@@ -1337,7 +1338,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_onAdRequestSuccess
        * @param {object} adsManagerLoadedEvent - from the IMA SDK contains the IMA AdManager instance.
        */
-      var _onAdRequestSuccess = (adsManagerLoadedEvent) => {
+      const _onAdRequestSuccess = (adsManagerLoadedEvent) => {
         clearTimeout(this.adsRequestTimeoutRef);
         this.adResponseTime = new Date().valueOf();
         const responseTime = this.adResponseTime - this.adRequestTime;
@@ -1529,7 +1530,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_raisePauseEvent
        */
-      var _raisePauseEvent = () => {
+      const _raisePauseEvent = () => {
         if (this.videoControllerWrapper) {
           this.videoControllerWrapper.raisePauseEvent();
         }
@@ -1579,7 +1580,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_IMA_SDK_onAdEvent
        * @param {object} adEvent The IMA ad event
        */
-      var _IMA_SDK_onAdEvent = (adEvent) => {
+      const _IMA_SDK_onAdEvent = (adEvent) => {
         if (_ignoreWhenAdNotPlaying(adEvent)) {
           OO.log('Ignoring IMA EVENT: ', adEvent.type, adEvent);
           return;
@@ -1683,11 +1684,11 @@ require('../html5-common/js/utils/utils.js');
             if (_usingAdRules) {
               this.adResponseTime = new Date().valueOf();
             }
-            var adSkipped = false;
+            let adSkipped = false;
             if (adEvent.type === eventType.SKIPPED) {
               adSkipped = true;
             }
-            var completionTime = new Date().valueOf() - this.currentImpressionTime;
+            const completionTime = new Date().valueOf() - this.currentImpressionTime;
             _amc.onAdCompleted(this.name, completionTime, adSkipped, this.adFinalTagUrl);
             this.adPlaybackStarted = false;
             if (this.videoControllerWrapper && (ad && ad.isLinear())) {
@@ -1729,12 +1730,12 @@ require('../html5-common/js/utils/utils.js');
           case eventType.IMPRESSION:
 
             this.currentImpressionTime = new Date().valueOf();
-            var loadTime = this.currentImpressionTime - this.adResponseTime;
-            var protocol = 'VAST';
+            const loadTime = this.currentImpressionTime - this.adResponseTime;
+            let protocol = 'VAST';
             if (ad && ad.g && ad.g.vpaid === true) {
               protocol = 'VPAID';
             }
-            var type = 'unknown';
+            let type = 'unknown';
             if (ad && ad.isLinear()) {
               if (ad.getContentType().lastIndexOf('video', 0) === 0) {
                 type = _amc.ADTYPE.LINEAR_VIDEO;
@@ -1804,7 +1805,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_ignoreWhenAdNotPlaying
        * @param {object} adEvent The IMA ad event
        */
-      var _ignoreWhenAdNotPlaying = (adEvent) => {
+      const _ignoreWhenAdNotPlaying = (adEvent) => {
         const eventType = google.ima.AdEvent.Type;
         const ignoredEvents = [
           // eventType.ALL_ADS_COMPLETED,
@@ -1832,7 +1833,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_resetUIContainerStyle
        */
-      var _resetUIContainerStyle = () => {
+      const _resetUIContainerStyle = () => {
         if (_uiContainer && typeof _uiContainerPrevStyle !== 'undefined' && _uiContainerPrevStyle !== null) {
           _uiContainer.setAttribute('style', _uiContainerPrevStyle);
         }
@@ -1845,7 +1846,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_startTimeUpdater
        */
-      var _startTimeUpdater = () => {
+      const _startTimeUpdater = () => {
         _stopTimeUpdater();
         // starting an interval causes unit tests to throw a max call stack exceeded error
         if (!this.runningUnitTests) {
@@ -1864,7 +1865,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_stopTimeUpdater
        */
-      var _stopTimeUpdater = () => {
+      const _stopTimeUpdater = () => {
         clearInterval(_timeUpdater);
         _timeUpdater = null;
       };
@@ -1874,7 +1875,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_trySetupForAdRules
        */
-      var _trySetupForAdRules = () => {
+      const _trySetupForAdRules = () => {
         if (_usingAdRules) {
           _amc.adManagerWillControlAds(this.name);
         }
@@ -1885,7 +1886,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_tryUndoSetupForAdRules
        */
-      var _tryUndoSetupForAdRules = () => {
+      const _tryUndoSetupForAdRules = () => {
         if (_usingAdRules && _amc) {
           _amc.adManagerDoneControllingAds(this.name);
         }
@@ -1897,7 +1898,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_getImaIframe
        * @returns {object} The IMA iframe
        */
-      var _getImaIframe = () => {
+      const _getImaIframe = () => {
         let imaIframe = null;
         if (_uiContainer) {
           const iframes = _uiContainer.querySelector('iframe');
@@ -1911,7 +1912,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_hideImaIframe
        */
-      var _hideImaIframe = () => {
+      const _hideImaIframe = () => {
         const IMAiframe = _getImaIframe();
         if (IMAiframe && IMAiframe.style) {
           IMAiframe.style.display = 'none';
@@ -1924,7 +1925,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_onAdMetrics
        * @param {object} adEvent
        */
-      var _onAdMetrics = (adEvent) => {
+      const _onAdMetrics = (adEvent) => {
         OO.log('Google IMA Ad playthrough', adEvent.type);
       };
 
@@ -1933,7 +1934,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_onContentChanged
        */
-      var _onContentChanged = () => {
+      const _onContentChanged = () => {
         this.contentEnded = false;
         _tryUndoSetupForAdRules();
         _resetAdsState();
@@ -1946,7 +1947,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_tryStartAd
        */
-      var _tryStartAd = () => {
+      const _tryStartAd = () => {
         let adTypeStarted = null;
         if (this.currentIMAAd && this.currentAMCAdPod) {
           if (this.currentIMAAd.isLinear()) {
@@ -1965,7 +1966,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_startLinearAd
        */
-      var _startLinearAd = () => {
+      const _startLinearAd = () => {
         if (!this.currentIMAAd) {
           _throwError('Trying to start linear ad and this.currentIMAAd is falsy');
         }
@@ -2022,7 +2023,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_startNonLinearOverlay
        */
-      var _startNonLinearOverlay = () => {
+      const _startNonLinearOverlay = () => {
         if (!this.currentAMCAdPod) {
           _throwError('Trying to start non linear overlay and this.currentAMCAdPod is falsy');
         }
@@ -2049,7 +2050,7 @@ require('../html5-common/js/utils/utils.js');
        * @private
        * @method GoogleIMA#_startNonLinearAdRulesOverlay
        */
-      var _startNonLinearAdRulesOverlay = () => {
+      const _startNonLinearAdRulesOverlay = () => {
         const adData = {
           position_type: AD_RULES_POSITION_TYPE,
           forced_ad_type: _amc.ADTYPE.NONLINEAR_OVERLAY,
@@ -2103,7 +2104,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_endCurrentAd
        * @param forceEndAdPod forces the ad pod to end
        */
-      var _endCurrentAd = (forceEndAdPod) => {
+      const _endCurrentAd = (forceEndAdPod) => {
         if (this.currentAMCAdPod) {
           if (this.currentIMAAd) {
             const { currentIMAAd } = this;
@@ -2149,7 +2150,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_isGoogleSDKValid
        * @returns {boolean} True if AdDisplayContainer is defined.
        */
-      var _isGoogleSDKValid = () => (google && google.ima && google.ima.AdDisplayContainer);
+      const _isGoogleSDKValid = () => (google && google.ima && google.ima.AdDisplayContainer);
 
       this.registerVideoControllerWrapper = (videoWrapper) => {
         this.videoControllerWrapper = videoWrapper;
@@ -2184,9 +2185,9 @@ require('../html5-common/js/utils/utils.js');
       this.willPlayAdMuted = () => this.requiresMutedAutoplay() && !this.capturedUserClick;
     };
 
-    var _inlinePlaybackSupported = () => !(OO.iosMajorVersion < 10 && OO.isIphone);
+    const _inlinePlaybackSupported = () => !(OO.iosMajorVersion < 10 && OO.isIphone);
 
-    var _throwError = (outputStr) => {
+    const _throwError = (outputStr) => {
       // TODO consolidate code to exit gracefully if we have an error.
       throw new Error(`GOOGLE IMA: ${outputStr}`);
     };
@@ -2274,7 +2275,7 @@ require('../html5-common/js/utils/utils.js');
    * @property {boolean} readyForCss When true, css may be applied on the video element.  When false, css
    *                                 should be stored for use later when this value is true.
    */
-  var GoogleIMAVideoWrapper = function (ima) {
+  const GoogleIMAVideoWrapper = function (ima) {
     const _ima = ima;
 
     this.controller = {};
@@ -2462,7 +2463,7 @@ require('../html5-common/js/utils/utils.js');
      * @private
      * @method GoogleIMAVideoWrapper#applyCssToElemenet
      */
-    var applyCssToElement = (css) => {
+    const applyCssToElement = (css) => {
       if (css && this.isControllingVideo && _ima.sharedVideoElement) {
         const node = document.querySelector(_ima.sharedVideoElement);
         pairs(css).forEach(([key, value]) => {
