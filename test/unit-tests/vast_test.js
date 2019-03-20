@@ -20,6 +20,7 @@ describe('ad_manager_vast', function () {
   require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
   require(`${TEST_ROOT}unit-test-helpers/mock_vpaid.js`);
 
+  /* eslint-disable max-len */
   const linearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear.xml'), 'utf8');
   const linearXMLNoClickthroughString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear_no_clickthrough.xml'), 'utf8');
   const linearXML2AdsString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear_2_ads.xml'), 'utf8');
@@ -44,6 +45,7 @@ describe('ad_manager_vast', function () {
   const contentTypeHLS2XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_content_type_HLS_2.xml'), 'utf8');
   const contentTypeHLS3XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_content_type_HLS_3.xml'), 'utf8');
   const contentTypeHLS4XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_content_type_HLS_4.xml'), 'utf8');
+  /* eslint-enable max-len */
 
   const linearXML = $.parseXML(linearXMLString);
   const linearNoClickthroughXML = $.parseXML(linearXMLNoClickthroughString);
@@ -1591,6 +1593,7 @@ describe('ad_manager_vast', function () {
     expect(trackingEvents[1].url).to.be('errorURL');
   });
 
+  // eslint-disable-next-line max-len
   it('Vast 3.0, VMAP, Inline Pre-roll Overlay, Post-roll: Should parse overlay and post-roll properly', () => {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlinePreAdTagPost);
@@ -2297,6 +2300,7 @@ describe('ad_manager_vast', function () {
     expect(amc.timeline.length).to.be(0);
   });
 
+  // eslint-disable-next-line max-len
   it('Vast Ad Manager: Should use tag url override if provided in page level settings for content tree ads', () => {
     const embed_code = 'embed_code';
     const vast_ad = {
@@ -2334,6 +2338,7 @@ describe('ad_manager_vast', function () {
     expect(vastAdManager.vastUrl).to.be('http://override');
   });
 
+  // eslint-disable-next-line max-len
   it('Vast Ad Manager: Should use tag url override if provided in page level settings for page level ads', () => {
     const embed_code = 'embed_code';
     const content = {
@@ -2632,6 +2637,7 @@ describe('ad_manager_vast', function () {
     expect(linearEndNotified).to.eql(1);
   });
 
+  // eslint-disable-next-line max-len
   it('VPAID 2.0: Ad skip button should display when skippableState changes to true, or hide when false', () => {
     let allowSkipButton = false; let
       skipOffset = 0;
@@ -2685,6 +2691,7 @@ describe('ad_manager_vast', function () {
     expect(linearEndNotified).to.eql(0);
   });
 
+  // eslint-disable-next-line max-len
   it('VPAID 2.0: Ad Unit should handle clickthru if playerHandles is false, otherwise players handle the click', () => {
     let adUnitHandling = true;
     vpaidInitialize();

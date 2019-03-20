@@ -223,7 +223,8 @@ OO.Ads.manager(() => {
         }
       }
       // For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
-      if ((amc.isLiveStream && (offset && isNumber(offset)) && (duration && isNumber(duration))) && offset > 0 && offset < duration) {
+      if ((amc.isLiveStream && (offset && isNumber(offset))
+          && (duration && isNumber(duration))) && offset > 0 && offset < duration) {
         offsetParam = duration - offset;
       }
 
@@ -712,6 +713,7 @@ OO.Ads.manager(() => {
      */
 
     const _sendMetadataRequest = () => {
+      // eslint-disable-next-line max-len
       const url = `${window.location.protocol}//${this.domainName}/v1/metadata/${this.currentEmbed}?ssai_guid=${this.ssaiGuid}`;
       fetch(url, {
         method: 'get',

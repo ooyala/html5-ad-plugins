@@ -267,6 +267,7 @@ OO.Ads.manager(() => {
       }
 
       // Listen to AdManager Events
+      /* eslint-disable max-len */
       fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, fw_onAdImpression);
       fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, fw_onAdImpressionEnd);
       fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, fw_onSlotStarted);
@@ -297,7 +298,6 @@ OO.Ads.manager(() => {
         fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, 0, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
       }
 
-
       const companionAds = [
         [
           '<span id="VPNT_1" class="_fwph">',
@@ -317,6 +317,7 @@ OO.Ads.manager(() => {
           '</span>',
         ].join(''),
       ];
+      /* eslint-enable max-len */
 
       fwContext.submitRequest();
       fwAdDataRequested = true;
@@ -485,7 +486,9 @@ OO.Ads.manager(() => {
           overlayContainer = document.createElement('div');
           overlayContainer.style.width = '100%';
           overlayContainer.style.height = '100%';
-          const parent = amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0];
+          const parent = amc.ui.playerSkinPluginsElement
+            ? amc.ui.playerSkinPluginsElement[0]
+            : amc.ui.pluginsElement[0];
           parent.appendChild(overlayContainer);
         }
 
@@ -526,6 +529,7 @@ OO.Ads.manager(() => {
           indexInPod = 0;
           if (ad.isLinear) {
             _registerDisplayForLinearAd();
+            // eslint-disable-next-line max-len
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             slotStartedCallbacks[ad.ad.getCustomId()] = () => {
               amc.focusAdVideo();
@@ -557,6 +561,7 @@ OO.Ads.manager(() => {
             }
           } else {
             _registerDisplayForNonlinearAd();
+            // eslint-disable-next-line max-len
             fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
             adStartedCallbacks[ad.ad.getCustomId()] = (details) => {
               // provide width and height values if available. Alice will use these to resize
@@ -733,7 +738,10 @@ OO.Ads.manager(() => {
           handlingClick = true;
           // NOTE: The below is more correct but is returning an empty array.  FW bug?
           // if (instance.getEventCallbackUrls(tv.freewheel.SDK.EVENT_AD_CLICK, tv.freewheel.SDK.EVENT_TYPE_CLICK).length > 0) {
-          const callback = instance.getEventCallback(tv.freewheel.SDK.EVENT_AD_CLICK, tv.freewheel.SDK.EVENT_TYPE_CLICK);
+          const callback = instance.getEventCallback(
+            tv.freewheel.SDK.EVENT_AD_CLICK,
+            tv.freewheel.SDK.EVENT_TYPE_CLICK,
+          );
           if (callback && callback._url) {
             instance.getRendererController().processEvent({ name: tv.freewheel.SDK.EVENT_AD_CLICK });
           }
@@ -1014,7 +1022,9 @@ OO.Ads.manager(() => {
 
       if (!event || !event.slot) return;
       _resetAdState();
-      if (isFunction(slotEndedCallbacks[event.slot.getCustomId()])) { slotEndedCallbacks[event.slot.getCustomId()](); }
+      if (isFunction(slotEndedCallbacks[event.slot.getCustomId()])) {
+        slotEndedCallbacks[event.slot.getCustomId()]();
+      }
       delete slotEndedCallbacks[event.slot.getCustomId()];
       delete adStartedCallbacks[event.slot.getCustomId()];
       delete adEndedCallbacks[event.slot.getCustomId()];

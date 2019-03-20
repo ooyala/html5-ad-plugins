@@ -362,6 +362,7 @@ require('../html5-common/js/utils/utils.js');
        */
       this.setupSharedVideoElement = (element) => {
         // Remove any listeners we added on the previous shared video element
+        // eslint-disable-next-line max-len
         if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.removeEventListener === 'function') {
           this.sharedVideoElement.removeEventListener('webkitendfullscreen', _raisePauseEvent);
         }
@@ -369,6 +370,7 @@ require('../html5-common/js/utils/utils.js');
         // On iPhone, there is a limitation in the IMA SDK where we do not receive a pause event when
         // we leave the native player
         // This is a workaround to listen for the webkitendfullscreen event ourselves
+        // eslint-disable-next-line max-len
         if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.addEventListener === 'function') {
           this.sharedVideoElement.addEventListener('webkitendfullscreen', _raisePauseEvent);
         }
@@ -788,7 +790,11 @@ require('../html5-common/js/utils/utils.js');
         // Call the init function here when using ad rules so that IMA can take over ad control.
         // If we call it earlier, the ad will start playback automatically even if we're not autoplaying
         if (_usingAdRules && _IMAAdsManager) {
-          _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
+          _IMAAdsManager.init(
+            _uiContainer.clientWidth,
+            _uiContainer.clientHeight,
+            google.ima.ViewMode.NORMAL,
+          );
         }
         _tryPlayImaAd();
 
@@ -839,6 +845,7 @@ require('../html5-common/js/utils/utils.js');
         // block this code from running till we want to play the video
         // if you run it before then ima will take over and immediately try to play
         // ads (if there is a preroll)
+        // eslint-disable-next-line max-len
         const validAdRequestSuccess = this.currentAMCAdPod && _adToPlayOnRequestSuccess === this.currentAMCAdPod;
         const readyToPlay = validAdRequestSuccess || _usingAdRules;
         if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer && readyToPlay) {
@@ -1118,7 +1125,9 @@ require('../html5-common/js/utils/utils.js');
             }
 
             // Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
-            _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
+            _uiContainer = _amc.ui.playerSkinPluginsElement
+              ? _amc.ui.playerSkinPluginsElement[0]
+              : _amc.ui.pluginsElement[0];
             // iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
             // also doesn't not seem to work nicely with podded ads if you don't use it.
 
@@ -1310,11 +1319,31 @@ require('../html5-common/js/utils/utils.js');
 
             _amc.onSdkAdEvent(this.name, adError.type, { errorData });
             if (isEmpty) {
-              _amc.onAdRequestEmpty(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage());
+              _amc.onAdRequestEmpty(
+                this.name,
+                this.adPosition,
+                this.adFinalTagUrl,
+                errorCodes,
+                errorData.getMessage(),
+              );
             } else if (isPlaybackError) {
-              _amc.onAdPlaybackError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), this.currentMedia);
+              _amc.onAdPlaybackError(
+                this.name,
+                this.adPosition,
+                this.adFinalTagUrl,
+                errorCodes,
+                errorData.getMessage(),
+                this.currentMedia,
+              );
             } else {
-              _amc.onAdRequestError(this.name, this.adPosition, this.adFinalTagUrl, errorCodes, errorData.getMessage(), isTimeout);
+              _amc.onAdRequestError(
+                this.name,
+                this.adPosition,
+                this.adFinalTagUrl,
+                errorCodes,
+                errorData.getMessage(),
+                isTimeout,
+              );
             }
             errorString = `ERROR Google SDK: ${adError.getError()}`;
           } else {
@@ -1427,7 +1456,11 @@ require('../html5-common/js/utils/utils.js');
         // If we are using ad rules, we need to wait until we get the initialPlayRequested event so that we
         // are ready for ad playback.
         if (!_usingAdRules || this.initialPlayRequested) {
-          _IMAAdsManager.init(_uiContainer.clientWidth, _uiContainer.clientHeight, google.ima.ViewMode.NORMAL);
+          _IMAAdsManager.init(
+            _uiContainer.clientWidth,
+            _uiContainer.clientHeight,
+            google.ima.ViewMode.NORMAL,
+          );
         }
 
         _trySetAdManagerToReady();
@@ -1461,6 +1494,7 @@ require('../html5-common/js/utils/utils.js');
         // the ad container and make sure it's rendered, while at the same time hiding it visually.
         // We store the element's current style in order to restore it afterwards.
         _uiContainerPrevStyle = _uiContainer.getAttribute('style') || '';
+        // eslint-disable-next-line max-len
         _uiContainer.setAttribute('style', 'display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;');
         _onSizeChanged();
         _tryNotifyUnmutedPlaybackFailed();
@@ -1695,7 +1729,9 @@ require('../html5-common/js/utils/utils.js');
               _stopTimeUpdater();
               // IMA provides values which can result in negative current times or current times which are greater than duration.
               // For good user experience, we will provide the duration as the current time here if the event type is COMPLETE
-              const currentTime = adEvent.type === eventType.COMPLETE ? this.getDuration() : this.getCurrentTime();
+              const currentTime = adEvent.type === eventType.COMPLETE
+                ? this.getDuration()
+                : this.getCurrentTime();
               this.videoControllerWrapper.raiseTimeUpdate(currentTime, this.getDuration());
               this.videoControllerWrapper.raiseEndedEvent();
             }
@@ -2173,8 +2209,13 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#requiresMutedAutoplay
        * @returns {boolean} true if video must be muted to autoplay, false otherwise
        */
-      this.requiresMutedAutoplay = () => !browserCanAutoplayUnmuted && ((OO.isSafari && OO.macOsSafariVersion >= 11) || OO.isIos || OO.isAndroid
-          || (OO.isChrome && OO.chromeMajorVersion >= 66));
+      this.requiresMutedAutoplay = () => !browserCanAutoplayUnmuted
+        && (
+          (OO.isSafari && OO.macOsSafariVersion >= 11)
+          || OO.isIos
+          || OO.isAndroid
+          || (OO.isChrome && OO.chromeMajorVersion >= 66)
+        );
 
       /**
        * Checks to see if we intend for the ad to playback muted.

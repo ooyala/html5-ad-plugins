@@ -360,9 +360,26 @@ OO.Ads.manager(() => {
     /**
      * Used to keep track of what events that are tracked for vast.
      */
-    const TRACKING_EVENTS = ['creativeView', 'start', 'midpoint', 'firstQuartile', 'thirdQuartile', 'complete',
-      'mute', 'unmute', 'pause', 'rewind', 'resume', 'fullscreen', 'exitFullscreen', 'expand', 'collapse', 'acceptInvitation',
-      'close', 'skip'];
+    const TRACKING_EVENTS = [
+      'creativeView',
+      'start',
+      'midpoint',
+      'firstQuartile',
+      'thirdQuartile',
+      'complete',
+      'mute',
+      'unmute',
+      'pause',
+      'rewind',
+      'resume',
+      'fullscreen',
+      'exitFullscreen',
+      'expand',
+      'collapse',
+      'acceptInvitation',
+      'close',
+      'skip',
+    ];
 
     /**
      * Helper function to verify that XML is valid
@@ -483,6 +500,7 @@ OO.Ads.manager(() => {
      * @returns {boolean} true if the skip ad functionality is supported in the specified Vast version,
      *                    false otherwise.
      */
+    // eslint-disable-next-line max-len
     const supportsSkipAd = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.SKIP_AD);
 
     /**
@@ -548,6 +566,7 @@ OO.Ads.manager(() => {
      * @returns {boolean} true if the podded ads functionality is supported in the specified Vast version,
      *                    false otherwise
      */
+    // eslint-disable-next-line max-len
     const supportsPoddedAds = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.PODDED_ADS);
 
     /**
@@ -558,6 +577,7 @@ OO.Ads.manager(() => {
      * @returns {boolean} true if the ad fallback functionality is supported in the specified Vast version,
      *                    false otherwise
      */
+    // eslint-disable-next-line max-len
     const supportsAdFallback = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.AD_FALLBACK);
 
     /**
@@ -622,7 +642,9 @@ OO.Ads.manager(() => {
         }
 
         try {
-          currentAd.vpaidAd = this.testMode ? global.vpaid.getVPAIDAd() : vpaidIframe.contentWindow.getVPAIDAd();
+          currentAd.vpaidAd = this.testMode
+            ? global.vpaid.getVPAIDAd()
+            : vpaidIframe.contentWindow.getVPAIDAd();
         } catch (e) {
           _tryRaiseAdError(`VPAID 2.0: error while getting vpaid creative - ${e}`);
         }
@@ -694,7 +716,9 @@ OO.Ads.manager(() => {
 
       _clearVpaidTimeouts();
       vpaidAdLoadedTimeout = delay(_checkVpaidAdLoaded, this.VPAID_AD_LOADED_TIMEOUT);
-      _safeFunctionCall(currentAd.vpaidAd, 'initAd', [width, height, viewMode, desiredBitrate, creativeData, environmentVars]);
+      _safeFunctionCall(currentAd.vpaidAd, 'initAd', [
+        width, height, viewMode, desiredBitrate, creativeData, environmentVars,
+      ]);
     };
 
     const _clearVpaidTimeouts = () => {
@@ -977,8 +1001,8 @@ OO.Ads.manager(() => {
      */
     // Unary + returns 1 for true and 0 for false and null
     // To avoid this, we check to see if position is a number or a string
-    const _isValidPosition = position => (typeof position === 'string' || typeof position === 'number') && isFinite(+position)
-    ;
+    // eslint-disable-next-line max-len
+    const _isValidPosition = position => (typeof position === 'string' || typeof position === 'number') && isFinite(+position);
 
     /**
      * Called when the ad starts playback.
@@ -1600,7 +1624,9 @@ OO.Ads.manager(() => {
       if (!isEmpty(metadata.data.linear.mediaFiles)) {
         duration = OO.timeStringToSeconds(metadata.data.linear.duration);
       } else {
-        duration = metadata.data.nonLinear.duration ? OO.timeStringToSeconds(metadata.data.nonLinear.duration) : 0;
+        duration = metadata.data.nonLinear.duration
+          ? OO.timeStringToSeconds(metadata.data.nonLinear.duration)
+          : 0;
       }
 
       const ad = new this.amc.Ad({
@@ -1635,6 +1661,7 @@ OO.Ads.manager(() => {
 
       // TODO: This might need to get integrated with Doug's error handling changes.
       // I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
+      /* eslint-disable max-len */
       if (metadata.streamUrl != null
           || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
           || (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
@@ -1642,6 +1669,7 @@ OO.Ads.manager(() => {
         this.amc.appendToTimeline(timeline);
         return true;
       }
+      /* eslint-enable max-len */
 
       return false;
     };
@@ -2019,7 +2047,9 @@ OO.Ads.manager(() => {
       if (wrapperAds.nonLinear.tracking) {
         if (!ad.nonLinear.tracking) { ad.nonLinear.tracking = {}; }
         each(wrapperAds.nonLinear.tracking, (value, key) => {
-          ad.nonLinear.tracking[key] = ad.nonLinear.tracking[key] ? value.concat(ad.nonLinear.tracking[key]) : value;
+          ad.nonLinear.tracking[key] = ad.nonLinear.tracking[key]
+            ? value.concat(ad.nonLinear.tracking[key])
+            : value;
         });
       }
     };
@@ -2033,7 +2063,9 @@ OO.Ads.manager(() => {
      */
     this.checkCompanionAds = (adInfo) => {
       const { data } = adInfo;
-      const adUnitCompanions = currentAd.vpaidAd ? _safeFunctionCall(currentAd.vpaidAd, 'getAdCompanions') : null;
+      const adUnitCompanions = currentAd.vpaidAd
+        ? _safeFunctionCall(currentAd.vpaidAd, 'getAdCompanions')
+        : null;
 
       // If vast template has no companions (has precedence), check the adCompanions property from the ad Unit
       // This rules is only for VPaid, it will take data.companion otherwise anyway
@@ -2361,6 +2393,7 @@ OO.Ads.manager(() => {
       const ads = this.parseAds(vastXML, adLoaded);
       // check to see if any ads are sequenced (are podded)
       each(ads, (ad) => {
+        // eslint-disable-next-line max-len
         const sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
         const version = typeof ad.version !== 'undefined' ? ad.version : null;
         if (supportsPoddedAds(version) && sequence) {
@@ -2407,6 +2440,7 @@ OO.Ads.manager(() => {
      * @return {boolean} VPaid validated value
      */
     const _isValidVpaidCreative = (node, isLinear) => {
+      // eslint-disable-next-line max-len
       const apiFramework = (safeGetAttribute(node, 'apiFramework') || safeGetAttribute(node, 'apiframework')) === 'VPAID';
       const creativeType = isLinear
         ? safeGetAttribute(node, 'type')
@@ -2737,6 +2771,7 @@ OO.Ads.manager(() => {
      */
     const _findVMAPTrackingEvents = (adBreakElement) => {
       const trackingEventsElement = adBreakElement.querySelectorAll('vmap\\:TrackingEvents, TrackingEvents');
+      // eslint-disable-next-line max-len
       const VMAPTrackingEventsElement = find(Array.from(trackingEventsElement), trackingEventElement => (trackingEventElement.tagName.toLowerCase().indexOf('vmap:') > -1));
       return VMAPTrackingEventsElement;
     };
@@ -2813,6 +2848,7 @@ OO.Ads.manager(() => {
         }
         // case: hh:mm:ss.mmm | hh:mm:ss
         else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
+          // eslint-disable-next-line max-len
           adObject.position = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration) / 1000;
         }
         // case: [0, 100]%
@@ -2885,6 +2921,7 @@ OO.Ads.manager(() => {
 
 
       if (!mediaNode || !_isValidVpaidCreative(validNode, isLinear)) {
+        // eslint-disable-next-line max-len
         OO.log('VPaid: No valid media source, either is not a VPaid Ad or ad unit is not in javascript format.');
         return;
       }
@@ -2987,7 +3024,9 @@ OO.Ads.manager(() => {
     const _beginVpaidAd = () => {
       if (_isVpaidAd(currentAd)) {
         const ad = currentAd.vpaidAd;
-        const clickthru = currentAd.ad.data.nonLinear ? currentAd.ad.data.nonLinear.nonLinearClickThrough : '';
+        const clickthru = currentAd.ad.data.nonLinear
+          ? currentAd.ad.data.nonLinear.nonLinearClickThrough
+          : '';
         // TODO: Is this used for anything?
         const adLinear = _safeFunctionCall(ad, 'getAdLinear');
 
@@ -3251,6 +3290,7 @@ OO.Ads.manager(() => {
 
           // If a timing issue with VTC causes the VPAID ad to not load, force load and play once the ad is started
           const isLinear = _safeFunctionCall(currentAd.vpaidAd, 'getAdLinear');
+          // eslint-disable-next-line max-len
           if (isLinear && this._videoSlot && this._videoSlot.buffered && (this._videoSlot.buffered.length < 1)) {
             this._videoSlot.load();
             this._videoSlot.play();

@@ -12,10 +12,17 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    "max-len": [
+      "error", 110,
+      {
+        "ignoreComments": true,
+        "ignorePattern": "if \\(\/\\(\\w*|\\)\/",
+        "ignoreUrls": true,
+        "ignoreRegExpLiterals": true
+      }
+    ],
     "no-underscore-dangle": "warn",
     "vars-on-top": "warn",
-    // "no-var": "warn",
-    "max-len": "warn",
     "no-use-before-define": "warn",
     "consistent-return": "warn",
     "no-undef": "warn",
@@ -34,7 +41,6 @@ module.exports = {
     "no-prototype-builtins": "warn",
     "no-restricted-globals": "warn",
     "block-scoped-var": "warn",
-    // "prefer-const": "warn",
     "guard-for-in": "warn",
     "no-restricted-syntax": "warn",
     "default-case": "warn",

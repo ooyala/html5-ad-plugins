@@ -221,7 +221,9 @@ google = {
       setVpaidMode() {},
       setLocale() {},
       setDisableFlashAds() {},
-      setDisableCustomPlaybackForIOS10Plus(newValue) { google.ima.disableCustomPlaybackForIOS10Plus = newValue; },
+      setDisableCustomPlaybackForIOS10Plus(newValue) {
+        google.ima.disableCustomPlaybackForIOS10Plus = newValue;
+      },
       setNumRedirects(newValue) { google.ima.numRedirects = newValue; },
     },
     AdsManagerLoadedEvent:

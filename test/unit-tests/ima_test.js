@@ -303,6 +303,7 @@ describe('ad_manager_ima', function () {
     expect(ima.adsRequested).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('Init, Ad Rules: setup ads request notifies amc that the IMA ad manager for ad rules will control ad playback', () => {
     let notified = false;
     amc.adManagerWillControlAds = function (adManagerName) {
@@ -321,6 +322,7 @@ describe('ad_manager_ima', function () {
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.UNKNOWN_AD_REQUEST);
   });
 
+  // eslint-disable-next-line max-len
   it('Init, Ad Rules: fake ad starts and ends properly when IMA ads manager is initialized and there is no preroll', () => {
     google.ima.delayAdRequest = true;
     let endNotified = false;
@@ -446,6 +448,7 @@ describe('ad_manager_ima', function () {
       expect(ima.autoHideAdControls).to.be(false);
     });
 
+    // eslint-disable-next-line max-len
     it('Show Ad Controls Override: playerControlsOverAds = false and showAdControls = false results in no controls', () => {
       amc.pageSettings.playerControlsOverAds = false;
       const metadata = {
@@ -511,6 +514,7 @@ describe('ad_manager_ima', function () {
     expect(triggered).to.be(1);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, Ad Rules: Existing non-linear ad should be cancelled when content pause is requested', () => {
     google.ima.linearAds = false;
     amc.playAd = function (ad) {
@@ -589,6 +593,7 @@ describe('ad_manager_ima', function () {
     expect(nonLinearAdState).to.be(1);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, Non-Ad Rules: non-linear ad provides amc with its width, height, and padding requirement', () => {
     let nonLinearWidth = -1;
     let nonLinearHeight = -1;
@@ -698,6 +703,7 @@ describe('ad_manager_ima', function () {
     expect(doneControllingAdsNotified).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('IMA plugin returns control to AMC and destroys ad loader if plugin times out loading ad rules ad', () => {
     let doneControllingAdsNotified = false;
     amc.adManagerDoneControllingAds = function (adManagerName) {
@@ -714,6 +720,7 @@ describe('ad_manager_ima', function () {
     expect(doneControllingAdsNotified).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('IMA plugin ends current ad pod and destroys ad loader if plugin times out loading non-ad rules ad', () => {
     google.ima.delayAdRequest = true;
 
@@ -771,6 +778,7 @@ describe('ad_manager_ima', function () {
     expect(_.isObject(google.ima.adLoaderInstance)).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc of a forced ad playback with streams set if a preroll and instead adds preroll to timeline', () => {
     let forcedAdNotified = 0;
     let appendedToTimeline = [];
@@ -816,6 +824,7 @@ describe('ad_manager_ima', function () {
     })]);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED notifies amc of a forced ad playback with streams set if not a preroll', () => {
     let notified = false;
     initAndPlay(true, vci);
@@ -835,6 +844,7 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event: IMA CONTENT_RESUME_REQUESTED notifies amc of a forced ad playback with streams set if not a preroll', () => {
     let linearAdEndedNotified = false;
     let podEndedNotified = false;
@@ -859,6 +869,7 @@ describe('ad_manager_ima', function () {
     expect(podEndedNotified).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event, single element mode: IMA CONTENT_RESUME_REQUESTED ends the current ad pod', () => {
     let linearAdEndedNotified = 0;
     let podEndedNotified = 0;
@@ -890,6 +901,7 @@ describe('ad_manager_ima', function () {
     expect(podEndedNotified).to.be(1);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event: IMA STARTED event notifies amc to focus the ad video element and of linear ad start for a linear ad', () => {
     let adStartedNotified = false;
     let focusNotified = false;
@@ -916,6 +928,7 @@ describe('ad_manager_ima', function () {
     expect(focusNotified).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element for single video element mode', () => {
     amc.ui.useSingleVideoElement = true;
     let focusNotified = false;
@@ -1023,6 +1036,7 @@ describe('ad_manager_ima', function () {
     expect(time).to.be(testTime);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event: IMA COMPLETE event (linear ad) notifies amc of ad pod end with pod size 1', () => {
     let notified = false;
     initAndPlay(true, vci);
@@ -1075,6 +1089,7 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) notifies amc of non-linear ad end', () => {
     let raiseTimeUpdateCalled = 0;
     let notified = false;
@@ -1218,7 +1233,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1256,7 +1273,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.unmute();
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1303,7 +1322,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.unmute();
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1366,7 +1387,9 @@ describe('ad_manager_ima', function () {
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1397,7 +1420,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.play();
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1430,7 +1455,9 @@ describe('ad_manager_ima', function () {
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1445,6 +1472,7 @@ describe('ad_manager_ima', function () {
     );
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration: Video wrapper setVolume with a non-zero value does not update IMA with volume if a user click is required and we autoplayed', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -1468,6 +1496,7 @@ describe('ad_manager_ima', function () {
     expect(vol).to.be(0);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume if a user click is required and we did not autoplay', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -1491,6 +1520,7 @@ describe('ad_manager_ima', function () {
     expect(vol).to.be(TEST_VOLUME);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume if a user click is required and we captured a user click', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -1573,6 +1603,7 @@ describe('ad_manager_ima', function () {
     expect(adcInitialized).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration: Programatic video wrapper unmute does not initialize the IMA Ad Display Container', () => {
     initAndPlay(true, vci, true);
     let adcInitialized = false;
@@ -1588,6 +1619,7 @@ describe('ad_manager_ima', function () {
     expect(adcInitialized).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration: Video wrapper unmute on user click does not initialize IMA Ad Display Container if ad is playing', () => {
     initAndPlay(true, vci, true);
     let adcInitialized = false;
@@ -1662,7 +1694,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
     videoWrapper.raiseVolumeEvent();
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1698,6 +1732,7 @@ describe('ad_manager_ima', function () {
     );
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration: Video wrapper raiseDurationChange notifies controller of DURATION_CHANGE event', () => {
     expect(notifyEventName).to.be(null);
     expect(notifyParams).to.be(null);
@@ -1720,6 +1755,7 @@ describe('ad_manager_ima', function () {
   });
 
   // IMA-VTC : IMA event tests
+  // eslint-disable-next-line max-len
   it('VTC Integration, IMA Event: Video wrapper notifies of play event when we receive IMA STARTED event from a linear ad', () => {
     let playing = false;
     initAndPlay(true, {
@@ -1735,6 +1771,7 @@ describe('ad_manager_ima', function () {
     expect(playing).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration, IMA Event: Video wrapper does not notify of play event when we receive IMA STARTED event from a nonlinear overlay', () => {
     let playing = false;
     google.ima.linearAds = false;
@@ -1751,6 +1788,7 @@ describe('ad_manager_ima', function () {
     expect(playing).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration, IMA Event: Video wrapper notifies of play event when we receive IMA RESUMED event', () => {
     let playing = false;
     initAndPlay(true, {
@@ -1772,6 +1810,7 @@ describe('ad_manager_ima', function () {
     expect(playing).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration, IMA Event: Video wrapper notifies of ended event when we receive IMA COMPLETE event', () => {
     let ended = false;
     initAndPlay(true, {
@@ -1788,6 +1827,7 @@ describe('ad_manager_ima', function () {
     expect(ended).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('VTC Integration, IMA Event: Video wrapper notifies of ended event when we receive IMA SKIPPED event', () => {
     let ended = false;
     initAndPlay(true, {
@@ -1836,6 +1876,7 @@ describe('ad_manager_ima', function () {
     expect(paused).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('IMA Event: Video wrapper notifies of volume change event when we receive IMA VOLUME_CHANGED event', () => {
     let volumeChanged = false;
     let currentVolume = 0;
@@ -1858,6 +1899,7 @@ describe('ad_manager_ima', function () {
     expect(currentVolume).to.be(0.5);
   });
 
+  // eslint-disable-next-line max-len
   it('IMA Event: Video wrapper does not notify of volume change event when we receive IMA VOLUME_MUTED event', () => {
     let volumeChanged = false;
     let currentVolume = 0.5;
@@ -1880,6 +1922,7 @@ describe('ad_manager_ima', function () {
     expect(currentVolume).to.be(0.5);
   });
 
+  // eslint-disable-next-line max-len
   it('IMA Event: Video wrapper notifies of duration change event when we receive IMA DURATION_CHANGE event', () => {
     let durationChanged = false;
     let currentDuration = 0;
@@ -1948,6 +1991,7 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('SingleElement: Video wrapper only notifies of volume change event when in control of the element', () => {
     let notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, true);
     expect(notified).to.be(false);
@@ -1957,6 +2001,7 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('SingleElement: Video wrapper only notifies of duration change event when in control of the element', () => {
     let notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
     expect(notified).to.be(false);
@@ -2005,6 +2050,7 @@ describe('ad_manager_ima', function () {
     expect(ima.disableFlashAds).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('IMA plugin ignores video wrapper play and pause events before ad is ready and after ad is complete', () => {
     let resumedCount = 0; let
       pausedCount = 0;
@@ -2088,6 +2134,7 @@ describe('ad_manager_ima', function () {
     expect(resumedCount).to.be(2);
   });
 
+  // eslint-disable-next-line max-len
   it('IMA plugin ignores COMPLETE, USER_CLOSE and SKIPPED IMA events before ad is ready and after ad is complete', () => {
     let endedCount = 0;
     initAndPlay(true, {
@@ -2113,6 +2160,7 @@ describe('ad_manager_ima', function () {
     expect(endedCount).to.be(1);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad', () => {
     let called = 0;
     let adPluginName = null;
@@ -2132,6 +2180,7 @@ describe('ad_manager_ima', function () {
     expect(_.isEmpty(sdkAdEvent)).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad', () => {
     let called = 0;
     let adPluginName = null;
@@ -2154,6 +2203,7 @@ describe('ad_manager_ima', function () {
     expect(_.isEmpty(sdkAdEventData)).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for an ad rules ad', () => {
     let called = 0;
     let adPluginName = null;
@@ -2284,6 +2334,7 @@ describe('ad_manager_ima', function () {
     expect(ima.enableIosSkippableAds).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ads Manager can start after IMA initialization and automatic initial play requested if muted autoplay is not required', () => {
     ima.requiresMutedAutoplay = function () {
       return false;
@@ -2296,6 +2347,7 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adsManagerStarted).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ads Manager cannot start and wrapper raises UNMUTED_PLAYBACK_FAILED after IMA initialization and automatic initial play requested if muted autoplay is required', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -2309,6 +2361,7 @@ describe('ad_manager_ima', function () {
     expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ads Manager can start after IMA initialization and automatic initial play requested if muted autoplay is required but we capture a user click', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -2323,6 +2376,7 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adsManagerStarted).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: do not publish UNMUTED_PLAYBACK_FAILED after IMA initialization and automatic initial play requested if muted autoplay is required but we are ad rules with no preroll', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -2332,6 +2386,7 @@ describe('ad_manager_ima', function () {
     play(true);
     // default getCuePoints is returning empty, so no preroll
     ima.playAd(amc.timeline[0]);
+    // eslint-disable-next-line max-len
     expect(_.contains(notifyEventNameHistory, videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED)).to.be(false);
   });
 
@@ -2346,6 +2401,7 @@ describe('ad_manager_ima', function () {
     expect(ima.requiresMutedAutoplay()).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a muted ad if muted autoplay is required', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -2359,6 +2415,7 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(true);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is not required', () => {
     ima.requiresMutedAutoplay = function () {
       return false;
@@ -2372,6 +2429,7 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is required but we did not autoplay', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -2386,6 +2444,7 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is required but we have captured a user click', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -2400,6 +2459,7 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(false);
   });
 
+  // eslint-disable-next-line max-len
   it('Muted Autoplay: Ad plugin can play a non-muted ad on second content onwards if we have captured a user click in the first content', () => {
     ima.requiresMutedAutoplay = function () {
       return true;
@@ -2494,6 +2554,7 @@ describe('ad_manager_ima', function () {
         expect(google.ima.adsManagerInitCalled).to.be(true);
       });
 
+      // eslint-disable-next-line max-len
       it('Does not preload an ad if playAd was called prior to initial play with preloadAds set to false', () => {
         initialize(true);
         createVideoWrapper(vci);
@@ -2507,6 +2568,7 @@ describe('ad_manager_ima', function () {
         expect(google.ima.adsManagerStarted).to.be(true);
       });
 
+      // eslint-disable-next-line max-len
       it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', () => {
         amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
         initialize(true);
@@ -2553,6 +2615,7 @@ describe('ad_manager_ima', function () {
         expect(google.ima.adsManagerStarted).to.be(true);
       });
 
+      // eslint-disable-next-line max-len
       it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', () => {
         amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
         initialize(false);

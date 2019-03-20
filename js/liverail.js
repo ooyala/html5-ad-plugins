@@ -170,7 +170,9 @@ OO.Ads.manager(() => {
       const positionString = this.environmentVariables.LR_VIDEO_POSITION.replace('%', '');
       const positionPercent = parseInt(isNaN(positionString) ? 0 : positionString);
       // If postroll, use MaxValue in case the movie duration is off by milliseconds from the playhead
-      const position = (positionPercent == 100) ? Number.MAX_VALUE : positionPercent / 100 * amc.movieDuration;
+      const position = (positionPercent == 100)
+        ? Number.MAX_VALUE
+        : positionPercent / 100 * amc.movieDuration;
       return [
         new amc.Ad({
           position,

@@ -673,7 +673,9 @@
       };
 
       const _onAdTimeUpdate = (event, eventData) => {
-        const duration = eventData.duration ? eventData.duration : this.currentAd.getCoreAd().creatives[0].duration;
+        const duration = eventData.duration
+          ? eventData.duration
+          : this.currentAd.getCoreAd().creatives[0].duration;
         this.videoControllerWrapper.raiseTimeUpdate(eventData.position, duration);
       };
 
@@ -755,9 +757,13 @@
        */
       this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
         preferredRenderingMode = adManagerMetadata.pulse_rendering_mode || 'HTML5_FIRST';
-        this._pulseHost = adManagerMetadata.pulse_host || backlotBaseMetadata.pulse_host || backlotBaseMetadata.vpHost || adManagerMetadata.vpDomain;
+        this._pulseHost = adManagerMetadata.pulse_host
+          || backlotBaseMetadata.pulse_host
+          || backlotBaseMetadata.vpHost
+          || adManagerMetadata.vpDomain;
 
         if (!this._pulseHost) {
+          // eslint-disable-next-line max-len
           log('No Pulse hostname found in plugin parameters or media metadata; will not attempt to show Pulse ads');
           noPulseConfiguration = true;
           this.ready = true;
@@ -899,29 +905,39 @@
 
         this._requestSettings.vptpTicketData = adManagerMetadata.pulse_vptp_data;
 
-        this._requestSettings.maxLinearBreakDuration = parseInt(adManagerMetadata.pulse_max_linear_break_duration
-          || backlotBaseMetadata.pulse_max_linear_break_duration);
+        this._requestSettings.maxLinearBreakDuration = parseInt(
+          adManagerMetadata.pulse_max_linear_break_duration
+          || backlotBaseMetadata.pulse_max_linear_break_duration,
+        );
 
         if (isNaN(this._requestSettings.maxLinearBreakDuration)) {
           this._requestSettings.maxLinearBreakDuration = null;
         }
 
-        this._requestSettings.linearPlaybackPositions = safeMap(safeSplit(getByPriority(adManagerMetadata.pulse_linear_cuepoints,
+        this._requestSettings.linearPlaybackPositions = safeMap(safeSplit(getByPriority(
+          adManagerMetadata.pulse_linear_cuepoints,
           backlotBaseMetadata.pulse_linear_cuepoints,
           backlotBaseMetadata.cuepoints,
-          adManagerMetadata.playerLevelCuePoints), ','), Number);
+          adManagerMetadata.playerLevelCuePoints,
+        ), ','), Number);
 
-        this._requestSettings.nonlinearPlaybackPositions = safeMap(safeSplit(getByPriority(adManagerMetadata.pulse_non_linear_cuepoints,
+        this._requestSettings.nonlinearPlaybackPositions = safeMap(safeSplit(getByPriority(
+          adManagerMetadata.pulse_non_linear_cuepoints,
           backlotBaseMetadata.pulse_non_linear_cuepoints,
-          adManagerMetadata.nonLinearAdBreaks), ','), Number);
+          adManagerMetadata.nonLinearAdBreaks,
+        ), ','), Number);
 
         if (adManagerMetadata.all_ads) {
-          this._requestSettings.insertionPointFilter = safeSplit(getByPriority(adManagerMetadata.pulse_insertion_point_filter
+          this._requestSettings.insertionPointFilter = safeSplit(getByPriority(
+            adManagerMetadata.pulse_insertion_point_filter
             || backlotBaseMetadata.pulse_insertion_point_filter
-            || getInsertionPointTypeFromAdPosition(adManagerMetadata.all_ads[0].position)), ',');
+            || getInsertionPointTypeFromAdPosition(adManagerMetadata.all_ads[0].position),
+          ), ',');
         } else {
-          this._requestSettings.insertionPointFilter = safeSplit(getByPriority(adManagerMetadata.pulse_insertion_point_filter,
-            backlotBaseMetadata.pulse_insertion_point_filter), ',');
+          this._requestSettings.insertionPointFilter = safeSplit(getByPriority(
+            adManagerMetadata.pulse_insertion_point_filter,
+            backlotBaseMetadata.pulse_insertion_point_filter,
+          ), ',');
         }
         // If pulse_override_metadata is true, the integration metadata will be given priority over the backlot ad set and custom metadata
         if (adManagerMetadata.pulse_override_metadata) {
@@ -1072,16 +1088,21 @@
 
         if (this.ui && adModuleState === AD_MODULE_STATE.READY) {
           if (!adPlayer) {
-            const renderingMode = flashVersion >= 11 ? OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_FIRST : OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_ONLY;
+            const renderingMode = flashVersion >= 11
+              ? OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_FIRST
+              : OO.Pulse.AdPlayer.Settings.RenderingMode.HTML5_ONLY;
             OO.Pulse.debug = enableDebugMode || OO.Pulse.debug;
             OO.Pulse.setPulseHost(this._pulseHost, this._deviceContainer, this._persistentId);
-            adPlayer = OO.Pulse.createAdPlayer(amc.ui.playerSkinPluginsElement ? amc.ui.playerSkinPluginsElement[0] : amc.ui.pluginsElement[0],
-              {
-                VPAIDViewMode: OO.Pulse.AdPlayer.Settings.VPAIDViewMode.NORMAL,
-                renderingMode: preferredRenderingMode || renderingMode,
-              }, this.sharedVideoElement);
+            adPlayer = OO.Pulse.createAdPlayer(amc.ui.playerSkinPluginsElement
+              ? amc.ui.playerSkinPluginsElement[0]
+              : amc.ui.pluginsElement[0],
+            {
+              VPAIDViewMode: OO.Pulse.AdPlayer.Settings.VPAIDViewMode.NORMAL,
+              renderingMode: preferredRenderingMode || renderingMode,
+            }, this.sharedVideoElement);
 
             // We register all the event listeners we will need
+            /* eslint-disable max-len */
             adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_FINISHED, _onAdBreakFinished);
             adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_BREAK_STARTED, _onAdBreakStarted);
             adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.LINEAR_AD_FINISHED, _onAdFinished);
@@ -1096,6 +1117,7 @@
             adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.OVERLAY_AD_SHOWN, _onOverlayShown);
             adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_VOLUME_CHANGED, _onAdVolumeChanged);
             adPlayer.addEventListener(OO.Pulse.AdPlayer.Events.AD_PLAY_PROMISE_REJECTED, _onAdPlayPromiseRejected);
+            /* eslint-enable max-len */
 
             if (pluginCallbacks && pluginCallbacks.onAdPlayerCreated) {
               pluginCallbacks.onAdPlayerCreated(adPlayer);

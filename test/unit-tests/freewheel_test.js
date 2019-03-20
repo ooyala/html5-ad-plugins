@@ -226,6 +226,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAssetNetwork');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs video embedcode', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -249,6 +250,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAsset');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is not provided', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -275,6 +277,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs pagelevel embedCode vs video embedcode', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -300,6 +303,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAsset');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is false', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -328,6 +332,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: ad manager can set video asset id to external id in loadMetadata function when use_external_id is true', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -356,6 +361,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myExternalId');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is true but there is no external id', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -382,6 +388,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: ad manager can set video asset id to external id with a filter in loadMetadata function when use_external_id is true', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -411,6 +418,7 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myExternalId');
   });
 
+  // eslint-disable-next-line max-len
   it('Init: ad manager can set video asset id to external id with a non-applicable filter in loadMetadata function when use_external_id is true', () => {
     fw.initialize(amc);
     fw.registerUi();
@@ -498,7 +506,9 @@ describe('ad_manager_freewheel', function () {
       play();
       fw.playAd(amc.timeline[0]);
       expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].value).to.be(1005);
-      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(
+        tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE,
+      );
     });
 
     it('bitrateOverride valid int', () => {
@@ -516,7 +526,9 @@ describe('ad_manager_freewheel', function () {
       play();
       fw.playAd(amc.timeline[0]);
       expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].value).to.be(1005);
-      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(
+        tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE,
+      );
     });
 
     it('bitrateOverride not specified', () => {
@@ -719,6 +731,7 @@ describe('ad_manager_freewheel', function () {
     expect(podStartedCount).to.be(2);
   });
 
+  // eslint-disable-next-line max-len
   it('Ad Clickthrough: AMC\'s adsClickthroughOpened() should be called when FW\'s ads click event occurs', () => {
     amc.adsClickthroughOpened = function () {
       adsClickthroughOpenedCalled += 1;

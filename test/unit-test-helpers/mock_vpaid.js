@@ -168,7 +168,11 @@ global.vpaidAd = {
       ],
       type: 'linearVideo',
       version: '2.0',
-      videoClickTracking: { clickTracking: 'clickTracking', clickThrough: 'clickThrough', customClick: 'customClick' },
+      videoClickTracking: {
+        clickTracking: 'clickTracking',
+        clickThrough: 'clickThrough',
+        customClick: 'customClick',
+      },
     },
     fallbackAd: null,
     positionSeconds: 0,
