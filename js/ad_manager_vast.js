@@ -500,8 +500,10 @@ OO.Ads.manager(() => {
      * @returns {boolean} true if the skip ad functionality is supported in the specified Vast version,
      *                    false otherwise.
      */
-    // eslint-disable-next-line max-len
-    const supportsSkipAd = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.SKIP_AD);
+    const supportsSkipAd = version => contains(
+      SUPPORTED_FEATURES[getMajorVersion(version)],
+      FEATURES.SKIP_AD,
+    );
 
     /**
      * Helper function to grab error information. vastAdSingleParser already grabs error data while
@@ -566,8 +568,10 @@ OO.Ads.manager(() => {
      * @returns {boolean} true if the podded ads functionality is supported in the specified Vast version,
      *                    false otherwise
      */
-    // eslint-disable-next-line max-len
-    const supportsPoddedAds = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.PODDED_ADS);
+    const supportsPoddedAds = version => contains(
+      SUPPORTED_FEATURES[getMajorVersion(version)],
+      FEATURES.PODDED_ADS,
+    );
 
     /**
      * Checks to see if the given Vast version supports the ad fallback functionality, as per Vast specs
@@ -2393,8 +2397,9 @@ OO.Ads.manager(() => {
       const ads = this.parseAds(vastXML, adLoaded);
       // check to see if any ads are sequenced (are podded)
       each(ads, (ad) => {
-        // eslint-disable-next-line max-len
-        const sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence)) ? ad.sequence : null;
+        const sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence))
+          ? ad.sequence
+          : null;
         const version = typeof ad.version !== 'undefined' ? ad.version : null;
         if (supportsPoddedAds(version) && sequence) {
           // Assume sequences will start from 1
@@ -2771,8 +2776,9 @@ OO.Ads.manager(() => {
      */
     const _findVMAPTrackingEvents = (adBreakElement) => {
       const trackingEventsElement = adBreakElement.querySelectorAll('vmap\\:TrackingEvents, TrackingEvents');
-      // eslint-disable-next-line max-len
-      const VMAPTrackingEventsElement = find(Array.from(trackingEventsElement), trackingEventElement => (trackingEventElement.tagName.toLowerCase().indexOf('vmap:') > -1));
+      const VMAPTrackingEventsElement = find(Array.from(trackingEventsElement), trackingEventElement => (
+        trackingEventElement.tagName.toLowerCase().indexOf('vmap:') > -1
+      ));
       return VMAPTrackingEventsElement;
     };
 

@@ -48,7 +48,6 @@ module.exports = {
     "no-unreachable": "warn",
     "semi-style": "warn",
     "no-mixed-spaces-and-tabs": "warn",
-    "no-tabs": "warn",
     "eqeqeq": "warn",
     "no-continue": "warn",
     "brace-style": "warn",

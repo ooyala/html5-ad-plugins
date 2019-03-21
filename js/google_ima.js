@@ -1494,8 +1494,10 @@ require('../html5-common/js/utils/utils.js');
         // the ad container and make sure it's rendered, while at the same time hiding it visually.
         // We store the element's current style in order to restore it afterwards.
         _uiContainerPrevStyle = _uiContainer.getAttribute('style') || '';
-        // eslint-disable-next-line max-len
-        _uiContainer.setAttribute('style', 'display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;');
+        _uiContainer.setAttribute(
+          'style',
+          'display: block; width: 100%; height: 100%; visibility: hidden; pointer-events: none;',
+        );
         _onSizeChanged();
         _tryNotifyUnmutedPlaybackFailed();
       };

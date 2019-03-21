@@ -181,7 +181,7 @@ OO.Ads.manager(() => {
         // log message if parameter does not conform to any of the above values
         else {
           OO.log(`${'Ooyala Pulse: page level parameter: "cacheBuster" expected value: "true"'
-                 + ' or "false", but value received was: '}${adManagerMetadata.cacheBuster}`);
+          + ' or "false", but value received was: '}${adManagerMetadata.cacheBuster}`);
         }
       }
     };
@@ -197,11 +197,11 @@ OO.Ads.manager(() => {
      * @returns {OO.OoyalaSsaiController#Ad[]} timeline A list of the ads to play for the current video
      */
     this.buildTimeline = // Video restrictions can be provided at the ad level. If provided, the player will
-// attempt to create a video element that supports the given video restrictions.
-// If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
-// If the element is not created due to lack of support from the available video plugins,
-// the ad will be skipped
-() => null
+      // attempt to create a video element that supports the given video restrictions.
+      // If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
+      // If the element is not created due to lack of support from the available video plugins,
+      // the ad will be skipped
+      () => null
     ;
 
     /**
@@ -293,16 +293,18 @@ OO.Ads.manager(() => {
     };
 
     /**
-    *
-    *
-    */
+     *
+     *
+     */
     const _getAdDuration = (id3Object) => {
       let duration = 0;
       // If not start id3 tag from ad, we recalculate ad duration.
       if (id3Object.time != 0) {
         const adOffset = id3Object.time * id3Object.duration / 100;
         duration = id3Object.duration - adOffset;
-      } else { duration = id3Object.duration; }
+      } else {
+        duration = id3Object.duration;
+      }
       return duration * 1000;
     };
 
@@ -457,9 +459,9 @@ OO.Ads.manager(() => {
     this.onMetadataError = (url, error) => {
       OO.log(`SSAI Metadata Request: Error${JSON.stringify(error)}`);
       if (error !== null) {
-      	const code = error.status;
-      	const message = error.responseText;
-      	amc.raiseApiError(code, message, url);
+        const code = error.status;
+        const message = error.responseText;
+        amc.raiseApiError(code, message, url);
       }
     };
 
@@ -591,28 +593,28 @@ OO.Ads.manager(() => {
      */
     const _parseUrl = (url) => {
       if (typeof url !== 'string') {
-      	return;
+        return;
       }
       const urlParts = url.split('?');
       if (urlParts === null) {
-      	return;
+        return;
       }
       const queryParamString = urlParts[1];
       const mainUrl = urlParts[0];
       const mainUrlParts = mainUrl.split('/');
       if (mainUrlParts !== null) {
-      	this.domainName = mainUrlParts[2];
-      	this.currentEmbed = mainUrlParts[4];
+        this.domainName = mainUrlParts[2];
+        this.currentEmbed = mainUrlParts[4];
       }
       const queryParams = queryParamString.split('&');
       if (queryParams === null) {
-      	return;
+        return;
       }
       for (let index = 0; index < queryParams.length; index++) {
         const paramParts = queryParams[index].split('=');
         if (paramParts === null) {
-	      continue;
-	    }
+          continue;
+        }
         if (paramParts[0] === 'ssai_guid') {
           this.ssaiGuid = paramParts[1];
           return;
@@ -638,23 +640,23 @@ OO.Ads.manager(() => {
     };
 
     /**
-    * Checks if current ID3 tag is the last one for an ad, value is
-    * represented in percentage, being 100 the completed time.
-    * @private
-    * @method OoyalaSsai#isId3ContainsCompletedTime
-    * @param  {float} id3ObjectTime  Time value from currentId3Object
-    * @returns {boolean}  True if ID3 tag time is 100
-    */
+     * Checks if current ID3 tag is the last one for an ad, value is
+     * represented in percentage, being 100 the completed time.
+     * @private
+     * @method OoyalaSsai#isId3ContainsCompletedTime
+     * @param  {float} id3ObjectTime  Time value from currentId3Object
+     * @returns {boolean}  True if ID3 tag time is 100
+     */
     const isId3ContainsCompletedTime = id3ObjectTime => id3ObjectTime === 100;
 
     /**
-    * Checks if current ID3 tag is the first one for an ad, value is
-    * represented in percentage, being 0 the start time.
-    * @private
-    * @method OoyalaSsai#isId3ContainsStartedTime
-    * @param  {float} id3ObjectTime  Time value from currentId3Object
-    * @returns {boolean}  True if ID3 tag time is 0
-    */
+     * Checks if current ID3 tag is the first one for an ad, value is
+     * represented in percentage, being 0 the start time.
+     * @private
+     * @method OoyalaSsai#isId3ContainsStartedTime
+     * @param  {float} id3ObjectTime  Time value from currentId3Object
+     * @returns {boolean}  True if ID3 tag time is 0
+     */
     const isId3ContainsStartedTime = id3ObjectTime => id3ObjectTime === 0;
 
     /**
@@ -801,7 +803,7 @@ OO.Ads.manager(() => {
           const id3String = id3Object.TXXX;
           parsedId3Object = _parseId3String(id3String);
         } else {
-          OO.log("Ooyala SSAI: Expected ID3 Metadata Object to have a 'TXXX' property");
+          OO.log('Ooyala SSAI: Expected ID3 Metadata Object to have a \'TXXX\' property');
         }
       }
       return parsedId3Object;
@@ -849,8 +851,8 @@ OO.Ads.manager(() => {
     const _getLinearClickThroughUrl = (adObject) => {
       let linearClickThroughUrl = null;
       if (adObject
-          && adObject.linear
-          && adObject.linear.clickThrough) {
+        && adObject.linear
+        && adObject.linear.clickThrough) {
         linearClickThroughUrl = adObject.linear.clickThrough;
       }
       return linearClickThroughUrl;
@@ -920,8 +922,8 @@ OO.Ads.manager(() => {
     const _getDuration = (vastAdData) => {
       let duration = null;
       if (vastAdData
-          && vastAdData.linear
-          && vastAdData.linear.duration) {
+        && vastAdData.linear
+        && vastAdData.linear.duration) {
         duration = vastAdData.linear.duration;
       }
       return duration;
@@ -1197,13 +1199,14 @@ OO.Ads.manager(() => {
             duration = (ad.duration * 1000) - (pauseTime - startTime);
           }
 
-          if (duration < 0) { duration = ad.duration * 1000; }
+          if (duration < 0) {
+            duration = ad.duration * 1000;
+          }
 
           // Setting the ad callback again since ad was resumed
           this.adIdDictionary[ad.ad.data.id].adTimer = delay(
             _adEndedCallback(null, ad.ad.data.id),
             duration,
-
           );
         }
       }
@@ -1270,7 +1273,6 @@ OO.Ads.manager(() => {
           this.adIdDictionary[currentId3Object.adId].adTimer = delay(
             _adEndedCallback(null, currentId3Object.adId),
             _getAdDuration(currentId3Object),
-
           );
           _notifyAmcToPlayAd(currentId3Object, this.adIdDictionary[currentId3Object.adId].vastData);
         }

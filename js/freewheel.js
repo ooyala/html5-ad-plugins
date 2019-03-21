@@ -529,8 +529,11 @@ OO.Ads.manager(() => {
           indexInPod = 0;
           if (ad.isLinear) {
             _registerDisplayForLinearAd();
-            // eslint-disable-next-line max-len
-            fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+            fwContext.setParameter(
+              tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION,
+              false,
+              tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+            );
             slotStartedCallbacks[ad.ad.getCustomId()] = () => {
               amc.focusAdVideo();
             };
@@ -561,8 +564,11 @@ OO.Ads.manager(() => {
             }
           } else {
             _registerDisplayForNonlinearAd();
-            // eslint-disable-next-line max-len
-            fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+            fwContext.setParameter(
+              tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION,
+              true,
+              tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+            );
             adStartedCallbacks[ad.ad.getCustomId()] = (details) => {
               // provide width and height values if available. Alice will use these to resize
               // the skin plugins div when a non linear overlay is on screen

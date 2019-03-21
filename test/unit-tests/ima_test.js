@@ -2386,8 +2386,10 @@ describe('ad_manager_ima', function () {
     play(true);
     // default getCuePoints is returning empty, so no preroll
     ima.playAd(amc.timeline[0]);
-    // eslint-disable-next-line max-len
-    expect(_.contains(notifyEventNameHistory, videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED)).to.be(false);
+    expect(_.contains(
+      notifyEventNameHistory,
+      videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED,
+    )).to.be(false);
   });
 
   it('Muted Autoplay: VTC can notify IMA that muted autoplay is not required', () => {
