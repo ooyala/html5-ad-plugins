@@ -38,7 +38,7 @@ const checkFileExtension = function (extension, fileName) {
     return false;
   }
 
-  return (fileName.lastIndexOf(extension) == fileName.length - extension.length);
+  return (fileName.lastIndexOf(extension) === fileName.length - extension.length);
 };
 
 const getFileNameFromPath = function (path) {

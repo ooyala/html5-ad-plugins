@@ -309,7 +309,7 @@ OO.Ads.manager(() => {
         // NOTE: If we set renderer.html.coadScriptName we can probably render overlays on our own
         //       (coad stands for customer owned ad renderer)
         let controlHeight = amc.ui.rootElement.find('.controlBar');
-        controlHeight = (controlHeight.length == 0)
+        controlHeight = (controlHeight.length === 0)
           ? 60
           : controlHeight.height() + OO.CONSTANTS.CONTROLS_BOTTOM_PADDING;
         fwContext.setParameter(
@@ -543,7 +543,7 @@ OO.Ads.manager(() => {
     this.playAd = (ad) => {
       _resetAdState();
       try {
-        if (ad.adType == amc.ADTYPE.AD_REQUEST) {
+        if (ad.adType === amc.ADTYPE.AD_REQUEST) {
           if (shouldRequestAds) {
             // Trigger the request for the list of ads;
             indexInPod = 0;
@@ -589,7 +589,7 @@ OO.Ads.manager(() => {
             };
             // Freewheel has a limitation where it is not possible to skip a single ad in a pod.
             // Until this is resolved, we will only show the skip button for ad pods of size 1.
-            if (currentPlayingSlot.getAdCount() == 1) {
+            if (currentPlayingSlot.getAdCount() === 1) {
               amc.showSkipVideoAdButton(true);
             } else {
               amc.showSkipVideoAdButton(false);
@@ -701,7 +701,7 @@ OO.Ads.manager(() => {
       }
 
       // Reset the ad manager ui registration after playing a nonlinear ad
-      if (timePosition == tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
+      if (timePosition === tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
         _registerDisplayForLinearAd();
       }
 
@@ -1054,7 +1054,7 @@ OO.Ads.manager(() => {
       }
 
       if (currentPlayingSlot
-          && currentPlayingSlot.getTimePositionClass() == tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
+          && currentPlayingSlot.getTimePositionClass() === tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
         _registerDisplayForLinearAd();
       }
 

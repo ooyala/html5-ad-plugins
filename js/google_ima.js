@@ -218,7 +218,7 @@ require('../html5-common/js/utils/utils.js');
         this.allAdInfo = metadata.all_ads;
 
         // Check if any ad is ad rules type.  if one is then we change to only using ad rules.
-        const usesAdRulesCheck = ad => ad.position_type == AD_RULES_POSITION_TYPE;
+        const usesAdRulesCheck = ad => ad.position_type === AD_RULES_POSITION_TYPE;
         const adRulesAd = find(metadata.all_ads, usesAdRulesCheck);
         _usingAdRules = !!adRulesAd;
         this.adRulesLoadError = false;
@@ -394,7 +394,7 @@ require('../html5-common/js/utils/utils.js');
             for (let i = 0; i < validAdTags.length; i++) {
               const ad = validAdTags[i];
               // double check it's not an ad rules ad before trying to add it to the timeline
-              if (ad.position_type != AD_RULES_POSITION_TYPE) {
+              if (ad.position_type !== AD_RULES_POSITION_TYPE) {
                 streams = {};
                 streams[OO.VIDEO.ENCODING.IMA] = '';
                 const adData = {
@@ -464,8 +464,8 @@ require('../html5-common/js/utils/utils.js');
         }
 
         const url = ad.tag_url;
-        const isAdRulesAd = (ad.position_type == AD_RULES_POSITION_TYPE);
-        const isSameAdType = (_usingAdRules == isAdRulesAd);
+        const isAdRulesAd = (ad.position_type === AD_RULES_POSITION_TYPE);
+        const isSameAdType = (_usingAdRules === isAdRulesAd);
 
         return isSameAdType && url && typeof url === 'string';
       };
@@ -522,7 +522,7 @@ require('../html5-common/js/utils/utils.js');
           IMAiframe.style.zIndex = this.imaIframeZIndex;
         }
 
-        if (_usingAdRules && this.currentAMCAdPod.adType == _amc.ADTYPE.UNKNOWN_AD_REQUEST) {
+        if (_usingAdRules && this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST) {
           if (adRequestOnly) {
             this.canSetupAdsRequest = true;
             _trySetupAdsRequest();
@@ -538,7 +538,7 @@ require('../html5-common/js/utils/utils.js');
 
         if (_usingAdRules && this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY) {
           _tryStartAd();
-        } else if (this.currentAMCAdPod.ad.forced_ad_type != _amc.ADTYPE.NONLINEAR_OVERLAY) {
+        } else if (this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY) {
           // if we are trying to play an linear ad then we need to request the ad now.
           // reset adRequested and adTagUrl so we can request another ad
           _resetAdsState();
@@ -586,7 +586,7 @@ require('../html5-common/js/utils/utils.js');
        * @param {object} ad The ad to cancel
        */
       this.cancelAd = (ad) => {
-        if (ad && this.currentAMCAdPod && ad.id != this.currentAMCAdPod.id) {
+        if (ad && this.currentAMCAdPod && ad.id !== this.currentAMCAdPod.id) {
           _throwError('AMC canceling ad that is not the current one playing.');
         }
         OO.log('GOOGLE IMA: ad got canceled by AMC');
@@ -882,7 +882,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_onContentCompleted
        */
       const _onContentCompleted = () => {
-        if (this.contentEnded == false) {
+        if (this.contentEnded === false) {
           this.contentEnded = true;
           if (_IMAAdsLoader) {
             _IMAAdsLoader.contentComplete();
@@ -1311,7 +1311,7 @@ require('../html5-common/js/utils/utils.js');
               default:
                 break;
             }
-            if (errorCodes.errorCode == imaErrorCodes.VIDEO_PLAY_ERROR) {
+            if (errorCodes.errorCode === imaErrorCodes.VIDEO_PLAY_ERROR) {
               isPlaybackError = true;
             }
 
@@ -1821,7 +1821,7 @@ require('../html5-common/js/utils/utils.js');
               const adPodIndex = adPodInfo.getPodIndex();
 
               // If ad is not part of preroll.
-              if (adPodIndex != 0) {
+              if (adPodIndex !== 0) {
                 this.adResponseTime = new Date().valueOf();
               }
             }
@@ -2046,7 +2046,7 @@ require('../html5-common/js/utils/utils.js');
           adProperties.skippable = this.currentIMAAd.isSkippable();
         }
 
-        if (adProperties.indexInPod == 1) {
+        if (adProperties.indexInPod === 1) {
           _amc.notifyPodStarted(adId, totalAdsInPod);
         }
 
@@ -2164,7 +2164,7 @@ require('../html5-common/js/utils/utils.js');
               // Wait until we receive content resume event from IMA before we end ad pod for
               // single video element mode. This is to workaround an issue where the video controller
               // and IMA are out of sync if we end ad pod too early for single video element mode
-              if ((!_amc.ui.useSingleVideoElement && adPos == totalAds) || forceEndAdPod) {
+              if ((!_amc.ui.useSingleVideoElement && adPos === totalAds) || forceEndAdPod) {
                 _endCurrentAdPod(true);
               }
             } else {

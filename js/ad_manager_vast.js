@@ -1023,7 +1023,7 @@ OO.Ads.manager(() => {
           const ad = generateAd(metadata);
 
           if (metadata.streamUrl != null
-            || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
+            || (ad.adType === this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
             || _isVpaidAd(currentAd)) {
             nextAd = ad;
           }
@@ -1666,7 +1666,7 @@ OO.Ads.manager(() => {
       // TODO: This might need to get integrated with Doug's error handling changes.
       // I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
       if (metadata.streamUrl != null
-        || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
+        || (ad.adType === this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
         || (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY
           && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
         timeline.push(ad);
@@ -2840,8 +2840,8 @@ OO.Ads.manager(() => {
       if (adBreak.adSource && adBreak.adSource.allowMultipleAds) {
         // parse the attribute, and convert string to boolean if it is "true"/"false"
         const { allowMultipleAds } = adBreak.adSource;
-        if (allowMultipleAds == 'true' || allowMultipleAds == 'false') {
-          adObject.allowMultipleAds = (allowMultipleAds == 'true');
+        if (allowMultipleAds === 'true' || allowMultipleAds === 'false') {
+          adObject.allowMultipleAds = (allowMultipleAds === 'true');
         }
       }
       if (adBreak.repeatAfter) {
@@ -3197,7 +3197,7 @@ OO.Ads.manager(() => {
         const { tracking } = ad.data;
         let currentEvent;
         if (tracking) {
-          currentEvent = find(tracking, (item, index) => item.event == type);
+          currentEvent = find(tracking, (item, index) => item.event === type);
 
           if (currentEvent && currentEvent.url) {
             OO.pixelPing(currentEvent.url);

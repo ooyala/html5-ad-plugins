@@ -46,7 +46,7 @@
 
     onVolumeChanged(event, volume) {
       if (this.currentVastAd == null) { return; }
-      const isMuted = (volume == 0);
+      const isMuted = (volume === 0);
       this._vastTrackings((isMuted && !this.isMuted) ? 'mute' : 'unmute');
       this.isMuted = isMuted;
     },
@@ -92,7 +92,7 @@
     },
 
     onPlayheadTimeChanged(event, time, duration) {
-      if (this.currentVastAd == null || duration == 0) { return; }
+      if (this.currentVastAd == null || duration === 0) { return; }
       // send percentile pings.
       if (time > duration * 0.75) {
         this._vastTrackings('thirdQuartile');
@@ -104,12 +104,12 @@
     },
 
     _itemStartPlay(item) {
-      if (!item || item.type != 'ad' || !item.item) { return; }
+      if (!item || item.type !== 'ad' || !item.item) { return; }
       this.currentVastAd = item.item;
       // ping urls, this will make sure Ooyala tracking_url is also pinged.
       OO.pixelPings(this.currentVastAd.tracking_url);
 
-      if (item.item.type != 'vast') { return; }
+      if (item.item.type !== 'vast') { return; }
       if (this.currentVastAd.data) {
         this.pingedKey = {};
         OO.pixelPings(this.currentVastAd.data.impression);
@@ -136,7 +136,7 @@
 
     _vastTrackings(key) {
       // make sure we only send each ping once for each vast ads.
-      if (this.pingedKey[key] == 1) { return; }
+      if (this.pingedKey[key] === 1) { return; }
       this.pingedKey[key] = 1;
       if (this.currentVastAd && this.currentVastAd.data && this.currentVastAd.data.tracking) {
         OO.pixelPings(this.currentVastAd.data.tracking[key]);

@@ -45,7 +45,6 @@ module.exports = {
     "no-restricted-syntax": "warn",
     "prefer-rest-params": "warn",
     "no-unreachable": "warn",
-    "eqeqeq": "warn",
     "no-continue": "warn",
     "no-unused-expressions": "warn",
     "prefer-spread": "warn",

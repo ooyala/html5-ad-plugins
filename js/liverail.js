@@ -144,7 +144,7 @@ OO.Ads.manager(() => {
         // Ad tag url parameters override all
         if (typeof pageAndBacklotMetadata.tagUrl === 'string') {
           // If the parameter is a real URL, decode it
-          const requiresDecode = (pageAndBacklotMetadata.tagUrl.indexOf('http') == 0);
+          const requiresDecode = (pageAndBacklotMetadata.tagUrl.indexOf('http') === 0);
           tags = pageAndBacklotMetadata.tagUrl.split('&');
           for (i = 0; i < tags.length; i++) {
             pair = tags[i].split('=');
@@ -170,7 +170,7 @@ OO.Ads.manager(() => {
       const positionString = this.environmentVariables.LR_VIDEO_POSITION.replace('%', '');
       const positionPercent = parseInt(isNaN(positionString) ? 0 : positionString);
       // If postroll, use MaxValue in case the movie duration is off by milliseconds from the playhead
-      const position = (positionPercent == 100)
+      const position = (positionPercent === 100)
         ? Number.MAX_VALUE
         : positionPercent / 100 * amc.movieDuration;
       return [
@@ -222,7 +222,7 @@ OO.Ads.manager(() => {
       // On iOS and Android devices, playback will not start if LiveRail dispatches an ad error event. The
       // device will assume the video play event is not user-initiated. This tricks the device into thinking
       // the video element is already playing (will not work for pre-5.0 iOS devices)
-      if (ad.position == 0) {
+      if (ad.position === 0) {
         amc.ui.ooyalaVideoElement[0].load();
       }
 

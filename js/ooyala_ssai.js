@@ -296,7 +296,7 @@ OO.Ads.manager(() => {
     const _getAdDuration = (id3Object) => {
       let duration = 0;
       // If not start id3 tag from ad, we recalculate ad duration.
-      if (id3Object.time != 0) {
+      if (id3Object.time !== 0) {
         const adOffset = id3Object.time * id3Object.duration / 100;
         duration = id3Object.duration - adOffset;
       } else {
@@ -364,7 +364,7 @@ OO.Ads.manager(() => {
         ssaiAd = _configureSsaiObject(adObject);
         _setVastDataToDictionary(id3Object, adObject);
         // If not start id3 tag from ad, we recalculate ad duration.
-        if (id3Object.time != 0) {
+        if (id3Object.time !== 0) {
           const adOffset = id3Object.time * id3Object.duration / 100;
           id3Object.duration -= adOffset;
         }
