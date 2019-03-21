@@ -3289,7 +3289,7 @@ OO.Ads.manager(() => {
           this._videoSlot.style.zIndex = 10001;
           break;
 
-        case VPAID_EVENTS.AD_STARTED:
+        case VPAID_EVENTS.AD_STARTED: {
           vpaidAdStarted = true;
           _onSizeChanged();
           prevAd = currentAd || null;
@@ -3303,12 +3303,13 @@ OO.Ads.manager(() => {
             this._videoSlot.play();
           }
           break;
+        }
 
         case VPAID_EVENTS.AD_IMPRESSION:
           this.sendVpaidImpressions();
           break;
 
-        case VPAID_EVENTS.AD_CLICK_THRU:
+        case VPAID_EVENTS.AD_CLICK_THRU: {
           const url = arguments[1];
           const playerHandles = arguments[3];
           // Refer to IAB 2.5.4 How to handle VPAID clicks in VAST context
@@ -3321,6 +3322,7 @@ OO.Ads.manager(() => {
           }
           this.sendVpaidClickTracking();
           break;
+        }
 
         case VPAID_EVENTS.AD_VIDEO_START:
           this.sendVpaidTracking('start');
@@ -3361,12 +3363,13 @@ OO.Ads.manager(() => {
           failedAd();
           break;
 
-        case VPAID_EVENTS.AD_DURATION_CHANGE:
+        case VPAID_EVENTS.AD_DURATION_CHANGE: {
           const remainingTime = _safeFunctionCall(currentAd.vpaidAd, 'getAdRemainingTime');
           if (remainingTime <= 0) {
             _stopVpaidAd();
           }
           break;
+        }
 
         case VPAID_EVENTS.AD_SKIPPED:
           this.sendVpaidTracking('skip');
@@ -3375,12 +3378,13 @@ OO.Ads.manager(() => {
           }
           break;
 
-        case VPAID_EVENTS.AD_SKIPPABLE_STATE_CHANGE:
+        case VPAID_EVENTS.AD_SKIPPABLE_STATE_CHANGE: {
           const skipState = _safeFunctionCall(currentAd.vpaidAd, 'getAdSkippableState');
           this.amc.showSkipVideoAdButton(skipState, '0');
           break;
+        }
 
-        case VPAID_EVENTS.AD_LINEAR_CHANGE:
+        case VPAID_EVENTS.AD_LINEAR_CHANGE: {
           const adLinear = _safeFunctionCall(currentAd.vpaidAd, 'getAdLinear');
           transitionFromNonLinearVideo = true;
           if (adLinear) {
@@ -3388,8 +3392,9 @@ OO.Ads.manager(() => {
             this.amc.ui.transitionToAd();
           }
           break;
+        }
 
-        case VPAID_EVENTS.AD_VOLUME_CHANGE:
+        case VPAID_EVENTS.AD_VOLUME_CHANGE: {
           const volume = _safeFunctionCall(currentAd.vpaidAd, 'getAdVolume');
           if (volume) {
             this.sendVpaidTracking('unmute');
@@ -3397,6 +3402,7 @@ OO.Ads.manager(() => {
             this.sendVpaidTracking('mute');
           }
           break;
+        }
 
         case VPAID_EVENTS.AD_USER_ACCEPT_INVITATION:
           this.sendVpaidTracking('acceptInvitation');

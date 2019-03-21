@@ -50,6 +50,5 @@ module.exports = {
     "prefer-spread": "warn",
     "no-mixed-operators": "warn",
     "no-loop-func": "warn",
-    "no-case-declarations": "warn",
   },
 };

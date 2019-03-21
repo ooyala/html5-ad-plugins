@@ -1708,7 +1708,7 @@ require('../html5-common/js/utils/utils.js');
             break;
           case eventType.USER_CLOSE:
           case eventType.SKIPPED:
-          case eventType.COMPLETE:
+          case eventType.COMPLETE: {
             // Workaround of an issue on iOS where the IMA iframe is capturing clicks after an ad.
             // We will show the iframe on receiving STARTED and hide it when receiving COMPLETE
             if (OO.isIos) {
@@ -1746,6 +1746,7 @@ require('../html5-common/js/utils/utils.js');
             _linearAdIsPlaying = false;
             _onAdMetrics(adEvent);
             break;
+          }
           case eventType.PAUSED:
             _raisePauseEvent();
             break;
@@ -1763,8 +1764,7 @@ require('../html5-common/js/utils/utils.js');
               _IMA_SDK_resumeMainContent();
             }
             break;
-          case eventType.IMPRESSION:
-
+          case eventType.IMPRESSION: {
             this.currentImpressionTime = new Date().valueOf();
             const loadTime = this.currentImpressionTime - this.adResponseTime;
             let protocol = 'VAST';
@@ -1778,14 +1778,14 @@ require('../html5-common/js/utils/utils.js');
               } else {
                 type = _amc.ADTYPE.LINEAR_OVERLAY;
               }
-            } else
-            if (ad && ad.getContentType().lastIndexOf('video', 0) === 0) {
+            } else if (ad && ad.getContentType().lastIndexOf('video', 0) === 0) {
               type = _amc.ADTYPE.NONLINEAR_VIDEO;
             } else {
               type = _amc.ADTYPE.NONLINEAR_OVERLAY;
             }
             _amc.onAdSdkImpression(this.name, this.adPosition, loadTime, protocol, type);
             break;
+          }
           case eventType.FIRST_QUARTILE:
           case eventType.MIDPOINT:
           case eventType.THIRD_QUARTILE:
