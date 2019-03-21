@@ -147,16 +147,18 @@
         const pos = parseInt(position);
         const insertionPointFilter = [];
 
-        if (pos && PREROLL) {
+        /* eslint-disable no-bitwise */
+        if (pos & PREROLL) {
           insertionPointFilter.push('onBeforeContent');
         }
-        if (pos && INSTREAM) {
+        if (pos & INSTREAM) {
           insertionPointFilter.push('playbackPosition');
           insertionPointFilter.push('playbackTime');
         }
-        if (pos && POSTROLL) {
+        if (pos & POSTROLL) {
           insertionPointFilter.push('onContentEnd');
         }
+        /* eslint-enable no-bitwise */
 
         if (insertionPointFilter.length > 0) {
           // Always add pause ads
