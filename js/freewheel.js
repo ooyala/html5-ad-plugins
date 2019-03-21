@@ -385,9 +385,8 @@ OO.Ads.manager(() => {
       if (adRequestTimeout) {
         const error = 'Ad Request Timeout already exists - bad state';
         fw_onError(null, error);
-      }
-      // only set timeout if not in test mode otherwise it will break unit tests
-      else if (!this.testMode) {
+      } else if (!this.testMode) {
+        // Only set timeout if not in test mode otherwise it will break unit tests.
         adRequestTimeout = delay(callback, duration);
       }
     };

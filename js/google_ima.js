@@ -546,10 +546,10 @@ require('../html5-common/js/utils/utils.js');
             this.adTagUrl = this.currentAMCAdPod.ad.tag_url;
             this.adPosition = this.currentAMCAdPod.ad.position / 1000;
             _trySetupAdsRequest();
-          }
-          // Otherwise we are trying to play an overlay, at this point IMA is already
-          // displaying it, so just notify AMC that we are showing an overlay.
-          else {
+          } else {
+            // Otherwise we are trying to play an overlay, at this point IMA is already
+            // displaying it, so just notify AMC that we are showing an overlay.
+
             // provide width and height values if available. Alice will use these to resize
             // the skin plugins div when a non linear overlay is on screen
             if (this.currentAMCAdPod && this.currentNonLinearIMAAd) {
@@ -1821,8 +1821,9 @@ require('../html5-common/js/utils/utils.js');
             if (_usingAdRules && ad) {
               const adPodInfo = ad.getAdPodInfo();
               const adPodIndex = adPodInfo.getPodIndex();
-              if (adPodIndex != 0) // if ad is not part of preroll
-              {
+
+              // If ad is not part of preroll.
+              if (adPodIndex != 0) {
                 this.adResponseTime = new Date().valueOf();
               }
             }

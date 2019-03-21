@@ -171,15 +171,13 @@ OO.Ads.manager(() => {
         // allow boolean true/false
         if (isBoolean(adManagerMetadata.cacheBuster)) {
           bustTheCache = adManagerMetadata.cacheBuster;
-        }
-        // allow string true/false
-        else if (adManagerMetadata.cacheBuster === 'true') {
+        } else if (adManagerMetadata.cacheBuster === 'true') {
+          // Allow string true/false.
           bustTheCache = true;
         } else if (adManagerMetadata.cacheBuster === 'false') {
           bustTheCache = false;
-        }
-        // log message if parameter does not conform to any of the above values
-        else {
+        } else {
+          // Log message if parameter does not conform to any of the above values.
           OO.log(`${'Ooyala Pulse: page level parameter: "cacheBuster" expected value: "true"'
           + ' or "false", but value received was: '}${adManagerMetadata.cacheBuster}`);
         }

@@ -1530,11 +1530,10 @@ OO.Ads.manager(() => {
           } else if (ad.isLinear) {
             _skipAd(currentAd);
           }
-        }
-        // [PLAYER-3912]
-        // Make sure that NONLINEAR_AD_PLAYED gets fired when a stream ends
-        // with an active overlay, otherwise the skin will keep it for new videos.
-        else if (!ad.isLinear && params.code === this.amc.AD_CANCEL_CODE.STREAM_ENDED) {
+        } else if (!ad.isLinear && params.code === this.amc.AD_CANCEL_CODE.STREAM_ENDED) {
+          // [PLAYER-3912]
+          // Make sure that NONLINEAR_AD_PLAYED gets fired when a stream ends
+          // with an active overlay, otherwise the skin will keep it for new videos.
           _endAd(ad, false);
         }
       } else {
@@ -2598,10 +2597,9 @@ OO.Ads.manager(() => {
         if (has(this.adTrackingInfo, adId)) {
           this.adTrackingInfo[adId].vastAdObject = vastAdObject;
           this.adTrackingInfo[adId].wrapperParentId = this.wrapperParentId || null;
-        }
-        // Theoretically, this branch should not ever execute because _getErrorTrackingInfo()
-        // should have already added the ad id to the adTrackingInfo dictionary.
-        else {
+        } else {
+          // Theoretically, this branch should not ever execute because _getErrorTrackingInfo()
+          // should have already added the ad id to the adTrackingInfo dictionary.
           this.adTrackingInfo[adId] = {
             vastAdObject,
             errorURLs: [],
@@ -2692,15 +2690,13 @@ OO.Ads.manager(() => {
           if (ad) {
             handleAds([ad], adLoaded);
           }
-        }
-        // A VAST response wrapped in VMAP could have allowMultipleAds specified by the VMAP AdBreak
-        else if (adLoaded.vmap) {
+        } else if (adLoaded.vmap) {
+          // A VAST response wrapped in VMAP could have allowMultipleAds specified by the VMAP AdBreak.
           if (adLoaded.allowMultipleAds) {
             handleAds(vastAds.podded, adLoaded, fallbackAd);
           }
-        }
-        // else show the podded ads
-        else {
+        } else {
+          // else show the podded ads
           handleAds(vastAds.podded, adLoaded, fallbackAd);
         }
       } else {
@@ -2849,18 +2845,15 @@ OO.Ads.manager(() => {
         // case: "start"
         if (/^start$/.test(adBreak.timeOffset)) {
           adObject.position = 0;
-        }
-        // case: "end"
-        else if (/^end$/.test(adBreak.timeOffset)) {
+        } else if (/^end$/.test(adBreak.timeOffset)) {
+          // case: "end"
           adObject.position = (this.amc.movieDuration + 1);
-        }
-        // case: hh:mm:ss.mmm | hh:mm:ss
-        else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
+        } else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
+          // case: hh:mm:ss.mmm | hh:mm:ss
           adObject.position = adManagerUtils
             .convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration) / 1000;
-        }
-        // case: [0, 100]%
-        else if (/^\d{1,3}%$/.test(adBreak.timeOffset)) {
+        } else if (/^\d{1,3}%$/.test(adBreak.timeOffset)) {
+          // case: [0, 100]%
           // TODO: test percentage > 100
           adObject.position = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset) / 1000;
         } else {
