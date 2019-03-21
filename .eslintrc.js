@@ -28,27 +28,26 @@ module.exports = {
     "consistent-return": "warn",
     "no-undef": "warn",
     "no-unused-vars": "warn",
-    "radix": "warn", //
+    "radix": "warn",
     "no-redeclare": "warn",
     "func-names": "warn",
     "camelcase": "warn",
-    "no-plusplus": "warn", // 1
+    "no-plusplus": "warn",
     "new-cap": "warn",
     "prefer-destructuring": "warn",
-    "no-shadow": "warn", //
-    "global-require": "warn", //
-    "import/no-dynamic-require": "warn", //
-    "no-param-reassign": "warn", //
+    "no-shadow": "warn",
+    "global-require": "warn",
+    "import/no-dynamic-require": "warn",
+    "no-param-reassign": "warn",
     "no-prototype-builtins": "warn",
     "no-restricted-globals": "warn",
-    "guard-for-in": "warn", //
-    "no-restricted-syntax": "warn", //
-    "prefer-rest-params": "warn", //
-    "no-unreachable": "warn", //
+    "guard-for-in": "warn",
+    "no-restricted-syntax": "warn",
+    "prefer-rest-params": "warn",
+    "no-unreachable": "warn",
     "eqeqeq": "warn",
     "no-continue": "warn",
     "no-unused-expressions": "warn",
-    "no-lonely-if": "warn",
     "prefer-spread": "warn",
     "no-fallthrough": "warn",
     "no-mixed-operators": "warn",

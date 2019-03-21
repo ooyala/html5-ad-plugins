@@ -1023,8 +1023,8 @@ OO.Ads.manager(() => {
           const ad = generateAd(metadata);
 
           if (metadata.streamUrl != null
-              || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
-              || _isVpaidAd(currentAd)) {
+            || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
+            || _isVpaidAd(currentAd)) {
             nextAd = ad;
           }
         }
@@ -1131,8 +1131,8 @@ OO.Ads.manager(() => {
 
         // Try to ping parent tracking events as well
         if (this.adTrackingInfo
-            && this.adTrackingInfo[adId]
-            && this.adTrackingInfo[adId].wrapperParentId) {
+          && this.adTrackingInfo[adId]
+          && this.adTrackingInfo[adId].wrapperParentId) {
           const parentId = this.adTrackingInfo[adId].wrapperParentId;
           const parentAdTrackingObject = this.adTrackingInfo[parentId];
           if (parentAdTrackingObject) {
@@ -1154,11 +1154,11 @@ OO.Ads.manager(() => {
     const _getVastAdObject = (amcAd) => {
       let vastAdObject = null;
       if (amcAd
-          && amcAd.ad
-          && amcAd.ad.data) {
+        && amcAd.ad
+        && amcAd.ad.data) {
         vastAdObject = amcAd.ad.data;
       } else if (amcAd
-               && amcAd.data) {
+        && amcAd.data) {
         vastAdObject = amcAd.data;
       } else {
         vastAdObject = amcAd;
@@ -1177,8 +1177,8 @@ OO.Ads.manager(() => {
       const vastAdObject = _getVastAdObject(amcAd);
       let impressionUrls = null;
       if (vastAdObject
-          && vastAdObject.impression
-          && vastAdObject.impression.length > 0) {
+        && vastAdObject.impression
+        && vastAdObject.impression.length > 0) {
         impressionUrls = vastAdObject.impression;
       }
       return impressionUrls;
@@ -1197,8 +1197,8 @@ OO.Ads.manager(() => {
       let linearClickTrackingUrls = [];
       if (vastAdObject) {
         if (vastAdObject.linear
-            && vastAdObject.linear.clickTracking
-            && vastAdObject.linear.clickTracking.length > 0) {
+          && vastAdObject.linear.clickTracking
+          && vastAdObject.linear.clickTracking.length > 0) {
           linearClickTrackingUrls = linearClickTrackingUrls.concat(vastAdObject.linear.clickTracking);
         }
 
@@ -1228,8 +1228,8 @@ OO.Ads.manager(() => {
       const vastAdObject = _getVastAdObject(amcAd);
       let linearClickThroughUrl = null;
       if (vastAdObject
-          && vastAdObject.linear
-          && vastAdObject.linear.clickThrough) {
+        && vastAdObject.linear
+        && vastAdObject.linear.clickThrough) {
         linearClickThroughUrl = vastAdObject.linear.clickThrough;
       }
       return linearClickThroughUrl;
@@ -1247,8 +1247,8 @@ OO.Ads.manager(() => {
       const vastAdObject = _getVastAdObject(amcAd);
       let nonLinearClickThroughUrl = null;
       if (vastAdObject
-          && vastAdObject.nonLinear
-          && vastAdObject.nonLinear.nonLinearClickThrough) {
+        && vastAdObject.nonLinear
+        && vastAdObject.nonLinear.nonLinearClickThrough) {
         nonLinearClickThroughUrl = vastAdObject.nonLinear.nonLinearClickThrough;
       }
       return nonLinearClickThroughUrl;
@@ -1266,9 +1266,9 @@ OO.Ads.manager(() => {
       const vastAdObject = _getVastAdObject(amcAd);
       let nonLinearClickTrackingUrls = null;
       if (vastAdObject
-          && vastAdObject.nonLinear
-          && vastAdObject.nonLinear.nonLinearClickTracking
-          && vastAdObject.nonLinear.nonLinearClickTracking.length > 0) {
+        && vastAdObject.nonLinear
+        && vastAdObject.nonLinear.nonLinearClickTracking
+        && vastAdObject.nonLinear.nonLinearClickTracking.length > 0) {
         nonLinearClickTrackingUrls = vastAdObject.nonLinear.nonLinearClickTracking;
       }
       return nonLinearClickTrackingUrls;
@@ -1285,7 +1285,7 @@ OO.Ads.manager(() => {
       const vastAdObject = _getVastAdObject(amcAd);
       let highLevelClickThroughUrl = null;
       if (vastAdObject
-          && vastAdObject.clickThrough) {
+        && vastAdObject.clickThrough) {
         highLevelClickThroughUrl = vastAdObject.clickThrough;
       }
       return highLevelClickThroughUrl;
@@ -1301,7 +1301,7 @@ OO.Ads.manager(() => {
     const _getOoyalaClickThroughUrl = (amcAd) => {
       let ooyalaClickThroughUrl = null;
       if (amcAd
-          && amcAd.click_url) {
+        && amcAd.click_url) {
         ooyalaClickThroughUrl = amcAd.click_url;
       }
       return ooyalaClickThroughUrl;
@@ -1324,18 +1324,18 @@ OO.Ads.manager(() => {
       let nonLinearTrackingUrls = [];
 
       if (vastAdObject
-          && vastAdObject.linear
-          && vastAdObject.linear.tracking
-          && vastAdObject.linear.tracking[trackingEventName]
-          && vastAdObject.linear.tracking[trackingEventName].length > 0) {
+        && vastAdObject.linear
+        && vastAdObject.linear.tracking
+        && vastAdObject.linear.tracking[trackingEventName]
+        && vastAdObject.linear.tracking[trackingEventName].length > 0) {
         linearTrackingUrls = vastAdObject.linear.tracking[trackingEventName];
       }
 
       if (vastAdObject
-          && vastAdObject.nonLinear
-          && vastAdObject.nonLinear.tracking
-          && vastAdObject.nonLinear.tracking[trackingEventName]
-          && vastAdObject.nonLinear.tracking[trackingEventName].length > 0) {
+        && vastAdObject.nonLinear
+        && vastAdObject.nonLinear.tracking
+        && vastAdObject.nonLinear.tracking[trackingEventName]
+        && vastAdObject.nonLinear.tracking[trackingEventName].length > 0) {
         nonLinearTrackingUrls = vastAdObject.nonLinear.tracking[trackingEventName];
       }
 
@@ -1358,7 +1358,7 @@ OO.Ads.manager(() => {
       const vastAdObject = _getVastAdObject(amcAd);
       let adId = null;
       if (vastAdObject
-          && vastAdObject.id) {
+        && vastAdObject.id) {
         adId = vastAdObject.id;
       }
       return adId;
@@ -1495,15 +1495,13 @@ OO.Ads.manager(() => {
           this.amc.showSkipVideoAdButton(adSkippableState,
             this.amc.adManagerSettings.linearAdSkipButtonStartTime.toString());
         }
-      } else {
+      } else if (!isVPaid) {
         // For Vast versions that don't support the skipoffset attribute, we
         // want to use Ooyala's settings for displaying the skip ad button
-        if (!isVPaid) {
-          this.amc.showSkipVideoAdButton(true);
-        } else {
-          this.amc.showSkipVideoAdButton(adSkippableState,
-            this.amc.adManagerSettings.linearAdSkipButtonStartTime.toString());
-        }
+        this.amc.showSkipVideoAdButton(true);
+      } else {
+        this.amc.showSkipVideoAdButton(adSkippableState,
+          this.amc.adManagerSettings.linearAdSkipButtonStartTime.toString());
       }
     };
 
@@ -1668,9 +1666,9 @@ OO.Ads.manager(() => {
       // TODO: This might need to get integrated with Doug's error handling changes.
       // I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
       if (metadata.streamUrl != null
-          || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
-          || (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY
-              && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
+        || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
+        || (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY
+          && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
         timeline.push(ad);
         this.amc.appendToTimeline(timeline);
         return true;
@@ -2044,13 +2042,17 @@ OO.Ads.manager(() => {
         ad.linear.clickTracking = wrapperAds.linear.clickTracking.concat(ad.linear.clickTracking || []);
       }
       if (wrapperAds.linear.tracking) {
-        if (!ad.linear.tracking) { ad.linear.tracking = {}; }
+        if (!ad.linear.tracking) {
+          ad.linear.tracking = {};
+        }
         each(wrapperAds.linear.tracking, (value, key) => {
           ad.linear.tracking[key] = ad.linear.tracking[key] ? value.concat(ad.linear.tracking[key]) : value;
         });
       }
       if (wrapperAds.nonLinear.tracking) {
-        if (!ad.nonLinear.tracking) { ad.nonLinear.tracking = {}; }
+        if (!ad.nonLinear.tracking) {
+          ad.nonLinear.tracking = {};
+        }
         each(wrapperAds.nonLinear.tracking, (value, key) => {
           ad.nonLinear.tracking[key] = ad.nonLinear.tracking[key]
             ? value.concat(ad.nonLinear.tracking[key])
@@ -2360,8 +2362,12 @@ OO.Ads.manager(() => {
         Array.from,
       )(xml.querySelectorAll('AdTitle'));
 
-      if (linear) { result.linear = parseLinearAd(linear); }
-      if (nonLinearAds) { result.nonLinear = parseNonLinearAds(nonLinearAds); }
+      if (linear) {
+        result.linear = parseLinearAd(linear);
+      }
+      if (nonLinearAds) {
+        result.nonLinear = parseNonLinearAds(nonLinearAds);
+      }
 
       result.companion = compose(
         array => map(array, node => parseCompanionAd(node)),
@@ -2857,7 +2863,7 @@ OO.Ads.manager(() => {
           // TODO: test percentage > 100
           adObject.position = adManagerUtils.convertPercentToMilliseconds(adBreak.timeOffset) / 1000;
         } else {
-          _tryRaiseAdError("VAST, VMAP: No Matching 'timeOffset' Attribute format");
+          _tryRaiseAdError('VAST, VMAP: No Matching \'timeOffset\' Attribute format');
           adObject = null;
         }
       }
@@ -3694,7 +3700,7 @@ OO.Ads.manager(() => {
         }
       } catch (err) {
         _tryRaiseAdError(`${'VPAID 2.0: '
-          + "function '"}${funcName}' threw exception -`,
+          + 'function \''}${funcName}' threw exception -`,
         err);
       }
       return null;

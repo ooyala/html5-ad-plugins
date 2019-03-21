@@ -538,33 +538,31 @@ require('../html5-common/js/utils/utils.js');
 
         if (_usingAdRules && this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY) {
           _tryStartAd();
-        } else {
+        } else if (this.currentAMCAdPod.ad.forced_ad_type != _amc.ADTYPE.NONLINEAR_OVERLAY) {
           // if we are trying to play an linear ad then we need to request the ad now.
-          if (this.currentAMCAdPod.ad.forced_ad_type != _amc.ADTYPE.NONLINEAR_OVERLAY) {
-            // reset adRequested and adTagUrl so we can request another ad
-            _resetAdsState();
-            this.adTagUrl = this.currentAMCAdPod.ad.tag_url;
-            this.adPosition = this.currentAMCAdPod.ad.position / 1000;
-            _trySetupAdsRequest();
-          } else {
-            // Otherwise we are trying to play an overlay, at this point IMA is already
-            // displaying it, so just notify AMC that we are showing an overlay.
+          // reset adRequested and adTagUrl so we can request another ad
+          _resetAdsState();
+          this.adTagUrl = this.currentAMCAdPod.ad.tag_url;
+          this.adPosition = this.currentAMCAdPod.ad.position / 1000;
+          _trySetupAdsRequest();
+        } else {
+          // Otherwise we are trying to play an overlay, at this point IMA is already
+          // displaying it, so just notify AMC that we are showing an overlay.
 
-            // provide width and height values if available. Alice will use these to resize
-            // the skin plugins div when a non linear overlay is on screen
-            if (this.currentAMCAdPod && this.currentNonLinearIMAAd) {
-              // IMA requires some padding in order to have the overlay render or else
-              // IMA thinks the available real estate is too small.
-              this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
-              this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
-              this.currentAMCAdPod.paddingWidth = OVERLAY_WIDTH_PADDING;
-              this.currentAMCAdPod.paddingHeight = OVERLAY_HEIGHT_PADDING;
-              _onSizeChanged();
-            }
-            // raise WILL_PLAY_NONLINEAR_AD event and alert AMC and player that a nonlinear ad is started.
-            // Nonlinear ad is rendered by IMA.
-            _amc.sendURLToLoadAndPlayNonLinearAd(this.currentAMCAdPod, this.currentAMCAdPod.id, null);
+          // provide width and height values if available. Alice will use these to resize
+          // the skin plugins div when a non linear overlay is on screen
+          if (this.currentAMCAdPod && this.currentNonLinearIMAAd) {
+            // IMA requires some padding in order to have the overlay render or else
+            // IMA thinks the available real estate is too small.
+            this.currentAMCAdPod.width = this.currentNonLinearIMAAd.getWidth();
+            this.currentAMCAdPod.height = this.currentNonLinearIMAAd.getHeight();
+            this.currentAMCAdPod.paddingWidth = OVERLAY_WIDTH_PADDING;
+            this.currentAMCAdPod.paddingHeight = OVERLAY_HEIGHT_PADDING;
+            _onSizeChanged();
           }
+          // raise WILL_PLAY_NONLINEAR_AD event and alert AMC and player that a nonlinear ad is started.
+          // Nonlinear ad is rendered by IMA.
+          _amc.sendURLToLoadAndPlayNonLinearAd(this.currentAMCAdPod, this.currentAMCAdPod.id, null);
         }
       };
 
