@@ -21,8 +21,8 @@ module.exports = {
         "ignoreRegExpLiterals": true
       }
     ],
+    "vars-on-top": 0,
     "no-underscore-dangle": "warn",
-    "vars-on-top": "warn",
     "no-use-before-define": "warn",
     "consistent-return": "warn",
     "no-undef": "warn",
@@ -40,7 +40,6 @@ module.exports = {
     "no-param-reassign": "warn",
     "no-prototype-builtins": "warn",
     "no-restricted-globals": "warn",
-    "block-scoped-var": "warn",
     "guard-for-in": "warn",
     "no-restricted-syntax": "warn",
     "default-case": "warn",
@@ -51,7 +50,6 @@ module.exports = {
     "no-mixed-spaces-and-tabs": "warn",
     "no-tabs": "warn",
     "eqeqeq": "warn",
-    "no-empty": "warn",
     "no-continue": "warn",
     "brace-style": "warn",
     "no-unused-expressions": "warn",

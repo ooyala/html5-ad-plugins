@@ -206,7 +206,9 @@
             } catch (e) {
               return '6,0,0';
             }
-          } catch (e) {}
+          } catch (e) {
+            // empty
+          }
           return new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version').replace(/\D+/g, ',').match(/^,?(.+),?$/)[1];
           // other browsers
         } catch (e) {
@@ -214,7 +216,9 @@
             if (navigator.mimeTypes['application/x-shockwave-flash'].enabledPlugin) {
               return (navigator.plugins['Shockwave Flash 2.0'] || navigator.plugins['Shockwave Flash']).description.replace(/\D+/g, ',').match(/^,?(.+),?$/)[1];
             }
-          } catch (e) {}
+          } catch (e) {
+            // empty
+          }
         }
         return '0,0,0';
       };
