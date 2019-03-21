@@ -292,6 +292,7 @@ OO.Ads.manager(() => {
           if (adEndedCallback) {
             adEndedCallback();
           }
+          break;
         case VPAID_EVENTS.AD_STOPPED:
           clearInterval(countdownIntervalId);
           if (slotEndedCallback) {

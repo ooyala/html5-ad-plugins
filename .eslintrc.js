@@ -49,7 +49,6 @@ module.exports = {
     "no-continue": "warn",
     "no-unused-expressions": "warn",
     "prefer-spread": "warn",
-    "no-fallthrough": "warn",
     "no-mixed-operators": "warn",
     "no-loop-func": "warn",
     "no-case-declarations": "warn",
