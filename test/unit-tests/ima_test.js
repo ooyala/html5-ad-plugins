@@ -2108,6 +2108,8 @@ describe('ad_manager_ima', function () {
           case vci.EVENTS.PLAYING:
             resumedCount++;
             break;
+          default:
+          // do nothing
         }
       },
       EVENTS: vci.EVENTS,

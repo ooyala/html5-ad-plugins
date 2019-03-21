@@ -43,7 +43,6 @@ module.exports = {
     "no-restricted-globals": "warn",
     "guard-for-in": "warn",
     "no-restricted-syntax": "warn",
-    "default-case": "warn",
     "prefer-rest-params": "warn",
     "no-unreachable": "warn",
     "eqeqeq": "warn",

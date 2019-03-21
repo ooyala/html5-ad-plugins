@@ -3419,6 +3419,9 @@ OO.Ads.manager(() => {
         case VPAID_EVENTS.AD_PLAYING:
           this.sendVpaidTracking('resume');
           break;
+
+        default:
+        // do nothing
       }
     };
 

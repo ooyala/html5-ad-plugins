@@ -309,6 +309,8 @@ OO.Ads.manager(() => {
         case VPAID_EVENTS.AD_LOG:
           log('LIVERAIL AD LOG -', logData);
           break;
+        default:
+        // do nothing
       }
 
       // /// Setup /////

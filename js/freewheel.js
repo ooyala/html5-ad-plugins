@@ -486,6 +486,8 @@ OO.Ads.manager(() => {
               adType: amc.ADTYPE.NONLINEAR_OVERLAY,
             }));
             break;
+          default:
+          // do nothing
         }
       }
     };
