@@ -362,16 +362,16 @@ require('../html5-common/js/utils/utils.js');
        */
       this.setupSharedVideoElement = (element) => {
         // Remove any listeners we added on the previous shared video element
-        // eslint-disable-next-line max-len
-        if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.removeEventListener === 'function') {
+        if (this.sharedVideoElement && OO.isIphone
+            && typeof this.sharedVideoElement.removeEventListener === 'function') {
           this.sharedVideoElement.removeEventListener('webkitendfullscreen', _raisePauseEvent);
         }
         this.sharedVideoElement = element;
         // On iPhone, there is a limitation in the IMA SDK where we do not receive a pause event when
         // we leave the native player
         // This is a workaround to listen for the webkitendfullscreen event ourselves
-        // eslint-disable-next-line max-len
-        if (this.sharedVideoElement && OO.isIphone && typeof this.sharedVideoElement.addEventListener === 'function') {
+        if (this.sharedVideoElement && OO.isIphone
+            && typeof this.sharedVideoElement.addEventListener === 'function') {
           this.sharedVideoElement.addEventListener('webkitendfullscreen', _raisePauseEvent);
         }
       };
@@ -845,8 +845,8 @@ require('../html5-common/js/utils/utils.js');
         // block this code from running till we want to play the video
         // if you run it before then ima will take over and immediately try to play
         // ads (if there is a preroll)
-        // eslint-disable-next-line max-len
-        const validAdRequestSuccess = this.currentAMCAdPod && _adToPlayOnRequestSuccess === this.currentAMCAdPod;
+        const validAdRequestSuccess = this.currentAMCAdPod && _adToPlayOnRequestSuccess
+              === this.currentAMCAdPod;
         const readyToPlay = validAdRequestSuccess || _usingAdRules;
         if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer && readyToPlay) {
           try {

@@ -13,8 +13,8 @@ const sinon = require('sinon');
 const fs = require('fs');
 
 describe('ad_manager_vast', function () {
-  let amc; let
-    vastAdManager;
+  let amc;
+  let vastAdManager;
   const name = 'vast';
   const originalOoAds = _.clone(OO.Ads);
   require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
@@ -160,7 +160,9 @@ describe('ad_manager_vast', function () {
   beforeEach(() => {
     amc = new fake_amc();
     amc.adManagerList = [];
-    amc.onAdManagerReady = function () { this.timeline = this.adManagerList[0].buildTimeline(); };
+    amc.onAdManagerReady = function () {
+      this.timeline = this.adManagerList[0].buildTimeline();
+    };
     amc.adManagerList.push(vastAdManager);
     OO.playerParams.maxVastWrapperDepth = 2;
     errorType = [];
@@ -175,7 +177,9 @@ describe('ad_manager_vast', function () {
     global.vpaid.adStarted = false;
     global.vpaid.adStopped = false;
     global.vpaid.adSkipped = false;
-    global.vpaid.getVPAIDAd = function () { return new global.vpaid.VpaidAd(); };
+    global.vpaid.getVPAIDAd = function () {
+      return new global.vpaid.VpaidAd();
+    };
 
     window.open = () => ({});
   });
@@ -201,7 +205,9 @@ describe('ad_manager_vast', function () {
   });
 
   it('Init: ad manager handles the initialize function', () => {
-    expect(() => { vastAdManager.initialize(amc); }).to.not.throwException();
+    expect(() => {
+      vastAdManager.initialize(amc);
+    }).to.not.throwException();
   });
 
   it('Init: ad manager notifies amc after loading metadata', () => {
@@ -1593,8 +1599,8 @@ describe('ad_manager_vast', function () {
     expect(trackingEvents[1].url).to.be('errorURL');
   });
 
-  // eslint-disable-next-line max-len
-  it('Vast 3.0, VMAP, Inline Pre-roll Overlay, Post-roll: Should parse overlay and post-roll properly', () => {
+  it(`Vast 3.0, VMAP, Inline Pre-roll Overlay,
+    Post-roll: Should parse overlay and post-roll properly`, () => {
     vastAdManager.initialize(amc);
     vastAdManager.onVMAPResponse(vmapInlinePreAdTagPost);
     const { adBreaks } = vastAdManager;
@@ -2300,8 +2306,8 @@ describe('ad_manager_vast', function () {
     expect(amc.timeline.length).to.be(0);
   });
 
-  // eslint-disable-next-line max-len
-  it('Vast Ad Manager: Should use tag url override if provided in page level settings for content tree ads', () => {
+  it(`Vast Ad Manager: Should use tag url override if provided
+    in page level settings for content tree ads`, () => {
     const embed_code = 'embed_code';
     const vast_ad = {
       type: 'vast',
@@ -2338,8 +2344,8 @@ describe('ad_manager_vast', function () {
     expect(vastAdManager.vastUrl).to.be('http://override');
   });
 
-  // eslint-disable-next-line max-len
-  it('Vast Ad Manager: Should use tag url override if provided in page level settings for page level ads', () => {
+  it(`Vast Ad Manager: Should use tag url override
+    if provided in page level settings for page level ads`, () => {
     const embed_code = 'embed_code';
     const content = {
       embed_code,
@@ -2554,7 +2560,9 @@ describe('ad_manager_vast', function () {
 
   it('VPAID 2.0: initAd should not be called when any required ad unit function is missing', () => {
     vpaidInitialize();
-    global.vpaid.getVPAIDAd = function () { return new global.vpaid.missingFnVPAIDAd(); };
+    global.vpaid.getVPAIDAd = function () {
+      return new global.vpaid.missingFnVPAIDAd();
+    };
     const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
@@ -2563,7 +2571,9 @@ describe('ad_manager_vast', function () {
 
   it('VPAID 2.0: initAd should not be called when using incorrect version <2.0', () => {
     vpaidInitialize();
-    global.vpaid.getVPAIDAd = function () { return new global.vpaid.incorrectVersionVPAIDAd(); };
+    global.vpaid.getVPAIDAd = function () {
+      return new global.vpaid.incorrectVersionVPAIDAd();
+    };
     const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
     vastAdManager.initializeAd();
@@ -2571,7 +2581,8 @@ describe('ad_manager_vast', function () {
   });
 
   it('VPAID 2.0: Ad should be started', () => {
-    let podStartedNotified = 0; let
+    let podStartedNotified = 0;
+    let
       linearStartedNotified = 0;
     vpaidInitialize();
 
@@ -2592,7 +2603,8 @@ describe('ad_manager_vast', function () {
   });
 
   it('VPAID 2.0: Ad should be stopped when ad video is completed', () => {
-    let podEndNotified = 0; let
+    let podEndNotified = 0;
+    let
       linearEndNotified = 0;
     vpaidInitialize();
 
@@ -2614,7 +2626,8 @@ describe('ad_manager_vast', function () {
   });
 
   it('VPAID 2.0: Ad should be skipped when calling skipAd', () => {
-    let podEndNotified = 0; let
+    let podEndNotified = 0;
+    let
       linearEndNotified = 0;
     vpaidInitialize();
 
@@ -2637,9 +2650,10 @@ describe('ad_manager_vast', function () {
     expect(linearEndNotified).to.eql(1);
   });
 
-  // eslint-disable-next-line max-len
-  it('VPAID 2.0: Ad skip button should display when skippableState changes to true, or hide when false', () => {
-    let allowSkipButton = false; let
+  it(`VPAID 2.0: Ad skip button should display when skippableState changes to true,
+    or hide when false`, () => {
+    let allowSkipButton = false;
+    let
       skipOffset = 0;
     amc.showSkipVideoAdButton = function (allowButton, offset) {
       allowSkipButton = allowButton;
@@ -2671,7 +2685,8 @@ describe('ad_manager_vast', function () {
   });
 
   it('VPAID 2.0: Ad should not end on adVideoEnded', () => {
-    let podEndNotified = 0; let
+    let podEndNotified = 0;
+    let
       linearEndNotified = 0;
     vpaidInitialize();
 
@@ -2691,8 +2706,8 @@ describe('ad_manager_vast', function () {
     expect(linearEndNotified).to.eql(0);
   });
 
-  // eslint-disable-next-line max-len
-  it('VPAID 2.0: Ad Unit should handle clickthru if playerHandles is false, otherwise players handle the click', () => {
+  it(`VPAID 2.0: Ad Unit should handle clickthru if playerHandles is false,
+    otherwise players handle the click`, () => {
     let adUnitHandling = true;
     vpaidInitialize();
 

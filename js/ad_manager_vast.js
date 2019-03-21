@@ -581,8 +581,10 @@ OO.Ads.manager(() => {
      * @returns {boolean} true if the ad fallback functionality is supported in the specified Vast version,
      *                    false otherwise
      */
-    // eslint-disable-next-line max-len
-    const supportsAdFallback = version => contains(SUPPORTED_FEATURES[getMajorVersion(version)], FEATURES.AD_FALLBACK);
+    const supportsAdFallback = version => contains(
+      SUPPORTED_FEATURES[getMajorVersion(version)],
+      FEATURES.AD_FALLBACK,
+    );
 
     /**
      * Default template to use when creating the vast ad object.
@@ -1005,8 +1007,9 @@ OO.Ads.manager(() => {
      */
     // Unary + returns 1 for true and 0 for false and null
     // To avoid this, we check to see if position is a number or a string
-    // eslint-disable-next-line max-len
-    const _isValidPosition = position => (typeof position === 'string' || typeof position === 'number') && isFinite(+position);
+    const _isValidPosition = position => (
+      typeof position === 'string' || typeof position === 'number'
+    ) && isFinite(+position);
 
     /**
      * Called when the ad starts playback.
@@ -1665,15 +1668,14 @@ OO.Ads.manager(() => {
 
       // TODO: This might need to get integrated with Doug's error handling changes.
       // I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
-      /* eslint-disable max-len */
       if (metadata.streamUrl != null
           || (ad.adType == this.amc.ADTYPE.LINEAR_VIDEO && !isEmpty(metadata.streams))
-          || (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
+          || (ad.adType === this.amc.ADTYPE.NONLINEAR_OVERLAY
+              && !isEmpty(metadata.data.nonLinear.mediaFiles.url))) {
         timeline.push(ad);
         this.amc.appendToTimeline(timeline);
         return true;
       }
-      /* eslint-enable max-len */
 
       return false;
     };
@@ -2445,8 +2447,8 @@ OO.Ads.manager(() => {
      * @return {boolean} VPaid validated value
      */
     const _isValidVpaidCreative = (node, isLinear) => {
-      // eslint-disable-next-line max-len
-      const apiFramework = (safeGetAttribute(node, 'apiFramework') || safeGetAttribute(node, 'apiframework')) === 'VPAID';
+      const apiFramework = (safeGetAttribute(node, 'apiFramework')
+        || safeGetAttribute(node, 'apiframework')) === 'VPAID';
       const creativeType = isLinear
         ? safeGetAttribute(node, 'type')
         : (
@@ -2854,8 +2856,8 @@ OO.Ads.manager(() => {
         }
         // case: hh:mm:ss.mmm | hh:mm:ss
         else if (/^\d{2}:\d{2}:\d{2}\.000$|^\d{2}:\d{2}:\d{2}$/.test(adBreak.timeOffset)) {
-          // eslint-disable-next-line max-len
-          adObject.position = adManagerUtils.convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration) / 1000;
+          adObject.position = adManagerUtils
+            .convertTimeStampToMilliseconds(adBreak.timeOffset, this.amc.movieDuration) / 1000;
         }
         // case: [0, 100]%
         else if (/^\d{1,3}%$/.test(adBreak.timeOffset)) {
@@ -2927,8 +2929,8 @@ OO.Ads.manager(() => {
 
 
       if (!mediaNode || !_isValidVpaidCreative(validNode, isLinear)) {
-        // eslint-disable-next-line max-len
-        OO.log('VPaid: No valid media source, either is not a VPaid Ad or ad unit is not in javascript format.');
+        OO.log(`VPaid: No valid media source, either is not a VPaid Ad
+                or ad unit is not in javascript format.`);
         return;
       }
 
@@ -3296,8 +3298,8 @@ OO.Ads.manager(() => {
 
           // If a timing issue with VTC causes the VPAID ad to not load, force load and play once the ad is started
           const isLinear = _safeFunctionCall(currentAd.vpaidAd, 'getAdLinear');
-          // eslint-disable-next-line max-len
-          if (isLinear && this._videoSlot && this._videoSlot.buffered && (this._videoSlot.buffered.length < 1)) {
+          if (isLinear && this._videoSlot && this._videoSlot.buffered
+            && (this._videoSlot.buffered.length < 1)) {
             this._videoSlot.load();
             this._videoSlot.play();
           }

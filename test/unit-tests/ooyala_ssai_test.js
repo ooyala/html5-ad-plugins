@@ -20,10 +20,14 @@ describe('ad_manager_ooyala_ssai', function () {
   const adsClickthroughOpenedCalled = 0;
 
   // Vast XML
-  /* eslint-disable max-len */
-  const ssaiXmlString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/ssai.xml'), 'utf8');
-  const ssaiNoDurationXmlString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/ssai_no_duration.xml'), 'utf8');
-  /* eslint-enablem ax-len */
+  const ssaiXmlString = fs.readFileSync(
+    require.resolve('../unit-test-helpers/mock_responses/ssai.xml'),
+    'utf8',
+  );
+  const ssaiNoDurationXmlString = fs.readFileSync(
+    require.resolve('../unit-test-helpers/mock_responses/ssai_no_duration.xml'),
+    'utf8',
+  );
   const ssaiXml = $.parseXML(ssaiXmlString);
   const ssaiNoDurationXml = $.parseXML(ssaiNoDurationXmlString);
   let trackingUrlsPinged = {};
@@ -311,8 +315,8 @@ describe('ad_manager_ooyala_ssai', function () {
     expect(trackingUrlsPinged.linearClickTrackingUrl).to.be(1);
   });
 
-  // eslint-disable-next-line max-len
-  it('Linear Creative Tracking Events mute/unmute urls should be pinged only once if multiple events received', () => {
+  it(`Linear Creative Tracking Events mute/unmute urls should
+    be pinged only once if multiple events received`, () => {
     const adQueue = [];
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
       const adData = {

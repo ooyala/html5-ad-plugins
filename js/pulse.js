@@ -767,8 +767,8 @@
           || adManagerMetadata.vpDomain;
 
         if (!this._pulseHost) {
-          // eslint-disable-next-line max-len
-          log('No Pulse hostname found in plugin parameters or media metadata; will not attempt to show Pulse ads');
+          log(`No Pulse hostname found in plugin parameters or media metadata;
+              will not attempt to show Pulse ads`);
           noPulseConfiguration = true;
           this.ready = true;
           amc.onAdManagerReady();

@@ -267,7 +267,6 @@ OO.Ads.manager(() => {
       }
 
       // Listen to AdManager Events
-      /* eslint-disable max-len */
       fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, fw_onAdImpression);
       fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, fw_onAdImpressionEnd);
       fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, fw_onSlotStarted);
@@ -277,10 +276,26 @@ OO.Ads.manager(() => {
       fwContext.addEventListener(tv.freewheel.SDK.EVENT_ERROR, fw_onError);
 
       // To make sure video ad playback in poor network condition, set video ad timeout parameters.
-      fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_START_DETECT_TIMEOUT, 10000, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-      fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_PROGRESS_DETECT_TIMEOUT, 10000, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-      fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_DISPLAY_CONTROLS_WHEN_PAUSE, false, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
-      fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION, true, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+      fwContext.setParameter(
+        tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_START_DETECT_TIMEOUT,
+        10000,
+        tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+      );
+      fwContext.setParameter(
+        tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_PROGRESS_DETECT_TIMEOUT,
+        10000,
+        tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+      );
+      fwContext.setParameter(
+        tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_DISPLAY_CONTROLS_WHEN_PAUSE,
+        false,
+        tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+      );
+      fwContext.setParameter(
+        tv.freewheel.SDK.PARAMETER_RENDERER_VIDEO_CLICK_DETECTION,
+        true,
+        tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+      );
 
       if (bitrateOverride) {
         fwContext.setParameter(tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE, bitrateOverride, tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
@@ -290,19 +305,32 @@ OO.Ads.manager(() => {
         // NOTE: If we set renderer.html.coadScriptName we can probably render overlays on our own
         //       (coad stands for customer owned ad renderer)
         let controlHeight = amc.ui.rootElement.find('.controlBar');
-        controlHeight = (controlHeight.length == 0) ? 60 : controlHeight.height() + OO.CONSTANTS.CONTROLS_BOTTOM_PADDING;
-        fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, controlHeight, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+        controlHeight = (controlHeight.length == 0)
+          ? 60
+          : controlHeight.height() + OO.CONSTANTS.CONTROLS_BOTTOM_PADDING;
+        fwContext.setParameter(
+          tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT,
+          controlHeight,
+          tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+        );
       } else {
         // if we can integrate the overlay with Alice, we do not want to add margin height as it will
         // fit properly within the player skin plugins div without being covered by the control bar
-        fwContext.setParameter(tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT, 0, tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL);
+        fwContext.setParameter(
+          tv.freewheel.SDK.PARAMETER_RENDERER_HTML_MARGIN_HEIGHT,
+          0,
+          tv.freewheel.SDK.PARAMETER_LEVEL_GLOBAL,
+        );
       }
 
       const companionAds = [
         [
           '<span id="VPNT_1" class="_fwph">',
           '<form id="_fw_form_VPNT_1" style="display:none">',
-          '<input type="hidden" name="_fw_input_VPNT_1" id="_fw_input_VPNT_1" value="ptgt=p&amp;h=90&amp;w=728&amp;cd=216,30">',
+          '<input type="hidden" '
+          + 'name="_fw_input_VPNT_1" '
+          + 'id="_fw_input_VPNT_1" '
+          + 'value="ptgt=p&amp;h=90&amp;w=728&amp;cd=216,30">',
           '</form>',
           '<span id="_fw_container_VPNT_1"></span>',
           '</span>',
@@ -317,7 +345,6 @@ OO.Ads.manager(() => {
           '</span>',
         ].join(''),
       ];
-      /* eslint-enable max-len */
 
       fwContext.submitRequest();
       fwAdDataRequested = true;

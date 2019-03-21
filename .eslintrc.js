@@ -18,7 +18,8 @@ module.exports = {
         "ignoreComments": true,
         "ignorePattern": "if \\(\/\\(\\w*|\\)\/",
         "ignoreUrls": true,
-        "ignoreRegExpLiterals": true
+        "ignoreRegExpLiterals": true,
+        "ignoreTemplateLiterals": true
       }
     ],
     "vars-on-top": 0,

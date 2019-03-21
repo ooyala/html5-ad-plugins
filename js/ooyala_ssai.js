@@ -715,7 +715,6 @@ OO.Ads.manager(() => {
      */
 
     const _sendMetadataRequest = () => {
-      // eslint-disable-next-line max-len
       const url = `${window.location.protocol}//${this.domainName}/v1/metadata/${this.currentEmbed}?ssai_guid=${this.ssaiGuid}`;
       fetch(url, {
         method: 'get',

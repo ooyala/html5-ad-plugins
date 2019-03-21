@@ -4,10 +4,12 @@
  */
 
 // stubs
-OO.log = function () {};
+OO.log = function () {
+};
 
 describe('ad_manager_freewheel', function () {
-  let amc; let fw;
+  let amc;
+  let fw;
   const name = 'freewheel-ads-manager';
   const originalOoAds = _.clone(OO.Ads);
   require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
@@ -32,13 +34,17 @@ describe('ad_manager_freewheel', function () {
     this.getCurrentAdInstance = function () {
       return {
         getRendererController() {
-          this.processEvent = function () {};
+          this.processEvent = function () {
+          };
         },
-        getEventCallback() {},
+        getEventCallback() {
+        },
       };
     };
-    this.getAdCount = function () {};
-    this.play = function () {};
+    this.getAdCount = function () {
+    };
+    this.play = function () {
+    };
   };
 
   const initialize = function () {
@@ -91,7 +97,8 @@ describe('ad_manager_freewheel', function () {
   }, this));
 
   after(() => {
-    let parentDom; let
+    let parentDom;
+    let
       element;
     _.each(document.getElementsByTagName('style'), (oneStyle) => {
       if (oneStyle && oneStyle.innerHTML.indexOf('fw_') >= 0) {
@@ -112,8 +119,10 @@ describe('ad_manager_freewheel', function () {
     fwParams = {};
     fw.destroy();
     fwContext = null;
-    getTemporalSlots = function () {};
-    setVideoAsset = function () {};
+    getTemporalSlots = function () {
+    };
+    setVideoAsset = function () {
+    };
   }, this));
 
   //   ------   TESTS   ------
@@ -135,11 +144,15 @@ describe('ad_manager_freewheel', function () {
   });
 
   it('Init: ad manager handles the initialize function', () => {
-    expect(() => { fw.initialize(amc); }).to.not.throwException();
+    expect(() => {
+      fw.initialize(amc);
+    }).to.not.throwException();
   });
 
   it('Init: ad manager handles the registerUi function', () => {
-    expect(() => { fw.registerUi(); }).to.not.throwException();
+    expect(() => {
+      fw.registerUi();
+    }).to.not.throwException();
   });
 
   it('Init: ad manager handles the loadMetadata function', () => {
@@ -226,8 +239,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAssetNetwork');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs video embedcode', () => {
+  it(`Init: test video asset override fw_video_asset_id
+    vs fw_video_asset_network_id vs video embedcode`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -250,8 +263,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAsset');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is not provided', () => {
+  it(`Init: ad manager can set video asset id to embed code in loadMetadata function
+    when use_external_id is not provided`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -277,8 +290,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs pagelevel embedCode vs video embedcode', () => {
+  it(`Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id
+    vs pagelevel embedCode vs video embedcode`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -303,8 +316,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAsset');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is false', () => {
+  it(`Init: ad manager can set video asset id to embed code in loadMetadata function
+    when use_external_id is false`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -332,8 +345,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: ad manager can set video asset id to external id in loadMetadata function when use_external_id is true', () => {
+  it(`Init: ad manager can set video asset id to external id in loadMetadata function
+    when use_external_id is true`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -361,8 +374,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myExternalId');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is true but there is no external id', () => {
+  it(`Init: ad manager can set video asset id to embed code in loadMetadata function when
+    use_external_id is true but there is no external id`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -388,8 +401,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: ad manager can set video asset id to external id with a filter in loadMetadata function when use_external_id is true', () => {
+  it(`Init: ad manager can set video asset id to external id with a filter in loadMetadata function when
+    use_external_id is true`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -418,8 +431,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myExternalId');
   });
 
-  // eslint-disable-next-line max-len
-  it('Init: ad manager can set video asset id to external id with a non-applicable filter in loadMetadata function when use_external_id is true', () => {
+  it(`Init: ad manager can set video asset id to external id with
+    a non-applicable filter in loadMetadata function when use_external_id is true`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -486,7 +499,8 @@ describe('ad_manager_freewheel', function () {
     initialize();
     expect(amc.timeline.length).to.be(1);
     play();
-    fw.playAd(amc.timeline[0], () => {});
+    fw.playAd(amc.timeline[0], () => {
+    });
     expect(fwContext).to.not.be(null);
   });
 
@@ -731,8 +745,8 @@ describe('ad_manager_freewheel', function () {
     expect(podStartedCount).to.be(2);
   });
 
-  // eslint-disable-next-line max-len
-  it('Ad Clickthrough: AMC\'s adsClickthroughOpened() should be called when FW\'s ads click event occurs', () => {
+  it(`Ad Clickthrough: AMC's adsClickthroughOpened() should be called
+    when FW's ads click event occurs`, () => {
     amc.adsClickthroughOpened = function () {
       adsClickthroughOpenedCalled += 1;
     };
@@ -770,7 +784,8 @@ describe('ad_manager_freewheel', function () {
   });
 
   describe('Freewheel Context', () => {
-    let videoState; let
+    let videoState;
+    let
       volume;
 
     beforeEach(() => {
