@@ -298,7 +298,11 @@ OO.Ads.manager(() => {
       );
 
       if (bitrateOverride) {
-        fwContext.setParameter(tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE, bitrateOverride, tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+        fwContext.setParameter(
+          tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE,
+          bitrateOverride,
+          tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE,
+        );
       }
 
       if (OO.requiresSingleVideoElement) {

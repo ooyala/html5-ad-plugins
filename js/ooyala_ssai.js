@@ -196,13 +196,12 @@ OO.Ads.manager(() => {
      * @public
      * @returns {OO.OoyalaSsaiController#Ad[]} timeline A list of the ads to play for the current video
      */
-    this.buildTimeline = // Video restrictions can be provided at the ad level. If provided, the player will
-      // attempt to create a video element that supports the given video restrictions.
-      // If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
-      // If the element is not created due to lack of support from the available video plugins,
-      // the ad will be skipped
-      () => null
-    ;
+    // Video restrictions can be provided at the ad level. If provided, the player will
+    // attempt to create a video element that supports the given video restrictions.
+    // If created, it will exist in amc.ui.adVideoElement by the time playAd is called.
+    // If the element is not created due to lack of support from the available video plugins,
+    // the ad will be skipped
+    this.buildTimeline = () => null;
 
     /**
      * Registered as a callback with the AMC, which gets called by the Ad Manager Controller when the the play head updates
@@ -778,9 +777,8 @@ OO.Ads.manager(() => {
             }
           }
         } else {
-          OO.log(`Ooyala SSAI: ID3 Metadata String contains${queryParameterStrings.length
-          }query parameters, but was expected to contain 3 query parameters: ${
-            _id3QueryParametersToString()}`);
+          OO.log(`Ooyala SSAI: ID3 Metadata String contains${queryParameterStrings.length}query parameters,
+                  but was expected to contain 3 query parameters: ${_id3QueryParametersToString()}`);
           parsedId3Object = null;
         }
       }

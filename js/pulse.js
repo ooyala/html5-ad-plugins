@@ -147,14 +147,14 @@
         const pos = parseInt(position);
         const insertionPointFilter = [];
 
-        if (pos & PREROLL) {
+        if (pos && PREROLL) {
           insertionPointFilter.push('onBeforeContent');
         }
-        if (pos & INSTREAM) {
+        if (pos && INSTREAM) {
           insertionPointFilter.push('playbackPosition');
           insertionPointFilter.push('playbackTime');
         }
-        if (pos & POSTROLL) {
+        if (pos && POSTROLL) {
           insertionPointFilter.push('onContentEnd');
         }
 
