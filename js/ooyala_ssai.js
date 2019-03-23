@@ -607,12 +607,14 @@ OO.Ads.manager(() => {
       if (queryParams === null) {
         return;
       }
-      for (let index = 0; index < queryParams.length; index++) {
+
+      let index = 0;
+      const ln = queryParams.length;
+
+      for (; index < ln; index++) {
         const paramParts = queryParams[index].split('=');
-        if (paramParts === null) {
-          continue;
-        }
-        if (paramParts[0] === 'ssai_guid') {
+
+        if (paramParts !== null && paramParts[0] === 'ssai_guid') {
           this.ssaiGuid = paramParts[1];
           return;
         }
