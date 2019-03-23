@@ -2475,7 +2475,7 @@ OO.Ads.manager(() => {
       let linearAdCount = 0;
       each(ads, (ad) => {
         if (!isEmpty(ad.linear)) {
-          linearAdCount++;
+          linearAdCount += 1;
         }
       });
 

@@ -954,7 +954,7 @@ OO.Ads.manager(() => {
      * @param {object} event The ad impression object indicating which ad started
      */
     const fw_onAdImpression = (event) => {
-      indexInPod++;
+      indexInPod += 1;
       if (!event || !event.adInstance) {
         return;
       }

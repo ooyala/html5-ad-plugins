@@ -688,13 +688,13 @@ describe('ad_manager_freewheel', function () {
     let podStartedCount = 0;
     let focusAdVideoCount = 0;
     amc.focusAdVideo = function () {
-      focusAdVideoCount++;
+      focusAdVideoCount += 1;
     };
     amc.notifyLinearAdStarted = function () {
-      linearAdStartedCount++;
+      linearAdStartedCount += 1;
     };
     amc.notifyPodStarted = function () {
-      podStartedCount++;
+      podStartedCount += 1;
     };
     const adInstance = new AdInstance({
       name: 'blah',

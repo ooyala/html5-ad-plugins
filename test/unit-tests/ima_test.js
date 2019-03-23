@@ -793,14 +793,14 @@ describe('ad_manager_ima', function () {
     initAndPlay(true, vci);
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
       if (adManager === name && streams.ima) {
-        forcedAdNotified++;
+        forcedAdNotified += 1;
       }
     };
     amc.appendToTimeline = function (ads) {
       appendedToTimeline = appendedToTimeline.concat(ads);
     };
     amc.notifyPodEnded = function () {
-      podEndedNotified++;
+      podEndedNotified += 1;
     };
 
     ima.playAd(
@@ -883,11 +883,11 @@ describe('ad_manager_ima', function () {
     amc.ui.useSingleVideoElement = true;
     initAndPlay(true, vci);
     amc.notifyLinearAdEnded = function () {
-      linearAdEndedNotified++;
+      linearAdEndedNotified += 1;
     };
 
     amc.notifyPodEnded = function () {
-      podEndedNotified++;
+      podEndedNotified += 1;
     };
 
     ima.playAd(
@@ -971,7 +971,7 @@ describe('ad_manager_ima', function () {
       },
     );
     ima.videoControllerWrapper.raiseTimeUpdate = function () {
-      raiseTimeUpdateCalled++;
+      raiseTimeUpdateCalled += 1;
     };
 
     const am = google.ima.adManagerInstance;
@@ -1111,7 +1111,7 @@ describe('ad_manager_ima', function () {
       },
     );
     ima.videoControllerWrapper.raiseTimeUpdate = function () {
-      raiseTimeUpdateCalled++;
+      raiseTimeUpdateCalled += 1;
     };
 
     const am = google.ima.adManagerInstance;
@@ -2067,10 +2067,10 @@ describe('ad_manager_ima', function () {
     initAndPlay(true, vci);
     const am = google.ima.adManagerInstance;
     am.resume = function () {
-      resumedCount++;
+      resumedCount += 1;
     };
     am.pause = function () {
-      pausedCount++;
+      pausedCount += 1;
     };
     ima.playAd(
       {
@@ -2107,10 +2107,10 @@ describe('ad_manager_ima', function () {
       notify(eventName, params) {
         switch (eventName) {
           case vci.EVENTS.PAUSED:
-            pausedCount++;
+            pausedCount += 1;
             break;
           case vci.EVENTS.PLAYING:
-            resumedCount++;
+            resumedCount += 1;
             break;
           default:
           // do nothing
@@ -2153,7 +2153,7 @@ describe('ad_manager_ima', function () {
     initAndPlay(true, {
       notify(eventName, params) {
         if (eventName === vci.EVENTS.ENDED) {
-          endedCount++;
+          endedCount += 1;
         }
       },
       EVENTS: vci.EVENTS,
@@ -2179,7 +2179,7 @@ describe('ad_manager_ima', function () {
     let adPluginName = null;
     let sdkAdEvent = null;
     amc.onSdkAdEvent = function (name, adEvent) {
-      called++;
+      called += 1;
       adPluginName = name;
       sdkAdEvent = adEvent;
     };
@@ -2200,7 +2200,7 @@ describe('ad_manager_ima', function () {
     let sdkAdEventName = null;
     let sdkAdEventData = null;
     amc.onSdkAdEvent = function (name, event, params) {
-      called++;
+      called += 1;
       adPluginName = name;
       sdkAdEventName = event;
       sdkAdEventData = params;
@@ -2223,7 +2223,7 @@ describe('ad_manager_ima', function () {
     let sdkAdEventName = null;
     let sdkAdEventData = null;
     amc.onSdkAdEvent = function (name, event, params) {
-      called++;
+      called += 1;
       adPluginName = name;
       sdkAdEventName = event;
       sdkAdEventData = params;

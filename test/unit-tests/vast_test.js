@@ -711,7 +711,7 @@ describe('ad_manager_vast', function () {
       skipOffset = offset;
     };
     amc.notifyPodStarted = function (id, podLength) {
-      adPodStartedCalled++;
+      adPodStartedCalled += 1;
       adPodLength = podLength;
     };
     amc.notifyLinearAdStarted = function (name, props) {
@@ -1053,19 +1053,19 @@ describe('ad_manager_vast', function () {
     };
 
     amc.notifyPodStarted = function () {
-      podStartNotified++;
+      podStartNotified += 1;
     };
     amc.notifyPodEnded = function () {
-      podEndNotified++;
+      podEndNotified += 1;
     };
     amc.notifyLinearAdStarted = function () {
-      linearStartNotified++;
+      linearStartNotified += 1;
     };
     amc.notifyLinearAdEnded = function () {
-      linearEndNotified++;
+      linearEndNotified += 1;
     };
     amc.sendURLToLoadAndPlayNonLinearAd = function () {
-      nonLinearStartNotified++;
+      nonLinearStartNotified += 1;
     };
     const embed_code = 'embed_code';
     const vast_ad_mid = {
@@ -1171,19 +1171,19 @@ describe('ad_manager_vast', function () {
     };
 
     amc.notifyPodStarted = function () {
-      podStartNotified++;
+      podStartNotified += 1;
     };
     amc.notifyPodEnded = function () {
-      podEndNotified++;
+      podEndNotified += 1;
     };
     amc.notifyLinearAdStarted = function () {
-      linearStartNotified++;
+      linearStartNotified += 1;
     };
     amc.notifyLinearAdEnded = function () {
-      linearEndNotified++;
+      linearEndNotified += 1;
     };
     amc.sendURLToLoadAndPlayNonLinearAd = function () {
-      nonLinearStartNotified++;
+      nonLinearStartNotified += 1;
     };
     const embed_code = 'embed_code';
     const vast_ad_mid = {
@@ -1249,19 +1249,19 @@ describe('ad_manager_vast', function () {
     };
 
     amc.notifyPodStarted = function () {
-      podStartNotified++;
+      podStartNotified += 1;
     };
     amc.notifyPodEnded = function () {
-      podEndNotified++;
+      podEndNotified += 1;
     };
     amc.notifyLinearAdStarted = function () {
-      linearStartNotified++;
+      linearStartNotified += 1;
     };
     amc.notifyLinearAdEnded = function () {
-      linearEndNotified++;
+      linearEndNotified += 1;
     };
     amc.sendURLToLoadAndPlayNonLinearAd = function () {
-      nonLinearStartNotified++;
+      nonLinearStartNotified += 1;
     };
     const embed_code = 'embed_code';
     const vast_ad_mid = {
@@ -1859,10 +1859,10 @@ describe('ad_manager_vast', function () {
     };
 
     amc.sendURLToLoadAndPlayNonLinearAd = function () {
-      nonLinearStartNotified++;
+      nonLinearStartNotified += 1;
     };
     amc.notifyNonlinearAdEnded = function () {
-      nonLinearEndNotified++;
+      nonLinearEndNotified += 1;
     };
 
     vastAdManager.initialize(amc);
@@ -2587,11 +2587,11 @@ describe('ad_manager_vast', function () {
     vpaidInitialize();
 
     amc.notifyPodStarted = function () {
-      podStartedNotified++;
+      podStartedNotified += 1;
     };
 
     amc.notifyLinearAdStarted = function () {
-      linearStartedNotified++;
+      linearStartedNotified += 1;
     };
 
     const ad = amc.timeline[1];
@@ -2609,11 +2609,11 @@ describe('ad_manager_vast', function () {
     vpaidInitialize();
 
     amc.notifyPodEnded = function () {
-      podEndNotified++;
+      podEndNotified += 1;
     };
 
     amc.notifyLinearAdEnded = function () {
-      linearEndNotified++;
+      linearEndNotified += 1;
     };
 
     const ad = amc.timeline[1];
@@ -2632,11 +2632,11 @@ describe('ad_manager_vast', function () {
     vpaidInitialize();
 
     amc.notifyPodEnded = function () {
-      podEndNotified++;
+      podEndNotified += 1;
     };
 
     amc.notifyLinearAdEnded = function () {
-      linearEndNotified++;
+      linearEndNotified += 1;
     };
 
     const ad = amc.timeline[1];
@@ -2691,11 +2691,11 @@ describe('ad_manager_vast', function () {
     vpaidInitialize();
 
     amc.notifyPodEnded = function () {
-      podEndNotified++;
+      podEndNotified += 1;
     };
 
     amc.notifyLinearAdEnded = function () {
-      linearEndNotified++;
+      linearEndNotified += 1;
     };
 
     const ad = amc.timeline[1];
@@ -2730,7 +2730,7 @@ describe('ad_manager_vast', function () {
     vpaidInitialize(vpaidNonLinearXML);
 
     amc.notifyLinearAdStarted = function () {
-      linearStartedNotified++;
+      linearStartedNotified += 1;
     };
     const ad = amc.timeline[1];
     vastAdManager.playAd(ad);

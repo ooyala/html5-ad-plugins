@@ -32,7 +32,12 @@ module.exports = {
     "no-redeclare": "warn",
     "func-names": "warn",
     "camelcase": "warn",
-    "no-plusplus": "warn",
+    "no-plusplus": [
+      "error",
+      {
+        "allowForLoopAfterthoughts": true
+      }
+    ],
     "new-cap": "warn",
     "prefer-destructuring": "warn",
     "no-shadow": "warn",
