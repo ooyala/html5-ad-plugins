@@ -3699,6 +3699,7 @@ OO.Ads.manager(() => {
     const _safeFunctionCall = (vpaidAd, funcName, params) => {
       try {
         if (isFunction(vpaidAd[funcName])) {
+          // eslint-disable-next-line prefer-spread
           return vpaidAd[funcName].apply(vpaidAd, params);
         }
       } catch (err) {

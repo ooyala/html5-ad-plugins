@@ -50,6 +50,5 @@ module.exports = {
     "prefer-rest-params": "warn",
     "no-unreachable": "warn",
     "no-unused-expressions": "warn",
-    "prefer-spread": "warn",
   },
 };
