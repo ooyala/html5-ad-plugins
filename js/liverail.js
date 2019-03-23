@@ -11,6 +11,7 @@
 const {
   isFunction,
   extend,
+  each,
 } = require('underscore');
 
 OO.Ads.manager(() => {
@@ -78,14 +79,11 @@ OO.Ads.manager(() => {
       liverailVPAIDManager = liverailFrame.contentWindow.getVPAIDAd();
       liverailVPAIDManager.handshakeVersion('2.0');
 
-      let eventName;
-      for (eventName in VPAID_EVENTS) {
-        // liverailVPAIDManager.subscribe(() => {this._onAdEvent(VPAID_EVENTS[eventName])}),
+      each(VPAID_EVENTS, (eventName) => {
         liverailVPAIDManager.subscribe(() => {
           this._onAdEvent(VPAID_EVENTS[eventName]);
-        },
-        VPAID_EVENTS[eventName]);
-      }
+        }, VPAID_EVENTS[eventName]);
+      });
 
       _tryInit();
     };

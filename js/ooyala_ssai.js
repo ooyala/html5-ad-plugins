@@ -999,12 +999,8 @@ OO.Ads.manager(() => {
      * associated URL array.
      */
     const _pingTrackingUrls = (urlObject) => {
-      for (const trackingName in urlObject) {
-        if (!urlObject.hasOwnProperty(trackingName)) {
-          return;
-        }
+      each(urlObject, (urls, trackingName) => {
         try {
-          let urls = urlObject[trackingName];
           if (!urls) {
             OO.log(`Ooyala SSAI: No "${trackingName}" tracking URLs provided to ping`);
             return;
@@ -1020,7 +1016,7 @@ OO.Ads.manager(() => {
             amc.raiseAdError(e);
           }
         }
-      }
+      });
     };
 
     /**

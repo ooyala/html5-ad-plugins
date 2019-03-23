@@ -655,16 +655,15 @@ OO.Ads.manager(() => {
           _tryRaiseAdError(`VPAID 2.0: error while getting vpaid creative - ${e}`);
         }
 
-
         // Subscribe to ad unit events
-        for (eventName in VPAID_EVENTS) {
+        each(VPAID_EVENTS, (eventNameValue) => {
           try {
-            currentAd.vpaidAd.subscribe(bind(_onVpaidAdEvent, this, VPAID_EVENTS[eventName]),
-              VPAID_EVENTS[eventName], this);
+            currentAd.vpaidAd.subscribe(bind(_onVpaidAdEvent, this, eventNameValue),
+              eventNameValue, this);
           } catch (e) {
             _tryRaiseAdError(`VPAID 2.0: error while subscribing to creative events - ${e}`);
           }
-        }
+        });
 
         this._slot = _createUniqueElement();
         this._videoSlot = this.amc.ui.adVideoElement[0];
@@ -1979,14 +1978,13 @@ OO.Ads.manager(() => {
       if (linearAd && linearAd.mediaFiles) {
         const vastStreams = linearAd.mediaFiles;
         const videoEncodingsSupported = OO.VIDEO.ENCODING;
-        let streamData;
-        for (const encoding in videoEncodingsSupported) {
-          streamData = null;
-          streamData = this.extractStreamForType(vastStreams, videoEncodingsSupported[encoding]);
+
+        each(videoEncodingsSupported, (encodingValue) => {
+          const streamData = this.extractStreamForType(vastStreams, encodingValue);
           if (streamData) {
-            streams[videoEncodingsSupported[encoding]] = streamData;
+            streams[encodingValue] = streamData;
           }
-        }
+        });
       }
 
       vastAdUnit.streams = streams;
@@ -3663,10 +3661,9 @@ OO.Ads.manager(() => {
      * @method Vast#_removeListeners
      */
     const _removeListeners = (currentAd) => {
-      let eventName;
-      for (eventName in VPAID_EVENTS) {
+      each(VPAID_EVENTS, (eventName) => {
         currentAd.unsubscribe(eventName);
-      }
+      });
     };
 
     /**

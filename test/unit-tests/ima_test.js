@@ -3,6 +3,10 @@
  * https://github.com/Automattic/expect.js
  */
 
+const {
+  each,
+} = require('underscore');
+
 // stubs
 OO.log = function () {
 };
@@ -2293,14 +2297,13 @@ describe('ad_manager_ima', function () {
       sdkAdEventName = event;
       sdkAdEventData = params;
     };
-    let event;
-    for (const i in imaAdEvents) {
-      event = imaAdEvents[i];
+
+    each(imaAdEvents, (event, i) => {
       am.publishEvent(event);
       expect(adPluginName).to.be(ima.name);
       expect(sdkAdEventName).to.be(event);
       expect(_.isEmpty(sdkAdEventData)).to.be(false);
-    }
+    });
   });
 
   it('AMC Integration: IMA plugin provides a default value of 15000 ms for loadVideoTimeout', () => {

@@ -30,10 +30,10 @@
     };
 
     /**
-         * @class PulseAdManager
-         * @classDesc The Pulse Ad Manager class.
-         * @public
-         */
+     * @class PulseAdManager
+     * @classDesc The Pulse Ad Manager class.
+     * @public
+     */
     const PulseAdManager = function () {
       this.name = 'videoplaza-ads-manager';// mandatory to get the ad set info from Backlot
       this.ready = false; // Also mandatory so the player knows if the ad manager is ready
@@ -64,9 +64,7 @@
       const pulseSDKUrl = '/proxy/pulse-sdk-html5/2.1/latest.min.js';
       let adModuleState = AD_MODULE_STATE.UNINITIALIZED;
       let enableDebugMode = false;
-      let pluginCallbacks = {
-
-      };
+      let pluginCallbacks = {};
       let forcedSiteId;
       let previewAdId;
       let noPulseConfiguration = false;
@@ -74,15 +72,15 @@
       this.getAdPlayer = () => adPlayer;
 
       /**
-             * Called by the AMF when the UI is ready.
-             */
+       * Called by the AMF when the UI is ready.
+       */
       this.registerUi = () => {
         this.ui = amc.ui;
         // Set the CSS overlay so it's responsive
 
         const style = document.createElement('style');
         const css = '.oo-ad-overlay-image { width:100% !important}'
-                    + ' .oo-ad-overlay {  margin:auto !important}';
+          + ' .oo-ad-overlay {  margin:auto !important}';
 
         style.type = 'text/css';
         if (style.styleSheet) {
@@ -93,7 +91,7 @@
         document.getElementsByTagName('head')[0].appendChild(style);
 
         if (amc.ui.useSingleVideoElement && !this.sharedVideoElement && amc.ui.ooyalaVideoElement[0]
-                    && (amc.ui.ooyalaVideoElement[0].className === 'video')) {
+          && (amc.ui.ooyalaVideoElement[0].className === 'video')) {
           this.sharedVideoElement = this.ui.ooyalaVideoElement[0];
         }
       };
@@ -350,10 +348,10 @@
       };
 
       /**
-             * When an ad is canceled
-             * @param ad v4ad
-             * @param params error code
-             */
+       * When an ad is canceled
+       * @param ad v4ad
+       * @param params error code
+       */
       this.cancelAd = (ad, params) => {
         // Only skip can happen
         if (params.code === 'skipped') {
@@ -370,9 +368,9 @@
       };
 
       /**
-             * Pause the ad player
-             * @param ad v4 ad
-             */
+       * Pause the ad player
+       * @param ad v4 ad
+       */
       this.pauseAd = (ad) => {
         if (adPlayer) {
           adPlayer.pause();
@@ -380,9 +378,9 @@
       };
 
       /**
-             * Resume the v4ad
-             * @param ad
-             */
+       * Resume the v4ad
+       * @param ad
+       */
       this.resumeAd = (ad) => {
         if (adPlayer) {
           adPlayer.play();
@@ -390,12 +388,12 @@
       };
 
       /**
-             * <i>Optional.</i><br/>
-             * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
-             * called
-             * @method AdManager#playerClicked
-             * @public
-             */
+       * <i>Optional.</i><br/>
+       * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
+       * called
+       * @method AdManager#playerClicked
+       * @public
+       */
       this.playerClicked = (amcAd, showPage) => {
         if (this._currentAd) {
           const clickThroughURL = this._currentAd.getClickthroughURL();
@@ -410,11 +408,11 @@
       };
 
       /**
-             * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
-             * the Ad Manager Controller.
-             * @method AdManager#destroy
-             * @public
-             */
+       * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
+       * the Ad Manager Controller.
+       * @method AdManager#destroy
+       * @public
+       */
       this.destroy = () => {
         // Stop any running ads
         if (adPlayer) {
@@ -465,9 +463,9 @@
       };
 
       /**
-             * Called by the Pulse SDK when an overlay should shown
-             * @param pulseOverlayAd
-             */
+       * Called by the Pulse SDK when an overlay should shown
+       * @param pulseOverlayAd
+       */
       this.showOverlayAd = (pulseOverlayAd) => {
         if (currentOverlayAd) {
           onOverlayFinished();
@@ -482,9 +480,9 @@
       };
 
       /**
-             * Called by the Pulse SDK to show a pause ad.
-             * @param pulsePauseAd
-             */
+       * Called by the Pulse SDK to show a pause ad.
+       * @param pulsePauseAd
+       */
       this.showPauseAd = (pulsePauseAd) => {
         /* not implemented */
       };
@@ -516,11 +514,11 @@
       };
 
       /**
-             * Checks to see if the ad player is muted.
-             * @protected
-             * @method Pulse#muted
-             * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
-             */
+       * Checks to see if the ad player is muted.
+       * @protected
+       * @method Pulse#muted
+       * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
+       */
       this.muted = () => {
         let muted = true;
         if (adPlayer) {
@@ -541,7 +539,9 @@
       };
 
       const _onMainVideoTimeUpdate = (event, playheadTime, duration) => {
-        if (adPlayer) { adPlayer.contentPositionChanged(playheadTime); }
+        if (adPlayer) {
+          adPlayer.contentPositionChanged(playheadTime);
+        }
       };
 
       const _onPlayStarted = () => {
@@ -645,25 +645,25 @@
       };
 
       /**
-             * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
-             * the video controller wrapper to notify the player of the volume change event.
-             * @private
-             * @method Pulse#_onAdVolumeChanged
-             * @param {String} event The event name
-             * @param {Object} metadata The metadata associated with the event
-             */
+       * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
+       * the video controller wrapper to notify the player of the volume change event.
+       * @private
+       * @method Pulse#_onAdVolumeChanged
+       * @param {String} event The event name
+       * @param {Object} metadata The metadata associated with the event
+       */
       const _onAdVolumeChanged = (event, metadata) => {
         this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
       };
 
       /**
-             * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
-             * the video controller wrapper to notify the player of the playback failure.
-             * @private
-             * @method Pulse#_onAdPlayPromiseRejected
-             * @param {String} event The event name
-             * @param {Object} metadata The metadata associated with the event
-             */
+       * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
+       * the video controller wrapper to notify the player of the playback failure.
+       * @private
+       * @method Pulse#_onAdPlayPromiseRejected
+       * @param {String} event The event name
+       * @param {Object} metadata The metadata associated with the event
+       */
       const _onAdPlayPromiseRejected = (event, metadata) => {
         if (this.muted()) {
           this.videoControllerWrapper.raiseMutedPlaybackFailed();
@@ -816,14 +816,15 @@
 
         // Check for some callbacks to expose plugin internals
         // (clear any old callbacks that may have been registered first)
-        pluginCallbacks = { };
+        pluginCallbacks = {};
         if (adManagerMetadata.pulse_callbacks) {
-          let callback;
           for (const name in adManagerMetadata.pulse_callbacks) {
-            callback = adManagerMetadata.pulse_callbacks[name];
+            if (adManagerMetadata.pulse_callbacks.hasOwnProperty(name)) {
+              const callback = adManagerMetadata.pulse_callbacks[name];
 
-            if (typeof callback === 'function') {
-              pluginCallbacks[name] = callback;
+              if (typeof callback === 'function') {
+                pluginCallbacks[name] = callback;
+              }
             }
           }
         }
@@ -1193,7 +1194,8 @@
      * @private
      * @method PulseVideoWrapper#unsubscribeAllEvents
      */
-    const unsubscribeAllEvents = () => {};
+    const unsubscribeAllEvents = () => {
+    };
 
     /**
      * Sets the url of the video.
@@ -1230,7 +1232,11 @@
 
 
     this.togglePlayPause = () => {
-      if (this.isPlaying) { this.pause(); } else { this.play(); }
+      if (this.isPlaying) {
+        this.pause();
+      } else {
+        this.play();
+      }
     };
     /**
      * Triggers playback on the video element.  If the 'load' function was not already called and the stream
@@ -1512,16 +1518,16 @@
     this.ready = true;
 
     /**
-         * Creates a video player instance using PulseVideoWrapper.
-         * @public
-         * @method TemplateVideoFactory#create
-         * @param {object} parentContainer The jquery div that should act as the parent for the video element
-         * @param {string} domId The dom id of the video player instance to create
-         * @param {object} ooyalaVideoController A reference to the video controller in the Ooyala player
-         * @param {object} css The css to apply to the video element
-         * @param {string} playerId The unique player identifier of the player creating this instance
-         * @returns {object} A reference to the wrapper for the newly created element
-         */
+     * Creates a video player instance using PulseVideoWrapper.
+     * @public
+     * @method TemplateVideoFactory#create
+     * @param {object} parentContainer The jquery div that should act as the parent for the video element
+     * @param {string} domId The dom id of the video player instance to create
+     * @param {object} ooyalaVideoController A reference to the video controller in the Ooyala player
+     * @param {object} css The css to apply to the video element
+     * @param {string} playerId The unique player identifier of the player creating this instance
+     * @returns {object} A reference to the wrapper for the newly created element
+     */
     this.create = (parentContainer, domId, ooyalaVideoController, css, playerId) => {
       const pulseAdManager = pulseAdManagers[playerId];
       const wrapper = new PulseVideoWrapper(pulseAdManager);
@@ -1541,21 +1547,22 @@
       return wrapper;
     };
     /**
-         * Destroys the video technology factory.
-         * @public
-         * @method TemplateVideoFactory#destroy
-         */
+     * Destroys the video technology factory.
+     * @public
+     * @method TemplateVideoFactory#destroy
+     */
     this.destroy = () => {
       this.encodings = [];
-      this.create = () => {};
+      this.create = () => {
+      };
     };
 
     /**
-         * Represents the max number of support instances of video elements that can be supported on the
-         * current platform. -1 implies no limit.
-         * @public
-         * @property TemplateVideoFactory#maxSupportedElements
-         */
+     * Represents the max number of support instances of video elements that can be supported on the
+     * current platform. -1 implies no limit.
+     * @public
+     * @property TemplateVideoFactory#maxSupportedElements
+     */
     this.maxSupportedElements = -1;
   };
 

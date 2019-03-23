@@ -247,7 +247,7 @@ require('../html5-common/js/utils/utils.js');
         // we have timed out
         // This may be a fault of the plugin or SDK. More investigation is required
         if (isFinite(_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT])
-            && (_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0 || this.runningUnitTests)) {
+          && (_amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT] > 0 || this.runningUnitTests)) {
           this.maxAdsRequestTimeout = _amc.adManagerSettings[_amc.AD_SETTINGS.AD_LOAD_TIMEOUT];
         }
 
@@ -346,7 +346,7 @@ require('../html5-common/js/utils/utils.js');
       this.registerUi = () => {
         this.uiRegistered = true;
         if (_amc.ui.useSingleVideoElement && !this.sharedVideoElement && _amc.ui.ooyalaVideoElement[0]
-            && (_amc.ui.ooyalaVideoElement[0].className === 'video')) {
+          && (_amc.ui.ooyalaVideoElement[0].className === 'video')) {
           this.setupSharedVideoElement(_amc.ui.ooyalaVideoElement[0]);
         }
 
@@ -363,7 +363,7 @@ require('../html5-common/js/utils/utils.js');
       this.setupSharedVideoElement = (element) => {
         // Remove any listeners we added on the previous shared video element
         if (this.sharedVideoElement && OO.isIphone
-            && typeof this.sharedVideoElement.removeEventListener === 'function') {
+          && typeof this.sharedVideoElement.removeEventListener === 'function') {
           this.sharedVideoElement.removeEventListener('webkitendfullscreen', _raisePauseEvent);
         }
         this.sharedVideoElement = element;
@@ -371,7 +371,7 @@ require('../html5-common/js/utils/utils.js');
         // we leave the native player
         // This is a workaround to listen for the webkitendfullscreen event ourselves
         if (this.sharedVideoElement && OO.isIphone
-            && typeof this.sharedVideoElement.addEventListener === 'function') {
+          && typeof this.sharedVideoElement.addEventListener === 'function') {
           this.sharedVideoElement.addEventListener('webkitendfullscreen', _raisePauseEvent);
         }
       };
@@ -811,7 +811,7 @@ require('../html5-common/js/utils/utils.js');
         // PLAYER-2426: We do not want to mute if we are using ad rules, are handling the initial ad request
         // for ad rules, and found no prerolls.
         const noPrerollAdRulesAdRequest = _usingAdRules && !this.hasPreroll && this.currentAMCAdPod
-            && this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST;
+          && this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST;
         if (this.willPlayAdMuted() && this.videoControllerWrapper && !noPrerollAdRulesAdRequest) {
           this.startImaOnVtcPlay = true;
           this.videoControllerWrapper.raiseUnmutedPlaybackFailed();
@@ -844,7 +844,7 @@ require('../html5-common/js/utils/utils.js');
         // if you run it before then ima will take over and immediately try to play
         // ads (if there is a preroll)
         const validAdRequestSuccess = this.currentAMCAdPod && _adToPlayOnRequestSuccess
-              === this.currentAMCAdPod;
+          === this.currentAMCAdPod;
         const readyToPlay = validAdRequestSuccess || _usingAdRules;
         if (_IMAAdsManager && this.initialPlayRequested && !_imaAdPlayed && _uiContainer && readyToPlay) {
           try {
@@ -985,12 +985,12 @@ require('../html5-common/js/utils/utils.js');
       const _trySetupAdsRequest = () => {
         // need metadata, ima sdk, and ui to be registered before we can request an ad
         if (this.adsRequested
-            || !this.canSetupAdsRequest
-            || !this.adTagUrl
-            || !this.uiRegistered
-            || !_amc.currentEmbedCode
-            || !_IMAAdsLoader
-            || !_checkRequestAdsOnReplay()) {
+          || !this.canSetupAdsRequest
+          || !this.adTagUrl
+          || !this.uiRegistered
+          || !_amc.currentEmbedCode
+          || !_IMAAdsLoader
+          || !_checkRequestAdsOnReplay()) {
           return;
         }
 
@@ -1006,10 +1006,10 @@ require('../html5-common/js/utils/utils.js');
 
           // Generate an array of key/value pairings, for faster string concat
           const paramArray = [];
-          let param = null;
-          for (param in this.additionalAdTagParameters) {
-            paramArray.push(`${param}=${this.additionalAdTagParameters[param]}`);
-          }
+          each(this.additionalAdTagParameters, (paramValue, param) => {
+            paramArray.push(`${param}=${paramValue}`);
+          });
+
           this.adTagUrl += connector + paramArray.join('&');
         }
         adsRequest.adTagUrl = OO.getNormalizedTagUrl(this.adTagUrl, _amc.currentEmbedCode);
@@ -2294,8 +2294,10 @@ require('../html5-common/js/utils/utils.js');
      */
     this.destroy = () => {
       this.encodings = [];
-      this.create = () => {};
-      this.createFromExisting = () => {};
+      this.create = () => {
+      };
+      this.createFromExisting = () => {
+      };
     };
 
     /**

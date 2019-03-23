@@ -41,7 +41,6 @@ module.exports = {
     "no-param-reassign": "warn",
     "no-prototype-builtins": "warn",
     "no-restricted-globals": "warn",
-    "guard-for-in": "warn",
     "no-restricted-syntax": "warn",
     "prefer-rest-params": "warn",
     "no-unreachable": "warn",
@@ -49,6 +48,5 @@ module.exports = {
     "no-unused-expressions": "warn",
     "prefer-spread": "warn",
     "no-mixed-operators": "warn",
-    "no-loop-func": "warn",
   },
 };
