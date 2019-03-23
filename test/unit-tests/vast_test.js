@@ -76,29 +76,6 @@ describe('ad_manager_vast', function () {
   let errorType = [];
   let adsClickthroughOpenedCalled = 0;
 
-  const initialize = function () {
-    const embed_code = 'embed_code';
-    const vast_ad = {
-      type: 'vast',
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: 'ad_set_code',
-      time: 0,
-      position_type: 't',
-      position: 0,
-      url: 'http://blahurl',
-    };
-    const content = {
-      embed_code,
-      ads: [vast_ad],
-    };
-    vastAdManager.initialize(amc);
-    vastAdManager.loadMetadata({
-      html5_ssl_ad_server: 'https://blah',
-      html5_ad_server: 'http://blah',
-    }, {}, content);
-  };
-
   const initialPlay = function () {
     amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
   };
@@ -1151,11 +1128,6 @@ describe('ad_manager_vast', function () {
   });
 
   it('Vast 3.0: On ad timeout, fallback ad will be shown', () => {
-    let nonLinearStartNotified = 0;
-    let podStartNotified = 0;
-    let podEndNotified = 0;
-    let linearStartNotified = 0;
-    let linearEndNotified = 0;
     const adQueue = [];
 
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
@@ -1170,21 +1142,11 @@ describe('ad_manager_vast', function () {
       adQueue.push(newAd);
     };
 
-    amc.notifyPodStarted = function () {
-      podStartNotified += 1;
-    };
-    amc.notifyPodEnded = function () {
-      podEndNotified += 1;
-    };
-    amc.notifyLinearAdStarted = function () {
-      linearStartNotified += 1;
-    };
-    amc.notifyLinearAdEnded = function () {
-      linearEndNotified += 1;
-    };
-    amc.sendURLToLoadAndPlayNonLinearAd = function () {
-      nonLinearStartNotified += 1;
-    };
+    amc.notifyPodStarted = function () {};
+    amc.notifyPodEnded = function () {};
+    amc.notifyLinearAdStarted = function () {};
+    amc.notifyLinearAdEnded = function () {};
+    amc.sendURLToLoadAndPlayNonLinearAd = function () {};
     const embed_code = 'embed_code';
     const vast_ad_mid = {
       type: 'vast',
@@ -1229,11 +1191,6 @@ describe('ad_manager_vast', function () {
   });
 
   it('Vast 3.0: On ad playback error, fallback ad will be shown', () => {
-    let nonLinearStartNotified = 0;
-    let podStartNotified = 0;
-    let podEndNotified = 0;
-    let linearStartNotified = 0;
-    let linearEndNotified = 0;
     const adQueue = [];
 
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
@@ -1248,21 +1205,11 @@ describe('ad_manager_vast', function () {
       adQueue.push(newAd);
     };
 
-    amc.notifyPodStarted = function () {
-      podStartNotified += 1;
-    };
-    amc.notifyPodEnded = function () {
-      podEndNotified += 1;
-    };
-    amc.notifyLinearAdStarted = function () {
-      linearStartNotified += 1;
-    };
-    amc.notifyLinearAdEnded = function () {
-      linearEndNotified += 1;
-    };
-    amc.sendURLToLoadAndPlayNonLinearAd = function () {
-      nonLinearStartNotified += 1;
-    };
+    amc.notifyPodStarted = function () {};
+    amc.notifyPodEnded = function () {};
+    amc.notifyLinearAdStarted = function () {};
+    amc.notifyLinearAdEnded = function () {};
+    amc.sendURLToLoadAndPlayNonLinearAd = function () {};
     const embed_code = 'embed_code';
     const vast_ad_mid = {
       type: 'vast',
@@ -1393,28 +1340,12 @@ describe('ad_manager_vast', function () {
    */
 
   it('Vast 3.0, Error Reporting: should report XML parsing error', () => {
-    const embed_code = 'embed_code';
-    const vast_ad_mid = {
-      type: 'vast',
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: 'ad_set_code',
-      time: 10,
-      position_type: 't',
-      url: '1.jpg',
-    };
-
     const vast_ad_request = {
       adManager: 'vast',
       ad: {
         type: vastAdManager.AD_REQUEST_TYPE,
         url: '1.jpg',
       },
-    };
-
-    const content = {
-      embed_code,
-      ads: [vast_ad_mid],
     };
 
     vastAdManager.initialize(amc);
@@ -1428,20 +1359,6 @@ describe('ad_manager_vast', function () {
   });
 
   it('Vast 3.0, Error Reporting: Should report unsupported vast version error', () => {
-    const embed_code = 'embed_code';
-    const vast_ad_mid = {
-      type: 'vast',
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: 'ad_set_code',
-      time: 10,
-      position_type: 't',
-      url: '1.jpg',
-    };
-    const content = {
-      embed_code,
-      ads: [vast_ad_mid],
-    };
     vastAdManager.initialize(amc);
 
     vastAdManager.isValidVastVersion('');
@@ -1449,20 +1366,6 @@ describe('ad_manager_vast', function () {
   });
 
   it('Vast 3.0, Error Reporting: Should report schema validation error', () => {
-    const embed_code = 'embed_code';
-    const vast_ad_mid = {
-      type: 'vast',
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: 'ad_set_code',
-      time: 10,
-      position_type: 't',
-      url: '1.jpg',
-    };
-    const content = {
-      embed_code,
-      ads: [vast_ad_mid],
-    };
     vastAdManager.initialize(amc);
 
     vastAdManager.isValidRootTagName('');
@@ -1500,7 +1403,6 @@ describe('ad_manager_vast', function () {
    */
 
   it('Vast 3.0, Error Reporting: Should report general linear ads error', () => {
-    const embed_code = 'embed_code';
     const vast_ad_mid = {
       type: 'vast',
       first_shown: 0,
@@ -1509,10 +1411,6 @@ describe('ad_manager_vast', function () {
       time: 10,
       position_type: 't',
       url: '1.jpg',
-    };
-    const content = {
-      embed_code,
-      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
 
@@ -1528,7 +1426,6 @@ describe('ad_manager_vast', function () {
   });
 
   it('Vast 3.0, Error Reporting: Should report general nonlinear ads error', () => {
-    const embed_code = 'embed_code';
     const vast_ad_mid = {
       type: 'vast',
       first_shown: 0,
@@ -1537,10 +1434,6 @@ describe('ad_manager_vast', function () {
       time: 10,
       position_type: 't',
       url: '1.jpg',
-    };
-    const content = {
-      embed_code,
-      ads: [vast_ad_mid],
     };
     vastAdManager.initialize(amc);
 
@@ -2711,7 +2604,7 @@ describe('ad_manager_vast', function () {
     let adUnitHandling = true;
     vpaidInitialize();
 
-    vastAdManager.openUrl = function (url) {
+    vastAdManager.openUrl = function () {
       adUnitHandling = false;
     };
 
@@ -3366,7 +3259,7 @@ describe('ad_manager_vast', function () {
       ads: [vast_ad],
     };
     let podEnded = false;
-    amc.notifyPodEnded = function (id) {
+    amc.notifyPodEnded = function () {
       podEnded = true;
     };
     vastAdManager.initialize(amc);
@@ -3382,7 +3275,6 @@ describe('ad_manager_vast', function () {
     // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
     const parentDepthOneId = 'wrapper-parent-1';
     const parentDepthTwoId = 'wrapper-parent-2';
-    const leafId = '6654644'; // Ad ID from linearXML file
 
     const adRequestAd = amc.timeline[0];
     expect(adRequestAd.adType).to.be(amc.ADTYPE.AD_REQUEST);
@@ -3414,7 +3306,7 @@ describe('ad_manager_vast', function () {
       ads: [vast_ad],
     };
     let podEnded = false;
-    amc.notifyPodEnded = function (id) {
+    amc.notifyPodEnded = function () {
       podEnded = true;
     };
     vastAdManager.initialize(amc);
@@ -3424,13 +3316,6 @@ describe('ad_manager_vast', function () {
     }, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
-
-    // Wrapper ads could be visualized as a tree with parents and children,
-    // but in this case, it looks more like a linked list:
-    // wrapper-parent-1 -> wrapper-parent-2 -> 6654644 (Inline Linear Ad)
-    const parentDepthOneId = 'wrapper-parent-1';
-    const parentDepthTwoId = 'wrapper-parent-2';
-    const leafId = '6654644'; // Ad ID from linearXML file
 
     const adRequestAd = amc.timeline[0];
     expect(adRequestAd.adType).to.be(amc.ADTYPE.AD_REQUEST);

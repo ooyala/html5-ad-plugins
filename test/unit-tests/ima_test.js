@@ -22,7 +22,6 @@ describe('ad_manager_ima', function () {
   const playerId = 'ima-player-id';
   const originalOoAds = _.clone(OO.Ads);
   const originalOoVideo = _.clone(OO.Video);
-  const originalMockAmc = null;
   let notifyEventNameHistory = [];
   let notifyParamHistory = [];
   let notifyEventName = null;
@@ -287,7 +286,7 @@ describe('ad_manager_ima', function () {
     ima.initialize(amc, playerId);
     ima.registerUi();
     let pluginLoaded = false;
-    amc.reportPluginLoaded = function (date, name) {
+    amc.reportPluginLoaded = function () {
       pluginLoaded = true;
     };
     ima.loadMetadata({}, {}, {});
@@ -296,7 +295,7 @@ describe('ad_manager_ima', function () {
 
   it('Init: ad sdk loads successfully', () => {
     let sdkLoaded = false;
-    amc.onAdSdkLoaded = function (name) {
+    amc.onAdSdkLoaded = function () {
       sdkLoaded = true;
     };
     ima.initialize(amc, playerId);
@@ -2298,7 +2297,7 @@ describe('ad_manager_ima', function () {
       sdkAdEventData = params;
     };
 
-    each(imaAdEvents, (event, i) => {
+    each(imaAdEvents, (event) => {
       am.publishEvent(event);
       expect(adPluginName).to.be(ima.name);
       expect(sdkAdEventName).to.be(event);

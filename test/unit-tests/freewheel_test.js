@@ -180,7 +180,7 @@ describe('ad_manager_freewheel', function () {
     fw.initialize(amc);
     fw.registerUi();
     let pluginLoaded = false;
-    amc.reportPluginLoaded = function (date, name) {
+    amc.reportPluginLoaded = function () {
       pluginLoaded = true;
     };
     expect(() => {
@@ -647,7 +647,7 @@ describe('ad_manager_freewheel', function () {
     const customId = 1234;
     const overlay = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
     let notified = false;
-    amc.notifyNonlinearAdEnded = function (adId) {
+    amc.notifyNonlinearAdEnded = function () {
       notified = true;
     };
     const adInstance = new AdInstance({

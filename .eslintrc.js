@@ -27,7 +27,7 @@ module.exports = {
     "no-use-before-define": "warn",
     "consistent-return": "warn",
     "no-undef": "warn",
-    "no-unused-vars": "warn",
+    // "no-unused-vars": "warn",
     "radix": "warn",
     "no-redeclare": "warn",
     "func-names": "warn",
