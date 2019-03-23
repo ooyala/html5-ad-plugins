@@ -679,8 +679,8 @@ OO.Ads.manager(() => {
     this.cancelAd = (ad) => {
       // Only cancel the ad if it's current
       if (ad && ad.ad && currentPlayingSlot
-          && ((ad.adType === amc.ADTYPE.AD_REQUEST))
-           || (currentPlayingSlot.getCustomId() === ad.ad.getCustomId())) {
+        && (ad.adType === amc.ADTYPE.AD_REQUEST
+            || currentPlayingSlot.getCustomId() === ad.ad.getCustomId())) {
         _cancelCurrentAd();
       }
     };
