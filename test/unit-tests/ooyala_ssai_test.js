@@ -53,7 +53,7 @@ describe('ad_manager_ooyala_ssai', function () {
   });
 
   beforeEach(() => {
-    amc = new fake_amc();
+    amc = new FakeAmc();
     amc.adManagerList = [];
     amc.onAdManagerReady = function () { this.timeline = this.adManagerList[0].buildTimeline(); };
     amc.adManagerList.push(OoyalaSsai);

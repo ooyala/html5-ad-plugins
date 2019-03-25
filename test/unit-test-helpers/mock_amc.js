@@ -1,6 +1,6 @@
 const sinon = require('sinon');
 
-fake_amc = function () {
+FakeAmc = function () {
   this.timeline = [];
   this.callbacks = {};
   this.addPlayerListener = function (event, callback) {

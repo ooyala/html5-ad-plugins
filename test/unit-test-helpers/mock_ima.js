@@ -67,7 +67,7 @@ const AdsLoader = function () {
     type: google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
     getAdsManager() {
       if (!google.ima.adManagerInstance) {
-        const mockAdManager = function () {
+        const MockAdManager = function () {
           const amCallbacks = {};
           let currentAd = null;
           this.init = function () {
@@ -146,7 +146,7 @@ const AdsLoader = function () {
             return false;
           };
         };
-        google.ima.adManagerInstance = new mockAdManager();
+        google.ima.adManagerInstance = new MockAdManager();
       }
       return google.ima.adManagerInstance;
     },

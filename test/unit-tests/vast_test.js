@@ -135,7 +135,7 @@ describe('ad_manager_vast', function () {
   });
 
   beforeEach(() => {
-    amc = new fake_amc();
+    amc = new FakeAmc();
     amc.adManagerList = [];
     amc.onAdManagerReady = function () {
       this.timeline = this.adManagerList[0].buildTimeline();
@@ -2448,7 +2448,7 @@ describe('ad_manager_vast', function () {
   it('VPAID 2.0: initAd should not be called when any required ad unit function is missing', () => {
     vpaidInitialize();
     global.vpaid.getVPAIDAd = function () {
-      return new global.vpaid.missingFnVPAIDAd();
+      return new global.vpaid.MissingFnVPAIDAd();
     };
     const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
@@ -2459,7 +2459,7 @@ describe('ad_manager_vast', function () {
   it('VPAID 2.0: initAd should not be called when using incorrect version <2.0', () => {
     vpaidInitialize();
     global.vpaid.getVPAIDAd = function () {
-      return new global.vpaid.incorrectVersionVPAIDAd();
+      return new global.vpaid.IncorrectVersionVPAIDAd();
     };
     const ad = amc.timeline[1];
     vastAdManager.playAd(ad);
@@ -2734,7 +2734,7 @@ describe('ad_manager_vast', function () {
     expect(vastAd.ad.streams).to.not.be(null);
     expect(vastAd.ad.streams.hls).to.be('1.m3u8');
 
-    amc = new fake_amc();
+    amc = new FakeAmc();
     vastAdManager.destroy();
     vastAdManager.initialize(amc);
 
@@ -2747,7 +2747,7 @@ describe('ad_manager_vast', function () {
     expect(vastAd.ad.streams).to.not.be(null);
     expect(vastAd.ad.streams.hls).to.be('1.m3u8');
 
-    amc = new fake_amc();
+    amc = new FakeAmc();
     vastAdManager.destroy();
     vastAdManager.initialize(amc);
 
@@ -2760,7 +2760,7 @@ describe('ad_manager_vast', function () {
     expect(vastAd.ad.streams).to.not.be(null);
     expect(vastAd.ad.streams.hls).to.be('1.m3u8');
 
-    amc = new fake_amc();
+    amc = new FakeAmc();
     vastAdManager.destroy();
     vastAdManager.initialize(amc);
 

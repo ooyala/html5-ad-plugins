@@ -18,7 +18,7 @@ describe('ad_manager_freewheel', function () {
   let adsClickthroughOpenedCalled;
 
   // Helper functions
-  const fakeAd = function (timePositionClass, position, duration, customId) {
+  const FakeAd = function (timePositionClass, position, duration, customId) {
     this.getTimePositionClass = function () {
       return timePositionClass;
     };
@@ -65,7 +65,7 @@ describe('ad_manager_freewheel', function () {
   };
 
   const prepareForPreroll = function (customId) {
-    const ad = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, customId);
+    const ad = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, customId);
     const adInstance = new AdInstance({
       name: 'freewilly',
       width: 340,
@@ -111,7 +111,7 @@ describe('ad_manager_freewheel', function () {
   });
 
   beforeEach(() => {
-    amc = new fake_amc();
+    amc = new FakeAmc();
     adsClickthroughOpenedCalled = 0;
   });
 
@@ -584,13 +584,13 @@ describe('ad_manager_freewheel', function () {
   it('Timeline: adds all valid slots', () => {
     getTemporalSlots = function () {
       return [
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1002),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 15, 5000, 1003),
-        new fakeAd('Not an ad', 15, 5000, 1004),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 10, 5000, 1005),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, 1006),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_POSTROLL, 100000000, 5000, 1007),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1002),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 15, 5000, 1003),
+        new FakeAd('Not an ad', 15, 5000, 1004),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 10, 5000, 1005),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, 1006),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_POSTROLL, 100000000, 5000, 1007),
       ];
     };
     initialize();
@@ -603,7 +603,7 @@ describe('ad_manager_freewheel', function () {
 
   it('Non-linear overlay: width and height are sent to AMC. No url is sent to the AMC', () => {
     const customId = 1234;
-    const overlay = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
+    const overlay = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
     let width = -1;
     let height = -1;
     let sentUrl = null;
@@ -645,7 +645,7 @@ describe('ad_manager_freewheel', function () {
 
   it('Non-linear overlay: notifies AMC of end of non-linear ad', () => {
     const customId = 1234;
-    const overlay = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
+    const overlay = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
     let notified = false;
     amc.notifyNonlinearAdEnded = function () {
       notified = true;
@@ -683,7 +683,7 @@ describe('ad_manager_freewheel', function () {
 
   it('Linear ad: notifies AMC of linear ad events', () => {
     const customId = 1234;
-    const linearAd = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 10, 5000, customId);
+    const linearAd = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 10, 5000, customId);
     let linearAdStartedCount = 0;
     let podStartedCount = 0;
     let focusAdVideoCount = 0;
@@ -752,7 +752,7 @@ describe('ad_manager_freewheel', function () {
     };
     getTemporalSlots = function () {
       return [
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
       ];
     };
     initialize();
@@ -769,7 +769,7 @@ describe('ad_manager_freewheel', function () {
     };
     getTemporalSlots = function () {
       return [
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
       ];
     };
     initialize();

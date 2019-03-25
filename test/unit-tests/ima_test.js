@@ -138,7 +138,7 @@ describe('ad_manager_ima', function () {
 
   beforeEach(() => {
     originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
-    amc = new fake_amc();
+    amc = new FakeAmc();
     adsClickthroughOpenedCalled = 0;
   });
 

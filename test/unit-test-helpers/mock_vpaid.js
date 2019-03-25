@@ -81,7 +81,7 @@ global.vpaid.VpaidAd = function () {
 };
 
 // Has all required functions but handshakeVersion returns <2.0
-global.vpaid.incorrectVersionVPAIDAd = function () {
+global.vpaid.IncorrectVersionVPAIDAd = function () {
   this.slot_ = null;
   this.videoSlot_ = null;
   this.properties = {
@@ -104,7 +104,7 @@ global.vpaid.incorrectVersionVPAIDAd = function () {
 };
 
 // required functions missing
-global.vpaid.missingFnVPAIDAd = function () {
+global.vpaid.MissingFnVPAIDAd = function () {
   this.initAd = function () {
     global.vpaid.adInit = true;
   };

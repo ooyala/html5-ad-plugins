@@ -37,7 +37,6 @@ module.exports = {
         "allowForLoopAfterthoughts": true
       }
     ],
-    "new-cap": "warn",
     "prefer-destructuring": "warn",
     "no-shadow": "warn",
     "global-require": "warn",
