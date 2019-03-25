@@ -27,7 +27,6 @@ require('../html5-common/js/utils/utils.js');
 require('../html5-common/js/utils/environment.js');
 
 const VastParser = require('../utils/vast_parser.js');
-const adManagerUtils = require('../utils/ad_manager_utils.js');
 
 OO.Ads.manager(() => {
   /**
@@ -63,7 +62,6 @@ OO.Ads.manager(() => {
     // Tracking Event states
     let adMode = false;
     let firstAdFound = false;
-    const isFullscreen = false;
     let isMuted = false;
     let lastVolume = -1;
 
@@ -74,15 +72,10 @@ OO.Ads.manager(() => {
     const OFFSET_PARAM = 'offset=';
     const AD_ID_PARAM = 'aid=';
 
-    // In the event that the ID3 tag has an ad duration of 0 and the VAST XML response does not specify an
-    // ad duration, use this constant. Live team said the average SSAI ad was 20 seconds long.
-    const FALLBACK_AD_DURATION = 20; // seconds
-
     let baseRequestUrl = '';
     let requestUrl = '';
 
     this.adIdDictionary = {};
-    this.currentId3Object = null;
 
     // The expected query parameters in an ID3 Metadata String
     const ID3_QUERY_PARAMETERS = {
@@ -130,9 +123,6 @@ OO.Ads.manager(() => {
       ERROR: 'error',
     };
 
-    // variable to store the timeout used to keep track of how long an SSAI ad plays
-    let adDurationTimeout;
-
     // player configuration parameters / page level params
     let bustTheCache = true;
 
@@ -157,10 +147,8 @@ OO.Ads.manager(() => {
      * @method OoyalaSsai#loadMetadata
      * @public
      * @param {object} adManagerMetadata Ad manager-specific metadata
-     * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
-     * @param {object} movieMetadata Metadata for the main video
      */
-    this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
+    this.loadMetadata = (adManagerMetadata) => {
       this.ready = true;
       this.timeline = {};
       firstAdFound = false;
@@ -237,12 +225,8 @@ OO.Ads.manager(() => {
      * already been called, then no action is required.
      * @method OoyalaSsai#cancelAd
      * @public
-     * @param {object} ad The ad object to cancel
-     * @param {object} params An object containing information about the cancellation. It will include the
-     *                        following fields:
-     *                 code : The amc.AD_CANCEL_CODE for the cancellation
      */
-    this.cancelAd = (ad, params) => {
+    this.cancelAd = () => {
     };
 
     /**
@@ -535,10 +519,8 @@ OO.Ads.manager(() => {
      * this error itself, it can use this time to end the ad playback.
      * @method OoyalaSsai#adVideoError
      * @public
-     * @param {object} adWrapper The current Ad's metadata
-     * @param {number} errorCode The error code associated with the video playback error
      */
-    this.adVideoError = (adWrapper, errorCode) => {
+    this.adVideoError = () => {
     };
 
     const _onContentChanged = () => {
@@ -807,22 +789,6 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Temporary mock function to force an ad to play until live team fixes ad proxy.
-     * @private
-     * @method OoyalaSsai#_forceMockAd
-     * @param {object} id3Object The ID3 object
-     */
-    const _forceMockAd = (id3Object) => {
-      const ad1 = {
-        clickthrough: 'http://www.google.com',
-        name: 'Test SSAI Ad',
-        ssai: true,
-        isLive: true,
-      };
-      amc.forceAdToPlay(this.name, ad1, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
-    };
-
-    /**
      * Helper function to retrieve the ad object's title.
      * @private
      * @method OoyalaSsai#_getTitle
@@ -910,23 +876,6 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Helper function to get the duration property within the Vast ad object.
-     * @private
-     * @method OoyalaSsai#_getDuration
-     * @param {object} vastAdData The Vast ad object
-     * @returns {string} The Vast ad duration time stamp.
-     */
-    const _getDuration = (vastAdData) => {
-      let duration = null;
-      if (vastAdData
-        && vastAdData.linear
-        && vastAdData.linear.duration) {
-        duration = vastAdData.linear.duration;
-      }
-      return duration;
-    };
-
-    /**
      * Helper function to retrieve how far (in seconds) the current playhead is from the end (VOD).
      * For Live it indicates how far the playhead is from actual Live (this value mostly is 0,
      * unless user seeks back).
@@ -946,31 +895,6 @@ OO.Ads.manager(() => {
      */
     this.setCurrentOffset = (offset) => {
       currentOffset = offset;
-    };
-
-    /**
-     * Helper function adjust the duration to a proper value. The priority from which to grab the duration is:
-     * 1. ID3 Tag ad duration - if the value is 0, fall through
-     * 2. VAST XML Response ad duration - if the ad duration is not defined, fall through
-     * 3. FALLBACK_AD_DURATION
-     * @private
-     * @method OoyalaSsai#_selectDuration
-     * @param {object} id3Object The object containing the ID3 Tag information
-     * @param {object} vastAdData The object containing the parsed Vast ad data
-     * @returns {number} The duration of the ad (in seconds).
-     */
-    const _selectDuration = (id3Object, vastAdData) => {
-      let duration = FALLBACK_AD_DURATION;
-
-      let vastDuration = _getDuration(vastAdData);
-      vastDuration = adManagerUtils.convertTimeStampToMilliseconds(vastDuration) / 1000;
-
-      if (id3Object && id3Object.duration > 0) {
-        duration = id3Object.duration;
-      } else if (vastDuration > 0) {
-        duration = vastDuration;
-      }
-      return duration;
     };
 
     /**
@@ -1127,9 +1051,8 @@ OO.Ads.manager(() => {
      * @method OoyalaSsai#initialize
      * @public
      * @param {object} adManagerController A reference to the Ad Manager Controller
-     * @param {string} playerId The unique player identifier of the player initializing the class
      */
-    this.initialize = (adManagerController, playerId) => {
+    this.initialize = (adManagerController) => {
       amc = adManagerController;
 
       // Request embed code provider metadata
@@ -1311,14 +1234,8 @@ OO.Ads.manager(() => {
      * @method OoyalaSsai#playAd
      * @public
      * @param {object} ad The ad object to play
-     * @param {function} adPodStartedCallback Call this function when the ad or group of podded ads have
-     *                                        started
-     * @param {function} adPodEndedCallback Call this function when the ad or group of podded ads have
-     *                                      completed
-     * @param {function} adStartedCallback Call this function each time an ad in the set starts
-     * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
-    this.playAd = (ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) => {
+    this.playAd = (ad) => {
       if (ad) {
         adMode = true;
         this.currentAd = ad;
@@ -1347,7 +1264,7 @@ OO.Ads.manager(() => {
      * @method OoyalaSsai#playerClicked
      * @public
      */
-    this.playerClicked = (amcAd, showPage) => {
+    this.playerClicked = (amcAd) => {
       if (amcAd && amcAd.ad) {
         _handleTrackingUrls(amcAd, ['linearClickTracking']);
         window.open(amcAd.ad.clickthrough);

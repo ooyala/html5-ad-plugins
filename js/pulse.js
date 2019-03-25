@@ -48,7 +48,6 @@
       let session = null;
       let isWaitingForPrerolls = false;
       let isInAdMode = false;
-      let waitingForContentPause = false;
       let podStarted = null;
       let contentPaused = false;
       let currentOverlayAd = null;
@@ -58,7 +57,6 @@
       let overlayTimeLeftMillis = 0;
       let isFullscreen = false;
       let adPlayer = null; // pulse ad player
-      let showAdTitle = false;
       let preferredRenderingMode = null;
       let amc = null;
       const pulseSDKUrl = '/proxy/pulse-sdk-html5/2.1/latest.min.js';
@@ -371,7 +369,7 @@
        * Pause the ad player
        * @param ad v4 ad
        */
-      this.pauseAd = (ad) => {
+      this.pauseAd = () => {
         if (adPlayer) {
           adPlayer.pause();
         }
@@ -381,7 +379,7 @@
        * Resume the v4ad
        * @param ad
        */
-      this.resumeAd = (ad) => {
+      this.resumeAd = () => {
         if (adPlayer) {
           adPlayer.play();
         }
@@ -394,7 +392,7 @@
        * @method AdManager#playerClicked
        * @public
        */
-      this.playerClicked = (amcAd, showPage) => {
+      this.playerClicked = () => {
         if (this._currentAd) {
           const clickThroughURL = this._currentAd.getClickthroughURL();
           if (clickThroughURL) {
@@ -479,14 +477,6 @@
           [pulseOverlayAd.getResourceURL()]);
       };
 
-      /**
-       * Called by the Pulse SDK to show a pause ad.
-       * @param pulsePauseAd
-       */
-      this.showPauseAd = (pulsePauseAd) => {
-        /* not implemented */
-      };
-
       // This method is called by the V4 AMF
       this.showOverlay = () => {
         if (currentOverlayAd) {
@@ -494,12 +484,8 @@
         }
       };
 
-      this.hideOverlay = (ad) => {
+      this.hideOverlay = () => {
         overlayTimeLeftMillis -= (Date.now() - lastOverlayAdStart);
-      };
-
-      this.illegalOperationOccurred = (msg) => {
-
       };
 
       this.sessionEnded = () => {
@@ -538,7 +524,7 @@
         );
       };
 
-      const _onMainVideoTimeUpdate = (event, playheadTime, duration) => {
+      const _onMainVideoTimeUpdate = (event, playheadTime) => {
         if (adPlayer) {
           adPlayer.contentPositionChanged(playheadTime);
         }
@@ -563,7 +549,7 @@
         }
       };
 
-      const _onSizeChanged = (event, width, height) => {
+      const _onSizeChanged = () => {
         if (adPlayer) {
           adPlayer.resize(-1,
             -1, isFullscreen);
@@ -633,14 +619,14 @@
         this.notifyAdPodStarted(this._adBreakId, this._currentAdBreak.getPlayableAdsTotal());
       };
 
-      const _onAdClicked = (event, eventData) => {
+      const _onAdClicked = () => {
         this.videoControllerWrapper.togglePlayPause();
       };
-      const _onAdPaused = (event, metadata) => {
+      const _onAdPaused = () => {
         this.videoControllerWrapper.raisePauseEvent();
       };
 
-      const _onAdPlaying = (event, metadata) => {
+      const _onAdPlaying = () => {
         this.videoControllerWrapper.raisePlayingEvent();
       };
 
@@ -664,7 +650,7 @@
        * @param {String} event The event name
        * @param {Object} metadata The metadata associated with the event
        */
-      const _onAdPlayPromiseRejected = (event, metadata) => {
+      const _onAdPlayPromiseRejected = () => {
         if (this.muted()) {
           this.videoControllerWrapper.raiseMutedPlaybackFailed();
         } else {
@@ -672,7 +658,7 @@
         }
       };
 
-      const _onSessionStarted = (event, metadata) => {
+      const _onSessionStarted = () => {
         if (pluginCallbacks && pluginCallbacks.onSessionCreated) {
           pluginCallbacks.onSessionCreated(session);
         }
@@ -722,7 +708,7 @@
           -1, isFullscreen);
       };
 
-      const _onOverlayShown = (event, metadata) => {
+      const _onOverlayShown = () => {
         /* Impression is tracked by the SDK before this
                    handler is triggered, so nothing needs to be done here */
       };
@@ -786,7 +772,6 @@
         if (adManagerMetadata.pulse_persistent_id) {
           this._persistentId = adManagerMetadata.pulse_persistent_id;
         }
-        showAdTitle = adManagerMetadata.pulse_show_ad_title || false;
         const protocol = getProtocolFromPulseHost(this._pulseHost);
         const pulse_account_name = getPulseAccount(this._pulseHost);
 
@@ -1080,10 +1065,6 @@
           setTimeout(playPlaceholder, 1);
         }
 
-        if (this.ui.useSingleVideoElement && !this._isControllingVideo) {
-          waitingForContentPause = true;
-        }
-
         if (isInAdMode || (isWaitingForPrerolls && !this.ui.useSingleVideoElement)) {
           return true;
         }
@@ -1198,38 +1179,14 @@
     };
 
     /**
-     * Sets the url of the video.
-     * @public
-     * @method PulseVideoWrapper#setVideoUrl
-     * @param {string} url The new url to insert into the video element's src attribute
-     * @param {string} encoding The encoding of video stream, possible values are found in OO.VIDEO.ENCODING (unused here)
-     * @param {boolean} live True if it is a live asset, false otherwise (unused here)
-     * @returns {boolean} True or false indicating success
-     */
-    this.setVideoUrl = url => true;
-
-    /**
      * Loads the current stream url in the video element; the element should be left paused.  This function
      * is generally called when preloading a stream before triggering play.  Load may not be called before
      * play.
      * @public
      * @method PulseVideoWrapper#load
-     * @param {boolean} rewind True if the stream should be setup to play as if from the beginning.  When
-     *   true, if initial time has not been set, or if the stream has already been played, set the stream
-     *   position to 0.
      */
-    this.load = (rewind) => {
+    this.load = () => {
     };
-
-    /**
-     * Sets the initial time of the video playback.  This value should not be used on replay.
-     * @public
-     * @method PulseVideoWrapper#setInitialTime
-     * @param {number} initialTime The initial time of the video (seconds)
-     */
-    this.setInitialTime = (initialTime) => {
-    };
-
 
     this.togglePlayPause = () => {
       if (this.isPlaying) {
@@ -1349,35 +1306,6 @@
       // Unsubscribe all events
       unsubscribeAllEvents();
       // Remove the element
-    };
-
-    /**
-     * Sets the closed captions on the video element.
-     * @public
-     * @method PulseVideoWrapper#setClosedCaptions
-     * @param {string} language The language of the closed captions. Set to null to remove captions.
-     * @param {object} closedCaptions The closedCaptions object
-     * @param {object} params The params to set with closed captions
-     */
-    this.setClosedCaptions = (language, closedCaptions, params) => {
-    };
-
-    /**
-     * Sets the closed captions mode on the video element.
-     * @public
-     * @method PulseVideoWrapper#setClosedCaptionsMode
-     * @param {string} mode The mode to set the text tracks element. One of ("disabled", "hidden", "showing").
-     */
-    this.setClosedCaptionsMode = (mode) => {
-    };
-
-    /**
-     * Sets the crossorigin attribute on the video element.
-     * @public
-     * @method PulseVideoWrapper#setCrossorigin
-     * @param {string} crossorigin The value to set the crossorigin attribute.
-     */
-    this.setCrossorigin = (crossorigin) => {
     };
 
     // **********************************************************************************/

@@ -24,7 +24,6 @@ OO.plugin('heartbeat', (OO) => {
     let ssaiGuid = '';
     let embedCode = '';
 
-    let movieDuration = 0;
     let playheadPosition = 0;
     const hostname = '//ssai.ooyala.com';
     let reportingPaused = false;
@@ -95,8 +94,7 @@ OO.plugin('heartbeat', (OO) => {
       }
     }
 
-    function _onPlayheadTimeChange(event, currentTime, duration) {
-      movieDuration = duration || 0;
+    function _onPlayheadTimeChange(event, currentTime) {
       playheadPosition = currentTime || 0;
     }
 

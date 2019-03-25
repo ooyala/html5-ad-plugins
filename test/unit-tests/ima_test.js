@@ -509,7 +509,7 @@ describe('ad_manager_ima', function () {
   it('AMC Integration, Ad Rules: Non-linear ad should trigger forceAdToPlay on AMC', () => {
     let triggered = 0;
     google.ima.linearAds = false;
-    amc.forceAdToPlay = function (name, metadata, type) {
+    amc.forceAdToPlay = function () {
       triggered += 1;
     };
     initAndPlay(true, vci);
@@ -583,7 +583,7 @@ describe('ad_manager_ima', function () {
     amc.notifyNonlinearAdEnded = function () {
       nonLinearAdState = 0;
     };
-    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId, url) {
+    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId) {
       if (adPod === currentAdPod && id === adPodId) {
         nonLinearAdState = 1;
         notified = true;
@@ -617,7 +617,7 @@ describe('ad_manager_ima', function () {
           forced_ad_type: amc.ADTYPE.NONLINEAR_OVERLAY,
         },
     };
-    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId, url) {
+    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId) {
       if (adPod === currentAdPod && id === adPodId) {
         nonLinearWidth = currentAdPod.width;
         nonLinearHeight = currentAdPod.height;
@@ -628,7 +628,7 @@ describe('ad_manager_ima', function () {
     // original ad definition
     ima.playAd(amc.timeline[0]);
     const am = google.ima.adManagerInstance;
-    am.resize = function (width, height, viewMode) {
+    am.resize = function (width, height) {
       imaWidth = width;
       imaHeight = height;
     };
@@ -1143,11 +1143,7 @@ describe('ad_manager_ima', function () {
   });
 
   it('AMC Integration: can cancel linear ad', () => {
-    let notified = false;
     initAndPlay(true, vci);
-    amc.notifyLinearAdEnded = function () {
-      notified = true;
-    };
     const id = 'blah';
     const myAd = {
       id,
@@ -1164,12 +1160,8 @@ describe('ad_manager_ima', function () {
   });
 
   it('AMC Integration: can cancel non-linear ad', () => {
-    let notified = false;
     google.ima.linearAds = false;
     initAndPlay(true, vci);
-    amc.notifyNonlinearAdEnded = function () {
-      notified = true;
-    };
     const id = 'blah';
     const myAd = {
       id,
@@ -1765,7 +1757,7 @@ describe('ad_manager_ima', function () {
     when we receive IMA STARTED event from a linear ad`, () => {
     let playing = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PLAYING) {
           playing = true;
         }
@@ -1782,7 +1774,7 @@ describe('ad_manager_ima', function () {
     let playing = false;
     google.ima.linearAds = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PLAYING) {
           playing = true;
         }
@@ -1798,7 +1790,7 @@ describe('ad_manager_ima', function () {
     when we receive IMA RESUMED event`, () => {
     let playing = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PLAYING) {
           playing = true;
         } else if (eventName === vci.EVENTS.PAUSED) {
@@ -1820,7 +1812,7 @@ describe('ad_manager_ima', function () {
     when we receive IMA COMPLETE event`, () => {
     let ended = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
           ended = true;
         }
@@ -1837,7 +1829,7 @@ describe('ad_manager_ima', function () {
     when we receive IMA SKIPPED event`, () => {
     let ended = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
           ended = true;
         }
@@ -1853,7 +1845,7 @@ describe('ad_manager_ima', function () {
   it('IMA Event: Video wrapper notifies of ended event when we receive IMA USER_CLOSE event', () => {
     let ended = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
           ended = true;
         }
@@ -1869,7 +1861,7 @@ describe('ad_manager_ima', function () {
   it('IMA Event: Video wrapper notifies of paused event when we receive IMA PAUSED event', () => {
     let paused = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PAUSED) {
           paused = true;
         }
@@ -1956,7 +1948,7 @@ describe('ad_manager_ima', function () {
   const checkNotifyCalled = _.bind((eventname, give) => {
     let notified = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify() {
         notified = true;
       },
       EVENTS: vci.EVENTS,
@@ -2103,7 +2095,7 @@ describe('ad_manager_ima', function () {
     let
       pausedCount = 0;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         switch (eventName) {
           case vci.EVENTS.PAUSED:
             pausedCount += 1;
@@ -2150,7 +2142,7 @@ describe('ad_manager_ima', function () {
     before ad is ready and after ad is complete`, () => {
     let endedCount = 0;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
           endedCount += 1;
         }

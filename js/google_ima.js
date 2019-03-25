@@ -5,7 +5,6 @@
  */
 
 const {
-  isFunction,
   find,
   isFinite,
   filter,
@@ -72,7 +71,6 @@ require('../html5-common/js/utils/utils.js');
       const PLAYER_TYPE = 'Ooyala';
       const PLUGIN_VERSION = '1.0';
 
-      const VISIBLE_CSS = { left: OO.CSS.VISIBLE_POSITION, visibility: 'visible' };
       const INVISIBLE_CSS = { left: OO.CSS.INVISIBLE_POSITION, visibility: 'hidden' };
 
       const OVERLAY_WIDTH_PADDING = 50;
@@ -601,9 +599,8 @@ require('../html5-common/js/utils/utils.js');
        * Called by the ad manager controller.  Pauses the current ad.
        * @public
        * @method GoogleIMA#pauseAd
-       * @param {object} ad The ad to pause
        */
-      this.pauseAd = (ad) => {
+      this.pauseAd = () => {
         if (_IMAAdsManager && this.adPlaybackStarted) {
           _IMAAdsManager.pause();
         }
@@ -613,9 +610,8 @@ require('../html5-common/js/utils/utils.js');
        * Called by the ad manager controller.  Resumes the current ad.
        * @public
        * @method GoogleIMA#resumeAd
-       * @param {object} ad The ad to resume
        */
-      this.resumeAd = (ad) => {
+      this.resumeAd = () => {
         if (this.startImaOnVtcPlay) {
           this.startImaOnVtcPlay = false;
           if (_IMAAdsManager) {
@@ -1473,7 +1469,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_startPlaylistAd
        * @param adEvent - Event data from IMA SDK.
        */
-      const _startPlaylistAd = (adEvent) => {
+      const _startPlaylistAd = () => {
         OO.log('GOOGLE_IMA:: starting playlist ad');
         // Proceed as usual if we're not using ad rules
         if (!_usingAdRules) {
@@ -1506,7 +1502,7 @@ require('../html5-common/js/utils/utils.js');
        * @method GoogleIMA#_IMA_SDK_onAdClicked
        * @param adEvent - Event data from IMA SDK.
        */
-      const _IMA_SDK_onAdClicked = (adEvent) => {
+      const _IMA_SDK_onAdClicked = () => {
         _amc.adsClicked();
         _amc.adsClickthroughOpened();
       };
@@ -1624,9 +1620,6 @@ require('../html5-common/js/utils/utils.js');
         // don't have ad object associated.
         const eventType = google.ima.AdEvent.Type;
         const ad = adEvent.getAd();
-        // Retrieve the ad data as well.
-        // Some events will not have ad data associated.
-        const adData = adEvent.getAdData();
 
         switch (adEvent.type) {
           case eventType.LOADED:
@@ -2362,32 +2355,12 @@ require('../html5-common/js/utils/utils.js');
     };
 
     /**
-     * Sets the url of the video.
-     * @public
-     * @method GoogleIMAVideoWrapper#setVideoUrl
-     * @param {string} url The new url to insert into the video element's src attribute
-     * @param {string} encoding The encoding of video stream, possible values are found in OO.VIDEO.ENCODING (unused here)
-     * @param {boolean} live True if it is a live asset, false otherwise (unused here)
-     * @returns {boolean} True or false indicating success
-     */
-    this.setVideoUrl = url => true;
-
-    /**
      * Loads the current stream url in the video element; the element should be left paused.
      * @public
      * @method GoogleIMAVideoWrapper#load
      * @param {boolean} rewind True if the stream should be set to time 0
      */
-    this.load = (rewind) => {
-    };
-
-    /**
-     * Sets the initial time of the video playback.
-     * @public
-     * @method GoogleIMAVideoWrapper#setInitialTime
-     * @param {number} initialTime The initial time of the video (seconds)
-     */
-    this.setInitialTime = (initialTime) => {
+    this.load = () => {
     };
 
     /**
@@ -2414,7 +2387,7 @@ require('../html5-common/js/utils/utils.js');
      * @method GoogleIMAVideoWrapper#seek
      * @param {number} time The time to seek the video to (in seconds)
      */
-    this.seek = (time) => {
+    this.seek = () => {
     };
 
     /**

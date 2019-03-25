@@ -678,15 +678,9 @@ describe('ad_manager_vast', function () {
   // TODO: Unit test for testing skipoffset with percentage value
 
   it('Vast 2.0: should provide ad pod position and length of 1 to AMC on playAd', () => {
-    let allowSkipButton = false;
-    let skipOffset = 0;
     let adPodLength = -1;
     let indexInPod = -1;
     let adPodStartedCalled = 0;
-    amc.showSkipVideoAdButton = function (allowButton, offset) {
-      allowSkipButton = allowButton;
-      skipOffset = offset;
-    };
     amc.notifyPodStarted = function (id, podLength) {
       adPodStartedCalled += 1;
       adPodLength = podLength;

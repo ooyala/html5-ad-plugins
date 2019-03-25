@@ -44,7 +44,6 @@ OO.Ads.manager(() => {
     this.ready = false;
     this.initTime = Date.now();
     let adModuleJsReady = false;
-    let fwAdDataRequested = false;
     let currentAd = null;
     let currentPlayingSlot = null;
     let handlingClick = false;
@@ -327,31 +326,7 @@ OO.Ads.manager(() => {
         );
       }
 
-      const companionAds = [
-        [
-          '<span id="VPNT_1" class="_fwph">',
-          '<form id="_fw_form_VPNT_1" style="display:none">',
-          '<input type="hidden" '
-          + 'name="_fw_input_VPNT_1" '
-          + 'id="_fw_input_VPNT_1" '
-          + 'value="ptgt=p&amp;h=90&amp;w=728&amp;cd=216,30">',
-          '</form>',
-          '<span id="_fw_container_VPNT_1"></span>',
-          '</span>',
-        ].join(''),
-
-        [
-          '<span id="SSNT_1" class="_fwph">',
-          '<form id="_fw_form_SSNT_1" style="display:none">',
-          '<input type="hidden" name="_fw_input_SSNT_1" id="_fw_input_SSNT_1" value="w=300&amp;h=250">',
-          '</form>',
-          '<span id="_fw_container_SSNT_1"></span>',
-          '</span>',
-        ].join(''),
-      ];
-
       fwContext.submitRequest();
-      fwAdDataRequested = true;
       _setAdRequestTimeout(_adRequestTimeout, amc.MAX_AD_REQUEST_TIMEOUT);
     };
 
@@ -1102,7 +1077,6 @@ OO.Ads.manager(() => {
       // state
       this.ready = false;
       adModuleJsReady = false;
-      fwAdDataRequested = false;
       _resetAdState();
 
       // data

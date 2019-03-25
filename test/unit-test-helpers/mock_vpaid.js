@@ -17,12 +17,12 @@ global.vpaid.VpaidAd = function () {
     height: 100,
     adCompanions: { companion: {} },
   };
-  this.initAd = function (width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
+  this.initAd = function (width, height, viewMode, desiredBitrate, creativeData) {
     global.vpaid.adInit = true;
     this.properties.adParameters = JSON.parse(creativeData.AdParameters);
     this.callEvent('AdLoaded');
   };
-  this.handshakeVersion = function (version) { return ('2.0'); };
+  this.handshakeVersion = function () { return ('2.0'); };
   this.startAd = function () {
     global.vpaid.adStarted = true;
   };
@@ -30,7 +30,7 @@ global.vpaid.VpaidAd = function () {
     this.callEvent('AdStopped');
     global.vpaid.adStopped = true;
   };
-  this.resizeAd = function (width, height, viewMode) {
+  this.resizeAd = function (width, height) {
     this.properties.width = width;
     this.properties.height = height;
   };
@@ -56,7 +56,7 @@ global.vpaid.VpaidAd = function () {
     const cb = aCallback.bind(aContext);
     this.eventsCallbacks[eventName] = cb;
   };
-  this.unsubscribe = function (eventName) {};
+  this.unsubscribe = function () {};
   this.setSkippableState = function (state) {
     this.properties.skippableState = state;
     this.callEvent('AdSkippableStateChange');
@@ -87,28 +87,28 @@ global.vpaid.incorrectVersionVPAIDAd = function () {
   this.properties = {
     adLinear: true,
   };
-  this.initAd = function (width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
+  this.initAd = function () {
     global.vpaid.adInit = true;
   };
-  this.handshakeVersion = function (version) { return ('1.0'); };
+  this.handshakeVersion = function () { return ('1.0'); };
   this.startAd = function () {};
   this.stopAd = function () {};
-  this.resizeAd = function (width, height, viewMode) {};
+  this.resizeAd = function () {};
   this.pauseAd = function () {};
   this.resumeAd = function () {};
   this.expandAd = function () {};
   this.collapseAd = function () {};
   this.skipAd = function () {};
-  this.subscribe = function (aCallback, eventName, aContext) {};
-  this.unsubscribe = function (eventName) {};
+  this.subscribe = function () {};
+  this.unsubscribe = function () {};
 };
 
 // required functions missing
 global.vpaid.missingFnVPAIDAd = function () {
-  this.initAd = function (width, height, viewMode, desiredBitrate, creativeData, environmentVars) {
+  this.initAd = function () {
     global.vpaid.adInit = true;
   };
-  this.handshakeVersion = function (version) { return ('2.0'); };
+  this.handshakeVersion = function () { return ('2.0'); };
   this.startAd = function () {};
   this.stopAd = function () {};
 };

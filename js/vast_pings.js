@@ -1,5 +1,5 @@
 
-(function (OO, _) {
+(function (OO) {
   /*
      *  AdsManager will manage the Ads config load and notify playback controller when they are ready.
      *  It will intercept willFetchAds event, and send adFetched event to notify playbck to continue.
@@ -83,11 +83,11 @@
       }
     },
 
-    onStreamPlayed(event) {
+    onStreamPlayed() {
       this._itemPlayed();
     },
 
-    onMidrollStreamPlayed(event, mainVideoPlayhead) {
+    onMidrollStreamPlayed() {
       this._itemPlayed();
     },
 
@@ -119,7 +119,7 @@
       this.pauseClicked = false;
     },
 
-    _itemResumePlay(item) {
+    _itemResumePlay() {
       if (this.currentVastAd) {
         this._vastTrackings('resume');
       }

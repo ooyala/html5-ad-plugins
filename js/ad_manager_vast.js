@@ -94,7 +94,6 @@ OO.Ads.manager(() => {
     this.adTagUrlOverride = null;
     this.showLinearAdSkipButton = false;
     let vpaidIframe = null;
-    const timeline = [];
 
     // ad settings
     let transitionFromNonLinearVideo = false;
@@ -627,7 +626,6 @@ OO.Ads.manager(() => {
      * @public
      */
     this.initializeAd = () => {
-      let eventName;
       let environmentVariables;
       let viewMode;
       let creativeData = {};
@@ -1660,7 +1658,6 @@ OO.Ads.manager(() => {
       if (!metadata) return;
       const timeline = [];
       const ad = generateAd(metadata);
-      const isVPaid = metadata.data && metadata.data.adType === 'vpaid';
 
       // TODO: This might need to get integrated with Doug's error handling changes.
       // I recall errors for when streams or media files aren't defined. We need to check with Doug on this when we merge.
@@ -2792,8 +2789,6 @@ OO.Ads.manager(() => {
      * @returns {object[]} The array of tracking event objects.
      */
     const _parseVMAPTrackingEvents = (trackingEventsElement) => {
-      const trackingEvents = [];
-
       const trackingElements = trackingEventsElement.querySelectorAll('vmap\\:Tracking, Tracking');
       if (!trackingElements.length) {
         return [];
@@ -3032,8 +3027,6 @@ OO.Ads.manager(() => {
         const clickthru = currentAd.ad.data.nonLinear
           ? currentAd.ad.data.nonLinear.nonLinearClickThrough
           : '';
-        // TODO: Is this used for anything?
-        const adLinear = _safeFunctionCall(ad, 'getAdLinear');
 
         initSkipAdOffset(currentAd);
         // Since a VPAID 2.0 ad handles its own UI, we want the video player to hide its UI elements
@@ -3195,7 +3188,7 @@ OO.Ads.manager(() => {
         const { tracking } = ad.data;
         let currentEvent;
         if (tracking) {
-          currentEvent = find(tracking, (item, index) => item.event === type);
+          currentEvent = find(tracking, item => item.event === type);
 
           if (currentEvent && currentEvent.url) {
             OO.pixelPing(currentEvent.url);
@@ -3429,23 +3422,6 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Set variables to its default state
-     * @private
-     * @method Vast#_resetAdState
-     */
-    const _resetAdState = () => {
-      _removeListeners(currentAd.vpaidAd);
-      currentAd = null;
-      this.currentAdBeingLoaded = null;
-      this.node = null;
-      vpaidIframeLoaded = false;
-      vpaidAdLoaded = false;
-      vpaidAdStarted = false;
-      vpaidAdStopped = false;
-      _clearVpaidTimeouts();
-    };
-
-    /**
      * Remove any new lines, line breaks and spaces from string.
      * @private
      * @method Vast#_cleanString
@@ -3456,22 +3432,6 @@ OO.Ads.manager(() => {
         return '';
       }
       return string.replace(/\r?\n|\r/g, '').trim();
-    };
-
-    /**
-     * Check for clickthrough url
-     * @private
-     * @method Vast#_hasClickUrl
-     * @return {object} Ad to look for the clickthrough
-     */
-    const _hasClickUrl = (ad) => {
-      if (ad && ad.data) {
-        const { videoClickTracking } = ad.data;
-        if (videoClickTracking.clickThrough) {
-          return videoClickTracking.clickThrough.length > 0;
-        }
-      }
-      return false;
     };
 
     /**
@@ -3652,18 +3612,6 @@ OO.Ads.manager(() => {
           _handleTrackingUrls(currentAd, ['unmute']);
         }
       }
-    };
-
-    /**
-     * Remove ad listeners
-     * This is only required for VPAID ads
-     * @private
-     * @method Vast#_removeListeners
-     */
-    const _removeListeners = (currentAd) => {
-      each(VPAID_EVENTS, (eventName) => {
-        currentAd.unsubscribe(eventName);
-      });
     };
 
     /**

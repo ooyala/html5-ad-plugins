@@ -17,45 +17,13 @@ describe('ad_manager_ooyala_ssai', function () {
   const originalOoAds = _.clone(OO.Ads);
   require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
 
-  const adsClickthroughOpenedCalled = 0;
-
   // Vast XML
   const ssaiXmlString = fs.readFileSync(
     require.resolve('../unit-test-helpers/mock_responses/ssai.xml'),
     'utf8',
   );
-  const ssaiNoDurationXmlString = fs.readFileSync(
-    require.resolve('../unit-test-helpers/mock_responses/ssai_no_duration.xml'),
-    'utf8',
-  );
   const ssaiXml = $.parseXML(ssaiXmlString);
-  const ssaiNoDurationXml = $.parseXML(ssaiNoDurationXmlString);
   let trackingUrlsPinged = {};
-
-  const initialize = function () {
-    const embed_code = 'embed_code';
-    const vast_ad = {
-      type: 'vast',
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: 'ad_set_code',
-      time: 0,
-      position_type: 't',
-    };
-    const content = {
-      embed_code,
-      ads: [vast_ad],
-    };
-    OoyalaSsai.initialize(amc);
-    OoyalaSsai.loadMetadata({
-      html5_ssl_ad_server: 'https://blah',
-      html5_ad_server: 'http://blah',
-    }, {}, content);
-  };
-
-  const initialPlay = function () {
-    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
-  };
 
   before(_.bind(() => {
     OO.Ads = {
@@ -158,7 +126,7 @@ describe('ad_manager_ooyala_ssai', function () {
 
   it('Init: ad manager notifies controller that it is loaded', () => {
     let pluginLoaded = false;
-    amc.reportPluginLoaded = function (date, name) {
+    amc.reportPluginLoaded = function () {
       pluginLoaded = true;
     };
     OoyalaSsai.initialize(amc);
@@ -571,7 +539,7 @@ describe('ad_manager_ooyala_ssai', function () {
         id: 'post', start: 600.04, duration: 30.1, adtype: 'postroll', adbreakname: 'postroll',
       }],
     };
-    const currentId3Object = OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
+    OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
     OoyalaSsai.onMetadataResponse(metadataResponse);
     expect(OoyalaSsai.timeline).to.eql(metadataResponse);
   });
@@ -845,7 +813,7 @@ describe('ad_manager_ooyala_ssai', function () {
       TXXX: 'adid=11de5230&t=0&d=100',
     };
     const expectedAd = { adId: '11de5230', time: 0, duration: 100 };
-    const currentId3Object = OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
+    OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
     expect(ssaiAdFound).to.eql(expectedAd);
   });
 
@@ -859,13 +827,13 @@ describe('ad_manager_ooyala_ssai', function () {
     const mockId3Tag = {
       TXXX: 'adid=11de5230&t=100&d=100',
     };
-    const currentId3Object = OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
+    OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
     expect(notifySSAIAdPlayingCalled).to.eql(true);
   });
 
   it('Init: SSAI requires embed code metadata', () => {
     let embedCodeMetadata = false;
-    amc.willRequireEmbedCodeMetadata = function (required) {
+    amc.willRequireEmbedCodeMetadata = function () {
       embedCodeMetadata = true;
     };
     OoyalaSsai.initialize(amc);

@@ -60,7 +60,7 @@ const AdsRenderingSettings = function () {
   google.ima.adsRenderingSettingsInstance = this;
 };
 
-const AdsLoader = function (container) {
+const AdsLoader = function () {
   google.ima.adLoaderInstance = this;
   const callbacks = {};
   const adsManagerLoadedEvent = {

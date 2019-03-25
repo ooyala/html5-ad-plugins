@@ -24,8 +24,6 @@ OO.Ads.manager(() => {
     this.videoRestrictions = {};
 
     let amc = null;
-    const remoteModuleJs = 'http://my.company/myAdModule.js';
-    let adModuleJsReady = false;
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -35,7 +33,7 @@ OO.Ads.manager(() => {
      * @param {object} adManagerController A reference to the Ad Manager Controller
      * @param {string} playerId The unique player identifier of the player initializing the class
      */
-    this.initialize = (adManagerController, playerId) => {
+    this.initialize = (adManagerController) => {
       amc = adManagerController;
 
       // Add any player event listeners now
@@ -43,11 +41,6 @@ OO.Ads.manager(() => {
 
       // ID3 Tag example
       amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
-
-      // Loads a remote file.  Use this function to load the client SDK for your ad module.
-      amc.loadAdModule(this.name, remoteModuleJs, (success) => {
-        adModuleJsReady = success;
-      });
 
       // Initialize the module here
     };
@@ -68,11 +61,8 @@ OO.Ads.manager(() => {
      * This metadata may contain the adTagUrl and other ad manager and movie specific configuration.
      * @method AdManager#loadMetadata
      * @public
-     * @param {object} adManagerMetadata Ad manager-specific metadata
-     * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
-     * @param {object} movieMetadata Metadata for the main video
      */
-    this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
+    this.loadMetadata = () => {
       this.ready = true;
       // Call the onAdManagerReady API after setting this.ready to true
       // to notify the Ad Manager Controller that this ad plugin is ready
@@ -120,15 +110,8 @@ OO.Ads.manager(() => {
      * the function as a parameter.
      * @method AdManager#playAd
      * @public
-     * @param {object} ad The ad object to play
-     * @param {function} adPodStartedCallback Call this function when the ad or group of podded ads have
-     *                                        started
-     * @param {function} adPodEndedCallback Call this function when the ad or group of podded ads have
-     *                                      completed
-     * @param {function} adStartedCallback Call this function each time an ad in the set starts
-     * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
-    this.playAd = (ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) => {
+    this.playAd = () => {
       // When the ad impression has started or when the first ad in a set of podded ads has begun,  trigger
       //   adStartedCallback
       // When the ad or group of podded ads are done, trigger adEndedCallback
@@ -143,12 +126,8 @@ OO.Ads.manager(() => {
      * already been called, then no action is required.
      * @method AdManager#cancelAd
      * @public
-     * @param {object} ad The ad object to cancel
-     * @param {object} params An object containing information about the cancellation. It will include the
-     *                        following fields:
-     *                 code : The amc.AD_CANCEL_CODE for the cancellation
      */
-    this.cancelAd = (ad, params) => {
+    this.cancelAd = () => {
     };
 
     /**
@@ -156,9 +135,8 @@ OO.Ads.manager(() => {
      * parameter.  If the given ad is not currently playing, no action is required.
      * @method AdManager#pauseAd
      * @public
-     * @param {object} ad The ad object to pause
      */
-    this.pauseAd = (ad) => {
+    this.pauseAd = () => {
     };
 
     /**
@@ -166,9 +144,8 @@ OO.Ads.manager(() => {
      * parameter.  If the given ad is not currently loaded or not paused, no action is required.
      * @method AdManager#resumeAd
      * @public
-     * @param {object} ad The ad object to resume
      */
-    this.resumeAd = (ad) => {
+    this.resumeAd = () => {
     };
 
     /**
@@ -213,7 +190,7 @@ OO.Ads.manager(() => {
      * @method AdManager#playerClicked
      * @public
     */
-    this.playerClicked = (amcAd, showPage) => {
+    this.playerClicked = () => {
     };
 
     /**
@@ -241,25 +218,9 @@ OO.Ads.manager(() => {
      * the initialize function.
      * @public
      * @method AdManager#onVideoTagFound
-     * @param {string} event The event that triggered this callback.
-     * @param {string} videoId The id of the video element that processed a tag.
-     * @param {string} tagType The type of tag that was detected.
-     * @param {object} metadata Any metadata attached to the found tag.
      */
-    this.onVideoTagFound = (event, videoId, tagType, metadata) => {
+    this.onVideoTagFound = () => {
       OO.log('TAG FOUND w/ args: ', arguments);
-    };
-
-    /**
-     * <i>Optional.</i><br/>
-     * Called when the player detects an error in the ad video playback.  If the ad manager did not detect
-     * this error itself, it can use this time to end the ad playback.
-     * @method AdManager#adVideoError
-     * @public
-     * @param {object} adWrapper The current Ad's metadata
-     * @param {number} errorCode The error code associated with the video playback error
-     */
-    this.adVideoError = (adWrapper, errorCode) => {
     };
 
     /**

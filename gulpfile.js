@@ -6,7 +6,6 @@ const gulp = require('gulp');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
-const gutil = require('gulp-util');
 const uglify = require('gulp-uglify');
 const shell = require('gulp-shell');
 const rename = require('gulp-rename');
