@@ -48,6 +48,5 @@ module.exports = {
     "no-restricted-syntax": "warn",
     "prefer-rest-params": "warn",
     "no-unreachable": "warn",
-    "no-unused-expressions": "warn",
   },
 };

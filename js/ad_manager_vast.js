@@ -54,7 +54,6 @@ OO.Ads.manager(() => {
    * maximum is reached
    * @property {boolean} loaded Set to true once the ad has been loaded successfully
    * @property {string} embedCode Keeps track of the embed code of the movie that is currently playing
-   * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
    * @property {object} adTrackingInfo The object that holds each individual ad id's tracking urls (including error reporting).
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
@@ -74,7 +73,6 @@ OO.Ads.manager(() => {
     this.currentDepth = 0;
     this.loaded = false;
     this.embedCode = 'unknown';
-    this.lastOverlayAd;
     this.adTrackingInfo = {};
     this.VAST_AD_CONTAINER = '#vast_ad_container';
     this.currentAdBeingLoaded = null;
@@ -1584,7 +1582,6 @@ OO.Ads.manager(() => {
             this.amc.notifyPodEnded(adPod.id);
           }
         } else {
-          this.lastOverlayAd = null;
           this.amc.notifyNonlinearAdEnded(ad.id);
         }
       }
@@ -1600,14 +1597,12 @@ OO.Ads.manager(() => {
      * Called by the Ad Manager Controller when the module is unregistered, we need to remove any overlays that are visible.
      * @public
      * @method Vast#destroy
-     * @param {object} ad Ad to cancel if it is not null
      */
     this.destroy = () => {
       // Stop any running ads
       this.cancelAd(currentAd);
       this.ready = false;
       this.currentDepth = 0;
-      this.lastOverlayAd = null;
       adPodPrimary = null;
     };
 
@@ -1772,31 +1767,6 @@ OO.Ads.manager(() => {
         _safeFunctionCall(currentAd.vpaidAd, 'resumeAd');
       }
       _handleTrackingUrls(amcAd, ['resume']);
-    };
-
-    /**
-     * When the Ad Manager Controller needs to hide the overlay it will call this function. We will store the current ad
-     * for reference. Vast ad doesn't need to do much other then save the reference.
-     * @public
-     * @method Vast#hideOverlay
-     * @param {object} currentAd In order to not lose reference to the overlay object that is currently being shown, it
-     * is stored in this object
-     */
-    this.hideOverlay = (currentAd) => {
-      this.lastOverlayAd = currentAd;
-    };
-
-    /**
-     * This function gets called by the Ad Manager Controller when an ad has completed playing. If the main video is
-     * finished playing and there was an overlay displayed before the post-roll then it needs to be cleared out of memory. If the main
-     * video hasn't finished playing and then it needs to be displayed agained but VAST doesn't need to do anything here.
-     * @public
-     * @method Vast#showOverlay
-     */
-    this.showOverlay = () => {
-      if (this.amc.ended && this.lastOverlayAd) {
-        this.cancelAd(lastOverlayAd);
-      }
     };
 
     /**
