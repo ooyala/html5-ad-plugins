@@ -24,7 +24,6 @@ module.exports = {
     ],
     "vars-on-top": 0,
     "no-underscore-dangle": "warn",
-    "no-use-before-define": "warn",
     "consistent-return": "warn",
     "no-undef": "warn",
     "radix": "warn",

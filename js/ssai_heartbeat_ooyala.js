@@ -30,29 +30,8 @@ OO.plugin('heartbeat', (OO) => {
 
     let heartbeatTimer = 0;
 
-    initialize();
-
-    function initialize() {
-      config = buildConfig(config);
-
-      // events subscribe
-      mb.subscribe(OO.EVENTS.VC_WILL_PLAY, 'heartbeat', _onVcWillPlay);
-      mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'heartbeat', _onEmbedCodeChanged);
-      mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'heartbeat', _onPlayheadTimeChange);
-      mb.subscribe(OO.EVENTS.PAUSE, 'heartbeat', _onPause);
-      mb.subscribe(OO.EVENTS.PLAY, 'heartbeat', _onPlay);
-      mb.subscribe(OO.EVENTS.VC_PLAYED, 'hearbeat', _onPlayed);
-      mb.subscribe(OO.EVENTS.DESTROY, 'heartbeat', destroy);
-      log('initialization completed', config);
-    }
-
     function stopHeartBeat() {
       clearInterval(heartbeatTimer);
-    }
-
-    function startHeartBeat() {
-      stopHeartBeat();
-      heartbeatTimer = setInterval(reportHeartBeat, config.Interval);
     }
 
     function reportHeartBeat() {
@@ -73,6 +52,11 @@ OO.plugin('heartbeat', (OO) => {
       }).then(() => {
         log('Heartbeat was sent successfully');
       });
+    }
+
+    function startHeartBeat() {
+      stopHeartBeat();
+      heartbeatTimer = setInterval(reportHeartBeat, config.Interval);
     }
 
     function parseGuid(url) {
@@ -138,6 +122,22 @@ OO.plugin('heartbeat', (OO) => {
       mb.unsubscribe(OO.EVENTS.VC_PLAYED, 'hearbeat');
       log('destroy');
     }
+
+    function initialize() {
+      config = buildConfig(config);
+
+      // events subscribe
+      mb.subscribe(OO.EVENTS.VC_WILL_PLAY, 'heartbeat', _onVcWillPlay);
+      mb.subscribe(OO.EVENTS.EMBED_CODE_CHANGED, 'heartbeat', _onEmbedCodeChanged);
+      mb.subscribe(OO.EVENTS.PLAYHEAD_TIME_CHANGED, 'heartbeat', _onPlayheadTimeChange);
+      mb.subscribe(OO.EVENTS.PAUSE, 'heartbeat', _onPause);
+      mb.subscribe(OO.EVENTS.PLAY, 'heartbeat', _onPlay);
+      mb.subscribe(OO.EVENTS.VC_PLAYED, 'hearbeat', _onPlayed);
+      mb.subscribe(OO.EVENTS.DESTROY, 'heartbeat', destroy);
+      log('initialization completed', config);
+    }
+
+    initialize();
   };
 
   return heartbeat;

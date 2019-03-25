@@ -231,41 +231,6 @@ OO.Ads.manager(() => {
 
     /**
      * <i>Optional.</i><br/>
-     * When the Ad Manager Controller needs to hide the overlay it will call this function.
-     * NOTE: This function should only be used by the ad manager if the cancelOverlay function is not being used.
-     * NOTE 2: Only implement this function if you plan to hide and reshow the overlay. Otherwise delete it or leave it commented.
-     * @method OoyalaSsai#hideOverlay
-     * @public
-     * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
-     */
-    // this.hideOverlay = (currentAd) => {
-    // };
-
-    /**
-     * <i>Optional.</i><br/>
-     * When the Ad Manager Controller needs to cancel the overlay it will call this function.
-     * NOTE: This function should only be used by the ad manager if the hideOverlay function is not being used.
-     * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delete it.
-     * @method OoyalaSsai#cancelOverlay
-     * @public
-     * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
-     */
-    // this.cancelOverlay = (currentAd) => {
-    // };
-
-    /**
-     * This function gets called by the ad Manager Controller when an ad has completed playing. If the main video is
-     * finished playing and there was an overlay displayed before the post-roll then it needs to be removed. If the main
-     * video hasn't finished playing and there was an overlay displayed before the ad video played, then it will show
-     * the overlay again.
-     * @method OoyalaSsai#showOverlay
-     * @public
-     */
-    this.showOverlay = () => {
-    };
-
-    /**
-     * <i>Optional.</i><br/>
      * Called when the player detects start of ad video playback.
      * @method OoyalaSsai#adVideoPlaying
      * @public
@@ -335,26 +300,6 @@ OO.Ads.manager(() => {
       if (this.adIdDictionary[id3Object.adId]) {
         this.adIdDictionary[id3Object.adId].vastData = adObject;
       }
-    };
-
-    /**
-     * Force an ad to play with configured ssai ad data
-     * @private
-     * @method OoyalaSsai#_notifyAmcToPlayAd
-     */
-    const _notifyAmcToPlayAd = (id3Object, adObject) => {
-      let ssaiAd;
-      if (adObject && id3Object) {
-        ssaiAd = _configureSsaiObject(adObject);
-        _setVastDataToDictionary(id3Object, adObject);
-        // If not start id3 tag from ad, we recalculate ad duration.
-        if (id3Object.time !== 0) {
-          const adOffset = id3Object.time * id3Object.duration / 100;
-          id3Object.duration -= adOffset;
-        }
-      }
-
-      amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
     };
 
     /**
@@ -443,73 +388,6 @@ OO.Ads.manager(() => {
         const code = error.status;
         const message = error.responseText;
         amc.raiseApiError(code, message, url);
-      }
-    };
-
-    /**
-     * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
-     * This is only required for VPAID ads
-     * @public
-     * @method OoyalaSsai#onFullScreenChanged
-     * @param {string} eventName The name of the event for which this callback is called
-     * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
-     */
-    this.onFullscreenChanged = (eventName, isFullscreen) => {
-      // only try to ping tracking urls if player is playing an ad
-      if (adMode) {
-        if (isFullscreen) {
-          _handleTrackingUrls(this.currentAd, ['fullscreen']);
-        } else if (!isFullscreen) {
-          _handleTrackingUrls(this.currentAd, ['exitFullscreen']);
-        }
-      }
-    };
-
-    /**
-     * Callback for Ad Manager Controller. Handles volume changes.
-     * @public
-     * @method OoyalaSsai#onAdVolumeChanged
-     * @param {string} eventName The name of the event for which this callback is called
-     * @param {number} volume The current volume level
-     */
-    this.onAdVolumeChanged = (eventName, volume) => {
-      let url = [];
-      if (volume === 0 && volume !== lastVolume) {
-        lastVolume = volume;
-        url = ['mute'];
-      } else if (volume > 0 && lastVolume === 0) {
-        lastVolume = volume;
-        url = ['unmute'];
-      }
-
-      if (adMode) {
-        _handleTrackingUrls(this.currentAd, url);
-      }
-    };
-
-    /**
-     * Callback for Ad Manager Controller. Handles mute state changes.
-     * @public
-     * @method OoyalaSsai#onMuteStateChanged
-     * @param {string} eventName The name of the event for which this callback is called
-     * @param {boolean} muteState True if ad was muted, false if ad was unmuted
-     */
-    this.onMuteStateChanged = (eventName, muteState) => {
-      let url = [];
-
-      // If volume is zero mute events are not relevant
-      if (lastVolume !== 0) {
-        if (!isMuted && muteState === true) {
-          isMuted = true;
-          url = ['mute'];
-        } else if (isMuted && muteState === false) {
-          isMuted = false;
-          url = ['unmute'];
-        }
-
-        if (adMode) {
-          _handleTrackingUrls(this.currentAd, url);
-        }
       }
     };
 
@@ -844,6 +722,26 @@ OO.Ads.manager(() => {
     };
 
     /**
+     * Force an ad to play with configured ssai ad data
+     * @private
+     * @method OoyalaSsai#_notifyAmcToPlayAd
+     */
+    const _notifyAmcToPlayAd = (id3Object, adObject) => {
+      let ssaiAd;
+      if (adObject && id3Object) {
+        ssaiAd = _configureSsaiObject(adObject);
+        _setVastDataToDictionary(id3Object, adObject);
+        // If not start id3 tag from ad, we recalculate ad duration.
+        if (id3Object.time !== 0) {
+          const adOffset = id3Object.time * id3Object.duration / 100;
+          id3Object.duration -= adOffset;
+        }
+      }
+
+      amc.forceAdToPlay(this.name, ssaiAd, amc.ADTYPE.LINEAR_VIDEO, {}, id3Object.duration);
+    };
+
+    /**
      * Helper function to convert the ad object returned by the Vast#parser function into
      * a key-value pair object where the key is the ad id and the value is the ad object.
      * @private
@@ -980,6 +878,73 @@ OO.Ads.manager(() => {
           `Ooyala SSAI: Tried to ping URLs: [${trackingEventNames
           }] but ad object passed in was: ${adObject}`,
         );
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
+     * This is only required for VPAID ads
+     * @public
+     * @method OoyalaSsai#onFullScreenChanged
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {boolean} isFullscreen True if entering fullscreen mode and false when exiting
+     */
+    this.onFullscreenChanged = (eventName, isFullscreen) => {
+      // only try to ping tracking urls if player is playing an ad
+      if (adMode) {
+        if (isFullscreen) {
+          _handleTrackingUrls(this.currentAd, ['fullscreen']);
+        } else if (!isFullscreen) {
+          _handleTrackingUrls(this.currentAd, ['exitFullscreen']);
+        }
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles volume changes.
+     * @public
+     * @method OoyalaSsai#onAdVolumeChanged
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {number} volume The current volume level
+     */
+    this.onAdVolumeChanged = (eventName, volume) => {
+      let url = [];
+      if (volume === 0 && volume !== lastVolume) {
+        lastVolume = volume;
+        url = ['mute'];
+      } else if (volume > 0 && lastVolume === 0) {
+        lastVolume = volume;
+        url = ['unmute'];
+      }
+
+      if (adMode) {
+        _handleTrackingUrls(this.currentAd, url);
+      }
+    };
+
+    /**
+     * Callback for Ad Manager Controller. Handles mute state changes.
+     * @public
+     * @method OoyalaSsai#onMuteStateChanged
+     * @param {string} eventName The name of the event for which this callback is called
+     * @param {boolean} muteState True if ad was muted, false if ad was unmuted
+     */
+    this.onMuteStateChanged = (eventName, muteState) => {
+      let url = [];
+
+      // If volume is zero mute events are not relevant
+      if (lastVolume !== 0) {
+        if (!isMuted && muteState === true) {
+          isMuted = true;
+          url = ['mute'];
+        } else if (isMuted && muteState === false) {
+          isMuted = false;
+          url = ['unmute'];
+        }
+
+        if (adMode) {
+          _handleTrackingUrls(this.currentAd, url);
+        }
       }
     };
 

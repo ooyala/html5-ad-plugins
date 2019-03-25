@@ -27,11 +27,6 @@ gulp.task('init_module', (callback) => {
   });
 });
 
-// Build All
-gulp.task('build', ['init_module'], () => {
-  browserify_fn();
-});
-
 const checkFileExtension = function (extension, fileName) {
   if (!fileName || fileName.length < extension.length) {
     return false;
@@ -75,6 +70,11 @@ const browserify_fn = function () {
     }
   });
 };
+
+// Build All
+gulp.task('build', ['init_module'], () => {
+  browserify_fn();
+});
 
 // Run tests
 gulp.task('test', shell.task(['make test']));

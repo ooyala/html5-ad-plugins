@@ -37,7 +37,7 @@ OO.Ads.manager(() => {
       amc = adManagerController;
 
       // Add any player event listeners now
-      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
+      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED);
 
       // ID3 Tag example
       amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
@@ -150,41 +150,6 @@ OO.Ads.manager(() => {
 
     /**
      * <i>Optional.</i><br/>
-     * When the Ad Manager Controller needs to hide the overlay it will call this function.
-     * NOTE: This function should only be used by the ad manager if the cancelOverlay function is not being used.
-     * NOTE 2: Only implement this function if you plan to hide and reshow the overlay. Otherwise delete it or leave it commented.
-     * @method AdManager#hideOverlay
-     * @public
-     * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
-     */
-    // this.hideOverlay = (currentAd) => {
-    // };
-
-    /**
-     * <i>Optional.</i><br/>
-     * When the Ad Manager Controller needs to cancel the overlay it will call this function.
-     * NOTE: This function should only be used by the ad manager if the hideOverlay function is not being used.
-     * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delete it.
-     * @method AdManager#cancelOverlay
-     * @public
-     * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
-     */
-    // this.cancelOverlay = (currentAd) => {
-    // };
-
-    /**
-     * This function gets called by the ad Manager Controller when an ad has completed playing. If the main video is
-     * finished playing and there was an overlay displayed before the post-roll then it needs to be removed. If the main
-     * video hasn't finished playing and there was an overlay displayed before the ad video played, then it will show
-     * the overlay again.
-     * @method AdManager#showOverlay
-     * @public
-     */
-    this.showOverlay = () => {
-    };
-
-    /**
-     * <i>Optional.</i><br/>
      * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
      * called
      * @method AdManager#playerClicked
@@ -231,23 +196,6 @@ OO.Ads.manager(() => {
      */
     this.destroy = () => {
       // Stop any running ads
-    };
-
-    /**
-     * Called by the Ad Manager Controller to determine if an ad video element must be created on player
-     * initialization. This is done so that the Video Controller can interface with the Ad's Video Plugin
-     * prior to an ad request. A typical use case would be to pass a user click to the ad plugin prior
-     * to ad playback so that the ad can start unmuted for browsers that require user interaction for
-     * unmuted playback.
-     * @method AdManager#createAdVideoElementOnPlayerInit
-     * @public
-     * @returns {string[]} An array of encoding types corresponding to the video elements that the Video Controller
-     *                     should create. Return an empty array, null, or undefined if this is not required.
-     */
-    this.createAdVideoElementOnPlayerInit = () => [];
-
-    const _onContentChanged = () => {
-      // Callback for example listener registered in this.initialize
     };
   };
 
