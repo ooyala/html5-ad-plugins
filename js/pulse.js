@@ -136,7 +136,7 @@
         const INSTREAM = 2;
         const POSTROLL = 4;
 
-        const pos = parseInt(position);
+        const pos = parseInt(position, 10);
         const insertionPointFilter = [];
 
         /* eslint-disable no-bitwise */
@@ -183,7 +183,7 @@
       };
 
       const safeParseInt = (string) => {
-        const val = parseInt(string);
+        const val = parseInt(string, 10);
         if (!val || isNaN(val)) {
           return null;
         }
@@ -896,6 +896,7 @@
         this._requestSettings.maxLinearBreakDuration = parseInt(
           adManagerMetadata.pulse_max_linear_break_duration
           || backlotBaseMetadata.pulse_max_linear_break_duration,
+          10,
         );
 
         if (isNaN(this._requestSettings.maxLinearBreakDuration)) {

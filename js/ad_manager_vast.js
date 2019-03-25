@@ -2866,7 +2866,7 @@ OO.Ads.manager(() => {
       let sequence = safeGetAttribute(adXml, 'sequence');
       const adPodLength = adXml.parentNode.querySelectorAll('[sequence] Linear').length;
 
-      if (!supportsPoddedAds(version) || !isNumber(parseInt(sequence))) {
+      if (!supportsPoddedAds(version) || !isNumber(parseInt(sequence, 10))) {
         sequence = null;
       }
 
@@ -2902,7 +2902,7 @@ OO.Ads.manager(() => {
       };
 
       const result = {
-        adPodIndex: parseInt(sequence) || 1,
+        adPodIndex: parseInt(sequence, 10) || 1,
         sequence: sequence || null,
         adPodLength: adPodLength || 1,
         data,
@@ -2930,7 +2930,7 @@ OO.Ads.manager(() => {
       let vpaidVersion = null;
       try {
         // TODO: Do we want int here? If so, consider var name vpaidMajorVersion
-        vpaidVersion = parseInt(currentAd.vpaidAd.handshakeVersion('2.0'));
+        vpaidVersion = parseInt(currentAd.vpaidAd.handshakeVersion('2.0'), 10);
       } catch (e) {
         OO.log(`VPAID 2.0: Error while fetching VPAID 2.0 creative handshakeVersion - ${e}`);
       }
@@ -3558,7 +3558,7 @@ OO.Ads.manager(() => {
       const ads = this.parseAds(vastXML, adLoaded);
       // check to see if any ads are sequenced (are podded)
       each(ads, (ad) => {
-        const sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence))
+        const sequence = typeof ad.sequence !== 'undefined' && isNumber(parseInt(ad.sequence, 10))
           ? ad.sequence
           : null;
         const version = typeof ad.version !== 'undefined' ? ad.version : null;

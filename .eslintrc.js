@@ -22,20 +22,19 @@ module.exports = {
         "ignoreTemplateLiterals": true
       }
     ],
-    "vars-on-top": 0,
-    "no-underscore-dangle": "warn",
-    "consistent-return": "warn",
-    "no-undef": "warn",
-    "radix": "warn",
-    "no-redeclare": "warn",
-    "func-names": "warn",
-    "camelcase": "warn",
     "no-plusplus": [
       "error",
       {
         "allowForLoopAfterthoughts": true
       }
     ],
+    "vars-on-top": 0,
+    "no-underscore-dangle": "warn",
+    "consistent-return": "warn",
+    "no-undef": "warn",
+    "no-redeclare": "warn",
+    "func-names": "warn",
+    "camelcase": "warn",
     "prefer-destructuring": "warn",
     "no-shadow": "warn",
     "global-require": "warn",

@@ -124,7 +124,7 @@ OO.Ads.manager(() => {
         freeWheelCompanionAdsWrapperId = metadata.companion_ad_wrapper_id;
         adServerURL = (amc.platform.isSSL ? metadata.html5_ssl_ad_server : metadata.html5_ad_server);
         remoteModuleJs = metadata.fw_ad_module_js || remoteModuleJs;
-        bitrateOverride = parseInt(metadata.bitrateOverride);
+        bitrateOverride = parseInt(metadata.bitrateOverride, 10);
       }
 
       // If the ad server or network id are not specified, unregister

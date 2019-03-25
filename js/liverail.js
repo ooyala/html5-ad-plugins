@@ -155,7 +155,7 @@ OO.Ads.manager(() => {
     this.buildTimeline = () => {
       if (!this.environmentVariables.LR_VIDEO_POSITION) return [];
       const positionString = this.environmentVariables.LR_VIDEO_POSITION.replace('%', '');
-      const positionPercent = parseInt(isNaN(positionString) ? 0 : positionString);
+      const positionPercent = parseInt(isNaN(positionString) ? 0 : positionString, 10);
       // If postroll, use MaxValue in case the movie duration is off by milliseconds from the playhead
       const position = (positionPercent === 100)
         ? Number.MAX_VALUE

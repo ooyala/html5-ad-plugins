@@ -42,8 +42,8 @@ OO.plugin('heartbeat', (OO) => {
       const reportUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
 
       const data = {
-        playheadpos: parseInt(playheadPosition),
-        pingfrequency: parseInt(config.Interval / 1000),
+        playheadpos: parseInt(playheadPosition, 10),
+        pingfrequency: parseInt(config.Interval / 1000, 10),
       };
 
       fetch(reportUrl, {
