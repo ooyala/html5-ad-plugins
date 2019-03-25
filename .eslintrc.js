@@ -28,18 +28,22 @@ module.exports = {
         "allowForLoopAfterthoughts": true
       }
     ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
     "vars-on-top": 0,
     "no-underscore-dangle": "warn",
     "consistent-return": "warn",
     "no-undef": "warn",
     "no-redeclare": "warn",
-    "func-names": "warn",
     "camelcase": "warn",
     "prefer-destructuring": "warn",
     "no-shadow": "warn",
     "global-require": "warn",
     "import/no-dynamic-require": "warn",
-    "no-param-reassign": "warn",
     "no-prototype-builtins": "warn",
     "no-restricted-globals": "warn",
     "no-restricted-syntax": "warn",

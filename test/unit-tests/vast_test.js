@@ -105,8 +105,8 @@ describe('ad_manager_vast', function () {
     vastAdManager.loadMetadata(server, {}, content);
     initialPlay();
     vastAdManager.initialPlay();
-    xml = xml || vpaidLinearXML;
-    vastAdManager.onVastResponse(preroll, xml);
+    const xmlNew = xml || vpaidLinearXML;
+    vastAdManager.onVastResponse(preroll, xmlNew);
   };
 
   before(_.bind(() => {

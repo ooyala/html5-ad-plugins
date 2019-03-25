@@ -822,8 +822,8 @@ OO.Ads.manager(() => {
       // Note: Revisit this if customer data can include ";" or "=" characters
       if (FRMSegment) {
         each(FRMSegment.split(';'), (segment) => {
-          segment = segment.split('=');
-          fwContext.addKeyValue(segment[0], segment[1]);
+          const segmentNew = segment.split('=');
+          fwContext.addKeyValue(segmentNew[0], segmentNew[1]);
         });
       }
 

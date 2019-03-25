@@ -824,15 +824,16 @@ OO.Ads.manager(() => {
      */
     const _pingTrackingUrls = (urlObject) => {
       each(urlObject, (urls, trackingName) => {
+        let urlsArr = urls;
         try {
-          if (!urls) {
+          if (!urlsArr) {
             OO.log(`Ooyala SSAI: No "${trackingName}" tracking URLs provided to ping`);
             return;
           }
           if (bustTheCache) {
-            urls = _cacheBuster(urls);
+            urlsArr = _cacheBuster(urlsArr);
           }
-          OO.pixelPings(urls);
+          OO.pixelPings(urlsArr);
           OO.log(`Ooyala SSAI: "${trackingName}" tracking URLs pinged`);
         } catch (e) {
           OO.log(`Ooyala SSAI: Failed to ping "${trackingName}" tracking URLs`);

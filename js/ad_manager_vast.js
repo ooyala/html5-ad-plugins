@@ -1592,8 +1592,8 @@ OO.Ads.manager(() => {
      * @param {string} url URL to ping
      */
     this.pingURL = (code, url) => {
-      url = url.replace(/\[ERRORCODE\]/, code);
-      OO.pixelPing(url);
+      const urlNew = url.replace(/\[ERRORCODE\]/, code);
+      OO.pixelPing(urlNew);
     };
 
     /**
@@ -1671,7 +1671,7 @@ OO.Ads.manager(() => {
         return null;
       }
 
-      params = params || {};
+      const paramsObj = params || {};
       const { mediaFiles } = ad.linear;
       const maxMedia = max(mediaFiles, v => parseInt(v.bitrate, 10));
       const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
@@ -1680,8 +1680,8 @@ OO.Ads.manager(() => {
       extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.linear.tracking;
       vastAdUnit.data.type = this.amc.ADTYPE.LINEAR_VIDEO;
-      vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
-      vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
+      vastAdUnit.adPodIndex = paramsObj.adPodIndex ? paramsObj.adPodIndex : 1;
+      vastAdUnit.adPodLength = paramsObj.adPodLength ? paramsObj.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.position;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
@@ -1723,15 +1723,15 @@ OO.Ads.manager(() => {
         this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, ad.id);
         return null;
       }
-      params = params || {};
+      const paramsObj = params || {};
       const adURL = ad.nonLinear.url;
       const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.streamUrl = adURL;
       extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.nonLinear.tracking;
       vastAdUnit.data.type = this.amc.ADTYPE.NONLINEAR_OVERLAY;
-      vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
-      vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
+      vastAdUnit.adPodIndex = paramsObj.adPodIndex ? paramsObj.adPodIndex : 1;
+      vastAdUnit.adPodLength = paramsObj.adPodLength ? paramsObj.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.position;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
