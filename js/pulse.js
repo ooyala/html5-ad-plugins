@@ -122,16 +122,12 @@
         switch (argsLentgh) {
           case 0:
             return undefined;
-            break;
           case 1:
             return params[0];
-            break;
           case 2:
             return mergeCommaSeparatedListsBase(params[0], params[1]);
-            break;
           default:
             return mergeCommaSeparatedListsBase(params.shift(), mergeCommaSeparatedStrings(params));
-            break;
         }
       };
 
