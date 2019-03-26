@@ -318,7 +318,7 @@ OO.Ads.manager(() => {
      */
     const _prepareTimeline = () => {
       if (!slots) return [];
-      if (timeline.length > 0) return;
+      if (timeline.length > 0) return null;
       for (let i = 0; i < slots.length; i++) {
         switch (slots[i].getTimePositionClass()) {
           case tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL:
@@ -364,6 +364,8 @@ OO.Ads.manager(() => {
           // do nothing
         }
       }
+
+      return null;
     };
 
     /**

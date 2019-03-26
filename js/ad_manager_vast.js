@@ -402,11 +402,11 @@ OO.Ads.manager(() => {
      */
     const safeGetAttribute = (node, attribute) => {
       if (!node) {
-        return;
+        return undefined;
       }
       const attributeValue = node.getAttribute(attribute);
       if (attributeValue === null) {
-        return;
+        return undefined;
       }
 
       return node.getAttribute(attribute);
@@ -510,6 +510,8 @@ OO.Ads.manager(() => {
       if (typeof version === 'string') {
         return version.split('.')[0];
       }
+
+      return '';
     };
 
     /**
@@ -1396,7 +1398,7 @@ OO.Ads.manager(() => {
      * @returns {boolean} True if the ad was added to the timeline successfully, false otherwise.
      */
     const addToTimeline = (metadata) => {
-      if (!metadata) return;
+      if (!metadata) return false;
       const timeline = [];
       const ad = generateAd(metadata);
 
@@ -1854,7 +1856,7 @@ OO.Ads.manager(() => {
       }
       const childNode = parentNode.querySelector(selector);
       if (!childNode) {
-        return;
+        return undefined;
       }
       return childNode.textContent || undefined;
     };
@@ -2370,7 +2372,7 @@ OO.Ads.manager(() => {
         child = node.getElementsByTagName('NonLinear')[0];
       }
       if (!child) {
-        return;
+        return undefined;
       }
       const name = child.nodeName;
       const format = name.toLowerCase() === 'linear' ? 'Linear' : 'NonLinear';
@@ -2515,8 +2517,7 @@ OO.Ads.manager(() => {
       const tracking = [];
       const nodes = parent.getElementsByTagName('Tracking');
       if (!nodes) {
-        // TODO: Would returning an empty array here be better?
-        return;
+        return [];
       }
       for (_i = 0, _len = nodes.length; _i < _len; _i++) {
         node = nodes[_i];
@@ -2813,7 +2814,7 @@ OO.Ads.manager(() => {
 
       const node = adXml.querySelector(format);
       if (!node) {
-        return;
+        return undefined;
       }
 
       const paramsNode = node.querySelector('AdParameters');
@@ -2827,7 +2828,7 @@ OO.Ads.manager(() => {
       if (!mediaNode || !_isValidVpaidCreative(validNode, isLinear)) {
         OO.log(`VPaid: No valid media source, either is not a VPaid Ad
                 or ad unit is not in javascript format.`);
-        return;
+        return undefined;
       }
 
       if (paramsNode) {
@@ -3376,7 +3377,7 @@ OO.Ads.manager(() => {
 
         if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
           _tryRaiseAdError('VPAID 2.0: Required function getVPAIDAd() is not defined.');
-          return;
+          return null;
         }
 
         try {
@@ -3430,6 +3431,8 @@ OO.Ads.manager(() => {
         this.initVpaidAd(this._properties.adWidth, this._properties.adHeight, viewMode,
           this._properties.adDesiredBitrate, creativeData, environmentVariables);
       }
+
+      return null;
     };
 
     /**

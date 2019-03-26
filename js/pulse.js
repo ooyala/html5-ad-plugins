@@ -245,6 +245,8 @@
         if (values && values.length !== 0) {
           return values[0];
         }
+
+        return null;
       };
 
       const getContentPartnerFromPlayerLevelShares = (shares) => {
@@ -253,6 +255,8 @@
         if (values && values.length === 2) {
           return values[1];
         }
+
+        return null;
       };
 
       const updateAdScreenPointerEventsEnabled = () => {

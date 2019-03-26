@@ -288,6 +288,7 @@ OO.Ads.manager(() => {
       if (has(adIdVastData, id3Object.adId)) {
         return adIdVastData[id3Object.adId];
       }
+      return null;
     };
 
     /**

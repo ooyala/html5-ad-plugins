@@ -24,6 +24,8 @@ gulp.task('init_module', (callback) => {
   exec('git submodule update --init && cd html5-common && npm install && cd ..', (err) => {
     if (err) return callback(err);
     callback();
+
+    return null;
   });
 });
 
