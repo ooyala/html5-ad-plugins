@@ -1625,6 +1625,7 @@ require('../html5-common/js/utils/utils.js');
        * @param success - whether SDK loaded successfully.
        */
       const _onSdkLoaded = (success) => {
+        let errorString = '';
         _adModuleJsReady = success;
         OO.log('onSdkLoaded!');
         // [PBK-639] Corner case where Google's SDK 200s but isn't properly

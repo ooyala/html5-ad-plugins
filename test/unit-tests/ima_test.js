@@ -44,7 +44,7 @@ describe('ad_manager_ima', function () {
     },
     EVENTS:
       {
-        PLAY: 'play', // TOOD : Consider renaming
+        PLAY: 'play', // TODO : Consider renaming.
         PLAYING: 'playing',
         ENDED: 'ended',
         ERROR: 'error',

@@ -804,15 +804,15 @@
         // (clear any old callbacks that may have been registered first)
         pluginCallbacks = {};
         if (adManagerMetadata.pulse_callbacks) {
-          Object.keys(adManagerMetadata.pulse_callbacks).forEach((name) => {
-            if (adManagerMetadata.pulse_callbacks.hasOwnProperty(name)) {
-              const callback = adManagerMetadata.pulse_callbacks[name];
+          Object
+            .entries(adManagerMetadata.pulse_callbacks)
+            .forEach(([name, value]) => {
+              const callback = value;
 
               if (typeof callback === 'function') {
                 pluginCallbacks[name] = callback;
               }
-            }
-          });
+            });
         }
 
         // Allow setting explicit site id

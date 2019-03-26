@@ -1569,11 +1569,11 @@ describe('ad_manager_vast', function () {
     expect(firstRepeatAdSource.adTagURI).to.be(undefined);
     expect(firstRepeatAdSource.VASTAdData).not.to.be(null);
 
-    const { trackingEvents } = firstRepeatAdBreak;
-    expect(trackingEvents[0].eventName).to.be('breakStart');
-    expect(trackingEvents[1].eventName).to.be('error');
-    expect(trackingEvents[0].url).to.be('trackingurl1');
-    expect(trackingEvents[1].url).to.be('errorurl1');
+    let [trackingEvents0, trackingEvents1] = firstRepeatAdBreak.trackingEvents;
+    expect(trackingEvents0.eventName).to.be('breakStart');
+    expect(trackingEvents1.eventName).to.be('error');
+    expect(trackingEvents0.url).to.be('trackingurl1');
+    expect(trackingEvents1.url).to.be('errorurl1');
 
     let vastAd = amc.timeline[0];
     expect(vastAd.ad).to.be.an('object');

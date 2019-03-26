@@ -119,10 +119,6 @@ describe('ad_manager_freewheel', function () {
     fwParams = {};
     fw.destroy();
     fwContext = null;
-    getTemporalSlots = function () {
-    };
-    setVideoAsset = function () {
-    };
   }, this));
 
   //   ------   TESTS   ------
