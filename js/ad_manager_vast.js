@@ -1201,21 +1201,18 @@ OO.Ads.manager(() => {
      * @param {object} adId The ad ID
      */
     const _pingTrackingUrls = (urlObject, adId) => {
-      for (const trackingName in urlObject) {
-        if (urlObject.hasOwnProperty(trackingName)) {
-          try {
-            const urls = urlObject[trackingName];
-            if (urls) {
-              OO.pixelPings(urls);
-              OO.log(`VAST: "${trackingName}" tracking URLs pinged for VAST Ad Id: ${adId}`);
-            } else {
-              OO.log(`VAST: No "${trackingName}" tracking URLs provided to ping for VAST Ad Id: ${adId}`);
-            }
-          } catch (e) {
-            _tryRaiseAdError(`VAST: Failed to ping "${trackingName}" tracking URLs for VAST Ad Id: ${adId}`);
+      each(urlObject, (trackingName) => {
+        try {
+          if (trackingName) {
+            OO.pixelPings(trackingName);
+            OO.log(`VAST: "${trackingName}" tracking URLs pinged for VAST Ad Id: ${adId}`);
+          } else {
+            OO.log(`VAST: No "${trackingName}" tracking URLs provided to ping for VAST Ad Id: ${adId}`);
           }
+        } catch (e) {
+          _tryRaiseAdError(`VAST: Failed to ping "${trackingName}" tracking URLs for VAST Ad Id: ${adId}`);
         }
-      }
+      });
     };
 
     /**

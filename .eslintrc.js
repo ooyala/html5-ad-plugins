@@ -36,14 +36,14 @@ module.exports = {
     ],
     "vars-on-top": 0,
     "import/no-dynamic-require": "warn",
-    "no-underscore-dangle": "warn",
-    "no-undef": "warn",
+    "no-underscore-dangle": "warn", // 341
+    "no-undef": "warn", // 2443 expect
     "camelcase": "warn",
-    "no-shadow": "warn",
-    "global-require": "warn",
-    "no-prototype-builtins": "warn",
-    "no-restricted-globals": "warn",
-    "no-restricted-syntax": "warn",
-    "prefer-rest-params": "warn",
+    "no-shadow": "warn", // 18
+    "global-require": "warn", // 15
+    "no-prototype-builtins": "warn", // 14
+    "no-restricted-globals": "warn", // 4
+    // "no-restricted-syntax": "warn", // 6
+    "prefer-rest-params": "warn", // 14
   },
 };

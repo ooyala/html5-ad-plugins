@@ -419,8 +419,7 @@ describe('ad_manager_ooyala_ssai', function () {
 
     // get the urls in with the "rnd" query parameter, this will contain the
     // CACHEBUSTING macro that should be replaced.
-    let url;
-    for (url in trackingUrlsPinged) {
+    Object.keys(trackingUrlsPinged).forEach((url) => {
       if (_.has(trackingUrlsPinged, url) && /rnd=/.test(url)) {
         // should not have the cachebusting macros and should be pinged
         expect(url).to.not.have.string('%5BCACHEBUSTING%5D');
@@ -432,7 +431,7 @@ describe('ad_manager_ooyala_ssai', function () {
 
         expect(trackingUrlsPinged[url]).to.be(1);
       }
-    }
+    });
 
     // cacheBuster function should not mutate other URLs without the cachebusting macro"
     expect(_.keys(trackingUrlsPinged)).to.contain('impressionUrl');

@@ -102,8 +102,9 @@ OO.Ads.manager(() => {
     this.loadMetadata = (pageAndBacklotMetadata, baseMetadata) => {
       metadataFetched = true;
 
-      let key; let tags; let pair; let
-        i;
+      let tags;
+      let pair;
+      let i;
       const params = {};
 
       const isLrParam = key => (typeof key === 'string') && (key.indexOf('LR_') === 0);
@@ -112,20 +113,20 @@ OO.Ads.manager(() => {
       if (baseMetadata && (typeof baseMetadata === 'object')) {
         // This is needed because the LiveRail ad source provides nonstandard means of incorporating
         // movie-level metadata and this is how it makes it into metadata
-        for (key in baseMetadata) {
+        each(baseMetadata, (key) => {
           if (isLrParam(key)) {
-            params[key] = baseMetadata[key];
+            params[key] = key;
           }
-        }
+        });
       }
 
       if (pageAndBacklotMetadata && (typeof pageAndBacklotMetadata === 'object')) {
         // load parameters set in backdoor 3rd party module settings
-        for (key in pageAndBacklotMetadata) {
+        each(pageAndBacklotMetadata, (key) => {
           if (isLrParam(key)) {
-            params[key] = pageAndBacklotMetadata[key];
+            params[key] = key;
           }
-        }
+        });
 
         // load parameters from backlot ad-set level
         // Ad tag url parameters override all

@@ -176,11 +176,11 @@
       };
 
       const cleanObject = (obj) => {
-        for (const prop in obj) {
+        Object.keys(obj).forEach((prop) => {
           if (obj[prop] === null || obj[prop] === undefined) {
             delete obj[prop];
           }
-        }
+        });
       };
 
       const safeParseInt = (string) => {
@@ -804,7 +804,7 @@
         // (clear any old callbacks that may have been registered first)
         pluginCallbacks = {};
         if (adManagerMetadata.pulse_callbacks) {
-          for (const name in adManagerMetadata.pulse_callbacks) {
+          Object.keys(adManagerMetadata.pulse_callbacks).forEach((name) => {
             if (adManagerMetadata.pulse_callbacks.hasOwnProperty(name)) {
               const callback = adManagerMetadata.pulse_callbacks[name];
 
@@ -812,7 +812,7 @@
                 pluginCallbacks[name] = callback;
               }
             }
-          }
+          });
         }
 
         // Allow setting explicit site id
