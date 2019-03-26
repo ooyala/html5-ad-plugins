@@ -185,7 +185,7 @@
 
       const safeParseInt = (string) => {
         const val = parseInt(string, 10);
-        if (!val || isNaN(val)) {
+        if (!val || Number.isNaN(val)) {
           return null;
         }
         return val;
@@ -904,7 +904,7 @@
           10,
         );
 
-        if (isNaN(this._requestSettings.maxLinearBreakDuration)) {
+        if (Number.isNaN(this._requestSettings.maxLinearBreakDuration)) {
           this._requestSettings.maxLinearBreakDuration = null;
         }
 

@@ -2547,7 +2547,7 @@ describe('ad_manager_ima', function () {
       ima.loadMetadata(content, {}, {});
       ima.registerUi();
 
-      expect(isNaN(ima.maxRedirects)).to.be(true); // this is what comes in
+      expect(Number.isNaN(ima.maxRedirects)).to.be(true); // this is what comes in
       expect(google.ima.numRedirects).to.be(undefined); // ima should not be called
     });
   });

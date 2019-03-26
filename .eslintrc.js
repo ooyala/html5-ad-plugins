@@ -65,7 +65,6 @@ module.exports = {
     "no-shadow": "warn",
     "global-require": "warn",
     "no-prototype-builtins": "warn",
-    "no-restricted-globals": "warn",
     "prefer-rest-params": "warn",
   },
 };
