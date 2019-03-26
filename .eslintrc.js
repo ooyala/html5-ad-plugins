@@ -35,13 +35,12 @@ module.exports = {
       }
     ],
     "vars-on-top": 0,
+    "import/no-dynamic-require": "warn",
     "no-underscore-dangle": "warn",
     "no-undef": "warn",
     "camelcase": "warn",
-    "prefer-destructuring": "warn",
-    "no-shadow": "warn",  // 1
+    "no-shadow": "warn",
     "global-require": "warn",
-    "import/no-dynamic-require": "warn",
     "no-prototype-builtins": "warn",
     "no-restricted-globals": "warn",
     "no-restricted-syntax": "warn",

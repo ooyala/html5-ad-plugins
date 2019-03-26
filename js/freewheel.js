@@ -99,7 +99,7 @@ OO.Ads.manager(() => {
           const match = externalId.match(filter);
           if (match.length > 0) {
             // the first element of match will contain the match itself
-            videoAssetId = match[0];
+            [videoAssetId] = match;
           }
         } else {
           videoAssetId = externalId;
@@ -120,6 +120,7 @@ OO.Ads.manager(() => {
         profileId = metadata.html5_player_profile;
         siteSectionId = metadata.fw_site_section_id;
         videoAssetId = metadata.fw_video_asset_id || metadata.fw_video_asset_network_id || videoAssetId;
+        // eslint-disable-next-line prefer-destructuring
         FRMSegment = metadata.FRMSegment;
         freeWheelCompanionAdsWrapperId = metadata.companion_ad_wrapper_id;
         adServerURL = (amc.platform.isSSL ? metadata.html5_ssl_ad_server : metadata.html5_ad_server);

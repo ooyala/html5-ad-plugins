@@ -284,6 +284,7 @@ require('../html5-common/js/utils/utils.js');
           // We do this because the player skin plugins div (_uiContainer) may not have been redrawn yet
           if (this.currentAMCAdPod && this.currentNonLinearIMAAd) {
             if (this.currentAMCAdPod.width) {
+              // eslint-disable-next-line prefer-destructuring
               width = this.currentAMCAdPod.width;
               if (this.currentAMCAdPod.paddingWidth) {
                 width += this.currentAMCAdPod.paddingWidth;
@@ -291,6 +292,7 @@ require('../html5-common/js/utils/utils.js');
             }
 
             if (this.currentAMCAdPod.height) {
+              // eslint-disable-next-line prefer-destructuring
               height = this.currentAMCAdPod.height;
               if (this.currentAMCAdPod.paddingHeight) {
                 height += this.currentAMCAdPod.paddingHeight;

@@ -243,13 +243,11 @@ OO.Ads.manager(() => {
      *
      */
     const _getAdDuration = (id3Object) => {
-      let duration = 0;
+      let { duration } = id3Object;
       // If not start id3 tag from ad, we recalculate ad duration.
       if (id3Object.time !== 0) {
-        const adOffset = id3Object.time * id3Object.duration / 100;
-        duration = id3Object.duration - adOffset;
-      } else {
-        duration = id3Object.duration;
+        const adOffset = id3Object.time * duration / 100;
+        duration -= adOffset;
       }
       return duration * 1000;
     };
@@ -461,8 +459,9 @@ OO.Ads.manager(() => {
       const mainUrl = urlParts[0];
       const mainUrlParts = mainUrl.split('/');
       if (mainUrlParts !== null) {
-        this.domainName = mainUrlParts[2];
-        this.currentEmbed = mainUrlParts[4];
+        const [, , domainName, , currentEmbed] = mainUrlParts;
+        this.domainName = domainName;
+        this.currentEmbed = currentEmbed;
       }
       const queryParams = queryParamString.split('&');
       if (queryParams === null) {
@@ -476,7 +475,8 @@ OO.Ads.manager(() => {
         const paramParts = queryParams[index].split('=');
 
         if (paramParts !== null && paramParts[0] === 'ssai_guid') {
-          this.ssaiGuid = paramParts[1];
+          const [, ssaiGuid] = paramParts;
+          this.ssaiGuid = ssaiGuid;
           return;
         }
       }
@@ -675,11 +675,10 @@ OO.Ads.manager(() => {
      * @return {string|null} The title of the ad. Returns null if no title exists.
      */
     const _getTitle = (adObject) => {
-      let title = null;
       if (adObject && adObject.title) {
-        title = adObject.title;
+        return adObject.title;
       }
-      return title;
+      return null;
     };
 
     /**

@@ -609,8 +609,10 @@ describe('ad_manager_freewheel', function () {
     let sentUrl = null;
     amc.sendURLToLoadAndPlayNonLinearAd = function (ad, adId, url) {
       if (ad) {
+        /* eslint-disable prefer-destructuring */
         width = ad.width;
         height = ad.height;
+        /* eslint-enable prefer-destructuring */
         sentUrl = url;
       }
     };

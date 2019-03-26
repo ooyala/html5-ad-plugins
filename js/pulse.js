@@ -90,6 +90,7 @@
 
         if (amc.ui.useSingleVideoElement && !this.sharedVideoElement && amc.ui.ooyalaVideoElement[0]
           && (amc.ui.ooyalaVideoElement[0].className === 'video')) {
+          // eslint-disable-next-line prefer-destructuring
           this.sharedVideoElement = this.ui.ooyalaVideoElement[0];
         }
       };

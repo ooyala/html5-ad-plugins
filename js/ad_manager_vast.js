@@ -1290,6 +1290,7 @@ OO.Ads.manager(() => {
       }
 
       if (canSkipAds) {
+        // eslint-disable-next-line prefer-destructuring
         skipOffset = adWrapper.ad.data.linear.skipOffset;
 
         if (skipOffset) {
@@ -1304,8 +1305,8 @@ OO.Ads.manager(() => {
             let ms = 0;
             const secondsSplits = ss.split('.');
             if (secondsSplits.length === 2) {
-              ss = secondsSplits[0];
-              ms = secondsSplits[1];
+              [ss] = secondsSplits;
+              [, ms] = secondsSplits;
             }
             let offset = +ms + (+ss * 1000) + (+mm * 60 * 1000) + (+hh * 60 * 60 * 1000);
             // Provide the offset to the AMC in seconds
@@ -2232,14 +2233,14 @@ OO.Ads.manager(() => {
       const vastVersion = getVastVersion(xml);
       let fallbackAd;
       if (supportsAdFallback(vastVersion) && vastAds.standalone.length > 0) {
-        fallbackAd = vastAds.standalone[0];
+        [fallbackAd] = vastAds.standalone;
       }
       let ad;
       if (supportsPoddedAds(vastVersion)) {
         // If there are no podded ads
         if (isEmpty(vastAds.podded)) {
           // show the first standalone ad
-          ad = vastAds.standalone[0];
+          [ad] = vastAds.standalone;
           if (ad) {
             handleAds([ad], adLoaded);
           }
@@ -2367,9 +2368,9 @@ OO.Ads.manager(() => {
      */
     const _getVpaidFormat = (node) => {
       let child;
-      child = node.getElementsByTagName('Linear')[0];
+      [child] = node.getElementsByTagName('Linear');
       if (!child) {
-        child = node.getElementsByTagName('NonLinear')[0];
+        [child] = node.getElementsByTagName('NonLinear');
       }
       if (!child) {
         return undefined;
@@ -3038,8 +3039,10 @@ OO.Ads.manager(() => {
       } else {
         let streamUrl;
         if (adWrapper.ad && adWrapper.ad.streamUrl) {
+          // eslint-disable-next-line prefer-destructuring
           streamUrl = adWrapper.ad.streamUrl;
         } else if (adWrapper.streamUrl) {
+          // eslint-disable-next-line prefer-destructuring
           streamUrl = adWrapper.streamUrl;
         } else {
           // TODO: What happens when streamUrl is the empty string? Will AMC get notified of an error?
@@ -3399,7 +3402,8 @@ OO.Ads.manager(() => {
         });
 
         this._slot = _createUniqueElement();
-        this._videoSlot = this.amc.ui.adVideoElement[0];
+        const [_videoSlot] = this.amc.ui.adVideoElement;
+        this._videoSlot = _videoSlot;
 
         // PBI-1609: Midroll VPAID 2.0 ads get stuck buffering on Mac Safari if
         // the VPAID creative does not call load() on the video. This is not

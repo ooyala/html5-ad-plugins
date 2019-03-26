@@ -349,6 +349,7 @@ describe('ad_manager_ima', function () {
     // This line mimics the ad pod having been set by the time the ad request success returns
     // This is a hack, will revisit in the future, but does properly test to see that the fake ad
     // ends when an ad request is successful
+    // eslint-disable-next-line prefer-destructuring
     ima.currentAMCAdPod = amc.timeline[0];
     play();
     expect(startNotified).to.be(false);
@@ -621,8 +622,10 @@ describe('ad_manager_ima', function () {
       if (adPod === currentAdPod && id === adPodId) {
         nonLinearWidth = currentAdPod.width;
         nonLinearHeight = currentAdPod.height;
+        /* eslint-disable prefer-destructuring */
         paddingWidth = currentAdPod.paddingWidth;
         paddingHeight = currentAdPod.paddingHeight;
+        /* eslint-enable prefer-destructuring */
       }
     };
     // original ad definition

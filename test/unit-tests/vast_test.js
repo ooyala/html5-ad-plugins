@@ -687,6 +687,7 @@ describe('ad_manager_vast', function () {
     };
     amc.notifyLinearAdStarted = function (name, props) {
       if (props) {
+        // eslint-disable-next-line prefer-destructuring
         indexInPod = props.indexInPod;
       }
     };
@@ -848,7 +849,7 @@ describe('ad_manager_vast', function () {
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = adQueue[0];
+    [vastAd] = adQueue;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql(['errorurl']);
     expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
@@ -908,7 +909,7 @@ describe('ad_manager_vast', function () {
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = adQueue[0];
+    [vastAd] = adQueue;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql(['errorurl']);
     expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
@@ -918,7 +919,7 @@ describe('ad_manager_vast', function () {
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = adQueue[1];
+    [, vastAd] = adQueue;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql(['errorurl']);
     expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
@@ -952,6 +953,7 @@ describe('ad_manager_vast', function () {
     };
     amc.notifyLinearAdStarted = function (name, props) {
       if (props) {
+        // eslint-disable-next-line prefer-destructuring
         indexInPod = props.indexInPod;
       }
     };
@@ -987,14 +989,14 @@ describe('ad_manager_vast', function () {
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = adQueue[0];
+    [vastAd] = adQueue;
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(3);
     expect(indexInPod).to.be(2);
 
     vastAdManager.adVideoPlaying();
     vastAdManager.adVideoEnded();
-    vastAd = adQueue[1];
+    [, vastAd] = adQueue;
     vastAdManager.playAd(vastAd);
     expect(adPodLength).to.be(3);
     expect(indexInPod).to.be(3);
@@ -1079,7 +1081,7 @@ describe('ad_manager_vast', function () {
     expect(linearEndNotified).to.be(1);
     expect(nonLinearStartNotified).to.be(0);
 
-    vastAd = adQueue[0];
+    [vastAd] = adQueue;
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(0);
@@ -1095,7 +1097,7 @@ describe('ad_manager_vast', function () {
     expect(linearEndNotified).to.be(2);
     expect(nonLinearStartNotified).to.be(0);
 
-    vastAd = adQueue[1];
+    [, vastAd] = adQueue;
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(0);
@@ -1112,7 +1114,7 @@ describe('ad_manager_vast', function () {
     expect(nonLinearStartNotified).to.be(0);
 
     // overlay
-    vastAd = adQueue[2];
+    [, , vastAd] = adQueue;
     vastAdManager.playAd(vastAd);
     expect(podStartNotified).to.be(1);
     expect(podEndNotified).to.be(1);
@@ -1176,7 +1178,7 @@ describe('ad_manager_vast', function () {
     vastAdManager.cancelAd(vastAd, {
       code: amc.AD_CANCEL_CODE.TIMEOUT,
     });
-    vastAd = adQueue[0];
+    [vastAd] = adQueue;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql(['errorurl']);
     expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
@@ -1237,7 +1239,7 @@ describe('ad_manager_vast', function () {
     expect(vastAd.ad.data.id).to.be('6654646');
 
     vastAdManager.adVideoError();
-    vastAd = adQueue[0];
+    [vastAd] = adQueue;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql(['errorurl']);
     expect(vastAd.ad.data.impression).to.eql(['impressionurl']);
@@ -1567,7 +1569,7 @@ describe('ad_manager_vast', function () {
     expect(firstRepeatAdSource.adTagURI).to.be(undefined);
     expect(firstRepeatAdSource.VASTAdData).not.to.be(null);
 
-    let { trackingEvents } = firstRepeatAdBreak;
+    const { trackingEvents } = firstRepeatAdBreak;
     expect(trackingEvents[0].eventName).to.be('breakStart');
     expect(trackingEvents[1].eventName).to.be('error');
     expect(trackingEvents[0].url).to.be('trackingurl1');
@@ -1611,13 +1613,13 @@ describe('ad_manager_vast', function () {
     expect(secondRepeatAdSource.adTagURI).to.be(undefined);
     expect(secondRepeatAdSource.VASTAdData).not.to.be(null);
 
-    trackingEvents = secondRepeatAdBreak.trackingEvents;
-    expect(trackingEvents[0].eventName).to.be('breakStart');
-    expect(trackingEvents[1].eventName).to.be('error');
-    expect(trackingEvents[0].url).to.be('trackingurl2');
-    expect(trackingEvents[1].url).to.be('errorurl2');
+    [trackingEvents0, trackingEvents1] = secondRepeatAdBreak.trackingEvents;
+    expect(trackingEvents0.eventName).to.be('breakStart');
+    expect(trackingEvents1.eventName).to.be('error');
+    expect(trackingEvents0.url).to.be('trackingurl2');
+    expect(trackingEvents1.url).to.be('errorurl2');
 
-    vastAd = amc.timeline[1];
+    [, vastAd] = amc.timeline;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql(['errorurl2']);
     expect(vastAd.ad.data.impression).to.eql(['impressionurl2']);
@@ -1655,13 +1657,13 @@ describe('ad_manager_vast', function () {
     expect(thirdAdSource.adTagURI).to.be(undefined);
     expect(thirdAdSource.VASTAdData).not.to.be(null);
 
-    trackingEvents = thirdAdBreak.trackingEvents;
-    expect(trackingEvents[0].eventName).to.be('breakStart');
-    expect(trackingEvents[1].eventName).to.be('error');
-    expect(trackingEvents[0].url).to.be('trackingurl3');
-    expect(trackingEvents[1].url).to.be('errorurl3');
+    [trackingEvents0, trackingEvents1] = thirdAdBreak.trackingEvents;
+    expect(trackingEvents0.eventName).to.be('breakStart');
+    expect(trackingEvents1.eventName).to.be('error');
+    expect(trackingEvents0.url).to.be('trackingurl3');
+    expect(trackingEvents1.url).to.be('errorurl3');
 
-    vastAd = amc.timeline[2];
+    [, , vastAd] = amc.timeline;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.error).to.eql(['errorurl3']);
     expect(vastAd.ad.data.impression).to.eql(['impressionurl3']);
@@ -1699,7 +1701,7 @@ describe('ad_manager_vast', function () {
     const secondRepeatAdBreak = adBreaks[1];
     expect(secondRepeatAdBreak.repeatAfter).to.be('1337');
 
-    vastAd = amc.timeline[1];
+    [, vastAd] = amc.timeline;
     expect(vastAd.ad.repeatAfter).to.be(null);
   });
 
@@ -1717,7 +1719,7 @@ describe('ad_manager_vast', function () {
     const secondRepeatAdBreak = adBreaks[1];
     expect(secondRepeatAdBreak.repeatAfter).to.be('');
 
-    vastAd = amc.timeline[1];
+    [, vastAd] = amc.timeline;
     expect(vastAd.ad.repeatAfter).to.be(null);
   });
 
@@ -2740,7 +2742,7 @@ describe('ad_manager_vast', function () {
 
     // catch content-type: application/mpegurl
     vastAdManager.onVastResponse(vast_ad, contentTypeHLS2);
-    vastAd = amc.timeline[0];
+    [vastAd] = amc.timeline;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
     expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('application/mpegurl');
@@ -2753,7 +2755,7 @@ describe('ad_manager_vast', function () {
 
     // catch content-type: audio/x-mpegurl
     vastAdManager.onVastResponse(vast_ad, contentTypeHLS3);
-    vastAd = amc.timeline[0];
+    [vastAd] = amc.timeline;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
     expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('audio/x-mpegurl');
@@ -2766,7 +2768,7 @@ describe('ad_manager_vast', function () {
 
     // catch content-type: audio/mpegurl
     vastAdManager.onVastResponse(vast_ad, contentTypeHLS4);
-    vastAd = amc.timeline[0];
+    [vastAd] = amc.timeline;
     expect(vastAd.ad).to.be.an('object');
     expect(vastAd.ad.data.linear.mediaFiles.length).to.eql(1);
     expect(vastAd.ad.data.linear.mediaFiles[0].type).to.be('audio/mpegurl');
