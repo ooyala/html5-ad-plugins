@@ -15,7 +15,7 @@ const fs = require('fs');
 describe('ad_manager_vast', function () {
   let amc;
   let vastAdManager;
-  const name = 'vast';
+  const nameVast = 'vast';
   const originalOoAds = _.clone(OO.Ads);
   require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
   require(`${TEST_ROOT}unit-test-helpers/mock_vpaid.js`);
@@ -178,7 +178,7 @@ describe('ad_manager_vast', function () {
   });
 
   it('Init: ad manager has the expected name', () => {
-    expect(vastAdManager.name).to.be(name);
+    expect(vastAdManager.name).to.be(nameVast);
   });
 
   it('Init: ad manager handles the initialize function', () => {

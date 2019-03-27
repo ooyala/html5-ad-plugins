@@ -526,8 +526,8 @@ require('../html5-common/js/utils/utils.js');
           if (slot.width && slot.height) {
             companionAd = ad.getCompanionAds(slot.width, slot.height);
             if (companionAd.length) {
-              each(companionAd, (ad) => {
-                companionAds.push({ slotSize: `${slot.width}x${slot.height}`, ad: ad.getContent() });
+              each(companionAd, (adValue) => {
+                companionAds.push({ slotSize: `${slot.width}x${slot.height}`, ad: adValue.getContent() });
               });
             }
           }

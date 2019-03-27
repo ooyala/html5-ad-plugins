@@ -18,7 +18,7 @@ describe('ad_manager_ima', function () {
   let imaVideoPluginFactory;
   let videoWrapper;
   let imaIframe;
-  const name = 'google-ima-ads-manager';
+  const nameAdsManager = 'google-ima-ads-manager';
   const playerId = 'ima-player-id';
   const originalOoAds = _.clone(OO.Ads);
   const originalOoVideo = _.clone(OO.Video);
@@ -179,7 +179,7 @@ describe('ad_manager_ima', function () {
   });
 
   it('Init: ad manager has the expected name', () => {
-    expect(ima.name).to.be(name);
+    expect(ima.name).to.be(nameAdsManager);
   });
 
   it('Init: ad manager handles the initialize function', () => {
@@ -313,7 +313,7 @@ describe('ad_manager_ima', function () {
    the IMA ad manager for ad rules will control ad playback`, () => {
     let notified = false;
     amc.adManagerWillControlAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === nameAdsManager) {
         notified = true;
       }
     };
@@ -492,14 +492,14 @@ describe('ad_manager_ima', function () {
 
     it('Play ad: Requests the AMC to show the player UI and not autohide', () => {
       let notified = false;
-      const showAdControls = true;
+      const showAdControlsState = true;
       amc.pageSettings.playerControlsOverAds = false;
       amc.hidePlayerUi = function (showAdControls, showAdMarquee, autoHideAdControls) {
         expect(showAdControls).to.be(true);
         expect(autoHideAdControls).to.be(false);
         notified = true;
       };
-      initAndPlay(true, vci, undefined, showAdControls);
+      initAndPlay(true, vci, undefined, showAdControlsState);
       ima.playAd(amc.timeline[0]);
       const am = google.ima.adManagerInstance;
       am.publishEvent(google.ima.AdEvent.Type.STARTED);
@@ -689,7 +689,7 @@ describe('ad_manager_ima', function () {
     };
 
     amc.adManagerDoneControllingAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === nameAdsManager) {
         doneControllingAdsNotified = true;
       }
     };
@@ -716,7 +716,7 @@ describe('ad_manager_ima', function () {
   times out loading ad rules ad`, () => {
     let doneControllingAdsNotified = false;
     amc.adManagerDoneControllingAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === nameAdsManager) {
         doneControllingAdsNotified = true;
       }
     };
@@ -794,7 +794,7 @@ describe('ad_manager_ima', function () {
     let podEndedNotified = 0;
     initAndPlay(true, vci);
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
-      if (adManager === name && streams.ima) {
+      if (adManager === nameAdsManager && streams.ima) {
         forcedAdNotified += 1;
       }
     };
@@ -820,7 +820,7 @@ describe('ad_manager_ima', function () {
     // check that the new preroll was appended to the timeline
     expect(appendedToTimeline).to.eql([new amc.Ad({
       position: amc.FORCED_AD_POSITION,
-      adManager: name,
+      adManager: nameAdsManager,
       ad: {
         position_type: 'r',
         forced_ad_type: amc.ADTYPE.LINEAR_VIDEO,
@@ -838,7 +838,7 @@ describe('ad_manager_ima', function () {
     let notified = false;
     initAndPlay(true, vci);
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
-      if (adManager === name && streams.ima === '') {
+      if (adManager === nameAdsManager && streams.ima === '') {
         notified = true;
       }
     };
@@ -1129,7 +1129,7 @@ describe('ad_manager_ima', function () {
     let notified = false;
     initAndPlay(true, vci);
     amc.adManagerDoneControllingAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === nameAdsManager) {
         notified = true;
       }
     };

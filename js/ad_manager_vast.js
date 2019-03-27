@@ -1630,7 +1630,7 @@ OO.Ads.manager(() => {
         default:
           filter.push(`video/${type}`);
       }
-      const stream = find(streams, stream => (filter.indexOf(stream.type) >= 0));
+      const stream = find(streams, item => (filter.indexOf(item.type) >= 0));
       return stream ? stream.url : null;
     };
 

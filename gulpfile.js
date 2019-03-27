@@ -15,7 +15,7 @@ const { exec } = require('child_process');
 const webserver = require('gulp-webserver');
 const babelify = require('babelify');
 
-const path = {
+const pathJs = {
   originalJs: ['./js/'],
 };
 
@@ -63,7 +63,7 @@ const browserify_fn = function () {
     });
   };
 
-  listFiles(path.originalJs, function (error, files) {
+  listFiles(pathJs.originalJs, function (error, files) {
     if (error) {
       console.log(error);
     } else {

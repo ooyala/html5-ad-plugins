@@ -94,9 +94,9 @@ OO.Ads.manager(() => {
       // if we have all the required parameters for using an external id, set videoAssetId to the external id
       const externalId = movieMetadata.external_id;
       if (metadata.use_external_id && externalId) {
-        const filter = metadata.external_id_filter;
-        if (filter) {
-          const match = externalId.match(filter);
+        const filterId = metadata.external_id_filter;
+        if (filterId) {
+          const match = externalId.match(filterId);
           if (match.length > 0) {
             // the first element of match will contain the match itself
             [videoAssetId] = match;
@@ -541,11 +541,11 @@ OO.Ads.manager(() => {
      * When the Ad Manager Controller needs to cancel the overlay it will call this function.
      * @public
      * @method Freewheel#cancelOverlay
-     * @param {object} currentAd The overlay ad object that is to be cancelled and removed
+     * @param {object} currentAdObj The overlay ad object that is to be cancelled and removed
      */
-    this.cancelOverlay = (currentAd) => {
+    this.cancelOverlay = (currentAdObj) => {
       // Consider instead, hiding the span with _fw_ad_container_html
-      this.cancelAd(currentAd);
+      this.cancelAd(currentAdObj);
     };
 
     /**

@@ -60,9 +60,26 @@ module.exports = {
     ],
     "vars-on-top": 0,
     "import/no-dynamic-require": "warn",
+    "require-jsdoc": ["warn", {
+      "require": {
+        "FunctionDeclaration": true,
+        "MethodDefinition": true,
+        "ClassDeclaration": true,
+        "ArrowFunctionExpression": false,
+        "FunctionExpression": false
+      }
+    }],
+    "valid-jsdoc": [
+      "warn",
+      {
+        "prefer": {
+          "return": "returns"
+        },
+        "requireReturn": false
+      }
+    ],
     "no-underscore-dangle": "warn",
     "camelcase": "warn",
-    "no-shadow": "warn",
     "global-require": "warn",
     "prefer-rest-params": "warn",
   },

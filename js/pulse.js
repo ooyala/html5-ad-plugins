@@ -211,6 +211,7 @@
             if (navigator.mimeTypes['application/x-shockwave-flash'].enabledPlugin) {
               return (navigator.plugins['Shockwave Flash 2.0'] || navigator.plugins['Shockwave Flash']).description.replace(/\D+/g, ',').match(/^,?(.+),?$/)[1];
             }
+            // eslint-disable-next-line no-shadow
           } catch (e) {
             // empty
           }
