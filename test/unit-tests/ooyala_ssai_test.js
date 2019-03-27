@@ -36,7 +36,7 @@ describe('ad_manager_ooyala_ssai', function () {
     // mock pixelPing to test error tracking
     OO.pixelPing = function (url) {
       if (url) {
-        if (trackingUrlsPinged.hasOwnProperty(url)) {
+        if (Object.prototype.hasOwnProperty.call(trackingUrlsPinged, url)) {
           trackingUrlsPinged[url] += 1;
         } else {
           trackingUrlsPinged[url] = 1;

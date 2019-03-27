@@ -1774,12 +1774,12 @@ require('../html5-common/js/utils/utils.js');
 
         // check if ads should play on replays
         this.requestAdsOnReplay = true;
-        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.REPLAY_ADS)) {
+        if (Object.prototype.hasOwnProperty.call(_amc.adManagerSettings, _amc.AD_SETTINGS.REPLAY_ADS)) {
           this.requestAdsOnReplay = _amc.adManagerSettings[_amc.AD_SETTINGS.REPLAY_ADS];
         }
 
         this.preloadAds = false;
-        if (_amc.adManagerSettings.hasOwnProperty(_amc.AD_SETTINGS.PRELOAD_ADS)) {
+        if (Object.prototype.hasOwnProperty.call(_amc.adManagerSettings, _amc.AD_SETTINGS.PRELOAD_ADS)) {
           this.preloadAds = _amc.adManagerSettings[_amc.AD_SETTINGS.PRELOAD_ADS];
         }
 
@@ -1794,7 +1794,7 @@ require('../html5-common/js/utils/utils.js');
         }
 
         this.additionalAdTagParameters = null;
-        if (metadata.hasOwnProperty('additionalAdTagParameters')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'additionalAdTagParameters')) {
           this.additionalAdTagParameters = metadata.additionalAdTagParameters;
         }
 
@@ -1804,7 +1804,7 @@ require('../html5-common/js/utils/utils.js');
         this.playerControlsOverAds = _amc.pageSettings && _amc.pageSettings.playerControlsOverAds === true;
         if (this.playerControlsOverAds) {
           this.showAdControls = true;
-        } else if (metadata.hasOwnProperty('showAdControls')) {
+        } else if (Object.prototype.hasOwnProperty.call(metadata, 'showAdControls')) {
           this.showAdControls = metadata.showAdControls;
         }
 
@@ -1817,37 +1817,37 @@ require('../html5-common/js/utils/utils.js');
         }
 
         this.useGoogleAdUI = false;
-        if (metadata.hasOwnProperty('useGoogleAdUI')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'useGoogleAdUI')) {
           this.useGoogleAdUI = metadata.useGoogleAdUI;
         }
 
         this.useGoogleCountdown = false;
-        if (metadata.hasOwnProperty('useGoogleCountdown')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'useGoogleCountdown')) {
           this.useGoogleCountdown = metadata.useGoogleCountdown;
         }
 
         this.useInsecureVpaidMode = false;
-        if (metadata.hasOwnProperty('vpaidMode')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'vpaidMode')) {
           this.useInsecureVpaidMode = metadata.vpaidMode === 'insecure';
         }
 
         this.disableFlashAds = false;
-        if (metadata.hasOwnProperty('disableFlashAds')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'disableFlashAds')) {
           this.disableFlashAds = metadata.disableFlashAds;
         }
 
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
-        if (metadata.hasOwnProperty('iframeZIndex')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'iframeZIndex')) {
           this.imaIframeZIndex = metadata.iframeZIndex;
         }
 
         this.enableIosSkippableAds = false;
-        if (metadata.hasOwnProperty('enableIosSkippableAds')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'enableIosSkippableAds')) {
           this.enableIosSkippableAds = metadata.enableIosSkippableAds;
         }
 
         // we don't set a default because we want Google's default if it isn't specified.
-        if (metadata.hasOwnProperty('setMaxRedirects')) {
+        if (Object.prototype.hasOwnProperty.call(metadata, 'setMaxRedirects')) {
           if (typeof metadata.setMaxRedirects === 'number') {
             this.maxRedirects = metadata.setMaxRedirects;
           } else if (typeof metadata.setMaxRedirects === 'string') {

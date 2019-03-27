@@ -64,7 +64,6 @@ module.exports = {
     "camelcase": "warn",
     "no-shadow": "warn",
     "global-require": "warn",
-    "no-prototype-builtins": "warn",
     "prefer-rest-params": "warn",
   },
 };
