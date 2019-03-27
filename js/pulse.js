@@ -6,9 +6,8 @@
   const pulseAdManagers = {};
 
 
-  OO.Ads.manager(function () {
+  OO.Ads.manager((...args) => {
     const log = () => {
-      const args = Array.prototype.slice.call(arguments);
       if (OO.Pulse) {
         if (OO.Pulse.Utils.logTagged) {
           args.unshift([{ tag: 'v4', color: '#69388E' }]);
@@ -34,7 +33,7 @@
      * @classDesc The Pulse Ad Manager class.
      * @public
      */
-    const PulseAdManager = function () {
+    const PulseAdManager = function (...paramsArr) {
       this.name = 'videoplaza-ads-manager';// mandatory to get the ad set info from Backlot
       this.ready = false; // Also mandatory so the player knows if the ad manager is ready
       this.initTime = Date.now();
@@ -105,11 +104,11 @@
         return b;
       };
 
-      const removeUndefinedElements = (args) => {
+      const removeUndefinedElements = () => {
         const retArray = [];
-        for (let i = 0, n = args.length; i < n; i++) {
-          if (args[i]) {
-            retArray.push(args[i]);
+        for (let i = 0, n = paramsArr.length; i < n; i++) {
+          if (paramsArr[i]) {
+            retArray.push(paramsArr[i]);
           }
         }
         return retArray;
@@ -117,7 +116,7 @@
 
       const mergeCommaSeparatedStrings = () => {
         // Remove the undefined element first
-        const params = removeUndefinedElements(arguments);
+        const params = removeUndefinedElements();
         const argsLentgh = params.length;
 
         switch (argsLentgh) {
@@ -220,9 +219,9 @@
       };
 
       const getByPriority = () => {
-        for (let i = 0, n = arguments.length; i < n; i++) {
-          if (arguments[i] || arguments[i] === '') {
-            return arguments[i];
+        for (let i = 0, n = paramsArr.length; i < n; i++) {
+          if (paramsArr[i] || paramsArr[i] === '') {
+            return paramsArr[i];
           }
         }
         // If none of the passed objects exist
@@ -434,7 +433,6 @@
           adPlayer.contentPaused();
         }
       };
-
 
       const _onContentResume = () => {
         contentPaused = false;

@@ -81,6 +81,5 @@ module.exports = {
     "no-underscore-dangle": "warn",
     "camelcase": "warn",
     "global-require": "warn",
-    "prefer-rest-params": "warn",
   },
 };

@@ -30,7 +30,7 @@ OO.Ads.manager(() => {
     AD_LOG: 'AdLog',
   };
 
-  const Liverail = function () {
+  const Liverail = function (...args) {
     // core
     this.name = 'liverail-ads-manager';
     const amc = null;
@@ -54,9 +54,9 @@ OO.Ads.manager(() => {
     // /// Helpers /////
     const log = () => {
       if (isFunction(OO.log)) {
-        OO.log.apply(null, ['liverail-ads-manager:'].concat(Array.prototype.slice.apply(arguments)));
+        OO.log.apply(null, ['liverail-ads-manager:'].concat(args));
       } else {
-        console.log(['liverail-ads-manager:'].concat(Array.prototype.slice.apply(arguments)));
+        console.log(['liverail-ads-manager:'].concat(args));
       }
     };
 

@@ -184,8 +184,8 @@ OO.Ads.manager(() => {
      * @public
      * @method AdManager#onVideoTagFound
      */
-    this.onVideoTagFound = () => {
-      OO.log('TAG FOUND w/ args: ', arguments);
+    this.onVideoTagFound = (...args) => {
+      OO.log('TAG FOUND w/ args: ', args);
     };
 
     /**

@@ -418,18 +418,18 @@ OO.Ads.manager(() => {
      * @method Vast#_tryRaiseAdError
      * @param {string} errorMessage The error message
      */
-    const _tryRaiseAdError = (errorMessage) => {
-      let _errorMessage = errorMessage;
+    const _tryRaiseAdError = (...args) => {
+      let [_errorMessage] = args;
 
       // if arguments are comma separated we want to leverage console.log's ability to
       // pretty print objects rather than printing an object's toStr representation.
       // TODO: print this log in amc.raiseAdError
       if (arguments.length > 1) {
-        OO.log.apply(OO.log, arguments);
+        OO.log.apply(OO.log, args);
 
         // converts the arguments keyword to an Array.
         // arguments looks like an Array, but isn't.
-        const convertArgs = [].slice.call(arguments);
+        const convertArgs = [].slice.call(args);
         _errorMessage = convertArgs.join('');
       } else {
         OO.log(_errorMessage);
@@ -3120,9 +3120,10 @@ OO.Ads.manager(() => {
      * This is only required for VPAID ads
      * @private
      * @method Vast#_onVpaidAdEvent
-     * @param {string} eventName Name of the event to process
+     * @param args: {string} eventName Name of the event to process
      */
-    const _onVpaidAdEvent = function (eventName) {
+    const _onVpaidAdEvent = function (...args) {
+      const [eventName] = args;
       switch (eventName) {
         case VPAID_EVENTS.AD_LOADED:
           vpaidAdLoaded = true;
@@ -3159,8 +3160,8 @@ OO.Ads.manager(() => {
           break;
 
         case VPAID_EVENTS.AD_CLICK_THRU: {
-          const url = arguments[1];
-          const playerHandles = arguments[3];
+          const [, url] = args;
+          const [, , , playerHandles] = args;
           // Refer to IAB 2.5.4 How to handle VPAID clicks in VAST context
           if (playerHandles) {
             if (url) {
@@ -3206,7 +3207,7 @@ OO.Ads.manager(() => {
           break;
 
         case VPAID_EVENTS.AD_ERROR:
-          _tryRaiseAdError(`VPaid: Ad unit error: ${arguments[1]}`);
+          _tryRaiseAdError(`VPaid: Ad unit error: ${args[1]}`);
           this.sendVpaidTracking('error');
           this.sendVpaidError();
           failedAd();
