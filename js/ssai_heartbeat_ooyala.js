@@ -39,7 +39,10 @@ OO.plugin('heartbeat', (OO) => {
         return;
       }
 
-      const reportUrl = config.ReportingPathPattern.replace(/<hostname>/g, hostname).replace(/<embed_code>/g, embedCode).replace(/<ssai_guid>/g, ssaiGuid);
+      const reportUrl = config.ReportingPathPattern
+        .replace(/<hostname>/g, hostname)
+        .replace(/<embed_code>/g, embedCode)
+        .replace(/<ssai_guid>/g, ssaiGuid);
 
       const data = {
         playheadpos: parseInt(playheadPosition, 10),

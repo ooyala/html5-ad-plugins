@@ -350,9 +350,9 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Clean up function for IMA SDK AdsLoader.
        * @private
-       * @method GoogleIMA#_IMA_SDK_destroyAdsLoader
+       * @method GoogleIMA#_imaSdkDestroyAdsLoader
        */
-      const _IMA_SDK_destroyAdsLoader = () => {
+      const _imaSdkDestroyAdsLoader = () => {
         if (_IMAAdsLoader) {
           _IMAAdsLoader.destroy();
           _IMAAdsLoader = null;
@@ -362,9 +362,9 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Clean up function for IMA SDK AdDisplayContainer.
        * @private
-       * @method GoogleIMA#_IMA_SDK_destroyAdDisplayContainer
+       * @method GoogleIMA#_imaSdkDestroyAdDisplayContainer
        */
-      const _IMA_SDK_destroyAdDisplayContainer = () => {
+      const _imaSdkDestroyAdDisplayContainer = () => {
         if (_IMAAdDisplayContainer) {
           _IMAAdDisplayContainer.destroy();
           _IMAAdDisplayContainer = null;
@@ -375,9 +375,9 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Clean up function for IMA SDK AdsManager.
        * @private
-       * @method GoogleIMA#_IMA_SDK_destroyAdsManager
+       * @method GoogleIMA#_imaSdkDestroyAdsManager
        */
-      const _IMA_SDK_destroyAdsManager = () => {
+      const _imaSdkDestroyAdsManager = () => {
         if (_IMAAdsManager) {
           _IMAAdsManager.stop();
           _IMAAdsManager.destroy();
@@ -410,7 +410,7 @@ require('../html5-common/js/utils/utils.js');
         // internal state in the IMA SDK. You call contentComplete after destroying the adManager
         // so you don't accidently play postrolls.
         // Link to documentation: https://developers.google.com/interactive-media-ads/docs/sdks/android/faq
-        _IMA_SDK_destroyAdsManager();
+        _imaSdkDestroyAdsManager();
         if (_IMAAdsLoader) {
           _IMAAdsLoader.contentComplete();
         }
@@ -483,10 +483,10 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Callback when IMA SDK detect an ad click. This relays it to the Ad Manager Controller.
        * @private
-       * @method GoogleIMA#_IMA_SDK_onAdClicked
+       * @method GoogleIMA#_imaSdkOnAdClicked
        * @param adEvent - Event data from IMA SDK.
        */
-      const _IMA_SDK_onAdClicked = () => {
+      const _imaSdkOnAdClicked = () => {
         _amc.adsClicked();
         _amc.adsClickthroughOpened();
       };
@@ -878,9 +878,9 @@ require('../html5-common/js/utils/utils.js');
        * Callback from IMA SDK to tell this ad manager to pause the main content video. If ad is an Ad Rules ad, the Ad
        * Manager Controller is forced to play an ad.
        * @private
-       * @method GoogleIMA#_IMA_SDK_pauseMainContent
+       * @method GoogleIMA#_imaSdkPauseMainContent
        */
-      const _IMA_SDK_pauseMainContent = () => {
+      const _imaSdkPauseMainContent = () => {
         OO.log('GOOGLE_IMA:: Content Pause Requested by Google IMA!');
         _linearAdIsPlaying = true;
         if (_usingAdRules) {
@@ -912,9 +912,9 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Callback from IMA SDK to tell this ad manager to resume the main content video.
        * @private
-       * @method GoogleIMA#_IMA_SDK_resumeMainContent
+       * @method GoogleIMA#_imaSdkResumeMainContent
        */
-      const _IMA_SDK_resumeMainContent = () => {
+      const _imaSdkResumeMainContent = () => {
         OO.log('GOOGLE_IMA:: Content Resume Requested by Google IMA!');
 
         // make sure when we resume, that we have ended the ad pod and told
@@ -941,10 +941,10 @@ require('../html5-common/js/utils/utils.js');
           _tryUndoSetupForAdRules();
         }
 
-        _IMA_SDK_destroyAdsManager();
+        _imaSdkDestroyAdsManager();
 
         if (adError === OOYALA_IMA_PLUGIN_TIMEOUT) {
-          _IMA_SDK_destroyAdsLoader();
+          _imaSdkDestroyAdsLoader();
         }
 
         // make sure we are showing the video in case it was hidden for whatever reason.
@@ -1153,10 +1153,10 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Callback from IMA SDK for ad tracking events.
        * @private
-       * @method GoogleIMA#_IMA_SDK_onAdEvent
+       * @method GoogleIMA#_imaSdkOnAdEvent
        * @param {object} adEvent The IMA ad event
        */
-      const _IMA_SDK_onAdEvent = (adEvent) => {
+      const _imaSdkOnAdEvent = (adEvent) => {
         if (_ignoreWhenAdNotPlaying(adEvent)) {
           OO.log('Ignoring IMA EVENT: ', adEvent.type, adEvent);
           return;
@@ -1295,12 +1295,12 @@ require('../html5-common/js/utils/utils.js');
             _tryUndoSetupForAdRules();
 
             /*
-            On iPhone, _IMA_SDK_resumeMainContent() is not being triggered after the last postroll, for
+            On iPhone, _imaSdkResumeMainContent() is not being triggered after the last postroll, for
             both adrules and non-adrules. For non-adrules, this event is triggered after every ad,
-            so we must check that it is the last postroll before calling _IMA_SDK_resumeMainContent().
+            so we must check that it is the last postroll before calling _imaSdkResumeMainContent().
             */
             if (OO.isIos && this.contentEnded && _amc.isLastAdPlayed()) {
-              _IMA_SDK_resumeMainContent();
+              _imaSdkResumeMainContent();
             }
             break;
           case eventType.IMPRESSION: {
@@ -1352,7 +1352,7 @@ require('../html5-common/js/utils/utils.js');
           case eventType.AD_BREAK_READY:
             break;
           case eventType.CLICK:
-            _IMA_SDK_onAdClicked(adEvent);
+            _imaSdkOnAdClicked(adEvent);
             break;
           case eventType.CONTENT_PAUSE_REQUESTED:
             if (_usingAdRules && ad) {
@@ -1364,10 +1364,10 @@ require('../html5-common/js/utils/utils.js');
                 this.adResponseTime = new Date().valueOf();
               }
             }
-            _IMA_SDK_pauseMainContent(adEvent);
+            _imaSdkPauseMainContent(adEvent);
             break;
           case eventType.CONTENT_RESUME_REQUESTED:
-            _IMA_SDK_resumeMainContent(adEvent);
+            _imaSdkResumeMainContent(adEvent);
             break;
           default:
             break;
@@ -1390,7 +1390,7 @@ require('../html5-common/js/utils/utils.js');
 
         if (!_usingAdRules && _IMAAdsManager) {
           // destroy the current ad manager is there is one
-          _IMA_SDK_destroyAdsManager();
+          _imaSdkDestroyAdsManager();
           this.currentIMAAd = null;
           this.currentNonLinearIMAAd = null;
         }
@@ -1455,7 +1455,7 @@ require('../html5-common/js/utils/utils.js');
         ];
 
         const addIMAEventListener = (e) => {
-          _IMAAdsManager.addEventListener(e, _IMA_SDK_onAdEvent, false, this);
+          _IMAAdsManager.addEventListener(e, _imaSdkOnAdEvent, false, this);
         };
 
         each(imaAdEvents, addIMAEventListener, this);
@@ -1485,13 +1485,13 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Tries to create an IMA SDK AdsLoader.  The AdsLoader notifies this ad manager when ad requests are completed.
        * @private
-       * @method GoogleIMA#IMA_SDK_tryCreateAdsLoader
+       * @method GoogleIMA#imaSdkTryCreateAdsLoader
        */
-      const IMA_SDK_tryCreateAdsLoader = () => {
+      const imaSdkTryCreateAdsLoader = () => {
         if (_IMAAdDisplayContainer) {
           const adsManagerEvents = google.ima.AdsManagerLoadedEvent.Type;
           const adErrorEvent = google.ima.AdErrorEvent.Type;
-          _IMA_SDK_destroyAdsLoader();
+          _imaSdkDestroyAdsLoader();
           _IMAAdsLoader = new google.ima.AdsLoader(_IMAAdDisplayContainer);
           _IMAAdsLoader.addEventListener(adsManagerEvents.ADS_MANAGER_LOADED, _onAdRequestSuccess, false);
           _IMAAdsLoader.addEventListener(adErrorEvent.AD_ERROR, _onImaAdError, false);
@@ -1501,9 +1501,9 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Tries to initialize the IMA SDK AdContainer.  This is where the ads will be located.
        * @private
-       * @method GoogleIMA#_IMA_SDK_tryInitAdContainer
+       * @method GoogleIMA#_imaSdkTryInitAdContainer
        */
-      const _IMA_SDK_tryInitAdContainer = () => {
+      const _imaSdkTryInitAdContainer = () => {
         if (_adModuleJsReady && this.uiRegistered) {
           if (!_isGoogleSDKValid()) {
             _throwError('IMA SDK loaded but does not contain valid data');
@@ -1549,7 +1549,7 @@ require('../html5-common/js/utils/utils.js');
               vid);
           }
 
-          IMA_SDK_tryCreateAdsLoader();
+          imaSdkTryCreateAdsLoader();
 
           _trySetAdManagerToReady();
         }
@@ -1603,7 +1603,7 @@ require('../html5-common/js/utils/utils.js');
       const _onReplayRequested = () => {
         if (!_IMAAdsLoader) {
           // The Ads Loader might have been destroyed if we had timed out.
-          IMA_SDK_tryCreateAdsLoader();
+          imaSdkTryCreateAdsLoader();
         }
         this.isReplay = true;
         _resetAdsState();
@@ -1641,7 +1641,7 @@ require('../html5-common/js/utils/utils.js');
           return;
         }
         _amc.onAdSdkLoaded(this.name);
-        _IMA_SDK_tryInitAdContainer();
+        _imaSdkTryInitAdContainer();
         _trySetupAdsRequest();
       };
 
@@ -1714,9 +1714,9 @@ require('../html5-common/js/utils/utils.js');
       this.destroy = () => {
         _uiContainer = null;
         _tryUndoSetupForAdRules();
-        _IMA_SDK_destroyAdsManager();
-        _IMA_SDK_destroyAdsLoader();
-        _IMA_SDK_destroyAdDisplayContainer();
+        _imaSdkDestroyAdsManager();
+        _imaSdkDestroyAdsLoader();
+        _imaSdkDestroyAdDisplayContainer();
         _resetVars();
         _removeAMCListeners();
       };
@@ -1859,10 +1859,10 @@ require('../html5-common/js/utils/utils.js');
         // On second video playthroughs, we will not be initializing the ad manager again.
         // Attempt to create the ad display container here instead of after the sdk has loaded
         if (!_IMAAdDisplayContainer) {
-          _IMA_SDK_tryInitAdContainer();
+          _imaSdkTryInitAdContainer();
         } else if (!_IMAAdsLoader) {
           // The Ads Loader might have been destroyed if we had timed out.
-          IMA_SDK_tryCreateAdsLoader();
+          imaSdkTryCreateAdsLoader();
         }
 
         this.metadataReady = true;
@@ -1892,7 +1892,7 @@ require('../html5-common/js/utils/utils.js');
           this.setupSharedVideoElement(_amc.ui.ooyalaVideoElement[0]);
         }
 
-        _IMA_SDK_tryInitAdContainer();
+        _imaSdkTryInitAdContainer();
         _trySetupAdsRequest();
       };
 
@@ -2088,7 +2088,7 @@ require('../html5-common/js/utils/utils.js');
         OO.log('GOOGLE IMA: ad got canceled by AMC');
 
         if (!_usingAdRules) {
-          _IMA_SDK_destroyAdsManager();
+          _imaSdkDestroyAdsManager();
         }
         _endCurrentAd(true);
       };

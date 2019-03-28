@@ -88,8 +88,8 @@ describe('ad_manager_ooyala_ssai', function () {
   });
 
   it('Init: ad manager handles the loadMetadata function', () => {
-    const embed_code = 'embed_code';
-    const vast_ad = {
+    const embedCode = 'embed_code';
+    const vastAd = {
       type: 'vast',
       first_shown: 0,
       frequency: 2,
@@ -98,8 +98,8 @@ describe('ad_manager_ooyala_ssai', function () {
       position_type: 't',
     };
     const content = {
-      embed_code,
-      ads: [vast_ad],
+      embed_code: embedCode,
+      ads: [vastAd],
     };
     OoyalaSsai.initialize(amc);
     // For VOD, currentOffset must be greater than 0.
@@ -140,8 +140,8 @@ describe('ad_manager_ooyala_ssai', function () {
   });
 
   it('Init: ad manager is ready', () => {
-    const embed_code = 'embed_code';
-    const vast_ad = {
+    const embedCode = 'embed_code';
+    const vastAd = {
       type: 'vast',
       first_shown: 0,
       frequency: 2,
@@ -150,8 +150,8 @@ describe('ad_manager_ooyala_ssai', function () {
       position_type: 't',
     };
     const content = {
-      embed_code,
-      ads: [vast_ad],
+      embed_code: embedCode,
+      ads: [vastAd],
     };
     OoyalaSsai.initialize(amc);
     expect(OoyalaSsai.ready).to.be(false);

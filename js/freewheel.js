@@ -266,11 +266,11 @@ OO.Ads.manager(() => {
      * Called by Freewheel js when an ad error is raised.  Raises the event with the ad manager controller
      * by calling "raiseAdError".
      * @private
-     * @method Freewheel#fw_onError
+     * @method Freewheel#fwOnError
      * @param {object} event The AD_ERROR event object
      * @param {string} error The error message
      */
-    const fw_onError = (event, error) => {
+    const fwOnError = (event, error) => {
       amc.raiseAdError(`FW: An ad error has occurred. The error string reported was: ${error}`);
     };
 
@@ -285,7 +285,7 @@ OO.Ads.manager(() => {
     const _setAdRequestTimeout = (callback, duration) => {
       if (adRequestTimeout) {
         const error = 'Ad Request Timeout already exists - bad state';
-        fw_onError(null, error);
+        fwOnError(null, error);
       } else if (!this.testMode) {
         // Only set timeout if not in test mode otherwise it will break unit tests.
         adRequestTimeout = delay(callback, duration);
@@ -304,7 +304,7 @@ OO.Ads.manager(() => {
         fwContext.removeEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE);
         OO.log('FW: freewheel ad request timeout');
         const error = 'ad request timeout';
-        fw_onError(null, error);
+        fwOnError(null, error);
         slotEndedCallbacks[amc.ADTYPE.AD_REQUEST]();
         delete slotEndedCallbacks[amc.ADTYPE.AD_REQUEST];
       }
@@ -373,11 +373,11 @@ OO.Ads.manager(() => {
      * Called when the Freewheel ad xml request has completed.  If the result was success, read the ad slots.
      * Declare that the ad manager is ready for use by setting this.ready=true.
      * @private
-     * @method Freewheel#fw_onAdRequestComplete
+     * @method Freewheel#fwOnAdRequestComplete
      * @param {object} event The requestComplete event indicating success or failure
      */
-    const fw_onAdRequestComplete = (event) => {
-      // clear ad request timeout since fw_onAdRequestComplete was called
+    const fwOnAdRequestComplete = (event) => {
+      // clear ad request timeout since fwOnAdRequestComplete was called
       _clearAdRequestTimeout();
       if (event.success) {
         slots = fwContext.getTemporalSlots();
@@ -652,9 +652,9 @@ OO.Ads.manager(() => {
      * Called by Freewheel js when an ad is clicked.  Raises the event with the ad manager controller by
      * calling "adsClicked".
      * @private
-     * @method Freewheel#fw_onAdClick
+     * @method Freewheel#fwOnAdClick
      */
-    const fw_onAdClick = () => {
+    const fwOnAdClick = () => {
       // handlingClick makes sure the click is only triggered once, rather than repeatedly in a loop.
       if (!handlingClick) {
         handlingClick = true;
@@ -674,10 +674,10 @@ OO.Ads.manager(() => {
      * Called when an ad impression begins.  Calls the callback from the ad manager controller to indicate
      * that the ad impression has begun.
      * @private
-     * @method Freewheel#fw_onAdImpression
+     * @method Freewheel#fwOnAdImpression
      * @param {object} event The ad impression object indicating which ad started
      */
-    const fw_onAdImpression = (event) => {
+    const fwOnAdImpression = (event) => {
       indexInPod += 1;
       if (!event || !event.adInstance) {
         return;
@@ -716,10 +716,10 @@ OO.Ads.manager(() => {
      * Called when an ad impression ends.  Calls the callback from the ad manager controller to indicate that
      * ad impression has ended.
      * @private
-     * @method Freewheel#fw_onAdImpressionEnd
+     * @method Freewheel#fwOnAdImpressionEnd
      * @param event {object} event The ad impression object indicating which ad ended
      */
-    const fw_onAdImpressionEnd = (event) => {
+    const fwOnAdImpressionEnd = (event) => {
       // FW has an issue where it resets the html5 video element's volume and muted attributes according to
       // FW's internal volume/mute state when moving to the next ad in an ad pod (but not the first ad in an ad pod).
       // This will break playback if muted autoplay is required and FW unmutes the video element. This internal state
@@ -742,9 +742,9 @@ OO.Ads.manager(() => {
     /**
      * Called when an ad slot has begun.  Removes native player controls.
      * @private
-     * @method Freewheel#fw_onSlotStarted
+     * @method Freewheel#fwOnSlotStarted
      */
-    const fw_onSlotStarted = () => {
+    const fwOnSlotStarted = () => {
       // adVideoElement may be null for overlays
       if (currentPlayingSlot
           && currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY
@@ -763,10 +763,10 @@ OO.Ads.manager(() => {
      * Called when an ad slot has ended.  Removes native player controls.  Calls the ad manager controller
      * callback to indicate that the ad has completed.
      * @private
-     * @method Freewheel#fw_onSlotEnded
+     * @method Freewheel#fwOnSlotEnded
      * @param {object} event The slotEnded event showing which ad ended
      */
-    const fw_onSlotEnded = (event) => {
+    const fwOnSlotEnded = (event) => {
       // Disable controls on the video element.  Freewheel seems to be turning it on
       // TODO: inspect event for playback success or errors
 
@@ -831,13 +831,13 @@ OO.Ads.manager(() => {
       }
 
       // Listen to AdManager Events
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, fw_onAdImpression);
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, fw_onAdImpressionEnd);
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, fw_onSlotStarted);
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_ENDED, fw_onSlotEnded);
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE, fw_onAdRequestComplete);
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_CLICK, fw_onAdClick);
-      fwContext.addEventListener(tv.freewheel.SDK.EVENT_ERROR, fw_onError);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION, fwOnAdImpression);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_IMPRESSION_END, fwOnAdImpressionEnd);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_STARTED, fwOnSlotStarted);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_SLOT_ENDED, fwOnSlotEnded);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_REQUEST_COMPLETE, fwOnAdRequestComplete);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_AD_CLICK, fwOnAdClick);
+      fwContext.addEventListener(tv.freewheel.SDK.EVENT_ERROR, fwOnError);
 
       // To make sure video ad playback in poor network condition, set video ad timeout parameters.
       fwContext.setParameter(

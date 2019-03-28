@@ -42,7 +42,7 @@ const getFileNameFromPath = function (path) {
   return path.substring(start);
 };
 
-const browserify_fn = function () {
+const browserifyFn = function () {
   const bundleThis = function (srcArray) {
     _.each(srcArray, (sourceFile) => {
       const b = browserify({
@@ -75,7 +75,7 @@ const browserify_fn = function () {
 
 // Build All
 gulp.task('build', ['init_module'], () => {
-  browserify_fn();
+  browserifyFn();
 });
 
 // Run tests

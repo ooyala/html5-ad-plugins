@@ -773,14 +773,14 @@
           this._persistentId = adManagerMetadata.pulse_persistent_id;
         }
         const protocol = getProtocolFromPulseHost(this._pulseHost);
-        const pulse_account_name = getPulseAccount(this._pulseHost);
+        const pulseAccountName = getPulseAccount(this._pulseHost);
 
 
         // Load the Pulse SDK if not already included
         if (!OO.Pulse) {
           log('Pulse SDK not present; loading latest ..');
           adModuleState = AD_MODULE_STATE.LOADING;
-          amc.loadAdModule(this.name, protocol + pulse_account_name + pulseSDKUrl, (success) => {
+          amc.loadAdModule(this.name, protocol + pulseAccountName + pulseSDKUrl, (success) => {
             adModuleState = success ? AD_MODULE_STATE.READY : AD_MODULE_STATE.FAILED;
             if (!success && podStarted) {
               log('Failed to load Pulse SDK');

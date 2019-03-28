@@ -65,8 +65,8 @@ module.exports = {
         "FunctionDeclaration": true,
         "MethodDefinition": true,
         "ClassDeclaration": true,
-        "ArrowFunctionExpression": false,
-        "FunctionExpression": false
+        "ArrowFunctionExpression": true,
+        "FunctionExpression": true
       }
     }],
     "valid-jsdoc": [
@@ -79,7 +79,6 @@ module.exports = {
       }
     ],
     "no-underscore-dangle": "warn",
-    "camelcase": "warn",
     "global-require": "warn",
   },
 };
