@@ -8,6 +8,8 @@ OO.log = function () {};
 require(`${COMMON_SRC_ROOT}utils/utils.js`);
 require(`${COMMON_SRC_ROOT}utils/environment.js`);
 require(`${COMMON_SRC_ROOT}classes/emitter.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_vpaid.js`);
 
 const sinon = require('sinon');
 const fs = require('fs');
@@ -17,8 +19,6 @@ describe('ad_manager_vast', function () {
   let vastAdManager;
   const nameVast = 'vast';
   const originalOoAds = _.clone(OO.Ads);
-  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
-  require(`${TEST_ROOT}unit-test-helpers/mock_vpaid.js`);
 
   /* eslint-disable max-len */
   const linearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear.xml'), 'utf8');
@@ -117,6 +117,7 @@ describe('ad_manager_vast', function () {
       },
     };
     delete require.cache[require.resolve(`${SRC_ROOT}ad_manager_vast.js`)];
+    // eslint-disable-next-line global-require
     require(`${SRC_ROOT}ad_manager_vast.js`);
 
     const originalTrackError = _.bind(vastAdManager.trackError, vastAdManager);

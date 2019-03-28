@@ -8,8 +8,9 @@ const {
 } = require('underscore');
 
 // stubs
-OO.log = function () {
-};
+OO.log = function () {};
+require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_ima.js`);
 
 describe('ad_manager_ima', function () {
   let amc;
@@ -28,9 +29,6 @@ describe('ad_manager_ima', function () {
   let notifyParams = null;
   let adsClickthroughOpenedCalled;
   let originalRequiresMutedAutoplay;
-
-  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
-  require(`${TEST_ROOT}unit-test-helpers/mock_ima.js`);
 
   // mock video controller interface
   const vci = {
@@ -127,6 +125,7 @@ describe('ad_manager_ima', function () {
       return 'en';
     };
     delete require.cache[require.resolve(`${SRC_ROOT}google_ima.js`)];
+    // eslint-disable-next-line global-require
     require(`${SRC_ROOT}google_ima.js`);
   }, this));
 

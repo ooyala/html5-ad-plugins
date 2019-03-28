@@ -8,6 +8,7 @@ OO.log = function () {};
 require(`${COMMON_SRC_ROOT}utils/utils.js`);
 require(`${COMMON_SRC_ROOT}utils/environment.js`);
 require(`${COMMON_SRC_ROOT}classes/emitter.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
 
 const fs = require('fs');
 
@@ -15,7 +16,6 @@ describe('ad_manager_ooyala_ssai', function () {
   let amc; let OoyalaSsai;
   const name = 'ooyala-ssai-ads-manager';
   const originalOoAds = _.clone(OO.Ads);
-  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
 
   // Vast XML
   const ssaiXmlString = fs.readFileSync(
@@ -45,6 +45,7 @@ describe('ad_manager_ooyala_ssai', function () {
     };
 
     delete require.cache[require.resolve(`${SRC_ROOT}ooyala_ssai.js`)];
+    // eslint-disable-next-line global-require
     require(`${SRC_ROOT}ooyala_ssai.js`);
   }, this));
 

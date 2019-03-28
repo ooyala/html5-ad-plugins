@@ -5,7 +5,10 @@
 OO.log = () => {};
 const fs = require('fs');
 const VastParser = require('../../utils/vast_parser');
-
+const linearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_linear.json');
+const linearXML2AdsParsed = require('../unit-test-helpers/vast_parsed/vast_linear_2_ads.json');
+const nonLinearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_overlay.json');
+const wrapper1XMLParsed = require('../unit-test-helpers/vast_parsed/vast_wrapper_1.json');
 
 describe('VAST parser', () => {
   let vastParser;
@@ -23,10 +26,6 @@ describe('VAST parser', () => {
   const nonLinearXML = $.parseXML(nonLinearXMLString);
   const wrapper1XML = $.parseXML(wrapper1XMLString);
 
-  const linearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_linear.json');
-  const linearXML2AdsParsed = require('../unit-test-helpers/vast_parsed/vast_linear_2_ads.json');
-  const nonLinearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_overlay.json');
-  const wrapper1XMLParsed = require('../unit-test-helpers/vast_parsed/vast_wrapper_1.json');
 
   beforeEach(() => {
     vastParser = new VastParser();

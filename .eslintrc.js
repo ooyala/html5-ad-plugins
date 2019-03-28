@@ -60,7 +60,10 @@ module.exports = {
     ],
     "vars-on-top": 0,
     "import/no-dynamic-require": "warn",
-    "require-jsdoc": ["warn", {
+    "no-underscore-dangle": "warn",
+    "require-jsdoc": [
+      "warn",
+      {
       "require": {
         "FunctionDeclaration": true,
         "MethodDefinition": true,
@@ -78,7 +81,5 @@ module.exports = {
         "requireReturn": false
       }
     ],
-    "no-underscore-dangle": "warn",
-    "global-require": "warn",
   },
 };

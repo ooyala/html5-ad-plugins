@@ -4,16 +4,15 @@
  */
 
 // stubs
-OO.log = function () {
-};
+OO.log = function () {};
+require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_fw.js`);
 
 describe('ad_manager_freewheel', function () {
   let amc;
   let fw;
   const name = 'freewheel-ads-manager';
   const originalOoAds = _.clone(OO.Ads);
-  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
-  require(`${TEST_ROOT}unit-test-helpers/mock_fw.js`);
 
   let adsClickthroughOpenedCalled;
 
@@ -93,6 +92,7 @@ describe('ad_manager_freewheel', function () {
     };
 
     delete require.cache[require.resolve(`${SRC_ROOT}freewheel.js`)];
+    // eslint-disable-next-line global-require
     require(`${SRC_ROOT}freewheel.js`);
   }, this));
 
