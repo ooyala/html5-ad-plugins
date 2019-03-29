@@ -30,6 +30,11 @@ OO.Ads.manager(() => {
     AD_LOG: 'AdLog',
   };
 
+  /**
+   * @class Liverail
+   * @classDesc The Liverail class.
+   * @constructor
+   */
   const Liverail = function (...args) {
     // core
     this.name = 'liverail-ads-manager';
@@ -52,6 +57,9 @@ OO.Ads.manager(() => {
     let adEndedCallback = null;
 
     // /// Helpers /////
+    /**
+     * Log.
+     */
     const log = () => {
       if (isFunction(OO.log)) {
         OO.log.apply(null, ['liverail-ads-manager:'].concat(args));
@@ -60,6 +68,10 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * Try init.
+     * @private
+     */
     const _tryInit = () => {
       if (!adModuleJsReady || !metadataFetched) return;
       this.ready = true;
@@ -67,6 +79,10 @@ OO.Ads.manager(() => {
       amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
     };
 
+    /**
+     * On sdk loaded.
+     * @private
+     */
     const _onSdkLoaded = () => {
       log('SDK loaded');
       adModuleJsReady = true;
@@ -83,6 +99,10 @@ OO.Ads.manager(() => {
       _tryInit();
     };
 
+    /**
+     * Try load sdk.
+     * @private
+     */
     const _tryLoadSdk = () => {
       if ((remoteModuleJs == null) || !iframeLoaded) return;
       const loader = liverailFrame.contentWindow.document.createElement('script');
@@ -107,6 +127,11 @@ OO.Ads.manager(() => {
       let i;
       const params = {};
 
+      /**
+       * Is Lr param.
+       * @param {string} key The Lr param.
+       * @returns {boolean} Returns true if key = 'LR_...'
+       */
       const isLrParam = key => (typeof key === 'string') && (key.indexOf('LR_') === 0);
 
       // load parameters from movie level custom metadata from backlot
@@ -194,6 +219,10 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * Reset ad state.
+     * @private
+     */
     const _resetAdState = () => {
       startAfterLoad = false;
       adLoaded = false;

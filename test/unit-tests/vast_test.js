@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 /*
  * Unit test class for the Vast Ad Manager
  * https://github.com/Automattic/expect.js
@@ -2169,6 +2170,7 @@ describe('ad_manager_vast', function () {
         {
           tag_url: 'http://blahblah',
           position_type: 'p',
+          // eslint-disable-next-line require-jsdoc
           position() {},
         },
         {
@@ -2326,7 +2328,7 @@ describe('ad_manager_vast', function () {
 
     amc.timeline = [];
     vastAdManager.loadMetadata({
-      tagUrl() {},
+      tagUrl: {},
     }, {}, content);
     amc.timeline[0].id = 'asdf';// work around because we are using mockAMC and normally it assigns id's
     expect(amc.timeline.length).to.be(2);

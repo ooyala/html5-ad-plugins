@@ -279,8 +279,8 @@ OO.Ads.manager(() => {
      * if we timeout.
      * @private
      * @method Freewheel#_setAdRequestTimeout
-     * @param callback The function to call when we time out
-     * @param duration the time to wait before timing out
+     * @param {function} callback The function to call when we time out
+     * @param {number} duration the time to wait before timing out
      */
     const _setAdRequestTimeout = (callback, duration) => {
       if (adRequestTimeout) {
@@ -314,8 +314,9 @@ OO.Ads.manager(() => {
      * If the timeline has not been built yet, build it in preparation for sending it to the AMC.
      * Freewheel assumes that the ad video element is an html5 video tag.  To force use of this element,
      * always list the stream type as mp4.
-     * @private
      * @method Freewheel#_prepareTimeline
+     * @returns {null|array} Returns [] or null
+     * @private
      */
     const _prepareTimeline = () => {
       if (!slots) return [];
@@ -412,12 +413,20 @@ OO.Ads.manager(() => {
       })];
     };
 
+    /**
+     * Reset ad state.
+     * @private
+     */
     const _resetAdState = () => {
       handlingClick = false;
       currentPlayingSlot = null;
       currentAd = null;
     };
 
+    /**
+     * Cancel current ad.
+     * @private
+     */
     const _cancelCurrentAd = () => {
       if (currentAd === null) return;
       if ((currentAd.adType === amc.ADTYPE.AD_REQUEST)
@@ -468,6 +477,9 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * On content changed.
+     */
     const onContentChanged = () => {
       // On Content Changed, need to dispose the context
       // if (fwContext && isFunction(fwContext.dispose)) fwContext.dispose();
@@ -493,6 +505,9 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * Update overlay position.
+     */
     const updateOverlayPosition = () => {
       // Overlay placement issue - PBI-1227 as of 12/9/2015
       // The main issue with Freewheel is when notifying their SDK of video size changes,
@@ -507,6 +522,9 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * On resize.
+     */
     const onResize = () => {
       updateOverlayPosition();
     };
@@ -563,6 +581,9 @@ OO.Ads.manager(() => {
       updateOverlayPosition();
     };
 
+    /**
+     * Setup ads wrapper.
+     */
     const setupAdsWrapper = () => {
       if (freeWheelCompanionAdsWrapper) {
         freeWheelCompanionAdsWrapper.style.display = '';
@@ -717,7 +738,7 @@ OO.Ads.manager(() => {
      * ad impression has ended.
      * @private
      * @method Freewheel#fwOnAdImpressionEnd
-     * @param event {object} event The ad impression object indicating which ad ended
+     * @param {object} event The ad impression object indicating which ad ended
      */
     const fwOnAdImpressionEnd = (event) => {
       // FW has an issue where it resets the html5 video element's volume and muted attributes according to

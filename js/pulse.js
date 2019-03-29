@@ -7,6 +7,9 @@
 
 
   OO.Ads.manager((...args) => {
+    /**
+     * Log.
+     */
     const log = () => {
       if (OO.Pulse) {
         if (OO.Pulse.Utils.logTagged) {
@@ -94,6 +97,12 @@
         }
       };
 
+      /**
+       * Merge comma separated lists base.
+       * @param {string} a The a string.
+       * @param {string} b The b string.
+       * @returns {string} Returns string.
+       */
       const mergeCommaSeparatedListsBase = (a, b) => {
         if (a) {
           if (b) {
@@ -104,16 +113,17 @@
         return b;
       };
 
-      const removeUndefinedElements = () => {
-        const retArray = [];
-        for (let i = 0, n = paramsArr.length; i < n; i++) {
-          if (paramsArr[i]) {
-            retArray.push(paramsArr[i]);
-          }
-        }
-        return retArray;
-      };
+      /**
+       * Remove Undefined Elements.
+       * @returns {Array} Returns Array of existing params.
+       */
+      const removeUndefinedElements = () => paramsArr.filter(item => !!item);
 
+      /**
+       * Merge comma separated strings.
+       * @recursive
+       * @returns {undefined|string} Returns result of mergeCommaSeparatedListsBase or undefined.
+       */
       const mergeCommaSeparatedStrings = () => {
         // Remove the undefined element first
         const params = removeUndefinedElements();
@@ -131,6 +141,11 @@
         }
       };
 
+      /**
+       * Get insertion point type from ad position.
+       * @param {string} position The ad position.
+       * @returns {array|null} Returns insertionPointFilter array or null.
+       */
       const getInsertionPointTypeFromAdPosition = (position) => {
         const PREROLL = 1;
         const INSTREAM = 2;
@@ -160,6 +175,12 @@
         return (insertionPointFilter.length !== 0 ? insertionPointFilter.join(',') : null);
       };
 
+      /**
+       * Safe Split
+       * @param {string} array The string.
+       * @param {string} char The char.
+       * @returns {array|null} Returns new array.
+       */
       const safeSplit = (array, char) => {
         if (array) {
           return array.split(char);
@@ -167,6 +188,12 @@
         return null;
       };
 
+      /**
+       * Safe Map.
+       * @param {array} array The array.
+       * @param {function} func The function.
+       * @returns {array|null} Returns new array or null.
+       */
       const safeMap = (array, func) => {
         if (array) {
           return array.map(func);
@@ -174,6 +201,10 @@
         return null;
       };
 
+      /**
+       * Clean Object.
+       * @param {object} obj The obj object
+       */
       const cleanObject = (obj) => {
         Object.keys(obj).forEach((prop) => {
           if (obj[prop] === null || obj[prop] === undefined) {
@@ -182,6 +213,11 @@
         });
       };
 
+      /**
+       * Safe ParseInt.
+       * @param {string} string The string.
+       * @returns {null|number} Returns null if !val || NaN else integer.
+       */
       const safeParseInt = (string) => {
         const val = parseInt(string, 10);
         if (!val || Number.isNaN(val)) {
@@ -190,6 +226,10 @@
         return val;
       };
 
+      /**
+       * Get Flash Version for ie and other browsers.
+       * @returns {string} Returns Version.
+       */
       const getFlashVersion = () => {
         // ie
         try {
@@ -203,7 +243,9 @@
           } catch (e) {
             // empty
           }
-          return new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version').replace(/\D+/g, ',').match(/^,?(.+),?$/)[1];
+          return new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version')
+            .replace(/\D+/g, ',')
+            .match(/^,?(.+),?$/)[1];
           // other browsers
         } catch (e) {
           try {
@@ -218,16 +260,26 @@
         return '0,0,0';
       };
 
+      /**
+       * Get By Priority
+       * @returns {Array|null} Returns Array of existing params or null If none of the passed objects exist.
+       */
       const getByPriority = () => {
-        for (let i = 0, n = paramsArr.length; i < n; i++) {
+        let i = 0;
+        const n = paramsArr.length;
+        for (; i < n; i++) {
           if (paramsArr[i] || paramsArr[i] === '') {
             return paramsArr[i];
           }
         }
-        // If none of the passed objects exist
         return null;
       };
 
+      /**
+       * Get Protocol From Pulse Host.
+       * @param {string} host The host string.
+       * @returns {'https://'|'http://'} Returns protocol from PulseHost.
+       */
       const getProtocolFromPulseHost = (host) => {
         if (host.indexOf('https') === 0) { // Then it starts with https
           return 'https://';
@@ -235,11 +287,21 @@
         return 'http://';
       };
 
+      /**
+       * Get Pulse Account.
+       * @param {string} host The host string.
+       * @returns {string} Returns the first pattern match.
+       */
       const getPulseAccount = (host) => {
         const regEx = /(?:https?:\/\/)?(.*)\/?/;
         return host.match(regEx)[1];
       };
 
+      /**
+       * Get Category From Player Level Shares.
+       * @param {string} shares The shares string.
+       * @returns {string|null} Returns first element(Category) from player level shares or null.
+       */
       const getCategoryFromPlayerLevelShares = (shares) => {
         // Category is the first element
         const values = safeSplit(shares, ',');
@@ -250,6 +312,11 @@
         return null;
       };
 
+      /**
+       * Get content partner from player level shares.
+       * @param {string} shares The shares string.
+       * @returns {string|null} Returns element from player level shares with index = 1 or null.
+       */
       const getContentPartnerFromPlayerLevelShares = (shares) => {
         // Category is the first element
         const values = safeSplit(shares, ',');
@@ -260,6 +327,9 @@
         return null;
       };
 
+      /**
+       * Update Ad Screen Pointer Events Enabled.
+       */
       const updateAdScreenPointerEventsEnabled = () => {
         const adScreens = document.getElementsByClassName('oo-ad-screen');
         const skinClickLayers = document.getElementsByClassName('oo-player-skin-plugins-click-layer');
@@ -292,16 +362,28 @@
         }
       };
 
+      /**
+       * Enable Ad Screen Pointer Events.
+       */
       const enableAdScreenPointerEvents = () => {
         this.adScreenPointerEventsEnabled = true;
         updateAdScreenPointerEventsEnabled();
       };
 
+      /**
+       * Disable Ad Screen Pointer Events.
+       */
       const disableAdScreenPointerEvents = () => {
         this.adScreenPointerEventsEnabled = false;
         updateAdScreenPointerEventsEnabled();
       };
 
+      /**
+       * Make Placeholder Ad.
+       * @param {string} type The type of Video Controller action events.
+       * @param {number} position The position number.
+       * @returns {Ad|FakeAmc.Ad} Returns Ad.
+       */
       const makePlaceholderAd = (type, position) => {
         const streams = {};
         streams[OO.VIDEO.ENCODING.PULSE] = '';
@@ -315,21 +397,26 @@
         });
       };
 
-
-      // When the overlay shoule be removed
+      /**
+       * Called when the overlay should be removed.
+       */
       const onOverlayFinished = () => {
         clearTimeout(overlayTimer);
         amc.notifyNonlinearAdEnded(currentOverlayAd.id);
         currentOverlayAd = null;
       };
 
-      //
+      /**
+       * Start Overlay Countdown.
+       */
       const startOverlayCountdown = () => {
         lastOverlayAdStart = Date.now();
         overlayTimer = setTimeout(onOverlayFinished, overlayTimeLeftMillis);
       };
 
-      // Called when the overlay is displayed
+      /**
+       * Called when the overlay is displayed.
+       */
       const onOverlayShown = () => {
         if (currentOverlayAd) {
           overlayTimeLeftMillis = currentOverlayAd.ad.getDuration() * 1000;
@@ -338,7 +425,9 @@
         }
       };
 
-      // Save the current display time of the overlay so it can be resumed later
+      /**
+       * Save the current display time of the overlay so it can be resumed later.
+       */
       const overlayPause = () => {
         if (currentOverlayAd) {
           overlayTimeLeftMillis -= (Date.now() - lastOverlayAdStart);
@@ -347,9 +436,9 @@
       };
 
       /**
-       * When an ad is canceled
-       * @param ad v4ad
-       * @param params error code
+       * When an ad is canceled.
+       * @param {object} ad v4ad.
+       * @param {object} params error code.
        */
       this.cancelAd = (ad, params) => {
         // Only skip can happen
@@ -367,8 +456,7 @@
       };
 
       /**
-       * Pause the ad player
-       * @param ad v4 ad
+       * Pause the ad player.
        */
       this.pauseAd = () => {
         if (adPlayer) {
@@ -377,8 +465,7 @@
       };
 
       /**
-       * Resume the v4ad
-       * @param ad
+       * Resume the v4ad.
        */
       this.resumeAd = () => {
         if (adPlayer) {
@@ -407,8 +494,8 @@
       };
 
       /**
-       * Called by Ad Manager Controller.  The ad manager should destroy itself.  It will be unregistered by
-       * the Ad Manager Controller.
+       * Called by Ad Manager Controller.  The ad manager should destroy itself.
+       * It will be unregistered by the Ad Manager Controller.
        * @method AdManager#destroy
        * @public
        */
@@ -423,10 +510,21 @@
         this.videoControllerWrapper = videoPlugin;
       };
 
+      /**
+       * Callback for when we receive the CONTENT_CHANGED event from the AMC.
+       * @private
+       * @method PulseAdManager#_onContentChanged
+       * @private
+       */
       const _onContentChanged = () => {
         // Not needed rn
       };
 
+      /**
+       * Callback for when we receive the PAUSED event from the AMC.
+       * @private
+       * @method PulseAdManager#_onContentPause
+       */
       const _onContentPause = () => {
         contentPaused = true;
         if (adPlayer) {
@@ -434,6 +532,11 @@
         }
       };
 
+      /**
+       * Callback for when we receive the RESUME event from the AMC.
+       * @private
+       * @method PulseAdManager#_onContentResume
+       */
       const _onContentResume = () => {
         contentPaused = false;
 
@@ -461,8 +564,8 @@
       };
 
       /**
-       * Called by the Pulse SDK when an overlay should shown
-       * @param pulseOverlayAd
+       * Called by the Pulse SDK when an overlay should shown.
+       * @param {object} pulseOverlayAd The pulseOverlayAd object.
        */
       this.showOverlayAd = (pulseOverlayAd) => {
         if (currentOverlayAd) {
@@ -477,7 +580,9 @@
           [pulseOverlayAd.getResourceURL()]);
       };
 
-      // This method is called by the V4 AMF
+      /**
+       * This method is called by the V4 AMF.
+       */
       this.showOverlay = () => {
         if (currentOverlayAd) {
           startOverlayCountdown();
@@ -502,7 +607,7 @@
       /**
        * Checks to see if the ad player is muted.
        * @protected
-       * @method Pulse#muted
+       * @method PulseAdManager#muted
        * @returns {Boolean} True if the ad player is muted or does not exist yet, false otherwise.
        */
       this.muted = () => {
@@ -513,6 +618,9 @@
         return muted;
       };
 
+      /**
+       * Play Placeholder.
+       */
       const playPlaceholder = () => {
         const streams = {};
         streams[OO.VIDEO.ENCODING.PULSE] = '';
@@ -524,18 +632,35 @@
         );
       };
 
-      const _onMainVideoTimeUpdate = (event, playheadTime) => {
+      /**
+       * Callback for when we receive the PLAYHEAD_TIME_CHANGED event from the AMC.
+       * @param {string} eventName The name of the event.
+       * @param {number} playheadTime The playhead position, in seconds.
+       * @private
+       * @method PulseAdManager#_onMainVideoTimeUpdate
+       */
+      const _onMainVideoTimeUpdate = (eventName, playheadTime) => {
         if (adPlayer) {
           adPlayer.contentPositionChanged(playheadTime);
         }
       };
 
+      /**
+       * Callback for when we receive the PLAY_STARTED event from the AMC.
+       * @private
+       * @method PulseAdManager#_onPlayStarted
+       */
       const _onPlayStarted = () => {
         if (adPlayer) {
           adPlayer.contentStarted();
         }
       };
 
+      /**
+       * Callback for when we receive the CONTENT_COMPLETED event from the AMC.
+       * @private
+       * @method PulseAdManager#_onContentFinished
+       */
       const _onContentFinished = () => {
         this._contentFinished = true;
         if (adPlayer) {
@@ -543,12 +668,24 @@
         }
       };
 
-      const _onDeviceIdSet = (event, deviceId) => {
+      /**
+       * Callback for when we receive the DEVICE_ID_SET event from the AMC.
+       * @param {string} eventName The name of the event.
+       * @param {string} deviceId The guid used to identify the device.
+       * @private
+       * @method PulseAdManager#_onDeviceIdSet
+       */
+      const _onDeviceIdSet = (eventName, deviceId) => {
         if (!this._persistentId) {
           this._persistentId = deviceId;
         }
       };
 
+      /**
+       * Callback for when we receive the SIZE_CHANGED event from the AMC.
+       * @private
+       * @method PulseAdManager#_onSizeChanged
+       */
       const _onSizeChanged = () => {
         if (adPlayer) {
           adPlayer.resize(-1,
@@ -559,11 +696,23 @@
         }
       };
 
-      const _onFullscreenChanged = (event, shouldEnterFullscreen) => {
+      /**
+       * Callback for when we receive the FULLSCREEN_CHANGED event from the AMC.
+       * @param {string} eventName The name of the event.
+       * @param {boolean} shouldEnterFullscreen The current fullscreen state.
+       * @private
+       * @method PulseAdManager#_onFullscreenChanged
+       */
+      const _onFullscreenChanged = (eventName, shouldEnterFullscreen) => {
         isFullscreen = shouldEnterFullscreen;
         _onSizeChanged();
       };
 
+      /**
+       * Callback for when we receive the INITIAL_PLAY_REQUESTED event from the AMC.
+       * @private
+       * @method PulseAdManager#_onInitialPlay
+       */
       const _onInitialPlay = () => {
         if (!this.ready || noPulseConfiguration) {
           // Do not wait for prerolls, do not control ads
@@ -586,32 +735,63 @@
         }
       };
 
+      /**
+       * Callback for when we receive the REPLAY_REQUESTED event from the AMC.
+       * @private
+       * @method PulseAdManager#_onAdFinished
+       */
       const _onReplay = () => {
         this._contentFinished = false;
         _onInitialPlay.call(this);
       };
 
+      /**
+       * Callback for when we receive the LINEAR_AD_FINISHED event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onAdFinished
+       */
       const _onAdFinished = () => {
         amc.notifyLinearAdEnded(1);
         enableAdScreenPointerEvents();
         this._currentAd = null;
       };
 
+      /**
+       * Callback for when we receive the LINEAR_AD_ERROR event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onAdError
+       */
       const _onAdError = () => {
         enableAdScreenPointerEvents();
       };
 
+      /**
+       * Callback for when we receive the LINEAR_AD_SKIPPED event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onAdSkipped
+       */
       const _onAdSkipped = () => {
         amc.notifyLinearAdEnded(1);
         enableAdScreenPointerEvents();
         this._currentAd = null;
       };
 
+      /**
+       * Callback for when we receive the AD_BREAK_FINISHED event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onAdBreakFinished
+       */
       const _onAdBreakFinished = () => {
         this._currentAdBreak = null;
         this.notifyAdPodEnded();
       };
 
+      /**
+       * Callback for when we receive the AD_BREAK_STARTED event from the Pulse SDK.
+       * @param {string} event The event name.
+       * @param {object} eventData The eventData object.
+       * @private
+       */
       const _onAdBreakStarted = (event, eventData) => {
         adPlayer.resize(-1,
           -1, isFullscreen);
@@ -619,36 +799,50 @@
         this.notifyAdPodStarted(this._adBreakId, this._currentAdBreak.getPlayableAdsTotal());
       };
 
+      /**
+       * Callback for when we receive the AD_CLICKED event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onAdClicked
+       */
       const _onAdClicked = () => {
         this.videoControllerWrapper.togglePlayPause();
       };
+
+      /**
+       * Callback for when we receive the LINEAR_AD_PAUSED event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onAdPaused
+       */
       const _onAdPaused = () => {
         this.videoControllerWrapper.raisePauseEvent();
       };
 
+      /**
+       * Callback for when we receive the LINEAR_AD_PLAYING event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onAdPlaying
+       */
       const _onAdPlaying = () => {
         this.videoControllerWrapper.raisePlayingEvent();
       };
 
       /**
-       * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK. We will ask
-       * the video controller wrapper to notify the player of the volume change event.
+       * Callback for when we receive the AD_VOLUME_CHANGED event from the Pulse SDK.
+       * We will ask the video controller wrapper to notify the player of the volume change event.
        * @private
-       * @method Pulse#_onAdVolumeChanged
-       * @param {String} event The event name
-       * @param {Object} metadata The metadata associated with the event
+       * @method PulseAdManager#_onAdVolumeChanged
+       * @param {String} event The event name.
+       * @param {Object} metadata The metadata associated with the event.
        */
       const _onAdVolumeChanged = (event, metadata) => {
         this.videoControllerWrapper.raiseVolumeEvent(metadata.volume, this.muted());
       };
 
       /**
-       * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK. We will ask
-       * the video controller wrapper to notify the player of the playback failure.
+       * Callback for when we receive the AD_PLAY_PROMISE_REJECTED event from the Pulse SDK.
+       * We will ask the video controller wrapper to notify the player of the playback failure.
        * @private
-       * @method Pulse#_onAdPlayPromiseRejected
-       * @param {String} event The event name
-       * @param {Object} metadata The metadata associated with the event
+       * @method PulseAdManager#_onAdPlayPromiseRejected
        */
       const _onAdPlayPromiseRejected = () => {
         if (this.muted()) {
@@ -658,12 +852,24 @@
         }
       };
 
+      /**
+       * Callback for when we receive the SESSION_STARTED event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onSessionStarted
+       */
       const _onSessionStarted = () => {
         if (pluginCallbacks && pluginCallbacks.onSessionCreated) {
           pluginCallbacks.onSessionCreated(session);
         }
       };
 
+      /**
+       * Callback for when we receive the LINEAR_AD_PROGRESS event from the Pulse SDK.
+       * @param {string} event The event name.
+       * @param {object} eventData The eventData object.
+       * @private
+       * @method PulseAdManager#_onAdTimeUpdate
+       */
       const _onAdTimeUpdate = (event, eventData) => {
         const duration = eventData.duration
           ? eventData.duration
@@ -671,6 +877,13 @@
         this.videoControllerWrapper.raiseTimeUpdate(eventData.position, duration);
       };
 
+      /**
+       * Callback for when we receive the LINEAR_AD_STARTED event from the Pulse SDK.
+       * @param {string} event The event name.
+       * @param {object} eventData The eventData object.
+       * @private
+       * @method PulseAdManager#_onAdStarted
+       */
       const _onAdStarted = (event, eventData) => {
         this._currentAd = eventData.ad;
 
@@ -708,6 +921,11 @@
           -1, isFullscreen);
       };
 
+      /**
+       * Callback for when we receive the OVERLAY_AD_SHOWN event from the Pulse SDK.
+       * @private
+       * @method PulseAdManager#_onOverlayShown
+       */
       const _onOverlayShown = () => {
         /* Impression is tracked by the SDK before this
                    handler is triggered, so nothing needs to be done here */
@@ -715,10 +933,9 @@
 
       /**
        * Ad manager init
-       *
-       * Register the event listeners for everything the ad player will need
-       * @param adManagerController
-       * @param playerId
+       * Register the event listeners for everything the ad player will need.
+       * @param {object} adManagerController A reference to the Ad Manager Controller.
+       * @param {string} playerId The unique player identifier of the player initializing the class.
        */
       this.initialize = (adManagerController, playerId) => {
         amc = adManagerController; // the AMC is how the code interacts with the player
@@ -968,13 +1185,13 @@
       /**
        * Mandatory method. We just return a placeholder ad that will prevent the content from starting. It will allow
        * the SDK to start the session and return if actual ads are present or not
-       * @returns {array}
+       * @returns {array} The empty or PlaceholderAd array.
        */
       this.buildTimeline = () => (noPulseConfiguration ? [] : [makePlaceholderAd.call(this, 'adRequest', 0)]);
 
       /**
-       * Mandatory method. Called by the AMF when an ad play has been requested
-       * @param v4ad
+       * Mandatory method. Called by the AMF when an ad play has been requested.
+       * @param {object} v4ad The v4ad object.
        */
       this.playAd = (v4ad) => {
         if (v4ad === null) {
@@ -1118,6 +1335,11 @@
     return new PulseAdManager();
   });
 
+  /**
+   * Management video.
+   * @param {object} adManager The adManager object.
+   * @constructor
+   */
   const PulseVideoWrapper = function (adManager) {
     const _adManager = adManager;
 
@@ -1275,7 +1497,7 @@
      * Gets the current time position of the video.
      * @public
      * @method PulseVideoWrapper#getCurrentTime
-     * @returns {number} The current time position of the video (seconds)
+     * @returns {void} The current time position of the video (seconds)
      */
     this.getCurrentTime = () => {
     };
@@ -1437,7 +1659,10 @@
     };
   };
 
-  // Pulse Video plugin
+  /**
+   * Pulse Video plugin.
+   * @constructor
+   */
   const PulsePlayerFactory = function () {
     this.adManager = {};
     this.name = 'PulseVideoTech';

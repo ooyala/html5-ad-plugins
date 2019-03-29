@@ -58,11 +58,10 @@ module.exports = {
         "props": false
       }
     ],
-    "vars-on-top": 0,
     "import/no-dynamic-require": "warn",
     "no-underscore-dangle": "warn",
     "require-jsdoc": [
-      "warn",
+      "error",
       {
       "require": {
         "FunctionDeclaration": true,
@@ -73,7 +72,7 @@ module.exports = {
       }
     }],
     "valid-jsdoc": [
-      "warn",
+      "error",
       {
         "prefer": {
           "return": "returns"

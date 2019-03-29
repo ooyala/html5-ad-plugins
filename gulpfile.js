@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 // Build automation
 // Require sudo npm install -g gulp
 // For dev, initiate watch by executing either `gulp` or `gulp watch`

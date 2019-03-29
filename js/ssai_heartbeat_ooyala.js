@@ -1,8 +1,18 @@
 OO.plugin('heartbeat', (OO) => {
+  /**
+   * Log.
+   * @param {arrays} args The array of function arguments.
+   */
   const log = function (...args) {
     OO.log.apply(this, ['heartbeat:', ...args]);
   };
 
+  /**
+   * @class heartbeat
+   * @constructor
+   * @param {object} mb The message bus object.
+   * @classDesc The heartbeat class.
+   */
   const heartbeat = function (mb) {
     const _this = this;
     let config = {};
@@ -30,10 +40,16 @@ OO.plugin('heartbeat', (OO) => {
 
     let heartbeatTimer = 0;
 
+    /**
+     * Stops the interval from heartbeatTimer.
+     */
     function stopHeartBeat() {
       clearInterval(heartbeatTimer);
     }
 
+    /**
+     * Report Heart Beat.
+     */
     function reportHeartBeat() {
       if (reportingPaused) {
         return;
@@ -57,11 +73,20 @@ OO.plugin('heartbeat', (OO) => {
       });
     }
 
+    /**
+     * Sets outer scope variable to a timer.
+     * Stops another timer if has been working before.
+     */
     function startHeartBeat() {
       stopHeartBeat();
       heartbeatTimer = setInterval(reportHeartBeat, config.Interval);
     }
 
+    /**
+     * Parse Guid.
+     * @param {string} url The streamUrl.
+     * @returns {''|string} Returns '' or first match result.
+     */
     function parseGuid(url) {
       const reg = new RegExp(/ssai_guid=([^&?]*)/g);
       const result = reg.exec(url);
@@ -72,7 +97,15 @@ OO.plugin('heartbeat', (OO) => {
       return '';
     }
 
-    function _onVcWillPlay(event, videoId, url) {
+    /**
+     * Callback for when we receive the VC_WILL_PLAY event from the AMC.
+     * @param {string} eventName The name of the eventName.
+     * @param {string} videoId The id of the video.
+     * @param {string} url The url string.
+     * @private
+     * @method heartbeat#_onVcWillPlay
+     */
+    function _onVcWillPlay(eventName, videoId, url) {
       streamUrl = url || '';
       ssaiGuid = parseGuid(streamUrl);
       if (ssaiGuid) {
@@ -81,28 +114,62 @@ OO.plugin('heartbeat', (OO) => {
       }
     }
 
-    function _onPlayheadTimeChange(event, currentTime) {
+    /**
+     * Callback for when we receive the PLAYHEAD_TIME_CHANGED event from the AMC.
+     * @param {string} eventName The name of the eventName.
+     * @param {number} currentTime The current time.
+     * @private
+     * @method heartbeat#_onPlayheadTimeChange
+     */
+    function _onPlayheadTimeChange(eventName, currentTime) {
       playheadPosition = currentTime || 0;
     }
 
+    /**
+     * Callback for when we receive the EMBED_CODE_CHANGED event from the AMC.
+     * @param {string} event The name of the event.
+     * @param {string} theEmbedCode The embed code.
+     * @private
+     * @method heartbeat#_onEmbedCodeChanged
+     */
     function _onEmbedCodeChanged(event, theEmbedCode) {
       embedCode = theEmbedCode || '';
     }
 
+    /**
+     * Callback for when we receive the PAUSE event from the AMC.
+     * @private
+     * @method heartbeat#_onPause
+     */
     function _onPause() {
       reportingPaused = true;
     }
 
+    /**
+     * Callback for when we receive the PLAY event from the AMC.
+     * @private
+     * @method heartbeat#_onPlay
+     */
     function _onPlay() {
       reportingPaused = false;
     }
 
+    /**
+     * Callback for when we receive the VC_PLAYED event from the AMC.
+     * @private
+     * @method heartbeat#_onPlayed
+     */
     function _onPlayed() {
       reportingPaused = false;
       reportHeartBeat();
       stopHeartBeat();
     }
 
+    /**
+     * Build Config.
+     * @param {object} configuration The configuration object
+     * @returns {object} Returns _config object
+     */
     function buildConfig(configuration) {
       const _config = Object.assign({}, DEFAULT_CONFIG, configuration);
 
@@ -114,6 +181,9 @@ OO.plugin('heartbeat', (OO) => {
       return _config;
     }
 
+    /**
+     * Destroy.
+     */
     function destroy() {
       stopHeartBeat();
       mb.unsubscribe(OO.EVENTS.VC_WILL_PLAY, 'heartbeat');
@@ -126,6 +196,9 @@ OO.plugin('heartbeat', (OO) => {
       log('destroy');
     }
 
+    /**
+     * Initialize.
+     */
     function initialize() {
       config = buildConfig(config);
 

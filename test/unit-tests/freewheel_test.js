@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 /*
  * Unit test class for the Freewheel Ad Manager
  * https://github.com/Automattic/expect.js

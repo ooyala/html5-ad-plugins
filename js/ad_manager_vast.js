@@ -396,7 +396,7 @@ OO.Ads.manager(() => {
      * Helper function to get node attribute value.
      * @private
      * @method VastParser#safeGetAttribute
-     * @param {HTMLElement} parentNode DOM element object
+     * @param {HTMLElement} node DOM element object
      * @param {String} attribute Attribute name
      * @returns {String | void} Attribute value
      */
@@ -443,8 +443,15 @@ OO.Ads.manager(() => {
     };
 
     // Helpers
-    // Safely trigger an ad manager function
     // TODO: consider error message override
+    /**
+     * Safely trigger an ad manager function
+     * @param {object} vpaidAd The vpaidAd object.
+     * @param {string} funcName The function name.
+     * @param {array} params The array of params.
+     * @returns {null|function} Returns function with vpaidAd and params arguments.
+     * @private
+     */
     const _safeFunctionCall = (vpaidAd, funcName, params) => {
       try {
         if (isFunction(vpaidAd[funcName])) {
@@ -545,7 +552,6 @@ OO.Ads.manager(() => {
      * @public
      * @method Vast#getErrorTrackingInfo
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-     * @param {object} ads A jQuery object which contains the collection of ad elements found
      */
     this.getErrorTrackingInfo = (vastXML) => {
       const ads = vastXML.querySelectorAll('Ad');
@@ -570,8 +576,9 @@ OO.Ads.manager(() => {
      * for different versions.
      * @private
      * @method Vast#supportsPoddedAds
+     * @param {string} version The Vast version as parsed from the XML
      * @returns {boolean} true if the podded ads functionality is supported in the specified Vast version,
-     *                    false otherwise
+     * false otherwise
      */
     const supportsPoddedAds = version => contains(
       SUPPORTED_FEATURES[getMajorVersion(version)],
@@ -583,8 +590,9 @@ OO.Ads.manager(() => {
      * for different versions.
      * @private
      * @method Vast#supportsAdFallback
+     * @param {string} version The Vast version as parsed from the XML
      * @returns {boolean} true if the ad fallback functionality is supported in the specified Vast version,
-     *                    false otherwise
+     * false otherwise
      */
     const supportsAdFallback = version => contains(
       SUPPORTED_FEATURES[getMajorVersion(version)],
@@ -606,6 +614,10 @@ OO.Ads.manager(() => {
       companion: [],
     });
 
+    /**
+     * Clear vpaid timeouts.
+     * @private
+     */
     const _clearVpaidTimeouts = () => {
       clearTimeout(vpaidIframeLoadedTimeout);
       vpaidIframeLoadedTimeout = null;
@@ -666,6 +678,10 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * Check vpaid iframe loaded.
+     * @private
+     */
     const _checkVpaidIframeLoaded = () => {
       if (!vpaidIframeLoaded) {
         _tryRaiseAdError('VPAID: iframe did not load');
@@ -673,6 +689,10 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * Check vpaid ad stopped.
+     * @private
+     */
     const _checkVpaidAdStopped = () => {
       if (!vpaidAdStopped) {
         _tryRaiseAdError('VPAID: Did not receive AD_STOPPED event from creative');
@@ -694,6 +714,10 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * Check vpaid ad loaded.
+     * @private
+     */
     const _checkVpaidAdLoaded = () => {
       if (!vpaidAdLoaded) {
         _tryRaiseAdError('VPAID: Did not receive AD_LOADED event from creative');
@@ -701,6 +725,10 @@ OO.Ads.manager(() => {
       }
     };
 
+    /**
+     * Check vpaid ad started.
+     * @private
+     */
     const _checkVpaidAdStarted = () => {
       if (!vpaidAdStarted) {
         _tryRaiseAdError('VPAID: Did not receive AD_STARTED event from creative');
@@ -764,8 +792,8 @@ OO.Ads.manager(() => {
     /**
      * [DEPRECATED]Checks to see if the current metadata contains any ads that are pre-rolls and of type vast. If there are any
      * then it will load the ads.
+     * @method Vast#loadPreRolls
      * @public
-     * @method Vast#loadPreRolls[DEPRECATED]
      */
     this.loadPreRolls = () => {
       // deprecated
@@ -777,6 +805,13 @@ OO.Ads.manager(() => {
      * @public
      * @method Vast#loadAllVastAds[DEPRECATED]
      */
+
+    /**
+     * [DEPRECATED]Checks the metadata for any remaining ads of type vast that are not pre-rolls.
+     * If it finds any then it will load them.
+     * @method Vast#loadAllVastAds
+     * @public
+     */
     this.loadAllVastAds = () => {
       // deprecated
 
@@ -787,7 +822,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#generateAd
      * @param {object} metadata The ad metadata to be used for the AMC Ad object
-     * @return {object} The AMC Ad object
+     * @returns {object} The AMC Ad object
      */
     const generateAd = (metadata) => {
       if (!metadata) return false;
@@ -853,8 +888,7 @@ OO.Ads.manager(() => {
      * Finds ads based on the position provided to the function.
      * @private
      * @method Vast#loadAd
-     * @param {string} position The position of the ad to be loaded. 'pre' (preroll), 'midPost' (midroll and post rolls)
-     * 'all' (all positions).
+     * @param {object} amcAd The AMC ad object.
      * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
      * unit tests.
      */
@@ -874,6 +908,7 @@ OO.Ads.manager(() => {
      * if there any. This function should only be used if you need to do something the first time the user hits play.
      * @public
      * @method Vast#initialPlay
+     * @returns {function} Returns the loadAllVastAds function.
      */
     this.initialPlay = () => this.loadAllVastAds();
 
@@ -895,16 +930,16 @@ OO.Ads.manager(() => {
      * @param {*} position The position metadata to check
      * @returns {boolean} True if the position is valid, false otherwise
      */
-    // Unary + returns 1 for true and 0 for false and null
-    // To avoid this, we check to see if position is a number or a string
     const _isValidPosition = position => (
+      // Unary + returns 1 for true and 0 for false and null
+      // To avoid this, we check to see if position is a number or a string
       typeof position === 'string' || typeof position === 'number'
     ) && isFinite(+position);
 
     /**
      * TODO: out of date
      * This is required by the Ad Manager Controller but for Vast ads nothing is done here.
-     * @returns The array of the new timeline to merge into the controller timeline but Vast Manager doesn't use this
+     * @returns {array} The array of the new timeline to merge into the controller timeline but Vast Manager doesn't use this
      * function since we add the Ads one by one, so we just return null so it is ignored by the AMC.
      * @public
      * @method Vast#buildTimeline
@@ -986,8 +1021,8 @@ OO.Ads.manager(() => {
      * Utility function to check if an ad is a VPAID ad.
      * @private
      * @method Vast#_isVpaidAd
-     * @param ad The ad to check
-     * @returns {boolean}
+     * @param {object} ad The ad to check.
+     * @returns {boolean} Returns true if type 'vpaid'
      */
     const _isVpaidAd = (ad) => {
       const vastAdObject = _getVastAdObject(ad);
@@ -999,7 +1034,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#_getImpressionUrls
      * @param {object} amcAd The AMC ad object
-     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
+     * @returns {string[]|null} The array of impression urls. Returns null if no URLs exist.
      */
     const _getImpressionUrls = (amcAd) => {
       const vastAdObject = _getVastAdObject(amcAd);
@@ -1017,7 +1052,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#_getLinearClickTrackingUrls
      * @param {object} amcAd The AMC ad object
-     * @return {string[]|null} The array of linear click tracking urls. Returns null if no
+     * @returns {string[]|null} The array of linear click tracking urls. Returns null if no
      * URLs exist.
      */
     const _getLinearClickTrackingUrls = (amcAd) => {
@@ -1049,7 +1084,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#_getLinearClickThroughUrl
      * @param {object} amcAd The AMC ad object
-     * @return {string|null} The linear click through url. Returns null if no
+     * @returns {string|null} The linear click through url. Returns null if no
      * URL exists.
      */
     const _getLinearClickThroughUrl = (amcAd) => {
@@ -1068,7 +1103,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#_getNonLinearClickThroughUrl
      * @param {object} amcAd The AMC ad object
-     * @return {string|null} The nonlinear click through url. Returns null if no
+     * @returns {string|null} The nonlinear click through url. Returns null if no
      * URL exists.
      */
     const _getNonLinearClickThroughUrl = (amcAd) => {
@@ -1087,7 +1122,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#_getNonLinearClickTrackingUrls
      * @param {object} amcAd The AMC ad object
-     * @return {string[]|null} The array of nonlinear click tracking urls. Returns null if no
+     * @returns {string[]|null} The array of nonlinear click tracking urls. Returns null if no
      * URLs exist.
      */
     const _getNonLinearClickTrackingUrls = (amcAd) => {
@@ -1328,9 +1363,8 @@ OO.Ads.manager(() => {
 
     /**
      * Called when a linear ad is skipped.
+     * @method Vast#_skipAd
      * @private
-     * @method Vast#_skipAd()
-     * @param {object} currentAd The ad metadata
      */
     const _skipAd = () => {
       prevAd = currentAd;
@@ -1809,7 +1843,6 @@ OO.Ads.manager(() => {
      * Helper function to map through array and filter empty items.
      * @private
      * @method VastParser#mapWithoutEmpty
-     * @param {Array} array
      * @param {Function} mapperFn mapper function
      * @returns {Array} The filtered array.
      */
@@ -1822,9 +1855,8 @@ OO.Ads.manager(() => {
      * The xml is parsed to find any tracking events and then returned as part of an object.
      * @private
      * @method Vast#parseTrackingEvents
-     * @param {object} tracking The tracking object to be mutated
      * @param {XMLDocument} xml The data of the ad with tracking info
-     * @param {string[]} trackingEvents List of events that are tracked, if null then it uses the global one
+     * @param {string[]} events trackingEvents List of events that are tracked, if null then it uses the global one
      * @returns {object} An array of tracking items.
      */
     const parseTrackingEvents = (xml, events = TRACKING_EVENTS) => {
@@ -1865,7 +1897,6 @@ OO.Ads.manager(() => {
      * @public
      * @method Vast#checkNoAds
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-     * @param {object} ads A jQuery object which contains the collection of ad elements found
      * @returns {boolean} true if there are no ads, false otherwise.
      */
     this.checkNoAds = (vastXML) => {
@@ -1993,8 +2024,10 @@ OO.Ads.manager(() => {
      * Check wether or not a vpaid ad is valid by checking the ad type and make sure is VPaid
      * This is only required for VPAID ads
      * @method Vast#_isValidVpaidCreative
+     * @param {HTMLElement} node DOM element object
+     * @param {boolean} isLinear <code>true</code> if the ad is linear, <code>false</code> otherwise.
+     * @returns {boolean} VPaid validated value
      * @private
-     * @return {boolean} VPaid validated value
      */
     const _isValidVpaidCreative = (node, isLinear) => {
       const apiFramework = (safeGetAttribute(node, 'apiFramework')
@@ -2360,9 +2393,10 @@ OO.Ads.manager(() => {
     /**
      * Gets current ad format, which is either Linear or NonLinear
      * This is only required for VPAID ads
+     * @param {HTMLElement} node DOM element object
      * @private
      * @method Vast#_getVpaidFormat
-     * @return {object} Ad format
+     * @returns {object} Ad format
      */
     const _getVpaidFormat = (node) => {
       let child;
@@ -2494,8 +2528,9 @@ OO.Ads.manager(() => {
      * Get tracking events.
      * This is only required for VPAID ads
      * @public
+     * @param {XMLDocument} adXml Current ad xml
      * @method Vast#getVpaidImpressions
-     * @return {array} Array with impressions urls
+     * @returns {array} Array with impressions urls
      */
     this.getVpaidImpressions = adXml => Array.from(adXml.getElementsByTagName('Impression')).map(node => ({
       url: node.textContent,
@@ -2507,7 +2542,7 @@ OO.Ads.manager(() => {
      * @public
      * @method Vast#getVpaidTracking
      * @param {object} parent DOM Element to look for tracking events
-     * @return {array} Array with tracking events and urls
+     * @returns {array} Array with tracking events and urls
      */
     this.getVpaidTracking = (parent) => {
       let node;
@@ -2672,7 +2707,8 @@ OO.Ads.manager(() => {
      * Remove any new lines, line breaks and spaces from string.
      * @private
      * @method Vast#_cleanString
-     * @return {string} String with no spaces
+     * @param {string} string The sting
+     * @returns {string} Returns string with no spaces
      */
     const _cleanString = (string) => {
       if (!string) {
@@ -2685,7 +2721,7 @@ OO.Ads.manager(() => {
      * While getting the ad data the manager needs to parse the companion ad data as well and add it to the object.
      * @private
      * @method Vast#parseCompanionAd
-     * @param {XMLDocument} companionAdXML XML that contains the companion ad data
+     * @param {XMLDocument} companionAdXml XML that contains the companion ad data
      * @returns {object} The ad object with companion ad.
      */
     const parseCompanionAd = (companionAdXml) => {
@@ -2800,9 +2836,9 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#_getVPaidCreative
      * @param {XMLDocument} adXml Current ad xml
-     * @param {string} Current vast version
+     * @param {string} version Current vast version
      * @param {object} adLoaded The ad loaded object and metadata
-     * @return {object} Parsed vpaid's metadata ad
+     * @returns {object} Parsed vpaid's metadata ad
      */
     const _getVpaidCreative = (adXml, version, adLoaded) => {
       // TODO: Add more comments in the function
@@ -2924,7 +2960,7 @@ OO.Ads.manager(() => {
      * This is only required for VPAID ads
      * @method Vast#_isValidVPaid
      * @private
-     * @return {boolean} VPaid validated value
+     * @returns {boolean} VPaid validated value
      */
     const _isValidVPaid = () => {
       let vpaidVersion = null;
@@ -2958,7 +2994,7 @@ OO.Ads.manager(() => {
      * Creates a new slot for each ad unit with unique id to avoid conflicts between ads.
      * This is only required for VPAID ads
      * @private
-     * @return {object} A DOM element with unique id.
+     * @returns {object} A DOM element with unique id.
      */
     const _createUniqueElement = () => {
       const parent = this.amc.ui.playerSkinPluginsElement
@@ -3068,6 +3104,7 @@ OO.Ads.manager(() => {
      * This is only required for VPAID ads
      * @private
      * @method Vast#_getFsState
+     * @returns {boolean} Returns true if fullscreen !== null
      */
     const _getFsState = () => {
       let fs;
@@ -3120,7 +3157,7 @@ OO.Ads.manager(() => {
      * This is only required for VPAID ads
      * @private
      * @method Vast#_onVpaidAdEvent
-     * @param args: {string} eventName Name of the event to process
+     * @param {array} args The array of arguments (eventName - Name of the event to process).
      */
     const _onVpaidAdEvent = function (...args) {
       const [eventName] = args;
@@ -3361,6 +3398,7 @@ OO.Ads.manager(() => {
      * Callback when the media file is loaded. Once is loaded we can initialize the ad
      * This is only required for VPAID ads
      * @public
+     * @returns {null} Returns null
      */
     this.initializeAd = () => {
       let environmentVariables;
@@ -3585,7 +3623,7 @@ OO.Ads.manager(() => {
      * @public
      * @method Vast#parseAds
      * @param {xml} vastXML The xml that contains the ad data
-     * @return {object[]} An array of ad objects
+     * @returns {object[]} An array of ad objects
      * @param {object} adLoaded The ad loaded object and metadata
      */
     this.parseAds = (vastXML, adLoaded) => {
@@ -3609,9 +3647,9 @@ OO.Ads.manager(() => {
      * during ad playback.
      * @public
      * @method Vast#onAdPlayheadTimeChanged
-     * @param {string} eventname The name of the event for which this callback is called
-     * @param {number} playhead Current video time (seconds)
-     * @param {number} duration Duration of the current video (seconds)
+     * @param {string} eventName The name of the event for which this callback is called.
+     * @param {number} playhead Current video time (seconds).
+     * @param {number} duration Duration of the current video (seconds).
      */
     this.onAdPlayheadTimeChanged = (eventName, playhead, duration) => {
       const firstQuartileTime = duration / 4;

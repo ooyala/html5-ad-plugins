@@ -24,11 +24,21 @@ require('../html5-common/js/utils/utils.js');
   const registeredGoogleIMAManagers = {};
 
   OO.Ads.manager(() => {
+    /**
+     * Throw error
+     * @param {string} outputStr The output string.
+     * @private
+     */
     const _throwError = (outputStr) => {
       // TODO consolidate code to exit gracefully if we have an error.
       throw new Error(`GOOGLE IMA: ${outputStr}`);
     };
 
+    /**
+     * Inline playback supported.
+     * @returns {boolean} Returns true if iosMajorVersion < 10 && isIphone
+     * @private
+     */
     const _inlinePlaybackSupported = () => !(OO.iosMajorVersion < 10 && OO.isIphone);
 
     /**
@@ -168,6 +178,7 @@ require('../html5-common/js/utils/utils.js');
 
       /**
        * Returns true if ad (from backlot) has a valid ad tag.
+       * @param {object} ad The ad object.
        * @private
        * @method GoogleIMA#isValidAdTag
        * @returns {array} Ads with valid ad tags.
@@ -205,6 +216,8 @@ require('../html5-common/js/utils/utils.js');
        * in an environment where muted playback is required will cause a fatal ad error.
        * @private
        * @method GoogleIMA#_tryNotifyUnmutedPlaybackFailed
+       * @returns {boolean} Returns notified flag.
+       * @private
        */
       const _tryNotifyUnmutedPlaybackFailed = () => {
         let notified = false;
@@ -253,10 +266,11 @@ require('../html5-common/js/utils/utils.js');
        * Callback for Ad Manager Controller EVENTS.PLAYHEAD_TIME_CHANGED.  Updates the IMA SDK with current playhead time.
        * @private
        * @method GoogleIMA#_onPlayheadTimeChanged
-       * @param playhead current playhead time
-       * @param duration - duration of the movie.
+       * @param {string} eventName The name of the event for which this callback is called.
+       * @param {number} playheadTime The current playhead time (seconds).
+       * @param {number} duration Duration of the current video (seconds).
        */
-      const _onPlayheadTimeChanged = (event, playheadTime, duration) => {
+      const _onPlayheadTimeChanged = (eventName, playheadTime, duration) => {
         if (!_playheadTracker) {
           _resetPlayheadTracker();
         }
@@ -304,7 +318,8 @@ require('../html5-common/js/utils/utils.js');
       };
 
       /**
-       * Callback for size change notifications.
+       * Callback for when we receive the SIZE_CHANGED event from the AMC.
+       * For size change notifications.
        * @private
        * @method GoogleIMA#_onSizeChanged
        */
@@ -313,12 +328,14 @@ require('../html5-common/js/utils/utils.js');
       };
 
       /**
-       * Callback for Ad Manager Controller. Handles going into and out of fullscreen mode.
-       * @public
+       * Callback for when we receive the FULLSCREEN_CHANGED event from the AMC.
+       * Handles going into and out of fullscreen mode.
+       * @param {string} eventName The name of the event for which this callback is called.
+       * @param {boolean} shouldEnterFullscreen The current fullscreen state.
        * @method GoogleIMA#onFullScreenChanged
-       * @param {boolean} shouldEnterFullscreen True if going into fullscreen
+       * @private
        */
-      const _onFullscreenChanged = (event, shouldEnterFullscreen) => {
+      const _onFullscreenChanged = (eventName, shouldEnterFullscreen) => {
         this.isFullscreen = shouldEnterFullscreen;
         _onSizeChanged();
       };
@@ -329,6 +346,7 @@ require('../html5-common/js/utils/utils.js');
        * on the player setup.
        * @private
        * @method GoogleIMA#_checkRequestAdsOnReplay
+       * @returns {boolean} Returns true if request ads on replay.
        */
       const _checkRequestAdsOnReplay = () => {
         if (!this.isReplay) {
@@ -451,7 +469,6 @@ require('../html5-common/js/utils/utils.js');
        * Fired when IMA SDK has a VMAP or Ad Rules ad that is ready for playback.
        * @private
        * @method GoogleIMA#_startPlaylistAd
-       * @param adEvent - Event data from IMA SDK.
        */
       const _startPlaylistAd = () => {
         OO.log('GOOGLE_IMA:: starting playlist ad');
@@ -484,7 +501,6 @@ require('../html5-common/js/utils/utils.js');
        * Callback when IMA SDK detect an ad click. This relays it to the Ad Manager Controller.
        * @private
        * @method GoogleIMA#_imaSdkOnAdClicked
-       * @param adEvent - Event data from IMA SDK.
        */
       const _imaSdkOnAdClicked = () => {
         _amc.adsClicked();
@@ -543,9 +559,9 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Checks to see if we should ignore certain IMA ad events if the ad
        * is not currently playing (either completed or has not started).
+       * @param {object} adEvent The IMA ad event.
+       * @returns {boolean} Returns true if ad not playing.
        * @private
-       * @method GoogleIMA#_ignoreWhenAdNotPlaying
-       * @param {object} adEvent The IMA ad event
        */
       const _ignoreWhenAdNotPlaying = (adEvent) => {
         const eventType = google.ima.AdEvent.Type;
@@ -654,7 +670,7 @@ require('../html5-common/js/utils/utils.js');
        * Logs ad metric events.
        * @private
        * @method GoogleIMA#_onAdMetrics
-       * @param {object} adEvent
+       * @param {object} adEvent The ad event object.
        */
       const _onAdMetrics = (adEvent) => {
         OO.log('Google IMA Ad playthrough', adEvent.type);
@@ -749,7 +765,7 @@ require('../html5-common/js/utils/utils.js');
        * Stop overlay and prepare the ad manager to be able to request another ad.
        * @private
        * @method GoogleIMA#_stopNonLinearOverlay
-       * @param adId the id of the overlay we are stopping
+       * @param {string} adId the id of the overlay we are stopping
        */
       const _stopNonLinearOverlay = (adId) => {
         _amc.notifyNonlinearAdEnded(adId);
@@ -764,7 +780,7 @@ require('../html5-common/js/utils/utils.js');
        * Controller that the whole ad pod has ended.
        * @private
        * @method GoogleIMA#_endCurrentAdPod
-       * @param linear whether or not the ad pod was linear or overlay
+       * @param {boolean} linear whether or not the ad pod was linear or overlay
        */
       const _endCurrentAdPod = (linear) => {
         if (this.currentAMCAdPod) {
@@ -788,7 +804,7 @@ require('../html5-common/js/utils/utils.js');
        * that the whole ad pod has ended.
        * @private
        * @method GoogleIMA#_endCurrentAd
-       * @param forceEndAdPod forces the ad pod to end
+       * @param {boolean} forceEndAdPod forces the ad pod to end
        */
       const _endCurrentAd = (forceEndAdPod) => {
         if (this.currentAMCAdPod) {
@@ -859,6 +875,7 @@ require('../html5-common/js/utils/utils.js');
        * isn't in ad mode or if IMA hasn't started playing the ad.
        * @private
        * @method GoogleIMA#_tryStartAd
+       * @returns {string} Returns ad type started.
        */
       const _tryStartAd = () => {
         let adTypeStarted = null;
@@ -927,7 +944,7 @@ require('../html5-common/js/utils/utils.js');
        * just not play the one ad.
        * @private
        * @method GoogleIMA#_onImaAdError
-       * @param {object} adErrorEvent - IMA SDK error data
+       * @param {object} adError - IMA SDK error data
        */
       const _onImaAdError = (adError) => {
         // all IMA errors are fatal so it's safe to clear out this timeout.
@@ -1454,8 +1471,12 @@ require('../html5-common/js/utils/utils.js');
           eventType.VOLUME_MUTED,
         ];
 
-        const addIMAEventListener = (e) => {
-          _IMAAdsManager.addEventListener(e, _imaSdkOnAdEvent, false, this);
+        /**
+         * Add IMA event listener.
+         * @param {string} eventName The name of event.
+         */
+        const addIMAEventListener = (eventName) => {
+          _IMAAdsManager.addEventListener(eventName, _imaSdkOnAdEvent, false, this);
         };
 
         each(imaAdEvents, addIMAEventListener, this);
@@ -1595,10 +1616,10 @@ require('../html5-common/js/utils/utils.js');
       };
 
       /**
-       * Callback for Ad Manager Controller EVENTS.REPLAY_REQUESTED.  Resets the IMA SDK to be able to
-       * request ads again and then requests the ads if it's AdRules.
-       * @private
+       * Callback for Ad Manager Controller EVENTS.REPLAY_REQUESTED.
+       * Resets the IMA SDK to be able to request ads again and then requests the ads if it's AdRules.
        * @method GoogleIMA#_onReplayRequested.
+       * @private
        */
       const _onReplayRequested = () => {
         if (!_IMAAdsLoader) {
@@ -1622,7 +1643,7 @@ require('../html5-common/js/utils/utils.js');
        * Callback after IMA SDK is successfully loaded. Tries to setup ad request and container for ads.
        * @private
        * @method GoogleIMA#_onSdkLoaded
-       * @param success - whether SDK loaded successfully.
+       * @param {boolean} success whether SDK loaded successfully.
        */
       const _onSdkLoaded = (success) => {
         let errorString = '';
@@ -1692,7 +1713,6 @@ require('../html5-common/js/utils/utils.js');
       /**
        * Remove listeners from the Ad Manager Controller about playback.
        * @private
-       * @method GoogleIMA@_removeAMCListeners
        */
       const _removeAMCListeners = () => {
         if (_amc) {
@@ -1759,7 +1779,12 @@ require('../html5-common/js/utils/utils.js');
         this.mainContentDuration = movieMetadata.duration / 1000;
         this.allAdInfo = metadata.all_ads;
 
-        // Check if any ad is ad rules type.  if one is then we change to only using ad rules.
+        /**
+         * Check if any ad is ad rules type.
+         * if one is then we change to only using ad rules.
+         * @param {object} ad The ad object.
+         * @returns {boolean} Returns true if AD_RULES_POSITION_TYPE.
+         */
         const usesAdRulesCheck = ad => ad.position_type === AD_RULES_POSITION_TYPE;
         const adRulesAd = find(metadata.all_ads, usesAdRulesCheck);
         _usingAdRules = !!adRulesAd;
@@ -1900,7 +1925,7 @@ require('../html5-common/js/utils/utils.js');
        * Sets up the shared video element.
        * @public
        * @method GoogleIMA#setupSharedVideoElement
-       * @param element Element to be setup as the shared video element
+       * @param {object} element Element to be setup as the shared video element
        */
       this.setupSharedVideoElement = (element) => {
         // Remove any listeners we added on the previous shared video element
@@ -1982,7 +2007,7 @@ require('../html5-common/js/utils/utils.js');
        * Called by the ad manager controller.  Ad Manager Controller lets the module know that an ad should play now.
        * @public
        * @method GoogleIMA#playAd
-       * @param {object} ad The ad to play from the timeline.
+       * @param {object} amcAdPod The ad to play from the timeline.
        * @param {object} adRequestOnly True to request the ad without starting playback, false to request and playback the ad
        */
       this.playAd = (amcAdPod, adRequestOnly) => {
@@ -2316,7 +2341,6 @@ require('../html5-common/js/utils/utils.js');
      * Triggers a seek on the video element.
      * @public
      * @method GoogleIMAVideoWrapper#seek
-     * @param {number} time The time to seek the video to (in seconds)
      */
     this.seek = () => {
     };
@@ -2352,8 +2376,8 @@ require('../html5-common/js/utils/utils.js');
     /**
      * Triggers a volume change on the video element.
      * @public
-     * @method GoogleIMAVideoWrapper#setVolume
      * @param {number} volume A number between 0 and 1 indicating the desired volume percentage
+     * @param {boolean} muteState True if ad was muted, false if ad was unmuted.
      */
     this.setVolume = (volume, muteState) => {
       previousVolume = volume;
@@ -2396,6 +2420,7 @@ require('../html5-common/js/utils/utils.js');
      * Does the application of css to the video element if the video element is shared and under ima control.
      * @private
      * @method GoogleIMAVideoWrapper#applyCssToElemenet
+     * @param {object} css The css to apply to the video element.
      */
     const applyCssToElement = (css) => {
       if (css && this.isControllingVideo && _ima.sharedVideoElement) {

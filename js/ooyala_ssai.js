@@ -194,9 +194,9 @@ OO.Ads.manager(() => {
      * during playback.
      * @public
      * @method OoyalaSsai#onPlayheadTimeChanged
-     * @param {string} eventname The name of the event for which this callback is called
-     * @param {number} playhead The total amount main video playback time (seconds)
-     * @param {number} duration Duration of the live video (seconds)
+     * @param {string} eventName The name of the event for which this callback is called.
+     * @param {number} playhead The total amount main video playback time (seconds).
+     * @param {number} duration Duration of the live video (seconds).
      * @param {number} offset Current video time (seconds). Currently is obtained just for live stream from amc.
      */
 
@@ -239,8 +239,10 @@ OO.Ads.manager(() => {
     };
 
     /**
-     *
-     *
+     * Callback for when we check to see if we already have adId in a dictionary.
+     * @param {object} id3Object The ID3 object.
+     * @returns {number} The ad duration.
+     * @private
      */
     const _getAdDuration = (id3Object) => {
       let { duration } = id3Object;
@@ -278,9 +280,9 @@ OO.Ads.manager(() => {
      * Returns the ssai data from the vast object in case if the vast
      * object contains data for the current id3 object.
      * @private
-     * @param id3Object
-     * @param adIdVastData
-     * @returns {*}
+     * @param {object} id3Object The ID3 object.
+     * @param {object} adIdVastData The adIdVastData object.
+     * @returns {null|number} Returns the value from adIdVastData object or null.
      */
     const _getAdObjectFromVast = (id3Object, adIdVastData) => {
       if (has(adIdVastData, id3Object.adId)) {
@@ -290,8 +292,9 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Set vast data to the cache for
-     * current id3 object.
+     * Set vast data to the cache for current id3 object.
+     * @param {object} id3Object The ID3 object.
+     * @param {object} adObject The add object.
      * @private
      * @method OoyalaSsai#_setVastDataToDictionary
      */
@@ -306,7 +309,7 @@ OO.Ads.manager(() => {
      * @private
      * @method OoyalaSsai#_getImpressionUrls
      * @param {object} adObject The ad metadata
-     * @return {string[]|null} The array of impression urls. Returns null if no URLs exist.
+     * @returns {string[]|null} The array of impression urls. Returns null if no URLs exist.
      */
     const _getImpressionUrls = (adObject) => {
       let impressionUrls = null;
@@ -325,7 +328,7 @@ OO.Ads.manager(() => {
      * @private
      * @method OoyalaSsai#_getLinearClickTrackingUrls
      * @param {object} adObject The ad metadata
-     * @return {string[]|null} The array of linear click tracking urls. Returns null if no
+     * @returns {string[]|null} The array of linear click tracking urls. Returns null if no
      * URLs exist.
      */
     const _getLinearClickTrackingUrls = (adObject) => {
@@ -365,6 +368,7 @@ OO.Ads.manager(() => {
 
     /**
      * Called if the ajax call fails
+     * @param {object} currentId3Object The current Id3 object.
      * @public
      * @method OoyalaSsai#onRequestError
      */
@@ -378,6 +382,8 @@ OO.Ads.manager(() => {
 
     /**
      * Called if the ajax call for SSAI metadata fails
+     * @param {string} url The url.
+     * @param {object} error The metadata error object.
      * @public
      * @method OoyalaSsai#onMetadataError
      */
@@ -400,6 +406,11 @@ OO.Ads.manager(() => {
     this.adVideoError = () => {
     };
 
+    /**
+     * Callback for when we receive the CONTENT_CHANGED event from the AMC.
+     * @private
+     * @method OoyalaSsai#_onContentChanged
+     */
     const _onContentChanged = () => {
       currentOffset = 0;
     };
@@ -534,6 +545,7 @@ OO.Ads.manager(() => {
      * @private
      * @method OoyalaSsai#_sendRequest
      * @param {string} url The url that contains the Ad creative
+     * @param {object} currentId3Object The current Id3 object.
      */
     const _sendRequest = (url, currentId3Object) => {
       fetch(url, {
@@ -573,7 +585,6 @@ OO.Ads.manager(() => {
      * @private
      * @method OoyalaSsai#_sendMetadataRequest
      */
-
     const _sendMetadataRequest = () => {
       const url = `${window.location.protocol}//${this.domainName}/v1/metadata/${this.currentEmbed}?ssai_guid=${this.ssaiGuid}`;
       fetch(url, {
@@ -672,7 +683,7 @@ OO.Ads.manager(() => {
      * @private
      * @method OoyalaSsai#_getTitle
      * @param {object} adObject The ad metadata
-     * @return {string|null} The title of the ad. Returns null if no title exists.
+     * @returns {string|null} The title of the ad. Returns null if no title exists.
      */
     const _getTitle = (adObject) => {
       if (adObject && adObject.title) {
@@ -686,7 +697,7 @@ OO.Ads.manager(() => {
      * @private
      * @method OoyalaSsai#_getLinearClickThroughUrl
      * @param {object} adObject The ad metadata
-     * @return {string|null} The linear click through url. Returns null if no
+     * @returns {string|null} The linear click through url. Returns null if no
      * URL exists.
      */
     const _getLinearClickThroughUrl = (adObject) => {
@@ -703,8 +714,8 @@ OO.Ads.manager(() => {
      * Configuring the ssai object to force an ad to play
      * @private
      * @method OoyalaSsai#_configureSsaiObject
-     * @param adObject
-     * @returns {{clickthrough: string, name: string, ssai: boolean, isLive: boolean}}
+     * @param {object} adObject The ad object.
+     * @returns {{clickthrough: string, name: string, ssai: boolean, isLive: boolean}} Returns configure Ssai object.
      */
     const _configureSsaiObject = (adObject) => {
       const ssaiAd = {
@@ -722,7 +733,9 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Force an ad to play with configured ssai ad data
+     * Force an ad to play with configured ssai ad data.
+     * @param {object} id3Object The ID3 object.
+     * @param {object} adObject The ad metadata.
      * @private
      * @method OoyalaSsai#_notifyAmcToPlayAd
      */
@@ -787,9 +800,9 @@ OO.Ads.manager(() => {
      * Helper function to set how far (in seconds) the current playhead is from the end (VOD).
      * For Live it indicates how far the playhead is from actual Live (this value mostly is 0,
      * unless user seeks back).
+     * @param {number} offset The offset number.
      * @public
      * @method OoyalaSsai#setCurrentOffset
-     * @param {}
      */
     this.setCurrentOffset = (offset) => {
       currentOffset = offset;
@@ -905,8 +918,8 @@ OO.Ads.manager(() => {
      * Callback for Ad Manager Controller. Handles volume changes.
      * @public
      * @method OoyalaSsai#onAdVolumeChanged
-     * @param {string} eventName The name of the event for which this callback is called
-     * @param {number} volume The current volume level
+     * @param {string} eventName The name of the event for which this callback is called.
+     * @param {number} volume The current volume level.
      */
     this.onAdVolumeChanged = (eventName, volume) => {
       let url = [];
@@ -969,10 +982,12 @@ OO.Ads.manager(() => {
 
     /**
      * Callback used when the duration of an ad has passed.
+     * @param {number} clearTimeoutId The clearTimeoutId for prevents a timeout from triggering.
+     * @param {string} objectId The property name of adIdDictionary object.
+     * @returns {function()} Return function.
      * @private
      * @method OoyalaSsai#_adEndedCallback
      */
-    // var self = this;
     const _adEndedCallback = (clearTimeoutId, objectId) => () => {
       if (clearTimeoutId) {
         clearTimeout(clearTimeoutId);
@@ -1097,8 +1112,9 @@ OO.Ads.manager(() => {
     /**
      * Called when the player creates a new video element and selects the stream url.
      * @public
+     * @param {string} eventName The name of event.
+     * @param {string} url The url string.
      * @method OoyalaSsai#onContentUrlChanged
-     * @param {string} url The stream url
      */
     this.onContentUrlChanged = (eventName, url) => {
       // important that smart player parameter is set here
@@ -1113,10 +1129,11 @@ OO.Ads.manager(() => {
      * the initialize function.
      * @public
      * @method OoyalaSsai#onVideoTagFound
-     * @param {string} event The event that triggered this callback
-     * @param {string} videoId The id of the video element that processed a tag
-     * @param {string} tagType The type of tag that was detected
-     * @param {object} metadata Any metadata attached to the found tag
+     * @param {string} eventName The event that triggered this callback.
+     * @param {string} videoId The id of the video element that processed a tag.
+     * @param {string} tagType The type of tag that was detected.
+     * @param {object} metadata Any metadata attached to the found tag.
+     * @returns {null|object} Returns current Id3 Object or null.
      */
     this.onVideoTagFound = (eventName, videoId, tagType, metadata) => {
       if (!amc.isLiveStream && !currentOffset) {
@@ -1225,8 +1242,9 @@ OO.Ads.manager(() => {
 
     /**
      * <i>Optional.</i><br/>
-     * Called when player clicks on the tap frame, if tap frame is disabled, then this function will not be
-     * called
+     * Called when player clicks on the tap frame, if tap frame is disabled,
+     * then this function will not be called.
+     * @param {object} amcAd The AMC Ad object.
      * @method OoyalaSsai#playerClicked
      * @public
      */

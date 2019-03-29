@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 const sinon = require('sinon');
 
 FakeAmc = function () {

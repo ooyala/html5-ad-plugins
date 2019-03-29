@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 const Ad = function () {
   // see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
   this.g = { vpaid: false };

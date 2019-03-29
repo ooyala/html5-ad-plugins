@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 /*
  * Unit test class for the Google IMA Ad Manager
  * https://github.com/Automattic/expect.js
