@@ -2170,7 +2170,6 @@ describe('ad_manager_vast', function () {
         {
           tag_url: 'http://blahblah',
           position_type: 'p',
-          // eslint-disable-next-line require-jsdoc
           position() {},
         },
         {
