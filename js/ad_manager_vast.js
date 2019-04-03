@@ -1724,7 +1724,7 @@ OO.Ads.manager(() => {
      *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
      */
-    const _handleLinearAd = (ad, adLoaded, params) => {
+    const _handleLinearAd = (ad, adLoaded, params = {}) => {
       if (!ad || isEmpty(ad.linear.mediaFiles)) {
         _tryRaiseAdError('VAST: General Linear Ads Error; No Mediafiles in Ad ', ad);
         // Want to ping error URLs at current depth if there are any available
@@ -1732,7 +1732,6 @@ OO.Ads.manager(() => {
         return null;
       }
 
-      const paramsObj = params || {};
       const { mediaFiles } = ad.linear;
       const maxMedia = max(mediaFiles, v => parseInt(v.bitrate, 10));
       const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
@@ -1741,8 +1740,8 @@ OO.Ads.manager(() => {
       extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.linear.tracking;
       vastAdUnit.data.type = this.amc.ADTYPE.LINEAR_VIDEO;
-      vastAdUnit.adPodIndex = paramsObj.adPodIndex ? paramsObj.adPodIndex : 1;
-      vastAdUnit.adPodLength = paramsObj.adPodLength ? paramsObj.adPodLength : 1;
+      vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
+      vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.position;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
@@ -1776,7 +1775,7 @@ OO.Ads.manager(() => {
      *                        adPodLength : the total number of ads in the ad pod this ad is housed in
      * @returns {object} The ad unit object ready to be added to the timeline
      */
-    const _handleNonLinearAd = (ad, adLoaded, params) => {
+    const _handleNonLinearAd = (ad, adLoaded, params = {}) => {
       // filter our playable stream:
       if (!ad || isEmpty(ad.nonLinear.url)) {
         _tryRaiseAdError('VAST: General NonLinear Ads Error: Cannot Find Playable Stream in Ad ', ad);
@@ -1784,15 +1783,15 @@ OO.Ads.manager(() => {
         this.trackError(this.ERROR_CODES.GENERAL_NONLINEAR_ADS, ad.id);
         return null;
       }
-      const paramsObj = params || {};
+
       const adURL = ad.nonLinear.url;
       const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.streamUrl = adURL;
       extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.nonLinear.tracking;
       vastAdUnit.data.type = this.amc.ADTYPE.NONLINEAR_OVERLAY;
-      vastAdUnit.adPodIndex = paramsObj.adPodIndex ? paramsObj.adPodIndex : 1;
-      vastAdUnit.adPodLength = paramsObj.adPodLength ? paramsObj.adPodLength : 1;
+      vastAdUnit.adPodIndex = params.adPodIndex ? params.adPodIndex : 1;
+      vastAdUnit.adPodLength = params.adPodLength ? params.adPodLength : 1;
       vastAdUnit.positionSeconds = adLoaded.position;
       vastAdUnit.repeatAfter = adLoaded.repeatAfter ? adLoaded.repeatAfter : null;
 
