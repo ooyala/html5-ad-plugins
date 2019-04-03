@@ -38,23 +38,28 @@ OO.Ads.manager(() => {
   const Liverail = function (...args) {
     // core
     this.name = 'liverail-ads-manager';
-    const amc = null;
+    let amc = null;
     let liverailVPAIDManager = null;
     let remoteModuleJs = null;
-    const liverailFrame = null;
+    let liverailFrame = null;
     this.environmentVariables = {};
 
     // module state
     this.ready = false;
     this.initTime = Date.now();
     let adModuleJsReady = false;
-    const iframeLoaded = false;
+    let iframeLoaded = false;
     let metadataFetched = false;
 
     // ad settings
     let adPlaying = false;
+    let startAfterLoad = false;
     let adLoaded = false;
+    const slotEndedCallback = null;
+    const slotStartedCallback = null;
+    const adStartedCallback = null;
     let adEndedCallback = null;
+    let countdownIntervalId = null;
 
     // /// Helpers /////
     /**
@@ -80,6 +85,92 @@ OO.Ads.manager(() => {
     };
 
     /**
+     * Reset ad state.
+     * @private
+     */
+    const _resetAdState = () => {
+      startAfterLoad = false;
+      adLoaded = false;
+      adPlaying = false;
+      adEndedCallback = null;
+    };
+
+    /**
+     * Update Countdown.
+     * @private
+     */
+    const _updateCountdown = () => {
+      const remainingTime = liverailVPAIDManager.getAdRemainingTime();
+      if (this.environmentVariables.LR_LAYOUT_SKIN_MESSAGE) {
+        const message = ('Advertisement: Your video will resume in {COUNTDOWN} seconds.')
+          .replace('{COUNTDOWN}', remainingTime)
+          .replace('seconds', remainingTime === 1 ? 'second' : 'seconds');
+        amc.ui.updateCustomAdMarquee(message);
+      } else {
+        amc.ui.updateAdMarqueeTime(remainingTime);
+      }
+    };
+
+    /**
+     * On Ad Event.
+     * @param {string} eventName The name of event.
+     * @param {*} logData ...
+     * @private
+     */
+    const _onAdEvent = (eventName, logData) => {
+      if (eventName !== VPAID_EVENTS.AD_LOG) {
+        log(eventName, 'fired with args', args.slice(1));
+      }
+
+      switch (eventName) {
+        case VPAID_EVENTS.AD_LOADED:
+          adLoaded = true;
+          if (startAfterLoad) {
+            liverailVPAIDManager.startAd();
+          }
+          break;
+        case VPAID_EVENTS.AD_STARTED:
+          if (slotStartedCallback) {
+            slotStartedCallback();
+          }
+          break;
+        case VPAID_EVENTS.AD_IMPRESSION:
+          if (adStartedCallback) {
+            adStartedCallback();
+          }
+          countdownIntervalId = setInterval(() => { _updateCountdown(); }, 500);
+          break;
+        case VPAID_EVENTS.AD_CLICK_THRU:
+          amc.adsClicked();
+          break;
+        case VPAID_EVENTS.AD_VIDEO_COMPLETE:
+          if (adEndedCallback) {
+            adEndedCallback();
+          }
+          break;
+        case VPAID_EVENTS.AD_STOPPED:
+          clearInterval(countdownIntervalId);
+          if (slotEndedCallback) {
+            slotEndedCallback();
+          }
+          _resetAdState();
+          break;
+        case VPAID_EVENTS.AD_ERROR:
+          // TODO: call ad ended callback if an ad was active
+          if (slotEndedCallback && adPlaying) {
+            slotEndedCallback();
+          }
+          _resetAdState();
+          break;
+        case VPAID_EVENTS.AD_LOG:
+          log('LIVERAIL AD LOG -', logData);
+          break;
+        default:
+        // do nothing
+      }
+    };
+
+    /**
      * On sdk loaded.
      * @private
      */
@@ -92,7 +183,7 @@ OO.Ads.manager(() => {
 
       each(VPAID_EVENTS, (eventName) => {
         liverailVPAIDManager.subscribe(() => {
-          this._onAdEvent(VPAID_EVENTS[eventName]);
+          _onAdEvent(VPAID_EVENTS[eventName]);
         }, VPAID_EVENTS[eventName]);
       });
 
@@ -200,6 +291,28 @@ OO.Ads.manager(() => {
 
     // /// Playback /////
 
+    /**
+     * Callback for when we receive the INITIAL_PLAY_REQUESTED and REPLAY_REQUESTED events from the AMC.
+     * @method Liverail#_playbackBeginning
+     * @private
+     */
+    const _playbackBeginning = () => {
+      const creativeData = {};
+      const environmentVariables = extend({
+        slot: amc.ui.videoWrapper[0],
+        // slot: amc.ui.adWrapper[0],
+        videoSlot: amc.ui.adVideoElement[0],
+        videoSlotCanAutoPlay: true, // based on LR engineer's comment, need to set it to true
+      }, this.environmentVariables);
+
+      // TODO: This actually shouldn't be done now in case the window is small for the ad lifetime.
+      //       This should be done within seconds before ad playback.
+      // initAd is defined in the VPAID spec:
+      // http://www.iab.net/media/file/VPAIDFINAL51109.pdf
+      liverailVPAIDManager.initAd(amc.ui.adVideoElement[0].offsetWidth, amc.ui.adVideoElement[0].offsetHeight,
+        'normal', 600, creativeData, environmentVariables);
+    };
+
     this.playAd = (ad) => {
       adEndedCallback = () => amc.notifyLinearAdEnded(ad.id);
       adPlaying = true;
@@ -220,14 +333,25 @@ OO.Ads.manager(() => {
     };
 
     /**
-     * Reset ad state.
+     * On Iframe Loaded.
      * @private
      */
-    const _resetAdState = () => {
-      startAfterLoad = false;
-      adLoaded = false;
-      adPlaying = false;
-      adEndedCallback = null;
+    const _onIframeLoaded = () => {
+      log('iframe loaded');
+      iframeLoaded = true;
+      _tryLoadSdk();
+    };
+
+    // /// Setup /////
+    this.initialize = (amcInterface) => {
+      amc = amcInterface;
+      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _playbackBeginning);
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _playbackBeginning);
+      log('Initializing SDK');
+      liverailFrame = document.createElement('iframe');
+      liverailFrame.style.display = 'none';
+      liverailFrame.onload = _onIframeLoaded;
+      document.body.appendChild(liverailFrame);
     };
 
     this.cancelAd = () => {
