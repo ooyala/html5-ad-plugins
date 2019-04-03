@@ -2311,15 +2311,6 @@ require('../html5-common/js/utils/utils.js');
     };
 
     /**
-     * Loads the current stream url in the video element; the element should be left paused.
-     * @public
-     * @method GoogleIMAVideoWrapper#load
-     * @param {boolean} rewind True if the stream should be set to time 0
-     */
-    this.load = () => {
-    };
-
-    /**
      * Triggers playback on the video element.
      * @public
      * @method GoogleIMAVideoWrapper#play
@@ -2335,14 +2326,6 @@ require('../html5-common/js/utils/utils.js');
      */
     this.pause = () => {
       _ima.pauseAd();
-    };
-
-    /**
-     * Triggers a seek on the video element.
-     * @public
-     * @method GoogleIMAVideoWrapper#seek
-     */
-    this.seek = () => {
     };
 
     /**
@@ -2406,14 +2389,6 @@ require('../html5-common/js/utils/utils.js');
      */
     this.applyStoredCss = () => {
       this.applyCss(storedCss);
-    };
-
-    /**
-     * Callback to handle notifications that ad finished playing
-     * @private
-     * @method GoogleIMAVideoWrapper#onAdsPlayed
-     */
-    this.onAdsPlayed = () => {
     };
 
     /**
