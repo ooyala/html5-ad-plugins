@@ -2188,10 +2188,9 @@ OO.Ads.manager(() => {
             }
           } else {
             processedFallbackAd = fallbackAd;
-          } // eslint-disable-next-line no-undef
-        } else if (ad.type === AD_TYPE.WRAPPER) {
-          // eslint-disable-next-line no-undef
-          _handleWrapperAd(ad, adLoaded);
+          }
+        } else if (fallbackAd.type === AD_TYPE.WRAPPER) {
+          _handleWrapperAd(fallbackAd, adLoaded);
           handlingWrapperAd = true;
           handled = true;
         }
