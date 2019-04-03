@@ -55,6 +55,7 @@ OO.Ads.manager(() => {
    * @property {boolean} loaded Set to true once the ad has been loaded successfully
    * @property {string} embedCode Keeps track of the embed code of the movie that is currently playing
    * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
+   * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
    * @property {object} adTrackingInfo The object that holds each individual ad id's tracking urls (including error reporting).
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
    * show the ads
@@ -73,6 +74,7 @@ OO.Ads.manager(() => {
     this.currentDepth = 0;
     this.loaded = false;
     this.embedCode = 'unknown';
+    this.lastOverlayAd = {};
     this.adTrackingInfo = {};
     this.VAST_AD_CONTAINER = '#vast_ad_container';
     this.currentAdBeingLoaded = null;
@@ -894,7 +896,7 @@ OO.Ads.manager(() => {
      */
     const loadAd = (amcAd) => {
       let loadedAds = false;
-      const {ad} = amcAd;
+      const { ad } = amcAd;
 
       this.currentAdBeingLoaded = amcAd;
       this.loadUrl(ad.tag_url);
@@ -1554,11 +1556,11 @@ OO.Ads.manager(() => {
      * for reference. Vast ad doesn't need to do much other then save the reference.
      * @public
      * @method Vast#hideOverlay
-     * @param {object} currentAd In order to not lose reference to the overlay object that is currently being shown, it
+     * @param {object} currentAdObj In order to not lose reference to the overlay object that is currently being shown, it
      * is stored in this object
      */
-    this.hideOverlay = (currentAd) => {
-      this.lastOverlayAd = currentAd;
+    this.hideOverlay = (currentAdObj) => {
+      this.lastOverlayAd = currentAdObj;
     };
 
     /**
@@ -1570,7 +1572,7 @@ OO.Ads.manager(() => {
      */
     this.showOverlay = () => {
       if (this.amc.ended && this.lastOverlayAd) {
-        this.cancelAd(lastOverlayAd);
+        this.cancelAd(this.lastOverlayAd);
       }
     };
 
@@ -1731,9 +1733,9 @@ OO.Ads.manager(() => {
       }
 
       const paramsObj = params || {};
-      const {mediaFiles} = ad.linear;
+      const { mediaFiles } = ad.linear;
       const maxMedia = max(mediaFiles, v => parseInt(v.bitrate, 10));
-      const vastAdUnit = {data: {}, vastUrl: this.vastUrl, maxBitrateStream: null};
+      const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.maxBitrateStream = maxMedia && maxMedia.url;
       vastAdUnit.durationInMilliseconds = OO.timeStringToSeconds(ad.linear.duration) * 1000;
       extend(vastAdUnit.data, ad);
@@ -1784,7 +1786,7 @@ OO.Ads.manager(() => {
       }
       const paramsObj = params || {};
       const adURL = ad.nonLinear.url;
-      const vastAdUnit = {data: {}, vastUrl: this.vastUrl, maxBitrateStream: null};
+      const vastAdUnit = { data: {}, vastUrl: this.vastUrl, maxBitrateStream: null };
       vastAdUnit.streamUrl = adURL;
       extend(vastAdUnit.data, ad);
       vastAdUnit.data.tracking = ad.nonLinear.tracking;
@@ -1839,7 +1841,7 @@ OO.Ads.manager(() => {
      * @param {object} adInfo The Ad metadata
      */
     this.checkCompanionAds = (adInfo) => {
-      const {data} = adInfo;
+      const { data } = adInfo;
       const adUnitCompanions = currentAd.vpaidAd
         ? _safeFunctionCall(currentAd.vpaidAd, 'getAdCompanions')
         : null;
@@ -1891,7 +1893,7 @@ OO.Ads.manager(() => {
           mapWithoutEmpty(node => node.textContent),
           Array.from,
         )(xml.querySelectorAll(sel));
-        return {...acc, [event]: item};
+        return { ...acc, [event]: item };
       }, {});
 
       return result;
@@ -1971,13 +1973,13 @@ OO.Ads.manager(() => {
       if (mediaFiles.length > 0) {
         result.mediaFiles = compose(
           mapWithoutEmpty(mediaFile => ({
-              type: mediaFile.getAttribute('type').toLowerCase(),
-              url: mediaFile.textContent.trim(),
-              bitrate: mediaFile.getAttribute('bitrate'),
-              width: mediaFile.getAttribute('width'),
-              height: mediaFile.getAttribute('height'),
-            }),
-            Array.from),
+            type: mediaFile.getAttribute('type').toLowerCase(),
+            url: mediaFile.textContent.trim(),
+            bitrate: mediaFile.getAttribute('bitrate'),
+            width: mediaFile.getAttribute('width'),
+            height: mediaFile.getAttribute('height'),
+          }),
+          Array.from),
         )(mediaFiles);
         result.duration = getNodeTextContent(linearXml, 'Duration');
       }
@@ -2384,7 +2386,7 @@ OO.Ads.manager(() => {
       }
       if (adBreak.adSource && adBreak.adSource.allowMultipleAds) {
         // parse the attribute, and convert string to boolean if it is "true"/"false"
-        const {allowMultipleAds} = adBreak.adSource;
+        const { allowMultipleAds } = adBreak.adSource;
         if (allowMultipleAds === 'true' || allowMultipleAds === 'false') {
           adObject.allowMultipleAds = (allowMultipleAds === 'true');
         }
@@ -2596,7 +2598,7 @@ OO.Ads.manager(() => {
      */
     this.sendVpaidError = () => {
       if (currentAd && currentAd.data) {
-        const {error} = currentAd.data;
+        const { error } = currentAd.data;
         if (error) {
           OO.pixelPing(error);
         }
@@ -2656,7 +2658,7 @@ OO.Ads.manager(() => {
       // var ad = prevAd ? prevAd : currentAd;
       const ad = currentAd;
       if (ad && ad.data) {
-        const {tracking} = ad.data;
+        const { tracking } = ad.data;
         let currentEvent;
         if (tracking) {
           currentEvent = find(tracking, item => item.event === type);
@@ -2692,17 +2694,17 @@ OO.Ads.manager(() => {
       const ad = currentAd;
       if (ad && ad.data) {
         if (ad.data.videoClickTracking) {
-          const {clickTracking} = ad.data.videoClickTracking;
+          const { clickTracking } = ad.data.videoClickTracking;
           if (clickTracking) {
             OO.pixelPing(clickTracking);
           }
 
-          const {customClick} = ad.data.videoClickTracking;
+          const { customClick } = ad.data.videoClickTracking;
           if (customClick) {
             OO.pixelPing(customClick);
           }
 
-          const {nonLinearClickThrough} = ad.data.videoClickTracking;
+          const { nonLinearClickThrough } = ad.data.videoClickTracking;
           if (nonLinearClickThrough) {
             OO.pixelPing(nonLinearClickThrough);
           }
@@ -2970,7 +2972,7 @@ OO.Ads.manager(() => {
         fallbackAd: null,
         positionSeconds: adLoaded.position,
         adParams,
-        streams: {mp4: ''},
+        streams: { mp4: '' },
         type: AD_TYPE.INLINE,
         mediaFile,
         version,
