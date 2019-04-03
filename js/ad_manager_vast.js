@@ -1651,8 +1651,8 @@ OO.Ads.manager(() => {
      * @param {string} url URL to ping
      */
     this.pingURL = (code, url) => {
-      const urlNew = url.replace(/\[ERRORCODE\]/, code);
-      OO.pixelPing(urlNew);
+      const pingUrl = url.replace(/\[ERRORCODE\]/, code);
+      OO.pixelPing(pingUrl);
     };
 
     /**
