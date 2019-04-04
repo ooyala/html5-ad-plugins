@@ -1661,6 +1661,7 @@ OO.Ads.manager(() => {
      */
     this.ajax = (url, errorCallback, dataType, loadingAd, wrapperParentId) => {
       fetch(OO.getNormalizedTagUrl(url, this.embedCode), {
+        mode: 'no-cors',
         method: 'get',
         credentials: 'include',
         headers: {
