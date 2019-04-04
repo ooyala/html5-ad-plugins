@@ -29,6 +29,14 @@ OO.Ads.manager(() => {
     let adModuleJsReady = false;
 
     /**
+     * Callback for when we receive the CONTENT_CHANGED event from the AMC.
+     * @private
+     */
+    const _onContentChanged = () => {
+      // Callback for example listener registered in this.initialize
+    };
+
+    /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
      * remote JS files.
      * @method AdManager#initialize
@@ -41,7 +49,7 @@ OO.Ads.manager(() => {
       amc = adManagerController;
 
       // Add any player event listeners now
-      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED);
+      amc.addPlayerListener(amc.EVENTS.CONTENT_CHANGED, _onContentChanged);
 
       // ID3 Tag example
       amc.addPlayerListener(amc.EVENTS.VIDEO_TAG_FOUND, this.onVideoTagFound);
@@ -225,9 +233,13 @@ OO.Ads.manager(() => {
      * the initialize function.
      * @public
      * @method AdManager#onVideoTagFound
+     * @param {string} event The event that triggered this callback.
+     * @param {string} videoId The id of the video element that processed a tag.
+     * @param {string} tagType The type of tag that was detected.
+     * @param {object} metadata Any metadata attached to the found tag.
      */
-    this.onVideoTagFound = (...args) => {
-      OO.log('TAG FOUND w/ args: ', args);
+    this.onVideoTagFound = (event, videoId, tagType, metadata) => {
+      OO.log('TAG FOUND w/ args: ', [event, videoId, tagType, metadata]);
     };
 
     /**

@@ -54,8 +54,8 @@ OO.Ads.manager(() => {
    * maximum is reached
    * @property {boolean} loaded Set to true once the ad has been loaded successfully
    * @property {string} embedCode Keeps track of the embed code of the movie that is currently playing
-   * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
    * @property {object} lastOverlayAd Contains the ad information for the overlay that was displayed before it was removed.
+   * This is used so we know what to add back to the screen after the video ad is done and the main video hasn't ended.
    * @property {object} adTrackingInfo The object that holds each individual ad id's tracking urls (including error reporting).
    * @property {string} VAST_AD_CONTAINER Constant used to keep track of the Vast Ad container div/layer that is used to
    * show the ads
@@ -74,7 +74,7 @@ OO.Ads.manager(() => {
     this.currentDepth = 0;
     this.loaded = false;
     this.embedCode = 'unknown';
-    this.lastOverlayAd = {};
+    this.lastOverlayAd = null;
     this.adTrackingInfo = {};
     this.VAST_AD_CONTAINER = '#vast_ad_container';
     this.currentAdBeingLoaded = null;
@@ -669,6 +669,7 @@ OO.Ads.manager(() => {
             this.amc.notifyPodEnded(adPod.id);
           }
         } else {
+          this.lastOverlayAd = null;
           this.amc.notifyNonlinearAdEnded(ad.id);
         }
       }
@@ -1420,6 +1421,7 @@ OO.Ads.manager(() => {
       this.cancelAd(currentAd);
       this.ready = false;
       this.currentDepth = 0;
+      this.lastOverlayAd = null;
       adPodPrimary = null;
     };
 
