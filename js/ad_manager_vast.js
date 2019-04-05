@@ -3425,8 +3425,9 @@ OO.Ads.manager(() => {
      * Callback when the media file is loaded. Once is loaded we can initialize the ad
      * This is only required for VPAID ads
      * @public
-     * @returns {void} Returns void
+     * @returns {null|void} Returns null if !mediaFileUrl
      */
+    // eslint-disable-next-line consistent-return
     this.initializeAd = () => {
       let environmentVariables;
       let viewMode;
@@ -3439,11 +3440,12 @@ OO.Ads.manager(() => {
 
         const mediaFileUrl = _cleanString(currentAd.ad.mediaFile.url);
         if (!mediaFileUrl) {
-          return;
+          return null;
         }
 
         if (typeof vpaidIframe.contentWindow.getVPAIDAd !== 'function' && !this.testMode) {
           _tryRaiseAdError('VPAID 2.0: Required function getVPAIDAd() is not defined.');
+          // eslint-disable-next-line consistent-return
           return;
         }
 
