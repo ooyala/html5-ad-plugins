@@ -125,9 +125,9 @@
        * @recursive
        * @returns {undefined|string} Returns result of mergeCommaSeparatedListsBase or undefined.
        */
-      const mergeCommaSeparatedStrings = () => {
+      const mergeCommaSeparatedStrings = (...args) => {
         // Remove the undefined element first
-        const params = removeUndefinedElements();
+        const params = removeUndefinedElements(args);
         const argsLentgh = params.length;
 
         switch (argsLentgh) {
@@ -263,12 +263,10 @@
 
       /**
        * Get By Priority
-       * @returns {Array|null} Returns Array of existing params or null If none of the passed objects exist.
+       * @returns {*} first argument which is an empty string.
        */
-      const getByPriority = () => {
-        let i = 0;
-        const n = args.length;
-        for (; i < n; i++) {
+      const getByPriority = (...args) => {
+        for (let i = 0, n = args.length; i < n; i++) {
           if (args[i] || args[i] === '') {
             return args[i];
           }

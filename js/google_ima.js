@@ -2399,7 +2399,7 @@ require('../html5-common/js/utils/utils.js');
      */
     const applyCssToElement = (css) => {
       if (css && this.isControllingVideo && _ima.sharedVideoElement) {
-        const node = document.querySelector(_ima.sharedVideoElement);
+        const node = document.querySelector(_ima.sharedVideoElement.className, '#' + _ima.sharedVideoElement.id);
         pairs(css).forEach(([key, value]) => {
           node.style[key] = value;
         });

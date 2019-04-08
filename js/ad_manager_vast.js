@@ -1462,23 +1462,26 @@ OO.Ads.manager(() => {
      * so the new ad knows who its parent is for tracking event purposes.
      */
     this.ajax = (url, errorCallback, dataType, loadingAd, wrapperParentId) => {
-      fetch(OO.getNormalizedTagUrl(url, this.embedCode), {
-        method: 'get',
-        credentials: 'include',
-        headers: {
-          pragma: 'no-cache',
-          'cache-control': 'no-cache',
+      /**
+       * @TODO this ugly jQuery request should be replaced by window.fetch from here:
+       * https://github.com/ooyala/html5-ad-plugins/blob/master/js/ad_manager_vast.js#L1662-L1681
+       * right after the backend team will fix it: https://jira.corp.ooyala.com/browse/BL-15574
+       */
+      $.ajax({
+        url: OO.getNormalizedTagUrl(url, this.embedCode),
+        type: 'GET',
+        beforeSend: function(xhr) {
+          xhr.withCredentials = true;
         },
-      })
-        .then(res => res.text())
-        .then(str => (new window.DOMParser()).parseFromString(str, 'text/xml'))
-        .then((xml) => {
-          this.onResponse(wrapperParentId, loadingAd || this.currentAdBeingLoaded, xml);
-        })
-        .catch(errorCallback)
-        .then(() => {
-          this.currentAdBeingLoaded = null;
-        });
+        dataType: dataType,
+        crossDomain: true,
+        cache:false,
+        //TODO: should pass wrapperParentId here for wrapper
+        success: (dataType == "script") ? function() {} : _.bind(this.onResponse, this, wrapperParentId,
+            loadingAd || this.currentAdBeingLoaded),
+        error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
+      });
+      this.currentAdBeingLoaded = null;
     };
 
     /**
