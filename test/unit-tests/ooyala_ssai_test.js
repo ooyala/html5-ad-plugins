@@ -1,4 +1,4 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc,import/no-dynamic-require */
 /*
  * Unit test class for the Ooyala SSAI Ad Manager
  * https://github.com/Automattic/expect.js

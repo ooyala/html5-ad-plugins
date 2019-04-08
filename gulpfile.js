@@ -66,7 +66,7 @@ const browserifyFn = function () {
 
   listFiles(pathJs.originalJs, function (error, files) {
     if (error) {
-      console.log(error);
+      OO.log(error);
     } else {
       const filteredList = files.filter(_.bind(checkFileExtension, this, '.js'));
       bundleThis(filteredList);

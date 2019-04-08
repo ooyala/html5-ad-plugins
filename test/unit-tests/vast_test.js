@@ -1,4 +1,4 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc,import/no-dynamic-require */
 /*
  * Unit test class for the Vast Ad Manager
  * https://github.com/Automattic/expect.js

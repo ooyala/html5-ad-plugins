@@ -888,7 +888,7 @@ OO.Ads.manager(() => {
           _pingTrackingUrls(urlObject);
         });
       } else {
-        console.log(
+        OO.log(
           `Ooyala SSAI: Tried to ping URLs: [${trackingEventNames
           }] but ad object passed in was: ${adObject}`,
         );

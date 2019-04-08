@@ -69,7 +69,7 @@ OO.Ads.manager(() => {
       if (isFunction(OO.log)) {
         OO.log.apply(null, ['liverail-ads-manager:'].concat(args));
       } else {
-        console.log(['liverail-ads-manager:'].concat(args));
+        OO.log(['liverail-ads-manager:'].concat(args));
       }
     };
 

@@ -46,6 +46,7 @@ module.exports = {
         "ignoreTemplateLiterals": true
       }
     ],
+    "func-names": 0,
     "no-plusplus": [
       "error",
       {
@@ -58,8 +59,7 @@ module.exports = {
         "props": false
       }
     ],
-    "import/no-dynamic-require": "warn",
-    "no-underscore-dangle": "warn",
+    "no-underscore-dangle": 0,
     "require-jsdoc": [
       "error",
       {

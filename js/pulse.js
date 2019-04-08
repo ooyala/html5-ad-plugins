@@ -21,7 +21,7 @@
         }
       } else {
         args.unshift('OO.Pulse: ');
-        console.log.apply(window.console, args);
+        OO.log(args);
       }
     };
 
