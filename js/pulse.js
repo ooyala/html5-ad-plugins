@@ -7,8 +7,7 @@
 
 
   OO.Ads.manager(function () {
-    const log = () => {
-      const args = Array.prototype.slice.call(arguments);
+    const log = (...args) => {
       if (OO.Pulse) {
         if (OO.Pulse.Utils.logTagged) {
           args.unshift([{ tag: 'v4', color: '#69388E' }]);
@@ -143,9 +142,9 @@
         return retArray;
       };
 
-      var mergeCommaSeparatedStrings = () => {
+      var mergeCommaSeparatedStrings = (...args) => {
         // Remove the undefined element first
-        const params = removeUndefinedElements(arguments);
+        const params = removeUndefinedElements(args);
         const argsLentgh = params.length;
 
         switch (argsLentgh) {
@@ -244,10 +243,10 @@
         return '0,0,0';
       };
 
-      const getByPriority = () => {
-        for (let i = 0, n = arguments.length; i < n; i++) {
-          if (arguments[i] || arguments[i] === '') {
-            return arguments[i];
+      const getByPriority = (...args) => {
+        for (let i = 0, n = args.length; i < n; i++) {
+          if (args[i] || args[i] === '') {
+            return args[i];
           }
         }
         // If none of the passed objects exist
