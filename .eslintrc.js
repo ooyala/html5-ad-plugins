@@ -60,11 +60,6 @@ module.exports = {
       }
     ],
     "no-underscore-dangle": 0,
-    // "consistent-return": [
-    //   "error", {
-    //     "treatUndefinedAsUnspecified": false
-    //   }
-    // ],
     "require-jsdoc": [
       "error",
       {
