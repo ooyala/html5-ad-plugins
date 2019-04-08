@@ -6,11 +6,12 @@
   const pulseAdManagers = {};
 
 
-  OO.Ads.manager((...args) => {
+  OO.Ads.manager(() => {
     /**
      * Log.
+     * @param {Array} args The array of args
      */
-    const log = () => {
+    const log = (...args) => {
       if (OO.Pulse) {
         if (OO.Pulse.Utils.logTagged) {
           args.unshift([{ tag: 'v4', color: '#69388E' }]);
@@ -36,7 +37,7 @@
      * @classDesc The Pulse Ad Manager class.
      * @public
      */
-    const PulseAdManager = function (...paramsArr) {
+    const PulseAdManager = function (...args) {
       this.name = 'videoplaza-ads-manager';// mandatory to get the ad set info from Backlot
       this.ready = false; // Also mandatory so the player knows if the ad manager is ready
       this.initTime = Date.now();
@@ -117,7 +118,7 @@
        * Remove Undefined Elements.
        * @returns {Array} Returns Array of existing params.
        */
-      const removeUndefinedElements = () => paramsArr.filter(item => !!item);
+      const removeUndefinedElements = () => args.filter(item => !!item);
 
       /**
        * Merge comma separated strings.
@@ -266,10 +267,10 @@
        */
       const getByPriority = () => {
         let i = 0;
-        const n = paramsArr.length;
+        const n = args.length;
         for (; i < n; i++) {
-          if (paramsArr[i] || paramsArr[i] === '') {
-            return paramsArr[i];
+          if (args[i] || args[i] === '') {
+            return args[i];
           }
         }
         return null;

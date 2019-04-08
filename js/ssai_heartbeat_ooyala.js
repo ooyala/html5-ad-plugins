@@ -85,7 +85,7 @@ OO.plugin('heartbeat', (OO) => {
     /**
      * Parse Guid.
      * @param {string} url The streamUrl.
-     * @returns {''|string} Returns '' or first match result.
+     * @returns {string} Guid extracted from URL or empty string.
      */
     function parseGuid(url) {
       const reg = new RegExp(/ssai_guid=([^&?]*)/g);
@@ -168,7 +168,7 @@ OO.plugin('heartbeat', (OO) => {
     /**
      * Build Config.
      * @param {object} configuration The configuration object
-     * @returns {object} Returns _config object
+     * @returns {object} _config object
      */
     function buildConfig(configuration) {
       const _config = Object.assign({}, DEFAULT_CONFIG, configuration);

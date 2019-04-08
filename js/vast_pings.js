@@ -148,7 +148,7 @@
      * @param {string} eventName The name of the event for which this callback is called
      * @param {number} time The total amount main video playback time (seconds)
      * @param {number} duration Duration of the live video (seconds).
-     * @public
+     * @private
      */
     onPlayheadTimeChanged(eventName, time, duration) {
       if (this.currentVastAd == null || duration === 0) { return; }

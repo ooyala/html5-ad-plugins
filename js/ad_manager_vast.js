@@ -385,7 +385,7 @@ OO.Ads.manager(() => {
      * @public
      * @method Vast#isValidVastXML
      * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-     * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
+     * @returns {boolean} true if the xml is valid otherwise it returns false.
      */
     this.isValidVastXML = (vastXML) => {
       if (!vastXML) {
@@ -426,13 +426,9 @@ OO.Ads.manager(() => {
       // if arguments are comma separated we want to leverage console.log's ability to
       // pretty print objects rather than printing an object's toStr representation.
       // TODO: print this log in amc.raiseAdError
-      if (arguments.length > 1) {
+      if (args.length > 1) {
         OO.log.apply(OO.log, args);
-
-        // converts the arguments keyword to an Array.
-        // arguments looks like an Array, but isn't.
-        const convertArgs = [].slice.call(args);
-        _errorMessage = convertArgs.join('');
+        _errorMessage = args.join('');
       } else {
         OO.log(_errorMessage);
       }
@@ -451,7 +447,7 @@ OO.Ads.manager(() => {
      * @param {object} vpaidAd The vpaidAd object.
      * @param {string} funcName The function name.
      * @param {array} params The array of params.
-     * @returns {null|function} Returns function with vpaidAd and params arguments.
+     * @returns {null|function} function with vpaidAd and params arguments.
      * @private
      */
     const _safeFunctionCall = (vpaidAd, funcName, params) => {
@@ -892,7 +888,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#loadAd
      * @param {object} amcAd The AMC ad object.
-     * @returns {boolean} returns true if it found an ad or ads to load otherwise it returns false. This is only used for
+     * @returns {boolean} true if it found an ad or ads to load otherwise it returns false. This is only used for
      * unit tests.
      */
     const loadAd = (amcAd) => {
@@ -911,7 +907,7 @@ OO.Ads.manager(() => {
      * if there any. This function should only be used if you need to do something the first time the user hits play.
      * @public
      * @method Vast#initialPlay
-     * @returns {function} Returns the loadAllVastAds function.
+     * @returns {function} the loadAllVastAds function.
      */
     this.initialPlay = () => this.loadAllVastAds();
 
@@ -1025,7 +1021,7 @@ OO.Ads.manager(() => {
      * @private
      * @method Vast#_isVpaidAd
      * @param {object} ad The ad to check.
-     * @returns {boolean} Returns true if type 'vpaid'
+     * @returns {boolean} true if type 'vpaid'
      */
     const _isVpaidAd = (ad) => {
       const vastAdObject = _getVastAdObject(ad);
@@ -3182,12 +3178,14 @@ OO.Ads.manager(() => {
     /**
      * Listen and executes events sent by the ad unit
      * This is only required for VPAID ads
+     * @param {string} eventName The name of the event to process
+     * @param {string} url The url
+     * @param {*} _ ...
+     * @param {*} playerHandles ...
      * @private
      * @method Vast#_onVpaidAdEvent
-     * @param {array} args The array of arguments (eventName - Name of the event to process).
      */
-    const _onVpaidAdEvent = function (...args) {
-      const [eventName] = args;
+    const _onVpaidAdEvent = function (eventName, url, _, playerHandles) {
       switch (eventName) {
         case VPAID_EVENTS.AD_LOADED:
           vpaidAdLoaded = true;
@@ -3224,8 +3222,6 @@ OO.Ads.manager(() => {
           break;
 
         case VPAID_EVENTS.AD_CLICK_THRU: {
-          const [, url] = args;
-          const [, , , playerHandles] = args;
           // Refer to IAB 2.5.4 How to handle VPAID clicks in VAST context
           if (playerHandles) {
             if (url) {
@@ -3271,7 +3267,7 @@ OO.Ads.manager(() => {
           break;
 
         case VPAID_EVENTS.AD_ERROR:
-          _tryRaiseAdError(`VPaid: Ad unit error: ${args[1]}`);
+          _tryRaiseAdError(`VPaid: Ad unit error: ${url}`);
           this.sendVpaidTracking('error');
           this.sendVpaidError();
           failedAd();

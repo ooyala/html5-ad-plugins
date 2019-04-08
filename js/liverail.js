@@ -35,7 +35,7 @@ OO.Ads.manager(() => {
    * @classDesc The Liverail class.
    * @constructor
    */
-  const Liverail = function (...args) {
+  const Liverail = function () {
     // core
     this.name = 'liverail-ads-manager';
     let amc = null;
@@ -65,7 +65,7 @@ OO.Ads.manager(() => {
     /**
      * Log.
      */
-    const log = () => {
+    const log = (...args) => {
       if (isFunction(OO.log)) {
         OO.log.apply(null, ['liverail-ads-manager:'].concat(args));
       } else {
@@ -113,11 +113,11 @@ OO.Ads.manager(() => {
 
     /**
      * On Ad Event.
-     * @param {string} eventName The name of event.
-     * @param {*} logData ...
+     * @param {Array} args The array of arguments.
      * @private
      */
-    const _onAdEvent = (eventName, logData) => {
+    const _onAdEvent = (...args) => {
+      const [eventName, logData] = args;
       if (eventName !== VPAID_EVENTS.AD_LOG) {
         log(eventName, 'fired with args', args.slice(1));
       }
@@ -138,7 +138,9 @@ OO.Ads.manager(() => {
           if (adStartedCallback) {
             adStartedCallback();
           }
-          countdownIntervalId = setInterval(() => { _updateCountdown(); }, 500);
+          countdownIntervalId = setInterval(() => {
+            _updateCountdown();
+          }, 500);
           break;
         case VPAID_EVENTS.AD_CLICK_THRU:
           amc.adsClicked();

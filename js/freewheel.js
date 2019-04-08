@@ -315,7 +315,7 @@ OO.Ads.manager(() => {
      * Freewheel assumes that the ad video element is an html5 video tag.  To force use of this element,
      * always list the stream type as mp4.
      * @method Freewheel#_prepareTimeline
-     * @returns {null|array} Returns [] or null
+     * @returns {null|array} [] or null
      * @private
      */
     const _prepareTimeline = () => {

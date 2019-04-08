@@ -260,7 +260,7 @@ OO.Ads.manager(() => {
      * @public
      * @method OoyalaSsai#onReplay
      */
-    this.onReplay = function () {
+    this.onReplay = () => {
       currentOffset = 0;
       this.currentAd = null;
     };
@@ -282,7 +282,7 @@ OO.Ads.manager(() => {
      * @private
      * @param {object} id3Object The ID3 object.
      * @param {object} adIdVastData The adIdVastData object.
-     * @returns {null|number} Returns the value from adIdVastData object or null.
+     * @returns {null|number} the value from adIdVastData object or null.
      */
     const _getAdObjectFromVast = (id3Object, adIdVastData) => {
       if (has(adIdVastData, id3Object.adId)) {
@@ -430,7 +430,7 @@ OO.Ads.manager(() => {
      * @private
      * @param  {string} url   Url to append the param to
      * @param  {string} param The parameter to be appended
-     * @returns {string}       The resulting url after appending the param
+     * @returns {string} The resulting url after appending the param
      */
     const _appendParamToUrl = (url, param) => {
       if (isString(url) && isString(param)) {
@@ -984,7 +984,7 @@ OO.Ads.manager(() => {
      * Callback used when the duration of an ad has passed.
      * @param {number} clearTimeoutId The clearTimeoutId for prevents a timeout from triggering.
      * @param {string} objectId The property name of adIdDictionary object.
-     * @returns {function()} Return function.
+     * @returns {function()} function.
      * @private
      * @method OoyalaSsai#_adEndedCallback
      */
@@ -1133,7 +1133,7 @@ OO.Ads.manager(() => {
      * @param {string} videoId The id of the video element that processed a tag.
      * @param {string} tagType The type of tag that was detected.
      * @param {object} metadata Any metadata attached to the found tag.
-     * @returns {null|object} Returns current Id3 Object or null.
+     * @returns {null|object} current Id3 Object or null.
      */
     this.onVideoTagFound = (eventName, videoId, tagType, metadata) => {
       if (!amc.isLiveStream && !currentOffset) {
