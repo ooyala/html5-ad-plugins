@@ -984,7 +984,7 @@ OO.Ads.manager(() => {
      * Callback used when the duration of an ad has passed.
      * @param {number} clearTimeoutId The clearTimeoutId for prevents a timeout from triggering.
      * @param {string} objectId The property name of adIdDictionary object.
-     * @returns {function()} function.
+     * @returns {void}
      * @private
      * @method OoyalaSsai#_adEndedCallback
      */

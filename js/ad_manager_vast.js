@@ -447,7 +447,7 @@ OO.Ads.manager(() => {
      * @param {object} vpaidAd The vpaidAd object.
      * @param {string} funcName The function name.
      * @param {array} params The array of params.
-     * @returns {null|function} function with vpaidAd and params arguments.
+     * @returns {*} function call result or undefined
      * @private
      */
     const _safeFunctionCall = (vpaidAd, funcName, params) => {
@@ -460,7 +460,7 @@ OO.Ads.manager(() => {
         _tryRaiseAdError(`${'VPAID 2.0: '
         + 'function \''}${funcName}' threw exception -`, err);
       }
-      return null;
+      return undefined;
     };
 
     /**

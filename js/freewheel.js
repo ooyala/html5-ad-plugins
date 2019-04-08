@@ -315,12 +315,13 @@ OO.Ads.manager(() => {
      * Freewheel assumes that the ad video element is an html5 video tag.  To force use of this element,
      * always list the stream type as mp4.
      * @method Freewheel#_prepareTimeline
-     * @returns {null|array} [] or null
      * @private
      */
     const _prepareTimeline = () => {
-      if (!slots) return [];
-      if (timeline.length > 0) return null;
+      if (!slots || timeline.length > 0) {
+        return;
+      }
+
       for (let i = 0; i < slots.length; i++) {
         switch (slots[i].getTimePositionClass()) {
           case tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL:
@@ -366,8 +367,6 @@ OO.Ads.manager(() => {
           // do nothing
         }
       }
-
-      return null;
     };
 
     /**
@@ -430,7 +429,7 @@ OO.Ads.manager(() => {
     const _cancelCurrentAd = () => {
       if (currentAd === null) return;
       if ((currentAd.adType === amc.ADTYPE.AD_REQUEST)
-          || (typeof (currentPlayingSlot.getCustomId) !== 'function')) {
+        || (typeof (currentPlayingSlot.getCustomId) !== 'function')) {
         _resetAdState();
         return;
       }
@@ -768,8 +767,8 @@ OO.Ads.manager(() => {
     const fwOnSlotStarted = () => {
       // adVideoElement may be null for overlays
       if (currentPlayingSlot
-          && currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY
-          && amc && amc.ui && amc.ui.adVideoElement) {
+        && currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY
+        && amc && amc.ui && amc.ui.adVideoElement) {
         amc.ui.adVideoElement.removeAttr('controls');
       }
 
@@ -793,13 +792,13 @@ OO.Ads.manager(() => {
 
       // adVideoElement may be null for overlays
       if (currentPlayingSlot
-          && currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY
-          && amc && amc.ui && amc.ui.adVideoElement) {
+        && currentPlayingSlot.getTimePositionClass() !== tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY
+        && amc && amc.ui && amc.ui.adVideoElement) {
         amc.ui.adVideoElement.attr('controls', false);
       }
 
       if (currentPlayingSlot
-          && currentPlayingSlot.getTimePositionClass() === tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
+        && currentPlayingSlot.getTimePositionClass() === tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY) {
         _registerDisplayForLinearAd();
       }
 
@@ -930,7 +929,9 @@ OO.Ads.manager(() => {
             // Trigger the request for the list of ads;
             indexInPod = 0;
             amc.notifyPodStarted(ad.id, 1);
-            slotEndedCallbacks[amc.ADTYPE.AD_REQUEST] = () => { amc.notifyPodEnded(ad.id); };
+            slotEndedCallbacks[amc.ADTYPE.AD_REQUEST] = () => {
+              amc.notifyPodEnded(ad.id);
+            };
             _sendFreewheelRequest();
           } else {
             amc.notifyPodStarted(ad.id, 1);
