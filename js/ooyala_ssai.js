@@ -560,7 +560,7 @@ OO.Ads.manager(() => {
         .then(str => (new window.DOMParser()).parseFromString(str, 'text/xml'))
         .then(res => this.onResponse(currentId3Object, res))
         .catch((error) => {
-          console.error(error);
+          OO.log(error);
           this.onRequestError(currentId3Object);
         });
     };

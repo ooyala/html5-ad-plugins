@@ -484,7 +484,7 @@ OO.Ads.manager(() => {
         }
         return vastRootElement[0];
       } catch (error) {
-        console.warn(error);
+        OO.log(error);
         return null;
       }
     };
