@@ -909,8 +909,7 @@ OO.Ads.manager(() => {
         method: 'get',
         credentials: 'omit',
         headers: {
-          pragma: 'no-cache',
-          'cache-control': 'no-cache',
+          'Content-Type': 'application/xml'
         },
       })
         .then(res => res.text())
@@ -934,9 +933,7 @@ OO.Ads.manager(() => {
         method: 'get',
         credentials: 'omit',
         headers: {
-          'Content-Type': 'application/json',
-          'pragma': 'no-cache',
-          'cache-control': 'no-cache'
+          'Content-Type': 'application/json'
         },
       })
         .then(res => res.json())
