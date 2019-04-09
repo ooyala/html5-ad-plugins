@@ -37,7 +37,7 @@
      * @classDesc The Pulse Ad Manager class.
      * @public
      */
-    const PulseAdManager = function (...args) {
+    const PulseAdManager = function () {
       this.name = 'videoplaza-ads-manager';// mandatory to get the ad set info from Backlot
       this.ready = false; // Also mandatory so the player knows if the ad manager is ready
       this.initTime = Date.now();
@@ -118,7 +118,7 @@
        * Remove Undefined Elements.
        * @returns {Array} Returns Array of existing params.
        */
-      const removeUndefinedElements = () => args.filter(item => !!item);
+      const removeUndefinedElements = (...args) => args.filter(item => !!item);
 
       /**
        * Merge comma separated strings.

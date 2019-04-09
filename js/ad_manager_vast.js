@@ -1470,16 +1470,17 @@ OO.Ads.manager(() => {
       $.ajax({
         url: OO.getNormalizedTagUrl(url, this.embedCode),
         type: 'GET',
-        beforeSend: function(xhr) {
+        // eslint-disable-next-line require-jsdoc
+        beforeSend(xhr) {
           xhr.withCredentials = true;
         },
-        dataType: dataType,
+        dataType,
         crossDomain: true,
-        cache:false,
-        //TODO: should pass wrapperParentId here for wrapper
-        success: (dataType == "script") ? function() {} : _.bind(this.onResponse, this, wrapperParentId,
-            loadingAd || this.currentAdBeingLoaded),
-        error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded)
+        cache: false,
+        // TODO: should pass wrapperParentId here for wrapper
+        success: (dataType === 'script') ? function () {} : _.bind(this.onResponse, this, wrapperParentId,
+          loadingAd || this.currentAdBeingLoaded),
+        error: _.bind(errorCallback, this, loadingAd || this.currentAdBeingLoaded),
       });
       this.currentAdBeingLoaded = null;
     };
