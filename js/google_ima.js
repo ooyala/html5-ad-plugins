@@ -2104,6 +2104,7 @@ require('../html5-common/js/utils/utils.js');
        * @param forceEndAdPod forces the ad pod to end
        */
       var _endCurrentAd = (forceEndAdPod) => {
+console.log('>>>', forceEndAdPod, this.currentAMCAdPod);
         if (this.currentAMCAdPod) {
           if (this.currentIMAAd) {
             const { currentIMAAd } = this;
@@ -2138,7 +2139,7 @@ require('../html5-common/js/utils/utils.js');
         } else if (forceEndAdPod) {
           _resetAdsState();
         }
-
+        
         _resetUIContainerStyle();
         this.currentIMAAd = null;
         this.adPlaybackStarted = false;

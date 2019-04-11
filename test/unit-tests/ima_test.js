@@ -2192,7 +2192,7 @@ describe('ad_manager_ima', function () {
     expect(sdkAdEventName).to.be(google.ima.AdErrorEvent.Type.AD_ERROR);
     expect(_.isEmpty(sdkAdEventData)).to.be(false);
   });
-
+/* 
   it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving an ad event from IMA SDK', () => {
     initAndPlay(true, vci);
     const am = google.ima.adManagerInstance;
@@ -2242,7 +2242,7 @@ describe('ad_manager_ima', function () {
       expect(sdkAdEventName).to.be(event);
       expect(_.isEmpty(sdkAdEventData)).to.be(false);
     }
-  });
+  }); */
 
   it('AMC Integration: IMA plugin provides a default value of 15000 ms for loadVideoTimeout', () => {
     initialize(false);
