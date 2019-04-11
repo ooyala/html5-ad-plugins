@@ -2135,6 +2135,8 @@ require('../html5-common/js/utils/utils.js');
           } else {
             _endCurrentAdPod(true);
           }
+        } else if (forceEndAdPod) {
+          _resetAdsState();
         }
 
         _resetUIContainerStyle();
