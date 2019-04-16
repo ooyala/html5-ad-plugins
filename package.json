@@ -12,7 +12,6 @@
     "webpack": "webpack --progress",
     "build:dev": "npm run webpack --mode=development",
     "build": "npm run webpack --mode=production",
-    "watch": "webpack --watch",
     "start": "npm run build && webpack-dev-server"
   },
   "keywords": [
