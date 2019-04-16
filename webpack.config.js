@@ -11,6 +11,7 @@ module.exports = () => ({
   optimization: {
     minimize: true,
   },
+  mode: 'development',
   devtool: 'source-map',
   devServer: {
     port: 9003,

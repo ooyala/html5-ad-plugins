@@ -10,8 +10,8 @@
     "lint": "eslint .",
     "analysis": "echo",
     "webpack": "webpack --progress",
-    "build:dev": "npm run webpack --mode=development",
-    "build": "npm run webpack --mode=production",
+    "build:dev": "webpack --mode development",
+    "build": "webpack --mode production",
     "start": "webpack-dev-server"
   },
   "keywords": [
