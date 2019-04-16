@@ -8,10 +8,7 @@ module.exports = () => ({
     path: path.resolve(__dirname, './build'),
     filename: '[name].min.js',
   },
-  optimization: {
-    minimize: true,
-  },
-  mode: 'development',
+  watch: process.env.NODE_ENV === 'development',
   devtool: 'source-map',
   devServer: {
     port: 9003,
