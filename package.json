@@ -12,7 +12,7 @@
     "webpack": "webpack --progress",
     "build:dev": "npm run webpack --mode=development",
     "build": "npm run webpack --mode=production",
-    "start": "npm run build && webpack-dev-server"
+    "start": "webpack-dev-server"
   },
   "keywords": [
     "ad manager",
