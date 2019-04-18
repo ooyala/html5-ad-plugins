@@ -2217,8 +2217,10 @@ require('../html5-common/js/utils/utils.js');
      */
     this.create = (parentContainer, id, ooyalaVideoController, css, playerId) => {
       const googleIMA = registeredGoogleIMAManagers[playerId];
-      const googleIMAWrapperElement = googleIMA.uiContainer.firstElementChild;
-      googleIMAWrapperElement.id = id;
+      const googleIMAWrapperElement = googleIMA.uiContainer && googleIMA.uiContainer.firstElementChild;
+      if (googleIMAWrapperElement) {
+        googleIMAWrapperElement.id = id;
+      }
       const wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
