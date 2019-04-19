@@ -14,14 +14,50 @@ Open-source HTML5 ad managers that plug into the Ooyala core HTML5 player.
 - git submodule update --init --recursive
 - npm install
 
+## Running the code
+
+```bash
+npm start
+```
+
+Will start webpack-dev-server on [localhost:9003](http://localhost:9003) with live reload
 
 ## Building the ad managers
+
+```bash
 gulp build
+```
+
 or
+
+```bash
 gulp (it defaults to build)
+```
+
+## Building using webpack
+
+```bash
+npm run build
+```
+
+Build in dev environment
+
+```bash
+npm run build:dev
+```
+
 
 ## Running unit tests
+
+```bash
 gulp test
+```
+
+or
+
+```bash
+npm run test
+```
 
 ## Example test page
 The following example assumes that you hare hosting the html5-skin repo at http://localhost:8080/skin and that you are hosting this repo at http://localhost:8080/ad-plugins.
