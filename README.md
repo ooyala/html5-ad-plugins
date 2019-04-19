@@ -59,6 +59,12 @@ or
 npm run test
 ```
 
+## Linting
+
+```bash
+npm run lint
+```
+
 ## Example test page
 The following example assumes that you hare hosting the html5-skin repo at http://localhost:8080/skin and that you are hosting this repo at http://localhost:8080/ad-plugins.
 ```javascript
