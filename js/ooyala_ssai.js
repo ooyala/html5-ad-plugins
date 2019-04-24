@@ -815,7 +815,10 @@ OO.Ads.manager(() => {
       const mainUrlParts = mainUrl.split('/');
       if (mainUrlParts !== null) {
       	this.domainName = mainUrlParts[2];
-      	this.currentEmbed = mainUrlParts[10];
+        if(mainUrlParts[3] === 'hls')
+      	 this.currentEmbed = mainUrlParts[12].split('.')[0];
+        else
+          this.currentEmbed = mainUrlParts[4];
       }
       const queryParams = queryParamString.split('&');
       if (queryParams === null) {
