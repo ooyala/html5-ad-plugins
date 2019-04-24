@@ -815,7 +815,7 @@ OO.Ads.manager(() => {
       const mainUrlParts = mainUrl.split('/');
       if (mainUrlParts !== null) {
       	this.domainName = mainUrlParts[2];
-      	this.currentEmbed = mainUrlParts[4];
+      	this.currentEmbed = mainUrlParts[10];
       }
       const queryParams = queryParamString.split('&');
       if (queryParams === null) {
