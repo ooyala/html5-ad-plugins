@@ -53,6 +53,7 @@ OO.Ads.manager(() => {
     this.currentEmbed = '';
     this.domainName = 'ssai.ooyala.com';
     this.ssaiGuid = '';
+    this.DVRduration = undefined;
     this.vastParser = new VastParser();
 
     this.currentAd = null;
@@ -260,6 +261,8 @@ OO.Ads.manager(() => {
         if (duration && isNumber(duration) && duration > 0) {
           offsetParam = duration - playhead;
         }
+      } else {
+        this.DVRduration = duration;
       }
       // For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
       if ((amc.isLiveStream && (offset && isNumber(offset)) && (duration && isNumber(duration))) && offset > 0 && offset < duration) {
@@ -352,22 +355,24 @@ OO.Ads.manager(() => {
         _handleTrackingUrls(this.currentAd, ['resume']);
         if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && isFinite(ad.duration)) {
 
-          var duration = ad.duration;
+          let endAdsSecondsLeft = ad.duration;
 	        const { startTime, pauseTime } = this.adIdDictionary[ad.ad.data.id];	
           //Deducting the already played duration of ad  from the actual ad duration for making timer accurate
           if( startTime && isFinite(startTime) && pauseTime && isFinite(pauseTime) )
           {
-            duration = (ad.duration * 1000) - (pauseTime - startTime);
+            endAdsSecondsLeft = (ad.duration * 1000) - (pauseTime - startTime);
           }
-
-          if(duration < 0)
-            duration = ad.duration * 1000;
+          const timeOnPause = Math.floor(new Date().getTime() - pauseTime) / 1000;
+          if (endAdsSecondsLeft < 0) {
+            endAdsSecondsLeft = ad.duration * 1000;
+          } else if (timeOnPause >= this.DVRduration) {
+            endAdsSecondsLeft = 0;
+          }
 
           //Setting the ad callback again since ad was resumed
           this.adIdDictionary[ad.ad.data.id].adTimer = delay(
             _adEndedCallback(null, ad.ad.data.id),
-            duration
-
+            endAdsSecondsLeft
           );
         }
       }
