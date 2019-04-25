@@ -289,7 +289,7 @@ OO.Ads.manager(() => {
         adMode = true;
         this.currentAd = ad;
         if (ad.ad && ad.ad.data && ad.ad.data.id) {
-          
+
           this.adIdDictionary[ad.ad.data.id].curAdId = ad.id;
           _handleTrackingUrls(this.currentAd, ['impression', 'start']);
           if (ad.duration && !isNumber(ad.duration)) {
@@ -353,7 +353,7 @@ OO.Ads.manager(() => {
         if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && isFinite(ad.duration)) {
 
           var duration = ad.duration;
-	        const { startTime, pauseTime } = this.adIdDictionary[ad.ad.data.id];	
+	        const { startTime, pauseTime } = this.adIdDictionary[ad.ad.data.id];
           //Deducting the already played duration of ad  from the actual ad duration for making timer accurate
           if( startTime && isFinite(startTime) && pauseTime && isFinite(pauseTime) )
           {
@@ -514,7 +514,7 @@ OO.Ads.manager(() => {
     *
     */
     var _getAdDuration = (id3Object) =>{
-	    
+
       var duration = 0;
       //If not start id3 tag from ad, we recalculate ad duration.
         if (id3Object.time != 0){
@@ -554,7 +554,7 @@ OO.Ads.manager(() => {
       this.currentAd = null;
     };
 
-    
+
 
     /**
      * Called if the ajax call succeeds
@@ -912,7 +912,12 @@ OO.Ads.manager(() => {
           'Content-Type': 'application/xml'
         },
       })
-        .then(res => res.text())
+        .then(res => {
+          if (res.ok) {
+            return res.text();
+          }
+          throw new Error('Ooyala SSAI: Fail request for: ' + url + ' Request Status: ' + res.status);
+        })
         .then(str => (new window.DOMParser()).parseFromString(str, 'text/xml'))
         .then(res => this.onResponse(currentId3Object, res))
         .catch((error) => {
