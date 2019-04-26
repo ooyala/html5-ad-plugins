@@ -43,7 +43,6 @@ require('../html5-common/js/utils/utils.js');
       this.sharedVideoElement = null;
       this.initTime = Date.now();
       this.enableIosSkippableAds = false;
-      this.uiContainer = null;
 
       // private member variables of this GoogleIMA object
       let _amc = null;
@@ -527,6 +526,11 @@ require('../html5-common/js/utils/utils.js');
           }
 
           return;
+        }
+
+        // IMA doesn't use the adVideoElement layer so make sure to hide it.
+        if (!_amc.ui.useSingleVideoElement && _amc.ui.adVideoElement) {
+          _amc.ui.adVideoElement.css(INVISIBLE_CSS);
         }
 
         if (_usingAdRules && this.currentAMCAdPod.ad.forced_ad_type !== _amc.ADTYPE.NONLINEAR_OVERLAY) {
@@ -1114,7 +1118,6 @@ require('../html5-common/js/utils/utils.js');
 
             // Prefer to use player skin plugins element to allow for click throughs. Use plugins element if not available
             _uiContainer = _amc.ui.playerSkinPluginsElement ? _amc.ui.playerSkinPluginsElement[0] : _amc.ui.pluginsElement[0];
-            this.uiContainer = _uiContainer;
             // iphone performance is terrible if we don't use the custom playback (i.e. filling in the second param for adDisplayContainer)
             // also doesn't not seem to work nicely with podded ads if you don't use it.
 
@@ -2217,10 +2220,6 @@ require('../html5-common/js/utils/utils.js');
      */
     this.create = (parentContainer, id, ooyalaVideoController, css, playerId) => {
       const googleIMA = registeredGoogleIMAManagers[playerId];
-      const googleIMAWrapperElement = googleIMA.uiContainer && googleIMA.uiContainer.firstElementChild;
-      if (googleIMAWrapperElement) {
-        googleIMAWrapperElement.id = id;
-      }
       const wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
