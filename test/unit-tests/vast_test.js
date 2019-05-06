@@ -365,7 +365,7 @@ describe('ad_manager_vast', function () {
     expect(amc.timeline[2].adType).to.be(amc.ADTYPE.LINEAR_VIDEO);
     expect(amc.timeline[2].ad.type).to.be(undefined);
   });
-/* 
+
   it('Init: test postroll appears in buildTimeline', () => {
     const embed_code = 'embed_code';
     const vast_ad_post = {
@@ -390,7 +390,7 @@ describe('ad_manager_vast', function () {
     expect(amc.timeline.length).to.be(1);
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.AD_REQUEST);
   });
- */
+
   it('should invalid vast', () => {
     const embed_code = 'embed_code';
     const vast_ad = {
