@@ -52,6 +52,7 @@ OO.Ads.manager(() => {
     this.currentEmbed = '';
     this.domainName = 'ssai.ooyala.com';
     this.ssaiGuid = '';
+    this.DVRduration = undefined;
     this.vastParser = new VastParser();
 
     this.currentAd = null;
@@ -206,10 +207,12 @@ OO.Ads.manager(() => {
         if (duration && isNumber(duration) && duration > 0) {
           offsetParam = duration - playhead;
         }
+      } else {
+        this.DVRduration = duration;
       }
       // For live streams, if user moved the playback head into the past, offset is the seconds in the past that user is watching
       if ((amc.isLiveStream && (offset && isNumber(offset))
-          && (duration && isNumber(duration))) && offset > 0 && offset < duration) {
+        && (duration && isNumber(duration))) && offset > 0 && offset < duration) {
         offsetParam = duration - offset;
       }
 
@@ -264,6 +267,7 @@ OO.Ads.manager(() => {
       currentOffset = 0;
       this.currentAd = null;
     };
+
 
     /**
      * Called if the ajax call for SSAI metadata succeeds
@@ -470,9 +474,13 @@ OO.Ads.manager(() => {
       const mainUrl = urlParts[0];
       const mainUrlParts = mainUrl.split('/');
       if (mainUrlParts !== null) {
-        const [, , domainName, , currentEmbed] = mainUrlParts;
-        this.domainName = domainName;
-        this.currentEmbed = currentEmbed;
+        [, , this.domainName] = mainUrlParts;
+
+        if (amc.isLiveStream) {
+          [this.currentEmbed] = mainUrlParts[12].split('.');
+        } else {
+          [, , , , this.currentEmbed] = mainUrlParts;
+        }
       }
       const queryParams = queryParamString.split('&');
       if (queryParams === null) {
@@ -552,11 +560,15 @@ OO.Ads.manager(() => {
         method: 'get',
         credentials: 'omit',
         headers: {
-          pragma: 'no-cache',
-          'cache-control': 'no-cache',
+          'Content-Type': 'application/xml',
         },
       })
-        .then(res => res.text())
+        .then((res) => {
+          if (res.ok) {
+            return res.text();
+          }
+          throw new Error(`Ooyala SSAI: Fail request for: ${url} Request Status: ${res.status}`);
+        })
         .then(str => (new window.DOMParser()).parseFromString(str, 'text/xml'))
         .then(res => this.onResponse(currentId3Object, res))
         .catch((error) => {
@@ -592,8 +604,6 @@ OO.Ads.manager(() => {
         credentials: 'omit',
         headers: {
           'Content-Type': 'application/json',
-          pragma: 'no-cache',
-          'cache-control': 'no-cache',
         },
       })
         .then(res => res.json())
@@ -1089,21 +1099,23 @@ OO.Ads.manager(() => {
       if (adMode) {
         _handleTrackingUrls(this.currentAd, ['resume']);
         if (ad && ad.ad && ad.ad.data && this.adIdDictionary[ad.ad.data.id] && isFinite(ad.duration)) {
-          let { duration } = ad;
+          let endAdsSecondsLeft = ad.duration;
           const { startTime, pauseTime } = this.adIdDictionary[ad.ad.data.id];
           // Deducting the already played duration of ad  from the actual ad duration for making timer accurate
           if (startTime && isFinite(startTime) && pauseTime && isFinite(pauseTime)) {
-            duration = (ad.duration * 1000) - (pauseTime - startTime);
+            endAdsSecondsLeft = (ad.duration * 1000) - (pauseTime - startTime);
           }
-
-          if (duration < 0) {
-            duration = ad.duration * 1000;
+          const timeOnPause = Math.floor(new Date().getTime() - pauseTime) / 1000;
+          if (endAdsSecondsLeft < 0) {
+            endAdsSecondsLeft = ad.duration * 1000;
+          } else if (timeOnPause >= this.DVRduration) {
+            endAdsSecondsLeft = 0;
           }
 
           // Setting the ad callback again since ad was resumed
           this.adIdDictionary[ad.ad.data.id].adTimer = delay(
             _adEndedCallback(null, ad.ad.data.id),
-            duration,
+            endAdsSecondsLeft,
           );
         }
       }
