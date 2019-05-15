@@ -8,10 +8,11 @@
   "scripts": {
     "test": "mocha test/unit-tests --require test/test_lib.js --exit",
     "lint": "eslint .",
-    "build": "echo",
-    "build-prod": "echo",
-    "start": "echo",
-    "analysis": "echo"
+    "analysis": "echo",
+    "webpack": "webpack --progress",
+    "build:dev": "webpack --mode development",
+    "build": "webpack --mode production",
+    "start": "webpack-dev-server"
   },
   "keywords": [
     "ad manager",
@@ -31,6 +32,7 @@
     "@babel/core": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.0.0-beta.51",
     "babel-core": "^7.0.0-bridge.0",
+    "babel-loader": "^8.0.5",
     "babelify": "^9.0.0",
     "browserify": "16.2.2",
     "eslint": "^5.15.2",
@@ -52,7 +54,11 @@
     "mocha": "~5.2.0",
     "sinon": "^7.2.2",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^2.0.0"
+    "vinyl-source-stream": "^2.0.0",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.0",
+    "webpack-dev-server": "^3.3.1",
+    "webpack-glob-entries": "^1.0.1"
   },
   "author": "Ooyala",
   "contributors": [
