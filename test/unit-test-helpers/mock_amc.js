@@ -1,14 +1,16 @@
+/* eslint-disable require-jsdoc */
 const sinon = require('sinon');
 
-fake_amc = function () {
+FakeAmc = function () {
   this.timeline = [];
   this.callbacks = {};
   this.addPlayerListener = function (event, callback) {
     this.callbacks[event] = callback;
   };
-  this.publishPlayerEvent = function (event) { // convenience method for unit tests
+  this.publishPlayerEvent = function (...args) { // convenience method for unit tests
+    const [event] = args;
     if (event && typeof this.callbacks[event] === 'function') {
-      this.callbacks[event].apply(this, arguments);
+      this.callbacks[event].apply(this, args);
     }
   };
   this.FORCED_AD_POSITION = -1;
@@ -59,8 +61,8 @@ fake_amc = function () {
   };
   const adType = this.ADTYPE;
   this.Ad = function (adObj) {
-    adObj.isLinear = (adObj.adType == adType.LINEAR_VIDEO) || (adObj.adType == adType.LINEAR_OVERLAY);
-    adObj.isRequest = (adObj.adType == adType.AD_REQUEST) || (adObj.adType == adType.UNKNOWN_AD_REQUEST);
+    adObj.isLinear = (adObj.adType === adType.LINEAR_VIDEO) || (adObj.adType === adType.LINEAR_OVERLAY);
+    adObj.isRequest = (adObj.adType === adType.AD_REQUEST) || (adObj.adType === adType.UNKNOWN_AD_REQUEST);
     return adObj;
   };
   this.currentEmbedCode = 'embed';

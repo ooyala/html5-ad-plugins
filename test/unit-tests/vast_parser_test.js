@@ -5,26 +5,27 @@
 OO.log = () => {};
 const fs = require('fs');
 const VastParser = require('../../utils/vast_parser');
-
+const linearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_linear.json');
+const linearXML2AdsParsed = require('../unit-test-helpers/vast_parsed/vast_linear_2_ads.json');
+const nonLinearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_overlay.json');
+const wrapper1XMLParsed = require('../unit-test-helpers/vast_parsed/vast_wrapper_1.json');
 
 describe('VAST parser', () => {
   let vastParser;
 
   // TODO: test all VAST examples with snaphots
+  /* eslint-disable max-len */
   const linearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear.xml'), 'utf8');
   const linearXML2AdsString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_linear_2_ads.xml'), 'utf8');
   const nonLinearXMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_overlay.xml'), 'utf8');
   const wrapper1XMLString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/vast_wrapper_1.xml'), 'utf8');
+  /* eslint-enable max-len */
 
   const linearXML = $.parseXML(linearXMLString);
   const linearXML2Ads = $.parseXML(linearXML2AdsString);
   const nonLinearXML = $.parseXML(nonLinearXMLString);
   const wrapper1XML = $.parseXML(wrapper1XMLString);
 
-  const linearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_linear.json');
-  const linearXML2AdsParsed = require('../unit-test-helpers/vast_parsed/vast_linear_2_ads.json');
-  const nonLinearXMLParsed = require('../unit-test-helpers/vast_parsed/vast_overlay.json');
-  const wrapper1XMLParsed = require('../unit-test-helpers/vast_parsed/vast_wrapper_1.json');
 
   beforeEach(() => {
     vastParser = new VastParser();

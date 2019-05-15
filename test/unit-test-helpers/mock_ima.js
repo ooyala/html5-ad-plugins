@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 const Ad = function () {
   // see https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.Ad
   this.g = { vpaid: false };
@@ -60,14 +61,14 @@ const AdsRenderingSettings = function () {
   google.ima.adsRenderingSettingsInstance = this;
 };
 
-const AdsLoader = function (container) {
+const AdsLoader = function () {
   google.ima.adLoaderInstance = this;
   const callbacks = {};
   const adsManagerLoadedEvent = {
     type: google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
     getAdsManager() {
       if (!google.ima.adManagerInstance) {
-        const mockAdManager = function () {
+        const MockAdManager = function () {
           const amCallbacks = {};
           let currentAd = null;
           this.init = function () {
@@ -146,7 +147,7 @@ const AdsLoader = function (container) {
             return false;
           };
         };
-        google.ima.adManagerInstance = new mockAdManager();
+        google.ima.adManagerInstance = new MockAdManager();
       }
       return google.ima.adManagerInstance;
     },
@@ -221,7 +222,9 @@ google = {
       setVpaidMode() {},
       setLocale() {},
       setDisableFlashAds() {},
-      setDisableCustomPlaybackForIOS10Plus(newValue) { google.ima.disableCustomPlaybackForIOS10Plus = newValue; },
+      setDisableCustomPlaybackForIOS10Plus(newValue) {
+        google.ima.disableCustomPlaybackForIOS10Plus = newValue;
+      },
       setNumRedirects(newValue) { google.ima.numRedirects = newValue; },
     },
     AdsManagerLoadedEvent:

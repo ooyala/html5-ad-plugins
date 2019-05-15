@@ -4,56 +4,81 @@ module.exports = {
     es6: true,
   },
   extends: 'airbnb-base',
+  // TODO: delete when we go to jest.
   globals: {
-
+    expect: 0,
+    OO: 0,
+    it: 0,
+    describe: 0,
+    _: 0,
+    $: 0,
+    after: 0,
+    before: 0,
+    beforeEach: 0,
+    afterEach: 0,
+    tv: 0,
+    ActiveXObject: 0,
+    startAfterLoad: 0,
+    google: 0,
+    TEST_ROOT: 0,
+    COMMON_SRC_ROOT: 0,
+    FakeAmc: 0,
+    SRC_ROOT: 0,
+    fwContext: 0,
+    AdInstance: 0,
+    getTemporalSlots: 0,
+    fwParams: 0,
+    setVideoAsset: 0,
+    jsdom: 0,
   },
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: 'module',
   },
   rules: {
-    "no-underscore-dangle": "warn",
-    "vars-on-top": "warn",
-    "no-var": "warn",
-    "max-len": "warn",
-    "no-use-before-define": "warn",
-    "consistent-return": "warn",
-    "no-undef": "warn",
-    "no-unused-vars": "warn",
-    "radix": "warn",
-    "no-redeclare": "warn",
-    "func-names": "warn",
-    "camelcase": "warn",
-    "no-plusplus": "warn",
-    "new-cap": "warn",
-    "prefer-destructuring": "warn",
-    "no-shadow": "warn",
-    "global-require": "warn",
-    "import/no-dynamic-require": "warn",
-    "no-param-reassign": "warn",
-    "no-prototype-builtins": "warn",
-    "no-restricted-globals": "warn",
-    "block-scoped-var": "warn",
-    "prefer-const": "warn",
-    "guard-for-in": "warn",
-    "no-restricted-syntax": "warn",
-    "default-case": "warn",
-    "prefer-rest-params": "warn",
-    "no-bitwise": "warn",
-    "no-unreachable": "warn",
-    "semi-style": "warn",
-    "no-mixed-spaces-and-tabs": "warn",
-    "no-tabs": "warn",
-    "eqeqeq": "warn",
-    "no-empty": "warn",
-    "no-continue": "warn",
-    "brace-style": "warn",
-    "no-unused-expressions": "warn",
-    "no-lonely-if": "warn",
-    "prefer-spread": "warn",
-    "operator-linebreak": "warn",
-    "no-fallthrough": "warn",
-    "no-mixed-operators": "warn",
-    "no-loop-func": "warn",
+    "max-len": [
+      "error", 110,
+      {
+        "ignoreComments": true,
+        "ignorePattern": "if \\(\/\\(\\w*|\\)\/",
+        "ignoreUrls": true,
+        "ignoreRegExpLiterals": true,
+        "ignoreTemplateLiterals": true
+      }
+    ],
+    "func-names": 0,
+    "no-plusplus": [
+      "error",
+      {
+        "allowForLoopAfterthoughts": true
+      }
+    ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
+    "no-underscore-dangle": 0,
+    "require-jsdoc": [
+      "error",
+      {
+      "require": {
+        "FunctionDeclaration": true,
+        "MethodDefinition": true,
+        "ClassDeclaration": true,
+        "ArrowFunctionExpression": true,
+        "FunctionExpression": true
+      }
+    }],
+    "valid-jsdoc": [
+      "error",
+      {
+        "prefer": {
+          "return": "returns"
+        },
+        "requireReturn": false
+      }
+    ],
   },
 };

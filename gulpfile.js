@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 // Build automation
 // Require sudo npm install -g gulp
 // For dev, initiate watch by executing either `gulp` or `gulp watch`
@@ -6,7 +7,6 @@ const gulp = require('gulp');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
-const gutil = require('gulp-util');
 const uglify = require('gulp-uglify');
 const shell = require('gulp-shell');
 const rename = require('gulp-rename');
@@ -16,11 +16,34 @@ const { exec } = require('child_process');
 const webserver = require('gulp-webserver');
 const babelify = require('babelify');
 
-const path = {
+const pathJs = {
   originalJs: ['./js/'],
 };
 
-const browserify_fn = function () {
+// Dependency task
+gulp.task('init_module', (callback) => {
+  exec('git submodule update --init && cd html5-common && npm install && cd ..', (err) => {
+    if (err) return callback(err);
+    callback();
+
+    return null;
+  });
+});
+
+const checkFileExtension = function (extension, fileName) {
+  if (!fileName || fileName.length < extension.length) {
+    return false;
+  }
+
+  return (fileName.lastIndexOf(extension) === fileName.length - extension.length);
+};
+
+const getFileNameFromPath = function (path) {
+  const start = path.lastIndexOf('/') + 1;
+  return path.substring(start);
+};
+
+const browserifyFn = function () {
   const bundleThis = function (srcArray) {
     _.each(srcArray, (sourceFile) => {
       const b = browserify({
@@ -41,9 +64,9 @@ const browserify_fn = function () {
     });
   };
 
-  listFiles(path.originalJs, function (error, files) {
+  listFiles(pathJs.originalJs, function (error, files) {
     if (error) {
-      console.log(error);
+      OO.log(error);
     } else {
       const filteredList = files.filter(_.bind(checkFileExtension, this, '.js'));
       bundleThis(filteredList);
@@ -51,31 +74,10 @@ const browserify_fn = function () {
   });
 };
 
-// Dependency task
-gulp.task('init_module', (callback) => {
-  exec('git submodule update --init && cd html5-common && npm install && cd ..', (err) => {
-    if (err) return callback(err);
-    callback();
-  });
-});
-
 // Build All
 gulp.task('build', ['init_module'], () => {
-  browserify_fn();
+  browserifyFn();
 });
-
-var checkFileExtension = function (extension, fileName) {
-  if (!fileName || fileName.length < extension.length) {
-    return false;
-  }
-
-  return (fileName.lastIndexOf(extension) == fileName.length - extension.length);
-};
-
-var getFileNameFromPath = function (path) {
-  const start = path.lastIndexOf('/') + 1;
-  return path.substring(start);
-};
 
 // Run tests
 gulp.task('test', shell.task(['make test']));

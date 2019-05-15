@@ -11,6 +11,7 @@
 const {
   isFunction,
   extend,
+  each,
 } = require('underscore');
 
 OO.Ads.manager(() => {
@@ -29,6 +30,11 @@ OO.Ads.manager(() => {
     AD_LOG: 'AdLog',
   };
 
+  /**
+   * @class Liverail
+   * @classDesc The Liverail class.
+   * @constructor
+   */
   const Liverail = function () {
     // core
     this.name = 'liverail-ads-manager';
@@ -49,46 +55,148 @@ OO.Ads.manager(() => {
     let adPlaying = false;
     let startAfterLoad = false;
     let adLoaded = false;
-    let slotEndedCallback = null;
-    let slotStartedCallback = null;
-    let adStartedCallback = null;
+    const slotEndedCallback = null;
+    const slotStartedCallback = null;
+    const adStartedCallback = null;
     let adEndedCallback = null;
     let countdownIntervalId = null;
 
     // /// Helpers /////
-    const log = () => {
+    /**
+     * Log.
+     */
+    const log = (...args) => {
       if (isFunction(OO.log)) {
-        OO.log.apply(null, ['liverail-ads-manager:'].concat(Array.prototype.slice.apply(arguments)));
+        OO.log.apply(null, ['liverail-ads-manager:'].concat(args));
       } else {
-        console.log(['liverail-ads-manager:'].concat(Array.prototype.slice.apply(arguments)));
+        OO.log(['liverail-ads-manager:'].concat(args));
       }
     };
 
-    // /// Setup /////
-    this.initialize = (amcInterface) => {
-      amc = amcInterface;
-      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _playbackBeginning);
-      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _playbackBeginning);
-      log('Initializing SDK');
-      liverailFrame = document.createElement('iframe');
-      liverailFrame.style.display = 'none';
-      liverailFrame.onload = _onIframeLoaded;
-      document.body.appendChild(liverailFrame);
+    /**
+     * Try init.
+     * @private
+     */
+    const _tryInit = () => {
+      if (!adModuleJsReady || !metadataFetched) return;
+      this.ready = true;
+      amc.onAdManagerReady(this.name);
+      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
     };
 
-    var _onIframeLoaded = () => {
-      log('iframe loaded');
-      iframeLoaded = true;
-      _tryLoadSdk();
+    /**
+     * Reset ad state.
+     * @private
+     */
+    const _resetAdState = () => {
+      startAfterLoad = false;
+      adLoaded = false;
+      adPlaying = false;
+      adEndedCallback = null;
     };
 
-    this.registerUi = () => {
-      remoteModuleJs = (amc.ui.isSSL ? 'https://cdn-static-secure.liverail.com/js/LiveRail.AdManager-1.0.js'
-        : 'http://cdn-static.liverail.com/js/LiveRail.AdManager-1.0.js');
-      _tryLoadSdk();
+    /**
+     * Update Countdown.
+     * @private
+     */
+    const _updateCountdown = () => {
+      const remainingTime = liverailVPAIDManager.getAdRemainingTime();
+      if (this.environmentVariables.LR_LAYOUT_SKIN_MESSAGE) {
+        const message = ('Advertisement: Your video will resume in {COUNTDOWN} seconds.')
+          .replace('{COUNTDOWN}', remainingTime)
+          .replace('seconds', remainingTime === 1 ? 'second' : 'seconds');
+        amc.ui.updateCustomAdMarquee(message);
+      } else {
+        amc.ui.updateAdMarqueeTime(remainingTime);
+      }
     };
 
-    var _tryLoadSdk = () => {
+    /**
+     * On Ad Event.
+     * @param {Array} args The array of arguments.
+     * @private
+     */
+    const _onAdEvent = (...args) => {
+      const [eventName, logData] = args;
+      if (eventName !== VPAID_EVENTS.AD_LOG) {
+        log(eventName, 'fired with args', args.slice(1));
+      }
+
+      switch (eventName) {
+        case VPAID_EVENTS.AD_LOADED:
+          adLoaded = true;
+          if (startAfterLoad) {
+            liverailVPAIDManager.startAd();
+          }
+          break;
+        case VPAID_EVENTS.AD_STARTED:
+          if (slotStartedCallback) {
+            slotStartedCallback();
+          }
+          break;
+        case VPAID_EVENTS.AD_IMPRESSION:
+          if (adStartedCallback) {
+            adStartedCallback();
+          }
+          countdownIntervalId = setInterval(() => {
+            _updateCountdown();
+          }, 500);
+          break;
+        case VPAID_EVENTS.AD_CLICK_THRU:
+          amc.adsClicked();
+          break;
+        case VPAID_EVENTS.AD_VIDEO_COMPLETE:
+          if (adEndedCallback) {
+            adEndedCallback();
+          }
+          break;
+        case VPAID_EVENTS.AD_STOPPED:
+          clearInterval(countdownIntervalId);
+          if (slotEndedCallback) {
+            slotEndedCallback();
+          }
+          _resetAdState();
+          break;
+        case VPAID_EVENTS.AD_ERROR:
+          // TODO: call ad ended callback if an ad was active
+          if (slotEndedCallback && adPlaying) {
+            slotEndedCallback();
+          }
+          _resetAdState();
+          break;
+        case VPAID_EVENTS.AD_LOG:
+          log('LIVERAIL AD LOG -', logData);
+          break;
+        default:
+        // do nothing
+      }
+    };
+
+    /**
+     * On sdk loaded.
+     * @private
+     */
+    const _onSdkLoaded = () => {
+      log('SDK loaded');
+      adModuleJsReady = true;
+
+      liverailVPAIDManager = liverailFrame.contentWindow.getVPAIDAd();
+      liverailVPAIDManager.handshakeVersion('2.0');
+
+      each(VPAID_EVENTS, (eventName) => {
+        liverailVPAIDManager.subscribe(() => {
+          _onAdEvent(VPAID_EVENTS[eventName]);
+        }, VPAID_EVENTS[eventName]);
+      });
+
+      _tryInit();
+    };
+
+    /**
+     * Try load sdk.
+     * @private
+     */
+    const _tryLoadSdk = () => {
       if ((remoteModuleJs == null) || !iframeLoaded) return;
       const loader = liverailFrame.contentWindow.document.createElement('script');
       loader.src = remoteModuleJs;
@@ -98,58 +206,51 @@ OO.Ads.manager(() => {
       _tryInit();
     };
 
-    var _onSdkLoaded = () => {
-      log('SDK loaded');
-      adModuleJsReady = true;
-
-      liverailVPAIDManager = liverailFrame.contentWindow.getVPAIDAd();
-      liverailVPAIDManager.handshakeVersion('2.0');
-
-      let eventName;
-      for (eventName in VPAID_EVENTS) {
-        // liverailVPAIDManager.subscribe(() => {this._onAdEvent(VPAID_EVENTS[eventName])}),
-        liverailVPAIDManager.subscribe(() => {
-          this._onAdEvent(VPAID_EVENTS[eventName]);
-        },
-        VPAID_EVENTS[eventName]);
-      }
-
-      _tryInit();
+    this.registerUi = () => {
+      remoteModuleJs = (amc.ui.isSSL ? 'https://cdn-static-secure.liverail.com/js/LiveRail.AdManager-1.0.js'
+        : 'http://cdn-static.liverail.com/js/LiveRail.AdManager-1.0.js');
+      _tryLoadSdk();
     };
 
     this.loadMetadata = (pageAndBacklotMetadata, baseMetadata) => {
       metadataFetched = true;
 
-      let key; let tags; let pair; let
-        i;
+      let tags;
+      let pair;
+      let i;
       const params = {};
 
+      /**
+       * Is Lr param.
+       * @param {string} key The Lr param.
+       * @returns {boolean} Returns true if key = 'LR_...'
+       */
       const isLrParam = key => (typeof key === 'string') && (key.indexOf('LR_') === 0);
 
       // load parameters from movie level custom metadata from backlot
       if (baseMetadata && (typeof baseMetadata === 'object')) {
         // This is needed because the LiveRail ad source provides nonstandard means of incorporating
         // movie-level metadata and this is how it makes it into metadata
-        for (key in baseMetadata) {
+        each(baseMetadata, (key) => {
           if (isLrParam(key)) {
-            params[key] = baseMetadata[key];
+            params[key] = key;
           }
-        }
+        });
       }
 
       if (pageAndBacklotMetadata && (typeof pageAndBacklotMetadata === 'object')) {
         // load parameters set in backdoor 3rd party module settings
-        for (key in pageAndBacklotMetadata) {
+        each(pageAndBacklotMetadata, (key) => {
           if (isLrParam(key)) {
-            params[key] = pageAndBacklotMetadata[key];
+            params[key] = key;
           }
-        }
+        });
 
         // load parameters from backlot ad-set level
         // Ad tag url parameters override all
         if (typeof pageAndBacklotMetadata.tagUrl === 'string') {
           // If the parameter is a real URL, decode it
-          const requiresDecode = (pageAndBacklotMetadata.tagUrl.indexOf('http') == 0);
+          const requiresDecode = (pageAndBacklotMetadata.tagUrl.indexOf('http') === 0);
           tags = pageAndBacklotMetadata.tagUrl.split('&');
           for (i = 0; i < tags.length; i++) {
             pair = tags[i].split('=');
@@ -173,9 +274,11 @@ OO.Ads.manager(() => {
     this.buildTimeline = () => {
       if (!this.environmentVariables.LR_VIDEO_POSITION) return [];
       const positionString = this.environmentVariables.LR_VIDEO_POSITION.replace('%', '');
-      const positionPercent = parseInt(isNaN(positionString) ? 0 : positionString);
+      const positionPercent = parseInt(Number.isNaN(positionString) ? 0 : positionString, 10);
       // If postroll, use MaxValue in case the movie duration is off by milliseconds from the playhead
-      const position = (positionPercent == 100) ? Number.MAX_VALUE : positionPercent / 100 * amc.movieDuration;
+      const position = (positionPercent === 100)
+        ? Number.MAX_VALUE
+        : positionPercent / 100 * amc.movieDuration;
       return [
         new amc.Ad({
           position,
@@ -188,16 +291,14 @@ OO.Ads.manager(() => {
       ];
     };
 
-    var _tryInit = () => {
-      if (!adModuleJsReady || !metadataFetched) return;
-      this.ready = true;
-      amc.onAdManagerReady(this.name);
-      amc.reportPluginLoaded(Date.now() - this.initTime, this.name);
-    };
-
     // /// Playback /////
 
-    var _playbackBeginning = () => {
+    /**
+     * Callback for when we receive the INITIAL_PLAY_REQUESTED and REPLAY_REQUESTED events from the AMC.
+     * @method Liverail#_playbackBeginning
+     * @private
+     */
+    const _playbackBeginning = () => {
       const creativeData = {};
       const environmentVariables = extend({
         slot: amc.ui.videoWrapper[0],
@@ -215,24 +316,13 @@ OO.Ads.manager(() => {
     };
 
     this.playAd = (ad) => {
-      slotStartedCallback = () => amc.notifyPodStarted(ad.id, null);
-      slotEndedCallback = () => amc.notifyPodEnded(ad.id);
-      adStartedCallback = () => {
-        amc.notifyLinearAdStarted(this.name, {
-          name: null,
-          duration: ad.ad.getAdDuration(),
-          clickUrl: null,
-          indexInPod: 1,
-          skippable: ad.ad.getAdSkippableState(),
-        });
-      };
       adEndedCallback = () => amc.notifyLinearAdEnded(ad.id);
       adPlaying = true;
 
       // On iOS and Android devices, playback will not start if LiveRail dispatches an ad error event. The
       // device will assume the video play event is not user-initiated. This tricks the device into thinking
       // the video element is already playing (will not work for pre-5.0 iOS devices)
-      if (ad.position == 0) {
+      if (ad.position === 0) {
         amc.ui.ooyalaVideoElement[0].load();
       }
 
@@ -242,6 +332,28 @@ OO.Ads.manager(() => {
       } else {
         startAfterLoad = true;
       }
+    };
+
+    /**
+     * On Iframe Loaded.
+     * @private
+     */
+    const _onIframeLoaded = () => {
+      log('iframe loaded');
+      iframeLoaded = true;
+      _tryLoadSdk();
+    };
+
+    // /// Setup /////
+    this.initialize = (amcInterface) => {
+      amc = amcInterface;
+      amc.addPlayerListener(amc.EVENTS.INITIAL_PLAY_REQUESTED, _playbackBeginning);
+      amc.addPlayerListener(amc.EVENTS.REPLAY_REQUESTED, _playbackBeginning);
+      log('Initializing SDK');
+      liverailFrame = document.createElement('iframe');
+      liverailFrame.style.display = 'none';
+      liverailFrame.onload = _onIframeLoaded;
+      document.body.appendChild(liverailFrame);
     };
 
     this.cancelAd = () => {
@@ -260,78 +372,6 @@ OO.Ads.manager(() => {
 
     this.resumeAd = () => {
       liverailVPAIDManager.resumeAd();
-    };
-
-    const _onAdEvent = (eventName, logData) => {
-      if (eventName !== VPAID_EVENTS.AD_LOG) {
-        log(eventName, 'fired with args', Array.prototype.slice.call(arguments, 1));
-      }
-
-      switch (eventName) {
-        case VPAID_EVENTS.AD_LOADED:
-          adLoaded = true;
-          if (startAfterLoad) {
-            liverailVPAIDManager.startAd();
-          }
-          break;
-        case VPAID_EVENTS.AD_STARTED:
-          if (slotStartedCallback) {
-            slotStartedCallback();
-          }
-          break;
-        case VPAID_EVENTS.AD_IMPRESSION:
-          if (adStartedCallback) {
-            adStartedCallback();
-          }
-          countdownIntervalId = setInterval(() => { this._updateCountdown; }, 500);
-          break;
-        case VPAID_EVENTS.AD_CLICK_THRU:
-          amc.adsClicked();
-          break;
-        case VPAID_EVENTS.AD_VIDEO_COMPLETE:
-          if (adEndedCallback) {
-            adEndedCallback();
-          }
-        case VPAID_EVENTS.AD_STOPPED:
-          clearInterval(countdownIntervalId);
-          if (slotEndedCallback) {
-            slotEndedCallback();
-          }
-          _resetAdState();
-          break;
-        case VPAID_EVENTS.AD_ERROR:
-          // TODO: call ad ended callback if an ad was active
-          if (slotEndedCallback && adPlaying) {
-            slotEndedCallback();
-          }
-          _resetAdState();
-          break;
-        case VPAID_EVENTS.AD_LOG:
-          log('LIVERAIL AD LOG -', logData);
-          break;
-      }
-    };
-
-    var _resetAdState = () => {
-      startAfterLoad = false;
-      adLoaded = false;
-      adPlaying = false;
-      slotStartedCallback = null;
-      slotEndedCallback = null;
-      adStartedCallback = null;
-      adEndedCallback = null;
-    };
-
-    const _updateCountdown = () => {
-      const remainingTime = liverailVPAIDManager.getAdRemainingTime();
-      if (this.environmentVariables.LR_LAYOUT_SKIN_MESSAGE) {
-        const message = ('Advertisement: Your video will resume in {COUNTDOWN} seconds.')
-          .replace('{COUNTDOWN}', remainingTime)
-          .replace('seconds', remainingTime === 1 ? 'second' : 'seconds');
-        amc.ui.updateCustomAdMarquee(message);
-      } else {
-        amc.ui.updateAdMarqueeTime(remainingTime);
-      }
     };
 
     this.destroy = () => {

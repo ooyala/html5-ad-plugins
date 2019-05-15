@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc,import/no-dynamic-require */
 /*
  * Unit test class for the Ooyala SSAI Ad Manager
  * https://github.com/Automattic/expect.js
@@ -8,6 +9,7 @@ OO.log = function () {};
 require(`${COMMON_SRC_ROOT}utils/utils.js`);
 require(`${COMMON_SRC_ROOT}utils/environment.js`);
 require(`${COMMON_SRC_ROOT}classes/emitter.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
 
 const fs = require('fs');
 
@@ -15,41 +17,14 @@ describe('ad_manager_ooyala_ssai', function () {
   let amc; let OoyalaSsai;
   const name = 'ooyala-ssai-ads-manager';
   const originalOoAds = _.clone(OO.Ads);
-  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
-
-  const adsClickthroughOpenedCalled = 0;
 
   // Vast XML
-  const ssaiXmlString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/ssai.xml'), 'utf8');
-  const ssaiNoDurationXmlString = fs.readFileSync(require.resolve('../unit-test-helpers/mock_responses/ssai_no_duration.xml'), 'utf8');
+  const ssaiXmlString = fs.readFileSync(
+    require.resolve('../unit-test-helpers/mock_responses/ssai.xml'),
+    'utf8',
+  );
   const ssaiXml = $.parseXML(ssaiXmlString);
-  const ssaiNoDurationXml = $.parseXML(ssaiNoDurationXmlString);
   let trackingUrlsPinged = {};
-
-  const initialize = function () {
-    const embed_code = 'embed_code';
-    const vast_ad = {
-      type: 'vast',
-      first_shown: 0,
-      frequency: 2,
-      ad_set_code: 'ad_set_code',
-      time: 0,
-      position_type: 't',
-    };
-    const content = {
-      embed_code,
-      ads: [vast_ad],
-    };
-    OoyalaSsai.initialize(amc);
-    OoyalaSsai.loadMetadata({
-      html5_ssl_ad_server: 'https://blah',
-      html5_ad_server: 'http://blah',
-    }, {}, content);
-  };
-
-  const initialPlay = function () {
-    amc.callbacks[amc.EVENTS.INITIAL_PLAY_REQUESTED]();
-  };
 
   before(_.bind(() => {
     OO.Ads = {
@@ -62,7 +37,7 @@ describe('ad_manager_ooyala_ssai', function () {
     // mock pixelPing to test error tracking
     OO.pixelPing = function (url) {
       if (url) {
-        if (trackingUrlsPinged.hasOwnProperty(url)) {
+        if (Object.prototype.hasOwnProperty.call(trackingUrlsPinged, url)) {
           trackingUrlsPinged[url] += 1;
         } else {
           trackingUrlsPinged[url] = 1;
@@ -71,6 +46,7 @@ describe('ad_manager_ooyala_ssai', function () {
     };
 
     delete require.cache[require.resolve(`${SRC_ROOT}ooyala_ssai.js`)];
+    // eslint-disable-next-line global-require
     require(`${SRC_ROOT}ooyala_ssai.js`);
   }, this));
 
@@ -79,7 +55,7 @@ describe('ad_manager_ooyala_ssai', function () {
   });
 
   beforeEach(() => {
-    amc = new fake_amc();
+    amc = new FakeAmc();
     amc.adManagerList = [];
     amc.onAdManagerReady = function () { this.timeline = this.adManagerList[0].buildTimeline(); };
     amc.adManagerList.push(OoyalaSsai);
@@ -114,8 +90,8 @@ describe('ad_manager_ooyala_ssai', function () {
   });
 
   it('Init: ad manager handles the loadMetadata function', () => {
-    const embed_code = 'embed_code';
-    const vast_ad = {
+    const embedCode = 'embed_code';
+    const vastAd = {
       type: 'vast',
       first_shown: 0,
       frequency: 2,
@@ -124,8 +100,8 @@ describe('ad_manager_ooyala_ssai', function () {
       position_type: 't',
     };
     const content = {
-      embed_code,
-      ads: [vast_ad],
+      embed_code: embedCode,
+      ads: [vastAd],
     };
     OoyalaSsai.initialize(amc);
     // For VOD, currentOffset must be greater than 0.
@@ -152,7 +128,7 @@ describe('ad_manager_ooyala_ssai', function () {
 
   it('Init: ad manager notifies controller that it is loaded', () => {
     let pluginLoaded = false;
-    amc.reportPluginLoaded = function (date, name) {
+    amc.reportPluginLoaded = function () {
       pluginLoaded = true;
     };
     OoyalaSsai.initialize(amc);
@@ -166,8 +142,8 @@ describe('ad_manager_ooyala_ssai', function () {
   });
 
   it('Init: ad manager is ready', () => {
-    const embed_code = 'embed_code';
-    const vast_ad = {
+    const embedCode = 'embed_code';
+    const vastAd = {
       type: 'vast',
       first_shown: 0,
       frequency: 2,
@@ -176,8 +152,8 @@ describe('ad_manager_ooyala_ssai', function () {
       position_type: 't',
     };
     const content = {
-      embed_code,
-      ads: [vast_ad],
+      embed_code: embedCode,
+      ads: [vastAd],
     };
     OoyalaSsai.initialize(amc);
     expect(OoyalaSsai.ready).to.be(false);
@@ -309,7 +285,8 @@ describe('ad_manager_ooyala_ssai', function () {
     expect(trackingUrlsPinged.linearClickTrackingUrl).to.be(1);
   });
 
-  it('Linear Creative Tracking Events mute/unmute urls should be pinged only once if multiple events received', () => {
+  it(`Linear Creative Tracking Events mute/unmute urls should
+    be pinged only once if multiple events received`, () => {
     const adQueue = [];
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
       const adData = {
@@ -444,8 +421,7 @@ describe('ad_manager_ooyala_ssai', function () {
 
     // get the urls in with the "rnd" query parameter, this will contain the
     // CACHEBUSTING macro that should be replaced.
-    let url;
-    for (url in trackingUrlsPinged) {
+    Object.keys(trackingUrlsPinged).forEach((url) => {
       if (_.has(trackingUrlsPinged, url) && /rnd=/.test(url)) {
         // should not have the cachebusting macros and should be pinged
         expect(url).to.not.have.string('%5BCACHEBUSTING%5D');
@@ -457,7 +433,7 @@ describe('ad_manager_ooyala_ssai', function () {
 
         expect(trackingUrlsPinged[url]).to.be(1);
       }
-    }
+    });
 
     // cacheBuster function should not mutate other URLs without the cachebusting macro"
     expect(_.keys(trackingUrlsPinged)).to.contain('impressionUrl');
@@ -564,7 +540,7 @@ describe('ad_manager_ooyala_ssai', function () {
         id: 'post', start: 600.04, duration: 30.1, adtype: 'postroll', adbreakname: 'postroll',
       }],
     };
-    const currentId3Object = OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
+    OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
     OoyalaSsai.onMetadataResponse(metadataResponse);
     expect(OoyalaSsai.timeline).to.eql(metadataResponse);
   });
@@ -838,7 +814,7 @@ describe('ad_manager_ooyala_ssai', function () {
       TXXX: 'adid=11de5230&t=0&d=100',
     };
     const expectedAd = { adId: '11de5230', time: 0, duration: 100 };
-    const currentId3Object = OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
+    OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
     expect(ssaiAdFound).to.eql(expectedAd);
   });
 
@@ -852,13 +828,13 @@ describe('ad_manager_ooyala_ssai', function () {
     const mockId3Tag = {
       TXXX: 'adid=11de5230&t=100&d=100',
     };
-    const currentId3Object = OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
+    OoyalaSsai.onVideoTagFound('eventName', 'videoId', 'tagType', mockId3Tag);
     expect(notifySSAIAdPlayingCalled).to.eql(true);
   });
 
   it('Init: SSAI requires embed code metadata', () => {
     let embedCodeMetadata = false;
-    amc.willRequireEmbedCodeMetadata = function (required) {
+    amc.willRequireEmbedCodeMetadata = function () {
       embedCodeMetadata = true;
     };
     OoyalaSsai.initialize(amc);
