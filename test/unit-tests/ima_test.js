@@ -1,31 +1,35 @@
+/* eslint-disable require-jsdoc,import/no-dynamic-require */
 /*
  * Unit test class for the Google IMA Ad Manager
  * https://github.com/Automattic/expect.js
  */
 
+const {
+  each,
+} = require('underscore');
+
 // stubs
 OO.log = function () {};
+require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_ima.js`);
 
 describe('ad_manager_ima', function () {
-  let amc; let
+  let amc;
+  let
     ima;
   let imaVideoPluginFactory;
   let videoWrapper;
   let imaIframe;
-  const name = 'google-ima-ads-manager';
+  const AD_MANAGER_NAME = 'google-ima-ads-manager';
   const playerId = 'ima-player-id';
   const originalOoAds = _.clone(OO.Ads);
   const originalOoVideo = _.clone(OO.Video);
-  const originalMockAmc = null;
   let notifyEventNameHistory = [];
   let notifyParamHistory = [];
   let notifyEventName = null;
   let notifyParams = null;
   let adsClickthroughOpenedCalled;
   let originalRequiresMutedAutoplay;
-
-  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
-  require(`${TEST_ROOT}unit-test-helpers/mock_ima.js`);
 
   // mock video controller interface
   const vci = {
@@ -38,26 +42,26 @@ describe('ad_manager_ima', function () {
       notifyParams = params;
     },
     EVENTS:
-    {
-      PLAY: 'play', // TOOD : Consider renaming
-      PLAYING: 'playing',
-      ENDED: 'ended',
-      ERROR: 'error',
-      SEEKING: 'seeking',
-      SEEKED: 'seeked',
-      PAUSED: 'paused',
-      RATE_CHANGE: 'ratechange',
-      STALLED: 'stalled',
-      TIME_UPDATE: 'timeupdate',
-      VOLUME_CHANGE: 'volumechange',
-      BUFFERING: 'buffering',
-      BUFFERED: 'buffered',
-      DURATION_CHANGE: 'durationchange',
-      PROGRESS: 'progress',
-      WAITING: 'waiting',
-      FULLSCREEN_CHANGED: 'fullScreenChanged',
-      MUTE_STATE_CHANGE: 'muteStateChange',
-    },
+      {
+        PLAY: 'play', // TODO : Consider renaming.
+        PLAYING: 'playing',
+        ENDED: 'ended',
+        ERROR: 'error',
+        SEEKING: 'seeking',
+        SEEKED: 'seeked',
+        PAUSED: 'paused',
+        RATE_CHANGE: 'ratechange',
+        STALLED: 'stalled',
+        TIME_UPDATE: 'timeupdate',
+        VOLUME_CHANGE: 'volumechange',
+        BUFFERING: 'buffering',
+        BUFFERED: 'buffered',
+        DURATION_CHANGE: 'durationchange',
+        PROGRESS: 'progress',
+        WAITING: 'waiting',
+        FULLSCREEN_CHANGED: 'fullScreenChanged',
+        MUTE_STATE_CHANGE: 'muteStateChange',
+      },
   };
 
   // IMA constants
@@ -102,7 +106,7 @@ describe('ad_manager_ima', function () {
   };
 
   before(_.bind(() => {
-    imaIframe = $("<iframe src='http://imasdk.googleapis.com/'></iframe>");
+    imaIframe = $('<iframe src=\'http://imasdk.googleapis.com/\'></iframe>');
     $('body').append(imaIframe);
 
     OO.Ads = {
@@ -122,6 +126,7 @@ describe('ad_manager_ima', function () {
       return 'en';
     };
     delete require.cache[require.resolve(`${SRC_ROOT}google_ima.js`)];
+    // eslint-disable-next-line global-require
     require(`${SRC_ROOT}google_ima.js`);
   }, this));
 
@@ -133,7 +138,7 @@ describe('ad_manager_ima', function () {
 
   beforeEach(() => {
     originalRequiresMutedAutoplay = ima.requiresMutedAutoplay;
-    amc = new fake_amc();
+    amc = new FakeAmc();
     adsClickthroughOpenedCalled = 0;
   });
 
@@ -174,7 +179,7 @@ describe('ad_manager_ima', function () {
   });
 
   it('Init: ad manager has the expected name', () => {
-    expect(ima.name).to.be(name);
+    expect(ima.name).to.be(AD_MANAGER_NAME);
   });
 
   it('Init: ad manager handles the initialize function', () => {
@@ -255,7 +260,8 @@ describe('ad_manager_ima', function () {
 
   it('Init: ad manager ignores function timeout values', () => {
     amc.adManagerSettings = {};
-    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = function () {};
+    amc.adManagerSettings[amc.AD_SETTINGS.AD_LOAD_TIMEOUT] = function () {
+    };
     initialize();
     // Value of DEFAULT_ADS_REQUEST_TIME_OUT
     expect(ima.maxAdsRequestTimeout).to.be(15000);
@@ -280,7 +286,7 @@ describe('ad_manager_ima', function () {
     ima.initialize(amc, playerId);
     ima.registerUi();
     let pluginLoaded = false;
-    amc.reportPluginLoaded = function (date, name) {
+    amc.reportPluginLoaded = function () {
       pluginLoaded = true;
     };
     ima.loadMetadata({}, {}, {});
@@ -289,7 +295,7 @@ describe('ad_manager_ima', function () {
 
   it('Init: ad sdk loads successfully', () => {
     let sdkLoaded = false;
-    amc.onAdSdkLoaded = function (name) {
+    amc.onAdSdkLoaded = function () {
       sdkLoaded = true;
     };
     ima.initialize(amc, playerId);
@@ -303,10 +309,11 @@ describe('ad_manager_ima', function () {
     expect(ima.adsRequested).to.be(true);
   });
 
-  it('Init, Ad Rules: setup ads request notifies amc that the IMA ad manager for ad rules will control ad playback', () => {
+  it(`Init, Ad Rules: setup ads request notifies amc that
+   the IMA ad manager for ad rules will control ad playback`, () => {
     let notified = false;
     amc.adManagerWillControlAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === AD_MANAGER_NAME) {
         notified = true;
       }
     };
@@ -321,7 +328,8 @@ describe('ad_manager_ima', function () {
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.UNKNOWN_AD_REQUEST);
   });
 
-  it('Init, Ad Rules: fake ad starts and ends properly when IMA ads manager is initialized and there is no preroll', () => {
+  it(`Init, Ad Rules: fake ad starts and ends properly when IMA ads manager 
+  is initialized and there is no preroll`, () => {
     google.ima.delayAdRequest = true;
     let endNotified = false;
     let startNotified = false;
@@ -341,6 +349,7 @@ describe('ad_manager_ima', function () {
     // This line mimics the ad pod having been set by the time the ad request success returns
     // This is a hack, will revisit in the future, but does properly test to see that the fake ad
     // ends when an ad request is successful
+    // eslint-disable-next-line prefer-destructuring
     ima.currentAMCAdPod = amc.timeline[0];
     play();
     expect(startNotified).to.be(false);
@@ -446,7 +455,8 @@ describe('ad_manager_ima', function () {
       expect(ima.autoHideAdControls).to.be(false);
     });
 
-    it('Show Ad Controls Override: playerControlsOverAds = false and showAdControls = false results in no controls', () => {
+    it(`Show Ad Controls Override: playerControlsOverAds = false and showAdControls
+     = false results in no controls`, () => {
       amc.pageSettings.playerControlsOverAds = false;
       const metadata = {
         showAdControls: false,
@@ -482,14 +492,14 @@ describe('ad_manager_ima', function () {
 
     it('Play ad: Requests the AMC to show the player UI and not autohide', () => {
       let notified = false;
-      const showAdControls = true;
+      const showAdControlsState = true;
       amc.pageSettings.playerControlsOverAds = false;
       amc.hidePlayerUi = function (showAdControls, showAdMarquee, autoHideAdControls) {
         expect(showAdControls).to.be(true);
         expect(autoHideAdControls).to.be(false);
         notified = true;
       };
-      initAndPlay(true, vci, undefined, showAdControls);
+      initAndPlay(true, vci, undefined, showAdControlsState);
       ima.playAd(amc.timeline[0]);
       const am = google.ima.adManagerInstance;
       am.publishEvent(google.ima.AdEvent.Type.STARTED);
@@ -500,7 +510,7 @@ describe('ad_manager_ima', function () {
   it('AMC Integration, Ad Rules: Non-linear ad should trigger forceAdToPlay on AMC', () => {
     let triggered = 0;
     google.ima.linearAds = false;
-    amc.forceAdToPlay = function (name, metadata, type) {
+    amc.forceAdToPlay = function () {
       triggered += 1;
     };
     initAndPlay(true, vci);
@@ -511,7 +521,8 @@ describe('ad_manager_ima', function () {
     expect(triggered).to.be(1);
   });
 
-  it('AMC Integration, Ad Rules: Existing non-linear ad should be cancelled when content pause is requested', () => {
+  it(`AMC Integration, Ad Rules: Existing non-linear ad should be cancelled
+   when content pause is requested`, () => {
     google.ima.linearAds = false;
     amc.playAd = function (ad) {
       ima.playAd(ad);
@@ -573,7 +584,7 @@ describe('ad_manager_ima', function () {
     amc.notifyNonlinearAdEnded = function () {
       nonLinearAdState = 0;
     };
-    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId, url) {
+    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId) {
       if (adPod === currentAdPod && id === adPodId) {
         nonLinearAdState = 1;
         notified = true;
@@ -589,7 +600,8 @@ describe('ad_manager_ima', function () {
     expect(nonLinearAdState).to.be(1);
   });
 
-  it('AMC Integration, Non-Ad Rules: non-linear ad provides amc with its width, height, and padding requirement', () => {
+  it(`AMC Integration, Non-Ad Rules: non-linear ad provides amc
+   with its width, height, and padding requirement`, () => {
     let nonLinearWidth = -1;
     let nonLinearHeight = -1;
     let paddingWidth = -1;
@@ -602,22 +614,24 @@ describe('ad_manager_ima', function () {
     const adPod = {
       id,
       ad:
-      {
-        forced_ad_type: amc.ADTYPE.NONLINEAR_OVERLAY,
-      },
+        {
+          forced_ad_type: amc.ADTYPE.NONLINEAR_OVERLAY,
+        },
     };
-    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId, url) {
+    amc.sendURLToLoadAndPlayNonLinearAd = function (currentAdPod, adPodId) {
       if (adPod === currentAdPod && id === adPodId) {
         nonLinearWidth = currentAdPod.width;
         nonLinearHeight = currentAdPod.height;
+        /* eslint-disable prefer-destructuring */
         paddingWidth = currentAdPod.paddingWidth;
         paddingHeight = currentAdPod.paddingHeight;
+        /* eslint-enable prefer-destructuring */
       }
     };
     // original ad definition
     ima.playAd(amc.timeline[0]);
     const am = google.ima.adManagerInstance;
-    am.resize = function (width, height, viewMode) {
+    am.resize = function (width, height) {
       imaWidth = width;
       imaHeight = height;
     };
@@ -675,7 +689,7 @@ describe('ad_manager_ima', function () {
     };
 
     amc.adManagerDoneControllingAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === AD_MANAGER_NAME) {
         doneControllingAdsNotified = true;
       }
     };
@@ -698,10 +712,11 @@ describe('ad_manager_ima', function () {
     expect(doneControllingAdsNotified).to.be(true);
   });
 
-  it('IMA plugin returns control to AMC and destroys ad loader if plugin times out loading ad rules ad', () => {
+  it(`IMA plugin returns control to AMC and destroys ad loader if plugin 
+  times out loading ad rules ad`, () => {
     let doneControllingAdsNotified = false;
     amc.adManagerDoneControllingAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === AD_MANAGER_NAME) {
         doneControllingAdsNotified = true;
       }
     };
@@ -714,7 +729,8 @@ describe('ad_manager_ima', function () {
     expect(doneControllingAdsNotified).to.be(true);
   });
 
-  it('IMA plugin ends current ad pod and destroys ad loader if plugin times out loading non-ad rules ad', () => {
+  it(`IMA plugin ends current ad pod and destroys ad loader
+   if plugin times out loading non-ad rules ad`, () => {
     google.ima.delayAdRequest = true;
 
     let podEndedNotified = false;
@@ -771,21 +787,22 @@ describe('ad_manager_ima', function () {
     expect(_.isObject(google.ima.adLoaderInstance)).to.be(true);
   });
 
-  it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc of a forced ad playback with streams set if a preroll and instead adds preroll to timeline', () => {
+  it(`AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc 
+  of a forced ad playback with streams set if a preroll and instead adds preroll to timeline`, () => {
     let forcedAdNotified = 0;
     let appendedToTimeline = [];
     let podEndedNotified = 0;
     initAndPlay(true, vci);
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
-      if (adManager === name && streams.ima) {
-        forcedAdNotified++;
+      if (adManager === AD_MANAGER_NAME && streams.ima) {
+        forcedAdNotified += 1;
       }
     };
     amc.appendToTimeline = function (ads) {
       appendedToTimeline = appendedToTimeline.concat(ads);
     };
     amc.notifyPodEnded = function () {
-      podEndedNotified++;
+      podEndedNotified += 1;
     };
 
     ima.playAd(
@@ -803,7 +820,7 @@ describe('ad_manager_ima', function () {
     // check that the new preroll was appended to the timeline
     expect(appendedToTimeline).to.eql([new amc.Ad({
       position: amc.FORCED_AD_POSITION,
-      adManager: name,
+      adManager: AD_MANAGER_NAME,
       ad: {
         position_type: 'r',
         forced_ad_type: amc.ADTYPE.LINEAR_VIDEO,
@@ -816,11 +833,12 @@ describe('ad_manager_ima', function () {
     })]);
   });
 
-  it('AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED notifies amc of a forced ad playback with streams set if not a preroll', () => {
+  it(`AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED notifies amc of a forced ad playback
+   with streams set if not a preroll`, () => {
     let notified = false;
     initAndPlay(true, vci);
     amc.forceAdToPlay = function (adManager, ad, adType, streams) {
-      if (adManager === name && streams.ima === '') {
+      if (adManager === AD_MANAGER_NAME && streams.ima === '') {
         notified = true;
       }
     };
@@ -835,7 +853,8 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(true);
   });
 
-  it('AMC Integration, IMA Event: IMA CONTENT_RESUME_REQUESTED notifies amc of a forced ad playback with streams set if not a preroll', () => {
+  it(`AMC Integration, IMA Event: IMA CONTENT_RESUME_REQUESTED notifies amc of a forced
+   ad playback with streams set if not a preroll`, () => {
     let linearAdEndedNotified = false;
     let podEndedNotified = false;
     initAndPlay(true, vci);
@@ -859,17 +878,18 @@ describe('ad_manager_ima', function () {
     expect(podEndedNotified).to.be(true);
   });
 
-  it('AMC Integration, IMA Event, single element mode: IMA CONTENT_RESUME_REQUESTED ends the current ad pod', () => {
+  it(`AMC Integration, IMA Event, single element mode:
+   IMA CONTENT_RESUME_REQUESTED ends the current ad pod`, () => {
     let linearAdEndedNotified = 0;
     let podEndedNotified = 0;
     amc.ui.useSingleVideoElement = true;
     initAndPlay(true, vci);
     amc.notifyLinearAdEnded = function () {
-      linearAdEndedNotified++;
+      linearAdEndedNotified += 1;
     };
 
     amc.notifyPodEnded = function () {
-      podEndedNotified++;
+      podEndedNotified += 1;
     };
 
     ima.playAd(
@@ -890,7 +910,8 @@ describe('ad_manager_ima', function () {
     expect(podEndedNotified).to.be(1);
   });
 
-  it('AMC Integration, IMA Event: IMA STARTED event notifies amc to focus the ad video element and of linear ad start for a linear ad', () => {
+  it(`AMC Integration, IMA Event: IMA STARTED event notifies amc to focus the ad video element 
+  and of linear ad start for a linear ad`, () => {
     let adStartedNotified = false;
     let focusNotified = false;
     let adId = -1;
@@ -916,7 +937,8 @@ describe('ad_manager_ima', function () {
     expect(focusNotified).to.be(true);
   });
 
-  it('AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element for single video element mode', () => {
+  it(`AMC Integration, IMA Event: IMA LOADED event notifies amc to focus the ad video element
+   for single video element mode`, () => {
     amc.ui.useSingleVideoElement = true;
     let focusNotified = false;
     initAndPlay(true, vci);
@@ -951,7 +973,7 @@ describe('ad_manager_ima', function () {
       },
     );
     ima.videoControllerWrapper.raiseTimeUpdate = function () {
-      raiseTimeUpdateCalled++;
+      raiseTimeUpdateCalled += 1;
     };
 
     const am = google.ima.adManagerInstance;
@@ -1023,7 +1045,8 @@ describe('ad_manager_ima', function () {
     expect(time).to.be(testTime);
   });
 
-  it('AMC Integration, IMA Event: IMA COMPLETE event (linear ad) notifies amc of ad pod end with pod size 1', () => {
+  it(`AMC Integration, IMA Event: IMA COMPLETE event (linear ad) notifies
+   amc of ad pod end with pod size 1`, () => {
     let notified = false;
     initAndPlay(true, vci);
     amc.notifyPodEnded = function () {
@@ -1075,7 +1098,8 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(true);
   });
 
-  it('AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) notifies amc of non-linear ad end', () => {
+  it(`AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) 
+  notifies amc of non-linear ad end`, () => {
     let raiseTimeUpdateCalled = 0;
     let notified = false;
     google.ima.linearAds = false;
@@ -1089,7 +1113,7 @@ describe('ad_manager_ima', function () {
       },
     );
     ima.videoControllerWrapper.raiseTimeUpdate = function () {
-      raiseTimeUpdateCalled++;
+      raiseTimeUpdateCalled += 1;
     };
 
     const am = google.ima.adManagerInstance;
@@ -1105,7 +1129,7 @@ describe('ad_manager_ima', function () {
     let notified = false;
     initAndPlay(true, vci);
     amc.adManagerDoneControllingAds = function (adManagerName) {
-      if (adManagerName === name) {
+      if (adManagerName === AD_MANAGER_NAME) {
         notified = true;
       }
     };
@@ -1122,11 +1146,7 @@ describe('ad_manager_ima', function () {
   });
 
   it('AMC Integration: can cancel linear ad', () => {
-    let notified = false;
     initAndPlay(true, vci);
-    amc.notifyLinearAdEnded = function () {
-      notified = true;
-    };
     const id = 'blah';
     const myAd = {
       id,
@@ -1143,12 +1163,8 @@ describe('ad_manager_ima', function () {
   });
 
   it('AMC Integration: can cancel non-linear ad', () => {
-    let notified = false;
     google.ima.linearAds = false;
     initAndPlay(true, vci);
-    amc.notifyNonlinearAdEnded = function () {
-      notified = true;
-    };
     const id = 'blah';
     const myAd = {
       id,
@@ -1218,7 +1234,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1256,7 +1274,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.unmute();
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1303,7 +1323,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.unmute();
     expect(vol).to.be(TEST_VOLUME);
 
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1366,7 +1388,9 @@ describe('ad_manager_ima', function () {
     am.publishEvent(google.ima.AdEvent.Type.LOADED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1397,7 +1421,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.play();
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1430,7 +1456,9 @@ describe('ad_manager_ima', function () {
     am.publishEvent(google.ima.AdEvent.Type.STARTED);
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1445,7 +1473,8 @@ describe('ad_manager_ima', function () {
     );
   });
 
-  it('VTC Integration: Video wrapper setVolume with a non-zero value does not update IMA with volume if a user click is required and we autoplayed', () => {
+  it(`VTC Integration: Video wrapper setVolume with a non-zero value does not update IMA with volume
+    if a user click is required and we autoplayed`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -1468,7 +1497,8 @@ describe('ad_manager_ima', function () {
     expect(vol).to.be(0);
   });
 
-  it('VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume if a user click is required and we did not autoplay', () => {
+  it(`VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume
+    if a user click is required and we did not autoplay`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -1491,7 +1521,8 @@ describe('ad_manager_ima', function () {
     expect(vol).to.be(TEST_VOLUME);
   });
 
-  it('VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume if a user click is required and we captured a user click', () => {
+  it(`VTC Integration: Video wrapper setVolume with a non-zero value does update IMA with volume
+    if a user click is required and we captured a user click`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -1573,7 +1604,8 @@ describe('ad_manager_ima', function () {
     expect(adcInitialized).to.be(true);
   });
 
-  it('VTC Integration: Programatic video wrapper unmute does not initialize the IMA Ad Display Container', () => {
+  it(`VTC Integration: Programatic video wrapper unmute
+    does not initialize the IMA Ad Display Container`, () => {
     initAndPlay(true, vci, true);
     let adcInitialized = false;
     const adc = google.ima.adDisplayContainerInstance;
@@ -1588,7 +1620,8 @@ describe('ad_manager_ima', function () {
     expect(adcInitialized).to.be(false);
   });
 
-  it('VTC Integration: Video wrapper unmute on user click does not initialize IMA Ad Display Container if ad is playing', () => {
+  it(`VTC Integration: Video wrapper unmute on user click
+    does not initialize IMA Ad Display Container if ad is playing`, () => {
     initAndPlay(true, vci, true);
     let adcInitialized = false;
     const am = google.ima.adManagerInstance;
@@ -1662,7 +1695,9 @@ describe('ad_manager_ima', function () {
     videoWrapper.setVolume(TEST_VOLUME);
     expect(vol).to.be(TEST_VOLUME);
     videoWrapper.raiseVolumeEvent();
-    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE);
+    expect(notifyEventNameHistory[notifyEventNameHistory.length - 1]).to.be(
+      videoWrapper.controller.EVENTS.MUTE_STATE_CHANGE,
+    );
     expect(notifyParamHistory[notifyParamHistory.length - 1]).to.eql(
       {
         muted: false,
@@ -1691,14 +1726,15 @@ describe('ad_manager_ima', function () {
         duration: DURATION,
         buffer: 1,
         seekRange:
-        {
-          begin: 0, end: 0,
-        },
+          {
+            begin: 0, end: 0,
+          },
       },
     );
   });
 
-  it('VTC Integration: Video wrapper raiseDurationChange notifies controller of DURATION_CHANGE event', () => {
+  it(`VTC Integration: Video wrapper raiseDurationChange
+    notifies controller of DURATION_CHANGE event`, () => {
     expect(notifyEventName).to.be(null);
     expect(notifyParams).to.be(null);
     initAndPlay(true, vci);
@@ -1712,18 +1748,19 @@ describe('ad_manager_ima', function () {
         duration: DURATION,
         buffer: 1,
         seekRange:
-      {
-        begin: 0, end: 0,
-      },
+          {
+            begin: 0, end: 0,
+          },
       },
     );
   });
 
   // IMA-VTC : IMA event tests
-  it('VTC Integration, IMA Event: Video wrapper notifies of play event when we receive IMA STARTED event from a linear ad', () => {
+  it(`VTC Integration, IMA Event: Video wrapper notifies of play event
+    when we receive IMA STARTED event from a linear ad`, () => {
     let playing = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PLAYING) {
           playing = true;
         }
@@ -1735,11 +1772,12 @@ describe('ad_manager_ima', function () {
     expect(playing).to.be(true);
   });
 
-  it('VTC Integration, IMA Event: Video wrapper does not notify of play event when we receive IMA STARTED event from a nonlinear overlay', () => {
+  it(`VTC Integration, IMA Event: Video wrapper does not notify of play event
+    when we receive IMA STARTED event from a nonlinear overlay`, () => {
     let playing = false;
     google.ima.linearAds = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PLAYING) {
           playing = true;
         }
@@ -1751,10 +1789,11 @@ describe('ad_manager_ima', function () {
     expect(playing).to.be(false);
   });
 
-  it('VTC Integration, IMA Event: Video wrapper notifies of play event when we receive IMA RESUMED event', () => {
+  it(`VTC Integration, IMA Event: Video wrapper notifies of play event
+    when we receive IMA RESUMED event`, () => {
     let playing = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PLAYING) {
           playing = true;
         } else if (eventName === vci.EVENTS.PAUSED) {
@@ -1772,10 +1811,11 @@ describe('ad_manager_ima', function () {
     expect(playing).to.be(true);
   });
 
-  it('VTC Integration, IMA Event: Video wrapper notifies of ended event when we receive IMA COMPLETE event', () => {
+  it(`VTC Integration, IMA Event: Video wrapper notifies of ended event
+    when we receive IMA COMPLETE event`, () => {
     let ended = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
           ended = true;
         }
@@ -1788,10 +1828,11 @@ describe('ad_manager_ima', function () {
     expect(ended).to.be(true);
   });
 
-  it('VTC Integration, IMA Event: Video wrapper notifies of ended event when we receive IMA SKIPPED event', () => {
+  it(`VTC Integration, IMA Event: Video wrapper notifies of ended event
+    when we receive IMA SKIPPED event`, () => {
     let ended = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
           ended = true;
         }
@@ -1807,7 +1848,7 @@ describe('ad_manager_ima', function () {
   it('IMA Event: Video wrapper notifies of ended event when we receive IMA USER_CLOSE event', () => {
     let ended = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
           ended = true;
         }
@@ -1823,7 +1864,7 @@ describe('ad_manager_ima', function () {
   it('IMA Event: Video wrapper notifies of paused event when we receive IMA PAUSED event', () => {
     let paused = false;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.PAUSED) {
           paused = true;
         }
@@ -1836,7 +1877,8 @@ describe('ad_manager_ima', function () {
     expect(paused).to.be(true);
   });
 
-  it('IMA Event: Video wrapper notifies of volume change event when we receive IMA VOLUME_CHANGED event', () => {
+  it(`IMA Event: Video wrapper notifies of volume change event
+    when we receive IMA VOLUME_CHANGED event`, () => {
     let volumeChanged = false;
     let currentVolume = 0;
     initAndPlay(true, {
@@ -1858,7 +1900,8 @@ describe('ad_manager_ima', function () {
     expect(currentVolume).to.be(0.5);
   });
 
-  it('IMA Event: Video wrapper does not notify of volume change event when we receive IMA VOLUME_MUTED event', () => {
+  it(`IMA Event: Video wrapper does not notify of volume change event
+    when we receive IMA VOLUME_MUTED event`, () => {
     let volumeChanged = false;
     let currentVolume = 0.5;
     initAndPlay(true, {
@@ -1880,7 +1923,8 @@ describe('ad_manager_ima', function () {
     expect(currentVolume).to.be(0.5);
   });
 
-  it('IMA Event: Video wrapper notifies of duration change event when we receive IMA DURATION_CHANGE event', () => {
+  it(`IMA Event: Video wrapper notifies of duration change event
+    when we receive IMA DURATION_CHANGE event`, () => {
     let durationChanged = false;
     let currentDuration = 0;
     initAndPlay(true, {
@@ -1907,7 +1951,9 @@ describe('ad_manager_ima', function () {
   const checkNotifyCalled = _.bind((eventname, give) => {
     let notified = false;
     initAndPlay(true, {
-      notify(eventName, params) { notified = true; },
+      notify() {
+        notified = true;
+      },
       EVENTS: vci.EVENTS,
     });
     if (give) {
@@ -1948,7 +1994,8 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(false);
   });
 
-  it('SingleElement: Video wrapper only notifies of volume change event when in control of the element', () => {
+  it(`SingleElement: Video wrapper only notifies of volume change event
+    when in control of the element`, () => {
     let notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, true);
     expect(notified).to.be(false);
     notified = checkNotifyCalled(google.ima.AdEvent.Type.VOLUME_CHANGED, false);
@@ -1957,7 +2004,8 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(false);
   });
 
-  it('SingleElement: Video wrapper only notifies of duration change event when in control of the element', () => {
+  it(`SingleElement: Video wrapper only notifies of duration change event
+    when in control of the element`, () => {
     let notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, true);
     expect(notified).to.be(false);
     notified = checkNotifyCalled(google.ima.AdEvent.Type.DURATION_CHANGE, false);
@@ -2005,16 +2053,18 @@ describe('ad_manager_ima', function () {
     expect(ima.disableFlashAds).to.be(false);
   });
 
-  it('IMA plugin ignores video wrapper play and pause events before ad is ready and after ad is complete', () => {
-    let resumedCount = 0; let
+  it(`IMA plugin ignores video wrapper play and pause events
+   before ad is ready and after ad is complete`, () => {
+    let resumedCount = 0;
+    let
       pausedCount = 0;
     initAndPlay(true, vci);
     const am = google.ima.adManagerInstance;
     am.resume = function () {
-      resumedCount++;
+      resumedCount += 1;
     };
     am.pause = function () {
-      pausedCount++;
+      pausedCount += 1;
     };
     ima.playAd(
       {
@@ -2044,17 +2094,20 @@ describe('ad_manager_ima', function () {
   });
 
   it('IMA plugin ignores PAUSED and RESUMED IMA events before ad is ready and after ad is complete', () => {
-    let resumedCount = 0; let
+    let resumedCount = 0;
+    let
       pausedCount = 0;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         switch (eventName) {
           case vci.EVENTS.PAUSED:
-            pausedCount++;
+            pausedCount += 1;
             break;
           case vci.EVENTS.PLAYING:
-            resumedCount++;
+            resumedCount += 1;
             break;
+          default:
+          // do nothing
         }
       },
       EVENTS: vci.EVENTS,
@@ -2088,12 +2141,13 @@ describe('ad_manager_ima', function () {
     expect(resumedCount).to.be(2);
   });
 
-  it('IMA plugin ignores COMPLETE, USER_CLOSE and SKIPPED IMA events before ad is ready and after ad is complete', () => {
+  it(`IMA plugin ignores COMPLETE, USER_CLOSE and SKIPPED IMA events
+    before ad is ready and after ad is complete`, () => {
     let endedCount = 0;
     initAndPlay(true, {
-      notify(eventName, params) {
+      notify(eventName) {
         if (eventName === vci.EVENTS.ENDED) {
-          endedCount++;
+          endedCount += 1;
         }
       },
       EVENTS: vci.EVENTS,
@@ -2113,12 +2167,13 @@ describe('ad_manager_ima', function () {
     expect(endedCount).to.be(1);
   });
 
-  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad', () => {
+  it(`AMC Integration: IMA plugin calls onSdkAdEvent API after receiving
+    ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad`, () => {
     let called = 0;
     let adPluginName = null;
     let sdkAdEvent = null;
     amc.onSdkAdEvent = function (name, adEvent) {
-      called++;
+      called += 1;
       adPluginName = name;
       sdkAdEvent = adEvent;
     };
@@ -2132,13 +2187,14 @@ describe('ad_manager_ima', function () {
     expect(_.isEmpty(sdkAdEvent)).to.be(false);
   });
 
-  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad', () => {
+  it(`AMC Integration: IMA plugin calls onSdkAdEvent API after receiving
+    ADS_MANAGER_LOADED event from IMA SDK for a non-ad rules ad`, () => {
     let called = 0;
     let adPluginName = null;
     let sdkAdEventName = null;
     let sdkAdEventData = null;
     amc.onSdkAdEvent = function (name, event, params) {
-      called++;
+      called += 1;
       adPluginName = name;
       sdkAdEventName = event;
       sdkAdEventData = params;
@@ -2154,13 +2210,14 @@ describe('ad_manager_ima', function () {
     expect(_.isEmpty(sdkAdEventData)).to.be(false);
   });
 
-  it('AMC Integration: IMA plugin calls onSdkAdEvent API after receiving ADS_MANAGER_LOADED event from IMA SDK for an ad rules ad', () => {
+  it(`AMC Integration: IMA plugin calls onSdkAdEvent API after receiving
+    ADS_MANAGER_LOADED event from IMA SDK for an ad rules ad`, () => {
     let called = 0;
     let adPluginName = null;
     let sdkAdEventName = null;
     let sdkAdEventData = null;
     amc.onSdkAdEvent = function (name, event, params) {
-      called++;
+      called += 1;
       adPluginName = name;
       sdkAdEventName = event;
       sdkAdEventData = params;
@@ -2234,14 +2291,13 @@ describe('ad_manager_ima', function () {
       sdkAdEventName = event;
       sdkAdEventData = params;
     };
-    let event;
-    for (const i in imaAdEvents) {
-      event = imaAdEvents[i];
+
+    each(imaAdEvents, (event) => {
       am.publishEvent(event);
       expect(adPluginName).to.be(ima.name);
       expect(sdkAdEventName).to.be(event);
       expect(_.isEmpty(sdkAdEventData)).to.be(false);
-    }
+    });
   });
 
   it('AMC Integration: IMA plugin provides a default value of 15000 ms for loadVideoTimeout', () => {
@@ -2284,7 +2340,8 @@ describe('ad_manager_ima', function () {
     expect(ima.enableIosSkippableAds).to.be(true);
   });
 
-  it('Muted Autoplay: Ads Manager can start after IMA initialization and automatic initial play requested if muted autoplay is not required', () => {
+  it(`Muted Autoplay: Ads Manager can start after IMA initialization and automatic initial play
+    requested if muted autoplay is not required`, () => {
     ima.requiresMutedAutoplay = function () {
       return false;
     };
@@ -2296,7 +2353,9 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adsManagerStarted).to.be(true);
   });
 
-  it('Muted Autoplay: Ads Manager cannot start and wrapper raises UNMUTED_PLAYBACK_FAILED after IMA initialization and automatic initial play requested if muted autoplay is required', () => {
+  it(`Muted Autoplay: Ads Manager cannot start and wrapper raises
+    UNMUTED_PLAYBACK_FAILED after IMA initialization and automatic
+    initial play requested if muted autoplay is required`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -2309,7 +2368,9 @@ describe('ad_manager_ima', function () {
     expect(notifyEventName).to.be(videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED);
   });
 
-  it('Muted Autoplay: Ads Manager can start after IMA initialization and automatic initial play requested if muted autoplay is required but we capture a user click', () => {
+  it(`Muted Autoplay: Ads Manager can start after
+    IMA initialization and automatic initial play requested
+    if muted autoplay is required but we capture a user click`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -2323,7 +2384,9 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adsManagerStarted).to.be(true);
   });
 
-  it('Muted Autoplay: do not publish UNMUTED_PLAYBACK_FAILED after IMA initialization and automatic initial play requested if muted autoplay is required but we are ad rules with no preroll', () => {
+  it(`Muted Autoplay: do not publish UNMUTED_PLAYBACK_FAILED after
+    IMA initialization and automatic initial play requested
+    if muted autoplay is required but we are ad rules with no preroll`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -2332,7 +2395,10 @@ describe('ad_manager_ima', function () {
     play(true);
     // default getCuePoints is returning empty, so no preroll
     ima.playAd(amc.timeline[0]);
-    expect(_.contains(notifyEventNameHistory, videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED)).to.be(false);
+    expect(_.contains(
+      notifyEventNameHistory,
+      videoWrapper.controller.EVENTS.UNMUTED_PLAYBACK_FAILED,
+    )).to.be(false);
   });
 
   it('Muted Autoplay: VTC can notify IMA that muted autoplay is not required', () => {
@@ -2346,7 +2412,8 @@ describe('ad_manager_ima', function () {
     expect(ima.requiresMutedAutoplay()).to.be(false);
   });
 
-  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a muted ad if muted autoplay is required', () => {
+  it(`Muted Autoplay: Ad plugin notifies IMA SDK of intent to play
+    a muted ad if muted autoplay is required`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -2359,7 +2426,8 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(true);
   });
 
-  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is not required', () => {
+  it(`Muted Autoplay: Ad plugin notifies IMA SDK of intent to play
+    a non-muted ad if muted autoplay is not required`, () => {
     ima.requiresMutedAutoplay = function () {
       return false;
     };
@@ -2372,7 +2440,8 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(false);
   });
 
-  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is required but we did not autoplay', () => {
+  it(`Muted Autoplay: Ad plugin notifies IMA SDK of intent to play
+    a non-muted ad if muted autoplay is required but we did not autoplay`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -2386,7 +2455,8 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(false);
   });
 
-  it('Muted Autoplay: Ad plugin notifies IMA SDK of intent to play a non-muted ad if muted autoplay is required but we have captured a user click', () => {
+  it(`Muted Autoplay: Ad plugin notifies IMA SDK of intent to play
+    a non-muted ad if muted autoplay is required but we have captured a user click`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -2400,7 +2470,8 @@ describe('ad_manager_ima', function () {
     expect(google.ima.adWillPlayMuted).to.be(false);
   });
 
-  it('Muted Autoplay: Ad plugin can play a non-muted ad on second content onwards if we have captured a user click in the first content', () => {
+  it(`Muted Autoplay: Ad plugin can play a non-muted ad on second content onwards
+    if we have captured a user click in the first content`, () => {
     ima.requiresMutedAutoplay = function () {
       return true;
     };
@@ -2476,7 +2547,7 @@ describe('ad_manager_ima', function () {
       ima.loadMetadata(content, {}, {});
       ima.registerUi();
 
-      expect(isNaN(ima.maxRedirects)).to.be(true); // this is what comes in
+      expect(Number.isNaN(ima.maxRedirects)).to.be(true); // this is what comes in
       expect(google.ima.numRedirects).to.be(undefined); // ima should not be called
     });
   });
@@ -2494,7 +2565,8 @@ describe('ad_manager_ima', function () {
         expect(google.ima.adsManagerInitCalled).to.be(true);
       });
 
-      it('Does not preload an ad if playAd was called prior to initial play with preloadAds set to false', () => {
+      it(`Does not preload an ad if playAd was called prior
+        to initial play with preloadAds set to false`, () => {
         initialize(true);
         createVideoWrapper(vci);
         ima.playAd(amc.timeline[0]);
@@ -2507,7 +2579,8 @@ describe('ad_manager_ima', function () {
         expect(google.ima.adsManagerStarted).to.be(true);
       });
 
-      it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', () => {
+      it(`Can preload an ad with preloadAds set to true
+        and calling playAd with adRequestOnly set to true`, () => {
         amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
         initialize(true);
         createVideoWrapper(vci);
@@ -2553,7 +2626,8 @@ describe('ad_manager_ima', function () {
         expect(google.ima.adsManagerStarted).to.be(true);
       });
 
-      it('Can preload an ad with preloadAds set to true and calling playAd with adRequestOnly set to true', () => {
+      it(`Can preload an ad with preloadAds set to true
+        and calling playAd with adRequestOnly set to true`, () => {
         amc.adManagerSettings[amc.AD_SETTINGS.PRELOAD_ADS] = true;
         initialize(false);
         createVideoWrapper(vci);

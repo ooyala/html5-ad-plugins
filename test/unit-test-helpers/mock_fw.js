@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc */
 fwContext = null;
 fwParams = {};
 getTemporalSlots = function () {};

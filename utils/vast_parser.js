@@ -261,7 +261,7 @@ var VastParser = function() {
    * @public
    * @method VastParser#isValidVastXML
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-   * @returns {boolean} Returns true if the xml is valid otherwise it returns false.
+   * @returns {boolean} true if the xml is valid otherwise it returns false.
    */
   this.isValidVastXML = (vastXML) => {
     return this.isValidRootTagName(vastXML) && this.isValidVastVersion(vastXML);
@@ -272,7 +272,7 @@ var VastParser = function() {
    * @public
    * @method VastParser#isValidRootTagName
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-   * @returns {boolean} Returns true if the root tag is valid otherwise it returns false.
+   * @returns {boolean} true if the root tag is valid otherwise it returns false.
    */
   this.isValidRootTagName = (vastXML) => {
     if (!getVastRoot(vastXML)) {
@@ -288,7 +288,7 @@ var VastParser = function() {
    * @public
    * @method VastParser#isValidVastVersion
    * @param {XMLDocument} vastXML Contains the vast ad data to be parsed
-   * @returns {boolean} Returns true if the VAST version is valid otherwise it returns false.
+   * @returns {boolean} true if the VAST version is valid otherwise it returns false.
    */
   this.isValidVastVersion = (vastXML) => {
     var version = getVastVersion(vastXML);

@@ -25,7 +25,16 @@ OO.Ads.manager(() => {
 
     let amc = null;
     const remoteModuleJs = 'http://my.company/myAdModule.js';
+    // eslint-disable-next-line no-unused-vars
     let adModuleJsReady = false;
+
+    /**
+     * Callback for when we receive the CONTENT_CHANGED event from the AMC.
+     * @private
+     */
+    const _onContentChanged = () => {
+      // Callback for example listener registered in this.initialize
+    };
 
     /**
      * Called by the Ad Manager Controller.  Use this function to initialize, create listeners, and load
@@ -35,6 +44,7 @@ OO.Ads.manager(() => {
      * @param {object} adManagerController A reference to the Ad Manager Controller
      * @param {string} playerId The unique player identifier of the player initializing the class
      */
+    // eslint-disable-next-line no-unused-vars
     this.initialize = (adManagerController, playerId) => {
       amc = adManagerController;
 
@@ -72,6 +82,7 @@ OO.Ads.manager(() => {
      * @param {object} backlotBaseMetadata Base metadata from Ooyala Backlot
      * @param {object} movieMetadata Metadata for the main video
      */
+    // eslint-disable-next-line no-unused-vars
     this.loadMetadata = (adManagerMetadata, backlotBaseMetadata, movieMetadata) => {
       this.ready = true;
       // Call the onAdManagerReady API after setting this.ready to true
@@ -128,6 +139,7 @@ OO.Ads.manager(() => {
      * @param {function} adStartedCallback Call this function each time an ad in the set starts
      * @param {function} adEndedCallback Call this function each time an ad in the set completes
      */
+    // eslint-disable-next-line no-unused-vars
     this.playAd = (ad, adPodStartedCallback, adPodEndedCallback, adStartedCallback, adEndedCallback) => {
       // When the ad impression has started or when the first ad in a set of podded ads has begun,  trigger
       //   adStartedCallback
@@ -148,6 +160,7 @@ OO.Ads.manager(() => {
      *                        following fields:
      *                 code : The amc.AD_CANCEL_CODE for the cancellation
      */
+    // eslint-disable-next-line no-unused-vars
     this.cancelAd = (ad, params) => {
     };
 
@@ -158,6 +171,7 @@ OO.Ads.manager(() => {
      * @public
      * @param {object} ad The ad object to pause
      */
+    // eslint-disable-next-line no-unused-vars
     this.pauseAd = (ad) => {
     };
 
@@ -168,32 +182,9 @@ OO.Ads.manager(() => {
      * @public
      * @param {object} ad The ad object to resume
      */
+    // eslint-disable-next-line no-unused-vars
     this.resumeAd = (ad) => {
     };
-
-    /**
-     * <i>Optional.</i><br/>
-     * When the Ad Manager Controller needs to hide the overlay it will call this function.
-     * NOTE: This function should only be used by the ad manager if the cancelOverlay function is not being used.
-     * NOTE 2: Only implement this function if you plan to hide and reshow the overlay. Otherwise delete it or leave it commented.
-     * @method AdManager#hideOverlay
-     * @public
-     * @param {object} currentAd The overlay ad object to be stored so when it is shown again, we can update the AMC
-     */
-    // this.hideOverlay = (currentAd) => {
-    // };
-
-    /**
-     * <i>Optional.</i><br/>
-     * When the Ad Manager Controller needs to cancel the overlay it will call this function.
-     * NOTE: This function should only be used by the ad manager if the hideOverlay function is not being used.
-     * NOTE 2: Only implement this function if you plan to cancel and not reshow the overlay. Otherwise leave it commented or delete it.
-     * @method AdManager#cancelOverlay
-     * @public
-     * @param {object} currentAd The overlay ad object that the ad manager needs to know is going to be cancelled and removed
-     */
-    // this.cancelOverlay = (currentAd) => {
-    // };
 
     /**
      * This function gets called by the ad Manager Controller when an ad has completed playing. If the main video is
@@ -204,6 +195,7 @@ OO.Ads.manager(() => {
      * @public
      */
     this.showOverlay = () => {
+
     };
 
     /**
@@ -213,7 +205,7 @@ OO.Ads.manager(() => {
      * @method AdManager#playerClicked
      * @public
     */
-    this.playerClicked = (amcAd, showPage) => {
+    this.playerClicked = () => {
     };
 
     /**
@@ -247,7 +239,7 @@ OO.Ads.manager(() => {
      * @param {object} metadata Any metadata attached to the found tag.
      */
     this.onVideoTagFound = (event, videoId, tagType, metadata) => {
-      OO.log('TAG FOUND w/ args: ', arguments);
+      OO.log('TAG FOUND w/ args: ', [event, videoId, tagType, metadata]);
     };
 
     /**
@@ -259,6 +251,7 @@ OO.Ads.manager(() => {
      * @param {object} adWrapper The current Ad's metadata
      * @param {number} errorCode The error code associated with the video playback error
      */
+    // eslint-disable-next-line no-unused-vars
     this.adVideoError = (adWrapper, errorCode) => {
     };
 
@@ -284,10 +277,6 @@ OO.Ads.manager(() => {
      *                     should create. Return an empty array, null, or undefined if this is not required.
      */
     this.createAdVideoElementOnPlayerInit = () => [];
-
-    var _onContentChanged = () => {
-      // Callback for example listener registered in this.initialize
-    };
   };
 
   return new AdManager();

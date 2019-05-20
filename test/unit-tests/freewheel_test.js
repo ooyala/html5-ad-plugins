@@ -1,3 +1,4 @@
+/* eslint-disable require-jsdoc,import/no-dynamic-require */
 /*
  * Unit test class for the Freewheel Ad Manager
  * https://github.com/Automattic/expect.js
@@ -5,18 +6,19 @@
 
 // stubs
 OO.log = function () {};
+require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
+require(`${TEST_ROOT}unit-test-helpers/mock_fw.js`);
 
 describe('ad_manager_freewheel', function () {
-  let amc; let fw;
+  let amc;
+  let fw;
   const name = 'freewheel-ads-manager';
   const originalOoAds = _.clone(OO.Ads);
-  require(`${TEST_ROOT}unit-test-helpers/mock_amc.js`);
-  require(`${TEST_ROOT}unit-test-helpers/mock_fw.js`);
 
   let adsClickthroughOpenedCalled;
 
   // Helper functions
-  const fakeAd = function (timePositionClass, position, duration, customId) {
+  const FakeAd = function (timePositionClass, position, duration, customId) {
     this.getTimePositionClass = function () {
       return timePositionClass;
     };
@@ -32,13 +34,17 @@ describe('ad_manager_freewheel', function () {
     this.getCurrentAdInstance = function () {
       return {
         getRendererController() {
-          this.processEvent = function () {};
+          this.processEvent = function () {
+          };
         },
-        getEventCallback() {},
+        getEventCallback() {
+        },
       };
     };
-    this.getAdCount = function () {};
-    this.play = function () {};
+    this.getAdCount = function () {
+    };
+    this.play = function () {
+    };
   };
 
   const initialize = function () {
@@ -59,7 +65,7 @@ describe('ad_manager_freewheel', function () {
   };
 
   const prepareForPreroll = function (customId) {
-    const ad = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, customId);
+    const ad = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, customId);
     const adInstance = new AdInstance({
       name: 'freewilly',
       width: 340,
@@ -87,11 +93,13 @@ describe('ad_manager_freewheel', function () {
     };
 
     delete require.cache[require.resolve(`${SRC_ROOT}freewheel.js`)];
+    // eslint-disable-next-line global-require
     require(`${SRC_ROOT}freewheel.js`);
   }, this));
 
   after(() => {
-    let parentDom; let
+    let parentDom;
+    let
       element;
     _.each(document.getElementsByTagName('style'), (oneStyle) => {
       if (oneStyle && oneStyle.innerHTML.indexOf('fw_') >= 0) {
@@ -104,7 +112,7 @@ describe('ad_manager_freewheel', function () {
   });
 
   beforeEach(() => {
-    amc = new fake_amc();
+    amc = new FakeAmc();
     adsClickthroughOpenedCalled = 0;
   });
 
@@ -112,8 +120,6 @@ describe('ad_manager_freewheel', function () {
     fwParams = {};
     fw.destroy();
     fwContext = null;
-    getTemporalSlots = function () {};
-    setVideoAsset = function () {};
   }, this));
 
   //   ------   TESTS   ------
@@ -135,11 +141,15 @@ describe('ad_manager_freewheel', function () {
   });
 
   it('Init: ad manager handles the initialize function', () => {
-    expect(() => { fw.initialize(amc); }).to.not.throwException();
+    expect(() => {
+      fw.initialize(amc);
+    }).to.not.throwException();
   });
 
   it('Init: ad manager handles the registerUi function', () => {
-    expect(() => { fw.registerUi(); }).to.not.throwException();
+    expect(() => {
+      fw.registerUi();
+    }).to.not.throwException();
   });
 
   it('Init: ad manager handles the loadMetadata function', () => {
@@ -167,7 +177,7 @@ describe('ad_manager_freewheel', function () {
     fw.initialize(amc);
     fw.registerUi();
     let pluginLoaded = false;
-    amc.reportPluginLoaded = function (date, name) {
+    amc.reportPluginLoaded = function () {
       pluginLoaded = true;
     };
     expect(() => {
@@ -226,7 +236,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAssetNetwork');
   });
 
-  it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs video embedcode', () => {
+  it(`Init: test video asset override fw_video_asset_id
+    vs fw_video_asset_network_id vs video embedcode`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -249,7 +260,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAsset');
   });
 
-  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is not provided', () => {
+  it(`Init: ad manager can set video asset id to embed code in loadMetadata function
+    when use_external_id is not provided`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -275,7 +287,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
-  it('Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id vs pagelevel embedCode vs video embedcode', () => {
+  it(`Init: test video asset override fw_video_asset_id vs fw_video_asset_network_id
+    vs pagelevel embedCode vs video embedcode`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -300,7 +313,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('testVideoAsset');
   });
 
-  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is false', () => {
+  it(`Init: ad manager can set video asset id to embed code in loadMetadata function
+    when use_external_id is false`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -328,7 +342,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
-  it('Init: ad manager can set video asset id to external id in loadMetadata function when use_external_id is true', () => {
+  it(`Init: ad manager can set video asset id to external id in loadMetadata function
+    when use_external_id is true`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -356,7 +371,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myExternalId');
   });
 
-  it('Init: ad manager can set video asset id to embed code in loadMetadata function when use_external_id is true but there is no external id', () => {
+  it(`Init: ad manager can set video asset id to embed code in loadMetadata function when
+    use_external_id is true but there is no external id`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -382,7 +398,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myEmbedCode');
   });
 
-  it('Init: ad manager can set video asset id to external id with a filter in loadMetadata function when use_external_id is true', () => {
+  it(`Init: ad manager can set video asset id to external id with a filter in loadMetadata function when
+    use_external_id is true`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -411,7 +428,8 @@ describe('ad_manager_freewheel', function () {
     expect(videoAssetId).to.be('myExternalId');
   });
 
-  it('Init: ad manager can set video asset id to external id with a non-applicable filter in loadMetadata function when use_external_id is true', () => {
+  it(`Init: ad manager can set video asset id to external id with
+    a non-applicable filter in loadMetadata function when use_external_id is true`, () => {
     fw.initialize(amc);
     fw.registerUi();
     let videoAssetId = null;
@@ -478,7 +496,8 @@ describe('ad_manager_freewheel', function () {
     initialize();
     expect(amc.timeline.length).to.be(1);
     play();
-    fw.playAd(amc.timeline[0], () => {});
+    fw.playAd(amc.timeline[0], () => {
+    });
     expect(fwContext).to.not.be(null);
   });
 
@@ -498,7 +517,9 @@ describe('ad_manager_freewheel', function () {
       play();
       fw.playAd(amc.timeline[0]);
       expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].value).to.be(1005);
-      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(
+        tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE,
+      );
     });
 
     it('bitrateOverride valid int', () => {
@@ -516,7 +537,9 @@ describe('ad_manager_freewheel', function () {
       play();
       fw.playAd(amc.timeline[0]);
       expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].value).to.be(1005);
-      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE);
+      expect(fwParams[tv.freewheel.SDK.PARAMETER_DESIRED_BITRATE].overrideLevel).to.be(
+        tv.freewheel.SDK.PARAMETER_LEVEL_OVERRIDE,
+      );
     });
 
     it('bitrateOverride not specified', () => {
@@ -558,13 +581,13 @@ describe('ad_manager_freewheel', function () {
   it('Timeline: adds all valid slots', () => {
     getTemporalSlots = function () {
       return [
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1002),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 15, 5000, 1003),
-        new fakeAd('Not an ad', 15, 5000, 1004),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 10, 5000, 1005),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, 1006),
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_POSTROLL, 100000000, 5000, 1007),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1002),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 15, 5000, 1003),
+        new FakeAd('Not an ad', 15, 5000, 1004),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_MIDROLL, 10, 5000, 1005),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, 1006),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_POSTROLL, 100000000, 5000, 1007),
       ];
     };
     initialize();
@@ -577,14 +600,16 @@ describe('ad_manager_freewheel', function () {
 
   it('Non-linear overlay: width and height are sent to AMC. No url is sent to the AMC', () => {
     const customId = 1234;
-    const overlay = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
+    const overlay = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
     let width = -1;
     let height = -1;
     let sentUrl = null;
     amc.sendURLToLoadAndPlayNonLinearAd = function (ad, adId, url) {
       if (ad) {
+        /* eslint-disable prefer-destructuring */
         width = ad.width;
         height = ad.height;
+        /* eslint-enable prefer-destructuring */
         sentUrl = url;
       }
     };
@@ -619,9 +644,9 @@ describe('ad_manager_freewheel', function () {
 
   it('Non-linear overlay: notifies AMC of end of non-linear ad', () => {
     const customId = 1234;
-    const overlay = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
+    const overlay = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_OVERLAY, 10, 5000, customId);
     let notified = false;
-    amc.notifyNonlinearAdEnded = function (adId) {
+    amc.notifyNonlinearAdEnded = function () {
       notified = true;
     };
     const adInstance = new AdInstance({
@@ -657,18 +682,18 @@ describe('ad_manager_freewheel', function () {
 
   it('Linear ad: notifies AMC of linear ad events', () => {
     const customId = 1234;
-    const linearAd = new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 10, 5000, customId);
+    const linearAd = new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 10, 5000, customId);
     let linearAdStartedCount = 0;
     let podStartedCount = 0;
     let focusAdVideoCount = 0;
     amc.focusAdVideo = function () {
-      focusAdVideoCount++;
+      focusAdVideoCount += 1;
     };
     amc.notifyLinearAdStarted = function () {
-      linearAdStartedCount++;
+      linearAdStartedCount += 1;
     };
     amc.notifyPodStarted = function () {
-      podStartedCount++;
+      podStartedCount += 1;
     };
     const adInstance = new AdInstance({
       name: 'blah',
@@ -719,13 +744,14 @@ describe('ad_manager_freewheel', function () {
     expect(podStartedCount).to.be(2);
   });
 
-  it('Ad Clickthrough: AMC\'s adsClickthroughOpened() should be called when FW\'s ads click event occurs', () => {
+  it(`Ad Clickthrough: AMC's adsClickthroughOpened() should be called
+    when FW's ads click event occurs`, () => {
     amc.adsClickthroughOpened = function () {
       adsClickthroughOpenedCalled += 1;
     };
     getTemporalSlots = function () {
       return [
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
       ];
     };
     initialize();
@@ -742,7 +768,7 @@ describe('ad_manager_freewheel', function () {
     };
     getTemporalSlots = function () {
       return [
-        new fakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
+        new FakeAd(tv.freewheel.SDK.TIME_POSITION_CLASS_PREROLL, 0, 5000, 1001),
       ];
     };
     initialize();
@@ -757,7 +783,8 @@ describe('ad_manager_freewheel', function () {
   });
 
   describe('Freewheel Context', () => {
-    let videoState; let
+    let videoState;
+    let
       volume;
 
     beforeEach(() => {
