@@ -116,9 +116,10 @@
 
       /**
        * Remove Undefined Elements.
-       * @returns {Array} Returns Array of existing params.
+       * @param {Array} array Array
+       * @returns {Array} Array of existing params.
        */
-      const removeUndefinedElements = (...args) => args.filter(item => !!item);
+      const removeUndefinedElements = array => array.filter(item => !!item);
 
       /**
        * Merge comma separated strings.
@@ -580,6 +581,15 @@
       };
 
       /**
+       * Called by the Pulse SDK to show a pause ad.
+       */
+      this.showPauseAd = () => {
+        /* not implemented */
+        /* do not remove */
+      };
+
+
+      /**
        * This method is called by the V4 AMF.
        */
       this.showOverlay = () => {
@@ -590,6 +600,14 @@
 
       this.hideOverlay = () => {
         overlayTimeLeftMillis -= (Date.now() - lastOverlayAdStart);
+      };
+
+      /**
+       * Called by the Pulse SDK
+       */
+      this.illegalOperationOccurred = () => {
+        /* not implemented */
+        /* do not remove */
       };
 
       this.sessionEnded = () => {
