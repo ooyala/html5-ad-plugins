@@ -1159,7 +1159,6 @@ require('../html5-common/js/utils/utils.js');
             if (_usingAdRules
               && !this.hasPreroll
               && this.currentAMCAdPod
-              && this.currentAMCAdPod.duration > 0
               && this.currentAMCAdPod.adType === _amc.ADTYPE.UNKNOWN_AD_REQUEST) {
               _amc.notifyPodStarted(this.currentAMCAdPod.id, 1);
               _endCurrentAd(true);
