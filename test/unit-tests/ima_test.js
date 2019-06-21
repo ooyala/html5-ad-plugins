@@ -96,7 +96,7 @@ describe('ad_manager_ima', function () {
   };
 
   const createVideoWrapper = function (vc) {
-    videoWrapper = imaVideoPluginFactory.create(null, null, vc, null, playerId);
+    videoWrapper = imaVideoPluginFactory.create($('div'), null, vc, null, playerId);
   };
 
   const initAndPlay = function (adRules, vc, autoplayed, showAdControls) {
@@ -190,7 +190,7 @@ describe('ad_manager_ima', function () {
 
   it('Init: VTC Integration is creatable after ad manager is initialized', () => {
     ima.initialize(amc, playerId);
-    videoWrapper = imaVideoPluginFactory.create(null, null, null, null, playerId);
+    videoWrapper = imaVideoPluginFactory.create($('div'), null, null, null, playerId);
     expect(typeof videoWrapper).to.be('object');
   });
 
@@ -328,7 +328,7 @@ describe('ad_manager_ima', function () {
     expect(amc.timeline[0].adType).to.be(amc.ADTYPE.UNKNOWN_AD_REQUEST);
   });
 
-  it(`Init, Ad Rules: fake ad starts and ends properly when IMA ads manager 
+  it(`Init, Ad Rules: fake ad starts and ends properly when IMA ads manager
   is initialized and there is no preroll`, () => {
     google.ima.delayAdRequest = true;
     let endNotified = false;
@@ -712,7 +712,7 @@ describe('ad_manager_ima', function () {
     expect(doneControllingAdsNotified).to.be(true);
   });
 
-  it(`IMA plugin returns control to AMC and destroys ad loader if plugin 
+  it(`IMA plugin returns control to AMC and destroys ad loader if plugin
   times out loading ad rules ad`, () => {
     let doneControllingAdsNotified = false;
     amc.adManagerDoneControllingAds = function (adManagerName) {
@@ -787,7 +787,7 @@ describe('ad_manager_ima', function () {
     expect(_.isObject(google.ima.adLoaderInstance)).to.be(true);
   });
 
-  it(`AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc 
+  it(`AMC Integration, IMA Event: IMA CONTENT_PAUSE_REQUESTED does not notify amc
   of a forced ad playback with streams set if a preroll and instead adds preroll to timeline`, () => {
     let forcedAdNotified = 0;
     let appendedToTimeline = [];
@@ -910,7 +910,7 @@ describe('ad_manager_ima', function () {
     expect(podEndedNotified).to.be(1);
   });
 
-  it(`AMC Integration, IMA Event: IMA STARTED event notifies amc to focus the ad video element 
+  it(`AMC Integration, IMA Event: IMA STARTED event notifies amc to focus the ad video element
   and of linear ad start for a linear ad`, () => {
     let adStartedNotified = false;
     let focusNotified = false;
@@ -1098,7 +1098,7 @@ describe('ad_manager_ima', function () {
     expect(notified).to.be(true);
   });
 
-  it(`AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad) 
+  it(`AMC Integration, IMA Event: IMA COMPLETE event (non-linear ad)
   notifies amc of non-linear ad end`, () => {
     let raiseTimeUpdateCalled = 0;
     let notified = false;

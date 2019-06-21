@@ -2548,6 +2548,13 @@ require('../html5-common/js/utils/utils.js');
      */
     this.create = (parentContainer, id, ooyalaVideoController, css, playerId) => {
       const googleIMA = registeredGoogleIMAManagers[playerId];
+
+      // This div is not used.
+      // Keep it for compatibility with other plugins
+      const videoWrapper = $('<div>');
+      videoWrapper.attr('id', id);
+      parentContainer.prepend(videoWrapper);
+
       const wrapper = new GoogleIMAVideoWrapper(googleIMA);
       wrapper.controller = ooyalaVideoController;
       wrapper.subscribeAllEvents();
