@@ -356,8 +356,8 @@ describe('ad_manager_ima', function () {
     expect(endNotified).to.be(false);
 
     google.ima.delayedAdRequestCallback();
-    expect(startNotified).to.be(true);
-    expect(endNotified).to.be(true);
+    expect(startNotified).to.be(false);
+    expect(endNotified).to.be(false);
   });
 
   // Non-Ad Rules
