@@ -7,6 +7,7 @@
 const {
   each,
 } = require('underscore');
+const $ = require('jquery');
 
 // stubs
 OO.log = function () {};
@@ -127,6 +128,7 @@ describe('ad_manager_ima', function () {
     };
     delete require.cache[require.resolve(`${SRC_ROOT}google_ima.js`)];
     // eslint-disable-next-line global-require
+    OO.$ = $;
     require(`${SRC_ROOT}google_ima.js`);
   }, this));
 
