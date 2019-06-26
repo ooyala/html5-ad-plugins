@@ -20,7 +20,7 @@ require('../html5-common/js/utils/constants.js');
 require('../html5-common/js/utils/utils.js');
 
 
-(function () {
+(function ($) {
   const registeredGoogleIMAManagers = {};
 
   OO.Ads.manager(() => {
@@ -2603,4 +2603,4 @@ require('../html5-common/js/utils/utils.js');
   };
 
   OO.Video.plugin(new GoogleIMAVideoFactory());
-}());
+}(OO.$));
