@@ -838,8 +838,6 @@ require('../html5-common/js/utils/utils.js');
           } else {
             _endCurrentAdPod(true);
           }
-        } else if (forceEndAdPod) {
-          _resetAdsState();
         }
 
         _resetUIContainerStyle();
@@ -1197,9 +1195,7 @@ require('../html5-common/js/utils/utils.js');
             if (_amc.ui.useSingleVideoElement) {
               _amc.focusAdVideo();
             }
-            if (ad) {
-              this.currentMedia = ad.getMediaUrl();
-            }
+            this.currentMedia = ad.getMediaUrl();
             _resetUIContainerStyle();
             break;
           case eventType.STARTED:
@@ -1219,7 +1215,7 @@ require('../html5-common/js/utils/utils.js');
             }
 
             this.adPlaybackStarted = true;
-            if (ad && ad.isLinear()) {
+            if (ad.isLinear()) {
               _linearAdIsPlaying = true;
 
               if (!_amc.ui.useSingleVideoElement) {
@@ -1247,7 +1243,7 @@ require('../html5-common/js/utils/utils.js');
             _onSizeChanged();
             _tryStartAd();
             if (this.videoControllerWrapper) {
-              if (ad && ad.isLinear()) {
+              if (ad.isLinear()) {
                 this.videoControllerWrapper.raisePlayEvent();
               }
               this.videoControllerWrapper.raiseTimeUpdate(this.getCurrentTime(), this.getDuration());
@@ -1256,13 +1252,13 @@ require('../html5-common/js/utils/utils.js');
             // Non-linear ad rules or VMAP ads will not be started by _tryStartAd()
             // because there'll be no AMC ad pod. We start them here after the time update event
             // in order to prevent the progress bar from flashing
-            if (_usingAdRules && ad && !ad.isLinear()) {
+            if (_usingAdRules && !ad.isLinear()) {
               _startNonLinearAdRulesOverlay();
             }
             break;
           case eventType.RESUMED:
             if (this.videoControllerWrapper) {
-              if (ad && ad.isLinear()) {
+              if (ad.isLinear()) {
                 this.videoControllerWrapper.raisePlayEvent();
               }
             }
@@ -1756,7 +1752,7 @@ require('../html5-common/js/utils/utils.js');
        */
       this.initialize = (amcIn, playerId) => {
         registeredGoogleIMAManagers[playerId] = this;
-        this.adPlaybackStarted = true;
+
         _amc = amcIn;
 
         const ext = OO.DEBUG ? '_debug.js' : '.js';
