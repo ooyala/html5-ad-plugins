@@ -1467,7 +1467,7 @@ OO.Ads.manager(() => {
        * https://github.com/ooyala/html5-ad-plugins/blob/master/js/ad_manager_vast.js#L1662-L1681
        * right after the backend team will fix it: https://jira.corp.ooyala.com/browse/BL-15574
        */
-      $.ajax({
+      OO.$.ajax({
         url: OO.getNormalizedTagUrl(url, this.embedCode),
         type: 'GET',
         // eslint-disable-next-line require-jsdoc
