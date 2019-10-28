@@ -2513,9 +2513,10 @@ require('../html5-common/js/utils/utils.js');
      * Will notify the IMA ad plugin so that it can play ads unmuted.
      * @public
      * @method GoogleIMAVideoWrapper#notifyUnmutedContentAutoPlaybackSucceeded
+     * @param {boolean} mutedFirstPlay indicate if the user muted the player for the first play through player params
      */
-    this.notifyUnmutedContentAutoPlaybackSucceeded = () => {
-      _ima.setRequiresMutedAutoplay(false);
+    this.notifyUnmutedContentAutoPlaybackSucceeded = (mutedFirstPlay) => {
+      _ima.setRequiresMutedAutoplay(mutedFirstPlay || false);
     };
   };
 
