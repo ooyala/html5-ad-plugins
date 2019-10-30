@@ -59,6 +59,7 @@ require('../html5-common/js/utils/utils.js');
       this.sharedVideoElement = null;
       this.initTime = Date.now();
       this.enableIosSkippableAds = false;
+      this.mutedFirstPlay = false; // We need to know if the user chooses to mute the player
 
       // private member variables of this GoogleIMA object
       let _amc = null;
@@ -161,6 +162,9 @@ require('../html5-common/js/utils/utils.js');
         this.useGoogleCountdown = false;
         this.useInsecureVpaidMode = false;
         this.imaIframeZIndex = DEFAULT_IMA_IFRAME_Z_INDEX;
+
+        // user muted preferences
+        this.mutedFirstPlay = false;
 
         // flag to track whether ad rules failed to load
         this.adRulesLoadError = false;
@@ -1107,7 +1111,7 @@ require('../html5-common/js/utils/utils.js');
         adsRequest.nonLinearAdSlotHeight = h;
 
         // Google makes use of certain parameters to determine inventory for ad playback
-        const adWillPlayMuted = this.willPlayAdMuted();
+        const adWillPlayMuted = this.mutedFirstPlay || this.willPlayAdMuted();
         OO.log(`IMA: setAdWillPlayMuted = ${adWillPlayMuted}`);
         adsRequest.setAdWillPlayMuted(adWillPlayMuted);
 
@@ -2516,7 +2520,8 @@ require('../html5-common/js/utils/utils.js');
      * @param {boolean} mutedFirstPlay indicate if the user muted the player for the first play through player params
      */
     this.notifyUnmutedContentAutoPlaybackSucceeded = (mutedFirstPlay) => {
-      _ima.setRequiresMutedAutoplay(mutedFirstPlay || false);
+      _ima.mutedFirstPlay = mutedFirstPlay;
+      _ima.setRequiresMutedAutoplay(false);
     };
   };
 
