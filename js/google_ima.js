@@ -2258,6 +2258,9 @@ require('../html5-common/js/utils/utils.js');
        * @returns {boolean} true if we intend for the ad to playback muted, false otherwise
        */
       this.willPlayAdMuted = () => this.requiresMutedAutoplay() && !this.capturedUserClick;
+      this.setMuteFirstPlay = (muted) => {
+        this.mutedFirstPlay = muted;
+      };
     };
 
     return new GoogleIMA();
@@ -2519,8 +2522,7 @@ require('../html5-common/js/utils/utils.js');
      * @method GoogleIMAVideoWrapper#notifyUnmutedContentAutoPlaybackSucceeded
      * @param {boolean} mutedFirstPlay indicate if the user muted the player for the first play through player params
      */
-    this.notifyUnmutedContentAutoPlaybackSucceeded = (mutedFirstPlay) => {
-      _ima.mutedFirstPlay = mutedFirstPlay;
+    this.notifyUnmutedContentAutoPlaybackSucceeded = () => {
       _ima.setRequiresMutedAutoplay(false);
     };
   };
