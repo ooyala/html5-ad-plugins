@@ -2429,6 +2429,21 @@ describe('ad_manager_ima', function () {
   });
 
   it(`Muted Autoplay: Ad plugin notifies IMA SDK of intent to play
+    a muted ad if muteFirstPlay is required at player param`, () => {
+    ima.requiresMutedAutoplay = function () {
+      return false;
+    };
+    initialize(false);
+    createVideoWrapper(vci);
+    play(true);
+    expect(google.ima.adsManagerStarted).to.be(false);
+    expect(google.ima.adWillPlayMuted).to.be(undefined);
+    ima.setMuteFirstPlay(true);
+    ima.playAd(amc.timeline[0]);
+    expect(google.ima.adWillPlayMuted).to.be(true);
+  });
+
+  it(`Muted Autoplay: Ad plugin notifies IMA SDK of intent to play
     a non-muted ad if muted autoplay is not required`, () => {
     ima.requiresMutedAutoplay = function () {
       return false;
