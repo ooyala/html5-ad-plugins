@@ -29,7 +29,7 @@
     "underscore": "^1.9.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0-beta.51",
+    "@babel/core": "^7.20.7",
     "@babel/preset-env": "^7.0.0-beta.51",
     "babel-core": "^7.0.0-bridge.0",
     "babel-loader": "^8.0.5",
