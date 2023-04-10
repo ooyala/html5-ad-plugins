@@ -24,7 +24,7 @@
     "url": "https://github.com/ooyala/html5-ad-plugins"
   },
   "dependencies": {
-    "aws-sdk": "^2.1.49",
+    "aws-sdk": "^2.1354.0",
     "mime": "^2.3.1",
     "underscore": "^1.9.1"
   },
